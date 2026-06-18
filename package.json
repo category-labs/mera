@@ -37,5 +37,5 @@
   "engines": {
     "node": ">=24"
   },
-  "license": "GPL-3.0-only"
+  "license": "(MIT OR Apache-2.0)"
 }

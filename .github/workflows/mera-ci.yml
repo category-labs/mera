@@ -4,13 +4,7 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "mera/**"
-      - ".github/workflows/mera-ci.yml"
   pull_request:
-    paths:
-      - "mera/**"
-      - ".github/workflows/mera-ci.yml"
   workflow_dispatch:
 
 permissions:
@@ -27,18 +21,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: mera/.nvmrc
+          node-version-file: .nvmrc
           check-latest: true
           cache: npm
-          cache-dependency-path: mera/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: mera
 
       - name: Run lint
         run: npm run lint
-        working-directory: mera
 
   format:
     name: Format
@@ -50,18 +42,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: mera/.nvmrc
+          node-version-file: .nvmrc
           check-latest: true
           cache: npm
-          cache-dependency-path: mera/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: mera
 
       - name: Check formatting
         run: npm exec -- biome format .
-        working-directory: mera
 
   compile:
     name: Compile
@@ -73,18 +63,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: mera/.nvmrc
+          node-version-file: .nvmrc
           check-latest: true
           cache: npm
-          cache-dependency-path: mera/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: mera
 
       - name: Compile library
         run: npm run build
-        working-directory: mera
 
   test:
     name: Test
@@ -96,22 +84,19 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: mera/.nvmrc
+          node-version-file: .nvmrc
           check-latest: true
           cache: npm
-          cache-dependency-path: mera/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: mera
 
       - name: Install Playwright browser
         run: npm exec -- playwright install --with-deps chromium
-        working-directory: mera
 
       - name: Run tests
         run: npm test
-        working-directory: mera
 
   demo:
     name: Demo
@@ -123,25 +108,23 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: mera/.nvmrc
+          node-version-file: .nvmrc
           check-latest: true
           cache: npm
           cache-dependency-path: |
-            mera/package-lock.json
-            mera/demo/package-lock.json
+            package-lock.json
+            demo/package-lock.json
 
       - name: Install library dependencies
         run: npm ci
-        working-directory: mera
 
       - name: Build library
         run: npm run build
-        working-directory: mera
 
       - name: Install demo dependencies
         run: npm ci
-        working-directory: mera/demo
+        working-directory: demo
 
       - name: Build demo
         run: npm run build
-        working-directory: mera/demo
+        working-directory: demo

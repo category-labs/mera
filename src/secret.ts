@@ -1,0 +1,432 @@
+import {
+  asArrayBuffer,
+  base64UrlDecode,
+  base64UrlEncode,
+  canonicalEncode,
+  uint32Be,
+  utf8ToBytes,
+} from "./encoding.js";
+import { PasskeyAccountError, type PasskeyAccountErrorCode } from "./errors.js";
+import { getPasskeyPrfOutput } from "./passkey.js";
+import type {
+  PasskeyCredentialTransport,
+  PasskeyPrfResult,
+  PasskeySecretVault,
+} from "./types.js";
+import { getCrypto, hkdfSha256AesGcmKey, randomBytes } from "./webcrypto.js";
+
+const PRF_SALT_LENGTH = 32;
+const PRF_OUTPUT_LENGTH = 32;
+const NONCE_LENGTH = 12;
+
+// HKDF info and AAD for the secret vault. The HKDF info keeps the wrapping key
+// distinct from any other key derived from the same PRF output. The AAD is a
+// precomputed constant (domain ‖ version): a secret vault has no public key to
+// bind, unlike a per-account vault.
+const SECRET_WRAP_INFO = utf8ToBytes("mera.v1.wrap.secret");
+const SECRET_AAD_DOMAIN = utf8ToBytes("mera.v1.secret.aad");
+const SECRET_AAD_VERSION = 1;
+const SECRET_AAD = canonicalEncode([
+  SECRET_AAD_DOMAIN,
+  uint32Be(SECRET_AAD_VERSION),
+]);
+
+/** AES-GCM encrypted bytes. */
+type EncryptedBytes = {
+  /** AES-GCM nonce. Secret vaults require 12 bytes. */
+  nonce: Uint8Array;
+  /** AES-GCM ciphertext including the authentication tag. */
+  ciphertext: Uint8Array;
+};
+
+async function deriveWrappingKey({
+  prfOutput,
+  info,
+}: {
+  prfOutput: Uint8Array;
+  info: Uint8Array;
+}): Promise<CryptoKey> {
+  if (prfOutput.length !== PRF_OUTPUT_LENGTH) {
+    throw new PasskeyAccountError(
+      "INPUT_INVALID",
+      "prfOutput must be 32 bytes",
+    );
+  }
+
+  return hkdfSha256AesGcmKey(prfOutput, info);
+}
+
+// AES-256-GCM encrypt. subtle.encrypt copies its inputs synchronously and the
+// caller owns the plaintext, so this helper has nothing of its own to zero.
+// GCM nonces are generated internally so callers cannot accidentally reuse one.
+async function aesGcmEncrypt({
+  plaintext,
+  wrappingKey,
+  aad,
+}: {
+  plaintext: Uint8Array;
+  wrappingKey: CryptoKey;
+  aad: Uint8Array;
+}): Promise<EncryptedBytes> {
+  const iv = randomBytes(NONCE_LENGTH);
+
+  const ciphertext = await getCrypto().subtle.encrypt(
+    {
+      name: "AES-GCM",
+      iv: asArrayBuffer(iv),
+      additionalData: asArrayBuffer(aad),
+    },
+    wrappingKey,
+    asArrayBuffer(plaintext),
+  );
+
+  return {
+    nonce: iv,
+    ciphertext: new Uint8Array(ciphertext),
+  };
+}
+
+// AES-256-GCM decrypt. Authentication failures (wrong key, tampered ciphertext
+// or AAD) surface as DECRYPT_FAILED. The returned bytes are not interpreted.
+async function aesGcmDecrypt({
+  encrypted,
+  wrappingKey,
+  aad,
+}: {
+  encrypted: EncryptedBytes;
+  wrappingKey: CryptoKey;
+  aad: Uint8Array;
+}): Promise<Uint8Array> {
+  try {
+    const plaintext = await getCrypto().subtle.decrypt(
+      {
+        name: "AES-GCM",
+        iv: asArrayBuffer(encrypted.nonce),
+        additionalData: asArrayBuffer(aad),
+      },
+      wrappingKey,
+      asArrayBuffer(encrypted.ciphertext),
+    );
+    return new Uint8Array(plaintext);
+  } catch (error) {
+    throw new PasskeyAccountError(
+      "DECRYPT_FAILED",
+      "Unable to decrypt ciphertext",
+      { cause: error },
+    );
+  }
+}
+
+function parseJsonVault(value: string): unknown {
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    throw new PasskeyAccountError(
+      "VAULT_FORMAT_INVALID",
+      "Vault JSON is invalid",
+      { cause: error },
+    );
+  }
+}
+
+function readBase64Url(
+  value: unknown,
+  name: string,
+  errorCode: PasskeyAccountErrorCode,
+  expectedLength?: number,
+): string {
+  if (typeof value !== "string") {
+    throw new PasskeyAccountError(errorCode, `${name} must be base64url`);
+  }
+
+  let bytes: Uint8Array;
+  try {
+    bytes = base64UrlDecode(value);
+  } catch (cause) {
+    throw new PasskeyAccountError(errorCode, `${name} must be base64url`, {
+      cause,
+    });
+  }
+
+  if (expectedLength !== undefined && bytes.length !== expectedLength) {
+    throw new PasskeyAccountError(
+      errorCode,
+      `${name} must be ${expectedLength} bytes`,
+    );
+  }
+
+  return value;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** Inputs for encrypting one arbitrary secret into a vault. */
+type CreateSecretVaultInput = {
+  /**
+   * Passkey credential plus the PRF salt and PRF output it produced. The result
+   * of `createPasskeyWithPrfOutput` can be passed straight through.
+   */
+  credential: {
+    /** Passkey credential ID as canonical unpadded base64url. */
+    credentialId: string;
+    /** Authenticator transports reported by the browser, when available. */
+    transports?: PasskeyCredentialTransport[];
+    /** PRF salt for this secret. Must be exactly 32 bytes. */
+    prfSalt: Uint8Array;
+    /** First WebAuthn PRF output for `prfSalt`. Must be exactly 32 bytes. */
+    prfOutput: Uint8Array;
+  };
+  /** Secret bytes to encrypt. Any non-empty length; the library does not interpret them. */
+  secret: Uint8Array;
+};
+
+/**
+ * Encrypts an arbitrary secret into a passkey-protected vault.
+ *
+ * The secret is opaque: no curve, no public key, no length or scalar checks. An AES-256-GCM wrapping key is derived from the PRF output with secret-specific HKDF info, and the secret is encrypted under canonical AAD. The input `secret` buffer is not mutated; callers that hold sensitive bytes should zero them when done.
+ *
+ * @remarks Security: a vault is bound to its `prfOutput` only — not to the credential ID, salt, or nonce (the AAD is a fixed constant). Use a fresh `prfSalt` per secret. Secrets wrapped under one reused PRF output share a wrapping key, so their ciphertexts are interchangeable by anyone who can rewrite stored vault JSON.
+ * @param options - Credential material and the secret to wrap.
+ * @returns A JSON-safe secret vault.
+ * @throws PasskeyAccountError with code `INPUT_INVALID` when the credential ID is empty, the PRF salt or output is not 32 bytes, or `secret` is empty.
+ */
+async function createSecretVault({
+  credential,
+  secret,
+}: CreateSecretVaultInput): Promise<PasskeySecretVault> {
+  const { transports, prfSalt, prfOutput } = credential;
+
+  const credentialId = readBase64Url(
+    credential.credentialId,
+    "credential.credentialId",
+    "INPUT_INVALID",
+  );
+  if (credentialId.length === 0) {
+    throw new PasskeyAccountError(
+      "INPUT_INVALID",
+      "credential.credentialId must not be empty",
+    );
+  }
+
+  if (prfSalt.length !== PRF_SALT_LENGTH) {
+    throw new PasskeyAccountError("INPUT_INVALID", "PRF salt must be 32 bytes");
+  }
+
+  if (secret.length === 0) {
+    throw new PasskeyAccountError("INPUT_INVALID", "secret must not be empty");
+  }
+
+  const wrappingKey = await deriveWrappingKey({
+    info: SECRET_WRAP_INFO,
+    prfOutput,
+  });
+  const encrypted = await aesGcmEncrypt({
+    plaintext: secret,
+    wrappingKey,
+    aad: SECRET_AAD,
+  });
+
+  return {
+    version: 1,
+    credential: {
+      credentialId,
+      ...(transports !== undefined ? { transports: [...transports] } : {}),
+    },
+    prfSalt: base64UrlEncode(prfSalt),
+    nonce: base64UrlEncode(encrypted.nonce),
+    ciphertext: base64UrlEncode(encrypted.ciphertext),
+  };
+}
+
+/** Inputs for decrypting a secret vault. */
+type UnwrapSecretVaultInput = {
+  /** Parsed secret vault. */
+  vault: PasskeySecretVault;
+  /** WebAuthn PRF output for the vault's PRF salt. Must be exactly 32 bytes. */
+  prfOutput: Uint8Array;
+};
+
+/**
+ * Decrypts the secret from a secret vault.
+ *
+ * @param options - Vault and PRF output.
+ * @returns The decrypted secret bytes, exactly as passed to `createSecretVault`.
+ * @remarks Side effects: callers should zero the returned buffer when finished.
+ * @throws PasskeyAccountError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url (already validated for vaults from `parseSecretVault`).
+ * @throws PasskeyAccountError with code `DECRYPT_FAILED` when authentication fails.
+ */
+async function unwrapSecretVault({
+  vault,
+  prfOutput,
+}: UnwrapSecretVaultInput): Promise<Uint8Array> {
+  const wrappingKey = await deriveWrappingKey({
+    info: SECRET_WRAP_INFO,
+    prfOutput,
+  });
+
+  return aesGcmDecrypt({
+    encrypted: {
+      nonce: base64UrlDecode(vault.nonce),
+      ciphertext: base64UrlDecode(vault.ciphertext),
+    },
+    wrappingKey,
+    aad: SECRET_AAD,
+  });
+}
+
+/**
+ * Parses and validates untrusted secret-vault JSON or objects.
+ *
+ * Only version 1 vaults are accepted. The credential, PRF salt, nonce, and ciphertext are canonicalized to base64url and length-checked.
+ *
+ * @param value - Secret vault as JSON text or an untrusted object.
+ * @returns A canonicalized secret vault.
+ * @throws PasskeyAccountError with code `VAULT_FORMAT_INVALID` when required structure, version, or encoded data is invalid.
+ */
+function parseSecretVault(value: unknown): PasskeySecretVault {
+  const vault = typeof value === "string" ? parseJsonVault(value) : value;
+
+  if (!isRecord(vault)) {
+    throw new PasskeyAccountError(
+      "VAULT_FORMAT_INVALID",
+      "Vault must be an object",
+    );
+  }
+
+  if (!("version" in vault)) {
+    throw new PasskeyAccountError(
+      "VAULT_FORMAT_INVALID",
+      "Vault version is required",
+    );
+  }
+
+  if (vault.version !== 1) {
+    throw new PasskeyAccountError(
+      "VAULT_FORMAT_INVALID",
+      "Vault version must be 1",
+    );
+  }
+
+  if (!isRecord(vault.credential)) {
+    throw new PasskeyAccountError(
+      "VAULT_FORMAT_INVALID",
+      "Vault credential must be an object",
+    );
+  }
+
+  const credentialId = readBase64Url(
+    vault.credential.credentialId,
+    "credential.credentialId",
+    "VAULT_FORMAT_INVALID",
+  );
+
+  if (credentialId.length === 0) {
+    throw new PasskeyAccountError(
+      "VAULT_FORMAT_INVALID",
+      "credential.credentialId must not be empty",
+    );
+  }
+
+  const credential: PasskeySecretVault["credential"] = { credentialId };
+
+  if (vault.credential.transports !== undefined) {
+    if (
+      !Array.isArray(vault.credential.transports) ||
+      vault.credential.transports.some(
+        (transport) => typeof transport !== "string",
+      )
+    ) {
+      throw new PasskeyAccountError(
+        "VAULT_FORMAT_INVALID",
+        "credential.transports must be an array of strings or omitted",
+      );
+    }
+    credential.transports = [...vault.credential.transports];
+  }
+
+  const prfSalt = readBase64Url(
+    vault.prfSalt,
+    "prfSalt",
+    "VAULT_FORMAT_INVALID",
+    PRF_SALT_LENGTH,
+  );
+  const nonce = readBase64Url(
+    vault.nonce,
+    "nonce",
+    "VAULT_FORMAT_INVALID",
+    NONCE_LENGTH,
+  );
+  const ciphertext = readBase64Url(
+    vault.ciphertext,
+    "ciphertext",
+    "VAULT_FORMAT_INVALID",
+  );
+
+  if (ciphertext.length === 0) {
+    throw new PasskeyAccountError(
+      "VAULT_FORMAT_INVALID",
+      "ciphertext must not be empty",
+    );
+  }
+
+  return { version: 1, credential, prfSalt, nonce, ciphertext };
+}
+
+/**
+ * Performs the WebAuthn assertion needed to unlock a secret vault.
+ *
+ * Reads the credential metadata and PRF salt from a parsed vault; pass JSON through `parseSecretVault` first.
+ *
+ * @param options - Secret-vault PRF inputs.
+ * @returns The selected credential ID and first WebAuthn PRF output.
+ * @remarks Side effects: invokes `navigator.credentials.get()`, which may show browser or authenticator UI.
+ * @throws PasskeyAccountError with code `PRF_UNAVAILABLE` when the authenticator does not return a 32-byte PRF output.
+ * @throws PasskeyAccountError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
+ */
+async function getSecretVaultPrfOutput({
+  rpId,
+  vault,
+  challenge,
+  timeout,
+}: {
+  /** Relying party ID for the WebAuthn assertion. */
+  rpId: string;
+  /** Parsed secret vault. */
+  vault: PasskeySecretVault;
+  /** WebAuthn challenge. Defaults to 32 cryptographically random bytes. */
+  challenge?: Uint8Array;
+  /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
+  timeout?: number;
+}): Promise<PasskeyPrfResult> {
+  return getPasskeyPrfOutput({
+    rpId,
+    credentialId: vault.credential.credentialId,
+    transports: vault.credential.transports,
+    prfSalt: base64UrlDecode(vault.prfSalt),
+    challenge,
+    timeout,
+  });
+}
+
+/** Options accepted by `createSecretVault`. */
+type CreateSecretVaultOptions = Parameters<typeof createSecretVault>[0];
+/** Options accepted by `unwrapSecretVault`. */
+type UnwrapSecretVaultOptions = Parameters<typeof unwrapSecretVault>[0];
+/** Options accepted by `getSecretVaultPrfOutput`. */
+type GetSecretVaultPrfOutputOptions = Parameters<
+  typeof getSecretVaultPrfOutput
+>[0];
+
+export type {
+  CreateSecretVaultOptions,
+  GetSecretVaultPrfOutputOptions,
+  UnwrapSecretVaultOptions,
+};
+export {
+  createSecretVault,
+  getSecretVaultPrfOutput,
+  parseSecretVault,
+  unwrapSecretVault,
+};

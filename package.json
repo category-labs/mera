@@ -1,0 +1,41 @@
+{
+  "name": "mera",
+  "version": "0.1.0",
+  "description": "Primitive-first passkey-backed signing utilities for secp256k1 (EVM) and Ed25519 (Solana).",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "check": "biome check .",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
+    "test": "npm run build && playwright test",
+    "test:e2e": "npm run build && playwright test --project=chromium --grep @e2e"
+  },
+  "dependencies": {
+    "@noble/ed25519": "^3.1.0",
+    "@noble/hashes": "^2.2.0",
+    "@noble/secp256k1": "^3.1.0",
+    "@scure/base": "^2.2.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.0",
+    "@playwright/test": "^1.61.0",
+    "@types/node": "^25.9.3",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "license": "GPL-3.0-only"
+}

@@ -1,0 +1,646 @@
+:root {
+  color-scheme: light;
+
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #f1f2f5;
+  --text: #0f1115;
+  --muted: #6b7280;
+  --border: rgba(15, 17, 21, 0.1);
+  --field: #ffffff;
+  --accent: #f50;
+  --accent-text: #ffffff;
+  --ok: #15a34a;
+  --error: #dc2626;
+  --shadow:
+    0 1px 2px rgba(15, 17, 21, 0.04), 0 12px 32px rgba(15, 17, 21, 0.06);
+
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  /* `margin-inline: auto` (not body-level grid/flex centering) — React mounts
+     into a `<div id="root">` between body and `.app`, so any centering applied
+     to body centers that wrapper, which already fills the width. Self-centering
+     `.app` is robust to whatever the wrapper does. */
+  margin: 48px auto;
+  width: min(420px, 100%);
+  display: grid;
+  gap: 18px;
+}
+
+/* Header */
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 12px;
+}
+
+.brand-lockup > div:last-child {
+  min-width: 0;
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  color: #fff;
+  font-size: 20px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.tagline {
+  margin: 2px 0 0;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.network-toggle {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.network-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+}
+
+.network-switch {
+  position: relative;
+  display: block;
+  width: 34px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.network-switch::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(15, 17, 21, 0.18);
+  transition: transform 0.15s;
+}
+
+.network-toggle input:checked + .network-switch {
+  border-color: transparent;
+  background: var(--accent);
+}
+
+.network-toggle input:checked + .network-switch::before {
+  transform: translateX(14px);
+}
+
+.network-toggle input:focus-visible + .network-switch {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* Card */
+.card {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+/* Account view shell: stack the chain toggle and the chain card with the same gap as the app grid. */
+.account-shell {
+  display: grid;
+  gap: 14px;
+}
+
+/* Account selector: a scrollable row of numbered HD accounts plus "+ Add". */
+.account-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.account-pills {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-2);
+  border-radius: 11px;
+  overflow-x: auto;
+}
+
+.account-pill {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 550;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.account-pill.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(15, 17, 21, 0.12);
+}
+
+.account-add {
+  flex: 0 0 auto;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* Recovery-phrase backup */
+.backup-trigger {
+  display: grid;
+  gap: 6px;
+}
+
+.backup {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.backup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.backup-title {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mnemonic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mnemonic-grid li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.mnemonic-grid .num {
+  min-width: 18px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: right;
+}
+
+/* Segmented control */
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-2);
+  border-radius: 11px;
+}
+
+.segment {
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 550;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.segment.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(15, 17, 21, 0.12);
+}
+
+.segment:disabled {
+  cursor: default;
+}
+
+/* Fields */
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field > span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.field-head .link {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Wrapped-mode recovery-phrase section on the connect screen. */
+.secret {
+  display: grid;
+  gap: 10px;
+}
+
+input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+input::placeholder {
+  color: color-mix(in srgb, var(--muted) 75%, transparent);
+}
+
+input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* Buttons */
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.btn {
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    opacity 0.15s,
+    transform 0.05s;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn.primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--accent-text);
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 88%, #000);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.link {
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 550;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.link.small {
+  font-size: 13px;
+  margin-left: auto;
+}
+
+.link:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.hint.center {
+  text-align: center;
+}
+
+.status {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.status.error {
+  color: var(--error);
+}
+
+.status.ok {
+  color: var(--ok);
+}
+
+/* Account view */
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+
+.badge.chain-solana {
+  background: color-mix(in srgb, #9945ff 16%, transparent);
+  color: #7a37cc;
+}
+
+.address {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--field);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+}
+
+.address:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+.copy {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mono {
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.balance {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.amount {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.symbol {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.qr-frame {
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.qr svg {
+  display: block;
+  width: 180px;
+  height: 180px;
+  shape-rendering: crispedges;
+}
+
+/* Send */
+.send {
+  display: grid;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.send-row {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+}
+
+.field.grow {
+  flex: 1;
+}
+
+.send-btn {
+  flex: 0 0 auto;
+  min-width: 92px;
+  height: 41px;
+}
+
+.reveal {
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+}
+
+.reveal summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 550;
+}
+
+.break {
+  display: block;
+  margin-top: 8px;
+  /* `overflow-wrap: anywhere` (not `word-break: break-all`) — the former reduces
+     min-content intrinsic size so a long base64 token can't widen the grid
+     track and push the centered card off-screen. */
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+a {
+  color: var(--accent);
+}
+
+/* Testnet faucet CTA: a subtle accent link riding on the balance baseline,
+   pushed to the right of the amount (replaces the old manual Refresh link). */
+.faucet {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.faucet:hover {
+  text-decoration: underline;
+}
+
+/* Pre-filled self-recipient: same box as `.address`, accent-tinted so it reads
+   as a send target rather than the account's own address shown above. */
+.recipient-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--field));
+}
+
+.recipient-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.recipient-addr {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.reveal-recipient {
+  justify-self: start;
+}
+
+/* Embedded in the post's iframe: drop the viewport-filling height and big
+   margins so the demo hugs its content and `embed.ts` can report a tight
+   height. Standalone (opened in its own tab) keeps the centered full layout. */
+html[data-embedded="true"] body {
+  min-height: 0;
+  padding: 16px;
+}
+
+html[data-embedded="true"] .app {
+  margin: 8px auto;
+}

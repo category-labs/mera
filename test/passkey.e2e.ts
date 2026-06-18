@@ -1,0 +1,188 @@
+import { expect, test } from "@playwright/test";
+import { startTestServer } from "./server.js";
+
+test("creates a PRF-capable passkey and returns stable PRF output @e2e", async ({
+  page,
+}) => {
+  const server = await startTestServer();
+  const client = await page.context().newCDPSession(page);
+
+  try {
+    await client.send("WebAuthn.enable");
+    await client.send("WebAuthn.addVirtualAuthenticator", {
+      options: {
+        protocol: "ctap2",
+        ctap2Version: "ctap2_1",
+        transport: "internal",
+        hasResidentKey: true,
+        hasUserVerification: true,
+        isUserVerified: true,
+        hasPrf: true,
+        automaticPresenceSimulation: true,
+      },
+    });
+
+    await page.goto(server.url);
+
+    const result = await page.evaluate(async () => {
+      const account = await import("/dist/index.js");
+      const salt = new Uint8Array(32).fill(5);
+      const otherSalt = new Uint8Array(32).fill(6);
+      const credential = await account.createPasskey({
+        rp: { id: "localhost", name: "Mera Test" },
+        user: {
+          id: crypto.getRandomValues(new Uint8Array(32)),
+          name: "monadbull",
+          displayName: "monadbull",
+        },
+        prfSalt: salt,
+      });
+      const second = await account.getPasskeyPrfOutput({
+        rpId: "localhost",
+        credentialId: credential.credentialId,
+        prfSalt: salt,
+      });
+      const other = await account.getPasskeyPrfOutput({
+        rpId: "localhost",
+        credentialId: credential.credentialId,
+        prfSalt: otherSalt,
+      });
+
+      return {
+        credentialId: credential.credentialId,
+        atCreate: credential.prfOutput
+          ? Array.from(credential.prfOutput)
+          : null,
+        second: Array.from(second.prfOutput),
+        other: Array.from(other.prfOutput),
+      };
+    });
+
+    expect(result.credentialId).toMatch(/^[A-Za-z0-9_-]+$/u);
+    expect(result.atCreate).not.toBeNull();
+    expect(result.atCreate).toHaveLength(32);
+    expect(result.atCreate).toEqual(result.second);
+    expect(result.atCreate).not.toEqual(result.other);
+  } finally {
+    await client.send("WebAuthn.disable").catch(() => undefined);
+    await server.close();
+  }
+});
+
+test("createPasskeyWithPrfOutput returns the first PRF output in one call @e2e", async ({
+  page,
+}) => {
+  const server = await startTestServer();
+  const client = await page.context().newCDPSession(page);
+
+  try {
+    await client.send("WebAuthn.enable");
+    await client.send("WebAuthn.addVirtualAuthenticator", {
+      options: {
+        protocol: "ctap2",
+        ctap2Version: "ctap2_1",
+        transport: "internal",
+        hasResidentKey: true,
+        hasUserVerification: true,
+        isUserVerified: true,
+        hasPrf: true,
+        automaticPresenceSimulation: true,
+      },
+    });
+
+    await page.goto(server.url);
+
+    const result = await page.evaluate(async () => {
+      const mera = await import("/dist/index.js");
+      const prfSalt = crypto.getRandomValues(new Uint8Array(32));
+      const created = await mera.createPasskeyWithPrfOutput({
+        rp: { id: "localhost", name: "Mera Test" },
+        user: {
+          id: crypto.getRandomValues(new Uint8Array(32)),
+          name: "monadbull",
+          displayName: "monadbull",
+        },
+        prfSalt,
+      });
+
+      // Same salt against the same credential reproduces the PRF output.
+      const repeated = await mera.getPasskeyPrfOutput({
+        rpId: "localhost",
+        credentialId: created.credentialId,
+        prfSalt: created.prfSalt,
+      });
+
+      return {
+        credentialId: created.credentialId,
+        prfSalt: Array.from(created.prfSalt),
+        prfOutput: Array.from(created.prfOutput),
+        repeated: Array.from(repeated.prfOutput),
+      };
+    });
+
+    expect(result.credentialId).toMatch(/^[A-Za-z0-9_-]+$/u);
+    expect(result.prfSalt).toHaveLength(32);
+    expect(result.prfOutput).toHaveLength(32);
+    expect(result.prfOutput).toEqual(result.repeated);
+  } finally {
+    await client.send("WebAuthn.disable").catch(() => undefined);
+    await server.close();
+  }
+});
+
+test("createSecretVault round-trips a secret through a real passkey ceremony @e2e", async ({
+  page,
+}) => {
+  const server = await startTestServer();
+  const client = await page.context().newCDPSession(page);
+
+  try {
+    await client.send("WebAuthn.enable");
+    await client.send("WebAuthn.addVirtualAuthenticator", {
+      options: {
+        protocol: "ctap2",
+        ctap2Version: "ctap2_1",
+        transport: "internal",
+        hasResidentKey: true,
+        hasUserVerification: true,
+        isUserVerified: true,
+        hasPrf: true,
+        automaticPresenceSimulation: true,
+      },
+    });
+
+    await page.goto(server.url);
+
+    const result = await page.evaluate(async () => {
+      const mera = await import("/dist/index.js");
+      const phrase =
+        "legal winner thank year wave sausage worth useful legal winner thank yellow";
+      const credential = await mera.createPasskeyWithPrfOutput({
+        rp: { id: "localhost", name: "Mera Test" },
+        user: {
+          id: crypto.getRandomValues(new Uint8Array(32)),
+          name: "monadbull",
+          displayName: "monadbull",
+        },
+        prfSalt: crypto.getRandomValues(new Uint8Array(32)),
+      });
+      const vault = await mera.createSecretVault({
+        credential,
+        secret: new TextEncoder().encode(phrase),
+      });
+      // Re-run the ceremony from the persisted vault, exactly as a reveal would.
+      const { prfOutput } = await mera.getSecretVaultPrfOutput({
+        rpId: "localhost",
+        vault: mera.parseSecretVault(JSON.stringify(vault)),
+      });
+      const secret = await mera.unwrapSecretVault({ vault, prfOutput });
+
+      return { phrase, revealed: new TextDecoder().decode(secret) };
+    });
+
+    expect(result.revealed).toBe(result.phrase);
+  } finally {
+    await client.send("WebAuthn.disable").catch(() => undefined);
+    await server.close();
+  }
+});

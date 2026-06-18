@@ -1,0 +1,35 @@
+import { defineMermaidSetup } from "@slidev/types";
+
+export default defineMermaidSetup(() => ({
+  theme: "base",
+  themeVariables: {
+    background: "#fafaf7",
+    primaryColor: "#fafaf7",
+    primaryTextColor: "#1a1a1a",
+    primaryBorderColor: "#1a1a1a",
+    secondaryColor: "#f2efe7",
+    tertiaryColor: "#fafaf7",
+    lineColor: "#1a1a1a",
+    textColor: "#1a1a1a",
+    nodeBorder: "#1a1a1a",
+    clusterBkg: "#f2efe7",
+    clusterBorder: "#a35a2a",
+    edgeLabelBackground: "#fafaf7",
+    fontFamily: "Newsreader, Georgia, serif",
+    fontSize: "15px",
+    // sequence diagram
+    actorBkg: "#fafaf7",
+    actorBorder: "#1a1a1a",
+    actorTextColor: "#1a1a1a",
+    actorLineColor: "#8a8a85",
+    signalColor: "#1a1a1a",
+    signalTextColor: "#1a1a1a",
+    labelBoxBkgColor: "#fafaf7",
+    labelBoxBorderColor: "#1a1a1a",
+    labelTextColor: "#1a1a1a",
+    loopTextColor: "#1a1a1a",
+    activationBorderColor: "#a35a2a",
+    activationBkgColor: "#f2efe7",
+    sequenceNumberColor: "#fafaf7",
+  },
+}));

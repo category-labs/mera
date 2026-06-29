@@ -147,7 +147,7 @@ type Ed25519SigningSession = {
    * Clears the active private key and permanently locks this session.
    *
    * @remarks Side effects: overwrites the session-owned seed copy with zeros and makes future signing or export fail.
-   * @remarks Caller assumptions: do not call `lock` while a sign on the same session is still in flight; the calls race and the in-flight signature's result is unspecified.
+   * @remarks If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
    */
   lock(): void;
 };

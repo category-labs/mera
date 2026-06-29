@@ -32,8 +32,8 @@ test("creates a PRF-capable passkey and returns stable PRF output @e2e", async (
         rp: { id: "localhost", name: "Mera Test" },
         user: {
           id: crypto.getRandomValues(new Uint8Array(32)),
-          name: "monadbull",
-          displayName: "monadbull",
+          name: "nad",
+          displayName: "nad",
         },
         prfSalt: salt,
       });
@@ -99,8 +99,8 @@ test("createPasskeyWithPrfOutput returns the first PRF output in one call @e2e",
         rp: { id: "localhost", name: "Mera Test" },
         user: {
           id: crypto.getRandomValues(new Uint8Array(32)),
-          name: "monadbull",
-          displayName: "monadbull",
+          name: "nad",
+          displayName: "nad",
         },
         prfSalt,
       });
@@ -161,8 +161,8 @@ test("createSecretVault round-trips a secret through a real passkey ceremony @e2
         rp: { id: "localhost", name: "Mera Test" },
         user: {
           id: crypto.getRandomValues(new Uint8Array(32)),
-          name: "monadbull",
-          displayName: "monadbull",
+          name: "nad",
+          displayName: "nad",
         },
         prfSalt: crypto.getRandomValues(new Uint8Array(32)),
       });

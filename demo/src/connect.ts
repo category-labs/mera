@@ -63,7 +63,7 @@ type ConnectResult = { wallet: ConnectedWallet; accountCount: number };
 
 const RP_NAME = "Mera Demo";
 const VAULT_KEY = "mera.demo.accountVault";
-const DEFAULT_USER = "monadbull";
+const DEFAULT_USER = "nad";
 
 const rpId = location.hostname;
 

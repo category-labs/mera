@@ -27,6 +27,8 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 - README examples should reflect actual tested behavior.
 - Keep documentation prose neutral: name keys, secrets, and passkeys plainly ("the passkey", "one encrypted secret") rather than attributing them to the reader ("your passkey", "a secret you provide" / "you own").
 - Internal helpers with non-obvious invariants should have short comments or docstrings.
+- Document observable behavior, not caller instructions: state what a function does to its inputs and outputs (for example, "the input is copied before use; the original buffer is not modified") rather than what the caller may or should do with them. Callers derive correct usage from the stated facts.
+- When a comment or doc gives a rationale, explain the mechanism, not just the claim: a reader should see *why* from the text (for example, "signing reads the buffer after an await, so copy it first") rather than having to reconstruct the cause.
 
 ### TypeScript Conventions
 

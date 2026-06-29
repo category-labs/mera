@@ -102,6 +102,7 @@ type Secp256k1SigningSession = {
    * @param digest32 - Exactly 32 bytes to sign.
    * @returns A compact secp256k1 ECDSA signature with its recovery ID.
    * @remarks Caller assumptions: `digest32` must already be the digest to sign; this method does not hash it.
+   * @remarks `digest32` is copied before use; the original buffer is not modified.
    * @throws PasskeyAccountError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
    * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
    */
@@ -117,6 +118,7 @@ type Secp256k1SigningSession = {
    * Clears the active private key and permanently locks this session.
    *
    * @remarks Side effects: overwrites the session-owned private-key copy with zeros and makes future signing or export fail.
+   * @remarks Caller assumptions: do not call `lock` while a sign on the same session is still in flight; the calls race and the in-flight signature's result is unspecified.
    */
   lock(): void;
 };
@@ -130,6 +132,7 @@ type Ed25519SigningSession = {
    *
    * @param message - Message bytes to sign. Hashing happens inside Ed25519 itself.
    * @returns A 64-byte Ed25519 signature (`R || s`).
+   * @remarks `message` is copied before use; the original buffer is not modified.
    * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
    */
   signMessage(message: Uint8Array): Promise<Uint8Array>;
@@ -144,6 +147,7 @@ type Ed25519SigningSession = {
    * Clears the active private key and permanently locks this session.
    *
    * @remarks Side effects: overwrites the session-owned seed copy with zeros and makes future signing or export fail.
+   * @remarks Caller assumptions: do not call `lock` while a sign on the same session is still in flight; the calls race and the in-flight signature's result is unspecified.
    */
   lock(): void;
 };

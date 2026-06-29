@@ -1,12 +1,12 @@
 import * as ed25519 from "@noble/ed25519";
 import { sha512 } from "@noble/hashes/sha2.js";
+import { copyBytes } from "./encoding.js";
 import { PasskeyAccountError } from "./errors.js";
 import { createLockableKey } from "./session.js";
 import type {
   CreateSigningSessionOptions,
   Ed25519SigningSession,
 } from "./types.js";
-import { copyBytes } from "./encoding.js";
 
 /**
  * Derives the 32-byte Ed25519 public key for a 32-byte Ed25519 seed.
@@ -50,7 +50,7 @@ function createEd25519SigningSession({
   return {
     publicKey,
     async signMessage(message: Uint8Array): Promise<Uint8Array> {
-      // Copy the message before async work so the buffer cannot be modified before signing.
+      // Signing reads the buffer after an await; copy it now so a later mutation can't change the signed bytes.
       const messageCopy = copyBytes(message);
       return new Uint8Array(await ed25519.signAsync(messageCopy, key.use()));
     },

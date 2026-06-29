@@ -1,4 +1,5 @@
 import * as secp from "@noble/secp256k1";
+import { copyBytes } from "./encoding.js";
 import { PasskeyAccountError } from "./errors.js";
 import { createLockableKey } from "./session.js";
 import type {
@@ -6,7 +7,6 @@ import type {
   Secp256k1Signature,
   Secp256k1SigningSession,
 } from "./types.js";
-import { copyBytes } from "./encoding.js";
 
 /**
  * Derives an uncompressed secp256k1 public key from a private key.
@@ -76,11 +76,9 @@ function createSecp256k1SigningSession({
         );
       }
 
-      // Copy the digest before async work so the buffer cannot be modified before signing.
+      // Signing reads the buffer after an await; copy it now so a later mutation can't change the signed bytes.
       const digest = copyBytes(digest32);
       const unlockedKey = key.use();
-      // `digest32` is passed through without copying: noble's `prepMsg` returns the
-      // same reference unchanged when `prehash: false`.
       const signature = await secp.signAsync(digest, unlockedKey, {
         format: "recovered",
         lowS: true,

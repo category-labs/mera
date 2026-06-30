@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { copyPrfOutput } from "../dist/passkey.js";
+import { expectError } from "./helpers.js";
 
 test("copyPrfOutput copies a plain ArrayBuffer without aliasing", () => {
   const source = new Uint8Array([1, 2, 3, 4]);
@@ -42,9 +43,9 @@ test("copyPrfOutput accepts the boundary byte values 0 and 255", () => {
 test("copyPrfOutput rejects non-byte array values instead of coercing them", () => {
   // Uint8Array.from would silently coerce each of these (256 -> 0, -1 -> 255,
   // 1.5 -> 1, NaN -> 0). The result becomes HKDF key material, so a malformed
-  // plain array must fail loudly instead.
-  expect(() => copyPrfOutput([256])).toThrow(/byte values/);
-  expect(() => copyPrfOutput([-1])).toThrow(/byte values/);
-  expect(() => copyPrfOutput([1.5])).toThrow(/byte values/);
-  expect(() => copyPrfOutput([Number.NaN])).toThrow(/byte values/);
+  // plain array must fail with PRF_UNAVAILABLE instead.
+  expectError(() => copyPrfOutput([256]), "PRF_UNAVAILABLE");
+  expectError(() => copyPrfOutput([-1]), "PRF_UNAVAILABLE");
+  expectError(() => copyPrfOutput([1.5]), "PRF_UNAVAILABLE");
+  expectError(() => copyPrfOutput([Number.NaN]), "PRF_UNAVAILABLE");
 });

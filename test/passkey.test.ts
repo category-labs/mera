@@ -34,3 +34,17 @@ test("copyPrfOutput copies a plain array of byte values", () => {
   expect(out).toBeInstanceOf(Uint8Array);
   expect([...out]).toEqual([10, 20, 30]);
 });
+
+test("copyPrfOutput accepts the boundary byte values 0 and 255", () => {
+  expect([...copyPrfOutput([0, 255])]).toEqual([0, 255]);
+});
+
+test("copyPrfOutput rejects non-byte array values instead of coercing them", () => {
+  // Uint8Array.from would silently coerce each of these (256 -> 0, -1 -> 255,
+  // 1.5 -> 1, NaN -> 0). The result becomes HKDF key material, so a malformed
+  // plain array must fail loudly instead.
+  expect(() => copyPrfOutput([256])).toThrow(/byte values/);
+  expect(() => copyPrfOutput([-1])).toThrow(/byte values/);
+  expect(() => copyPrfOutput([1.5])).toThrow(/byte values/);
+  expect(() => copyPrfOutput([Number.NaN])).toThrow(/byte values/);
+});

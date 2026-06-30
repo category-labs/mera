@@ -1,6 +1,6 @@
 import * as secp from "@noble/secp256k1";
 import { PasskeyAccountError } from "./errors.js";
-import { createLockableKey } from "./session.js";
+import { createSigningKey } from "./session.js";
 import type {
   CreateSigningSessionOptions,
   Secp256k1Signature,
@@ -56,16 +56,18 @@ function normalizeSecp256k1PublicKey(publicKey: Uint8Array): Uint8Array {
  * `signDigest` signs exactly 32 bytes without prehashing. Calling `lock` zeroes the active private-key copy and makes future signing or export fail.
  *
  * @param options - Signing session inputs.
- * @param options.consumePrivateKey - secp256k1 private key. The session takes ownership: the caller's buffer is zeroed once the session has copied the bytes.
+ * @param options.consumePrivateKey - secp256k1 private key. Zeroed before this call returns or throws.
  * @returns An unlocked secp256k1 signing session.
- * @remarks Side effects: copies `consumePrivateKey` into session memory and then zeroes the caller's buffer; `lock()` later zeroes the session-owned copy.
+ * @remarks Side effects: zeroes `consumePrivateKey` on every path; on success first copies it into session memory, which `lock()` later zeroes.
  * @throws PasskeyAccountError with code `INPUT_INVALID` when `consumePrivateKey` is not a valid secp256k1 scalar.
  */
 function createSecp256k1SigningSession({
   consumePrivateKey,
 }: CreateSigningSessionOptions): Secp256k1SigningSession {
-  const publicKey = getSecp256k1PublicKey(consumePrivateKey);
-  const key = createLockableKey(consumePrivateKey);
+  const { key, publicKey } = createSigningKey(
+    consumePrivateKey,
+    getSecp256k1PublicKey,
+  );
 
   return {
     publicKey,

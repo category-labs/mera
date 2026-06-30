@@ -1,7 +1,7 @@
 import * as ed25519 from "@noble/ed25519";
 import { sha512 } from "@noble/hashes/sha2.js";
 import { PasskeyAccountError } from "./errors.js";
-import { createLockableKey } from "./session.js";
+import { createSigningKey } from "./session.js";
 import type {
   CreateSigningSessionOptions,
   Ed25519SigningSession,
@@ -37,16 +37,18 @@ function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array {
  * `signMessage` signs the raw message bytes with Ed25519 (Ed25519pure); the curve hashes internally with SHA-512.
  *
  * @param options - Signing session inputs.
- * @param options.consumePrivateKey - Ed25519 seed. Must be 32 bytes. The session takes ownership: the caller's buffer is zeroed once the session has copied the bytes.
+ * @param options.consumePrivateKey - Ed25519 seed. Must be 32 bytes. Zeroed before this call returns or throws.
  * @returns An unlocked Ed25519 signing session.
- * @remarks Side effects: copies `consumePrivateKey` into session memory and then zeroes the caller's buffer; `lock()` later zeroes the session-owned copy.
+ * @remarks Side effects: zeroes `consumePrivateKey` on every path; on success first copies it into session memory, which `lock()` later zeroes.
  * @throws PasskeyAccountError with code `INPUT_INVALID` when `consumePrivateKey` is not 32 bytes.
  */
 function createEd25519SigningSession({
   consumePrivateKey,
 }: CreateSigningSessionOptions): Ed25519SigningSession {
-  const publicKey = getEd25519PublicKey(consumePrivateKey);
-  const key = createLockableKey(consumePrivateKey);
+  const { key, publicKey } = createSigningKey(
+    consumePrivateKey,
+    getEd25519PublicKey,
+  );
 
   return {
     publicKey,

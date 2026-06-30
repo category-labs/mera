@@ -87,7 +87,7 @@ type CreateSigningSessionOptions = {
   /**
    * Curve private key. Must be exactly 32 bytes; secp256k1 must also be a valid scalar.
    *
-   * The session takes ownership of this buffer: once it has copied the bytes into session-owned memory, it zeros the caller's `Uint8Array`. Hand a fresh copy if you need to keep the bytes available elsewhere.
+   * Zeroed before the call returns or throws. Pass a fresh copy if the bytes are needed elsewhere.
    */
   consumePrivateKey: Uint8Array;
 };

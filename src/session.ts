@@ -26,31 +26,45 @@ type LockableKey = {
 };
 
 /**
- * Copies a private key into session-owned memory and zeroes the caller's buffer.
+ * Consumes a private key into a lockable signing key and derives its public key.
  *
- * @param consumePrivateKey - Private key the session takes ownership of. Zeroed once copied.
- * @returns A {@link LockableKey} gating access on lock state.
- * @remarks Side effects: copies `consumePrivateKey` into session memory and then zeroes the caller's buffer.
+ * The caller's buffer is zeroed before this function returns or throws.
+ *
+ * @param consumePrivateKey - Private key to consume. Zeroed before this function returns or throws.
+ * @param derivePublicKey - Derives the public key from the private key; a throw doubles as private-key validation.
+ * @returns The {@link LockableKey} handle gating access on lock state, paired with the derived public key.
+ * @remarks Side effects: zeroes `consumePrivateKey` on every path; on success first copies it into session memory, which `lock()` later zeroes.
+ * @throws Rethrows whatever `derivePublicKey` throws, after zeroing `consumePrivateKey`.
  */
-function createLockableKey(consumePrivateKey: Uint8Array): LockableKey {
-  let activePrivateKey: Uint8Array | undefined = copyBytes(consumePrivateKey);
-  consumePrivateKey.fill(0);
+function createSigningKey(
+  consumePrivateKey: Uint8Array,
+  derivePublicKey: (privateKey: Uint8Array) => Uint8Array,
+): { key: LockableKey; publicKey: Uint8Array } {
+  try {
+    // Derive (which validates) before copying, so an invalid key is never copied into session memory.
+    const publicKey = derivePublicKey(consumePrivateKey);
+    let activePrivateKey: Uint8Array | undefined = copyBytes(consumePrivateKey);
 
-  return {
-    use(): Uint8Array {
-      return requireUnlocked(activePrivateKey);
-    },
-    exportCopy(): Uint8Array {
-      return new Uint8Array(requireUnlocked(activePrivateKey));
-    },
-    lock(): void {
-      if (activePrivateKey !== undefined) {
-        activePrivateKey.fill(0);
-        activePrivateKey = undefined;
-      }
-    },
-  };
+    const key: LockableKey = {
+      use(): Uint8Array {
+        return requireUnlocked(activePrivateKey);
+      },
+      exportCopy(): Uint8Array {
+        return new Uint8Array(requireUnlocked(activePrivateKey));
+      },
+      lock(): void {
+        if (activePrivateKey !== undefined) {
+          activePrivateKey.fill(0);
+          activePrivateKey = undefined;
+        }
+      },
+    };
+
+    return { key, publicKey };
+  } finally {
+    consumePrivateKey.fill(0);
+  }
 }
 
 export type { LockableKey };
-export { createLockableKey };
+export { createSigningKey };

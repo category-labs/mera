@@ -44,3 +44,14 @@ test("rejects non-32-byte private keys", () => {
     "INPUT_INVALID",
   );
 });
+
+test("zeroes the caller's buffer when the private key is the wrong length", () => {
+  const buffer = new Uint8Array(31).fill(7);
+
+  expectError(
+    () => createEd25519SigningSession({ consumePrivateKey: buffer }),
+    "INPUT_INVALID",
+  );
+
+  expect(buffer).toEqual(new Uint8Array(31));
+});

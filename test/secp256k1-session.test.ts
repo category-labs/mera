@@ -46,3 +46,15 @@ test("rejects non-32-byte digests", async () => {
     code: "INPUT_INVALID",
   });
 });
+
+test("zeroes the caller's buffer when the private key is an invalid scalar", () => {
+  // All-0xff exceeds the curve order, so it is a valid length but invalid scalar.
+  const buffer = new Uint8Array(32).fill(0xff);
+
+  expectError(
+    () => createSecp256k1SigningSession({ consumePrivateKey: buffer }),
+    "INPUT_INVALID",
+  );
+
+  expect(buffer).toEqual(new Uint8Array(32));
+});

@@ -63,7 +63,8 @@ mera requires the WebAuthn PRF extension, discoverable credentials, and user ver
 | iCloud Keychain          | Chrome                            | iOS 18+                     | ✓                          | Safari 18 / iOS 18 (2024-09)                 |
 | iCloud Keychain          | Firefox                           | macOS 15+                   | ✓                          | Firefox 139+ (2025-05)                       |
 | Google Password Manager  | Chrome                            | Android                     | ✓                          | Known by 2026-06                             |
-| Google Password Manager  | Chrome                            | Desktop (signed-in profile) | ✓                          | Chrome 132+ (2025-01)                        |
+| Google Password Manager  | Chrome                            | Desktop (signed-in)         | ✓                          | Chrome 132+ (2025-01)                        |
+| Chrome profile           | Chrome                            | Desktop                     | Not supported (2026-06-01) |                                              |
 | Google Password Manager  | Edge                              | Android                     | ✓                          | Known by 2026-06                             |
 | Windows Password Manager | Edge                              | Windows 11 25H2+            | ✓                          | Windows 11 25H2 + 2026-02 update             |
 | Windows Password Manager | Chrome                            | Windows 11 25H2+            | ✓                          | Chrome 147+ (2026-04)                        |
@@ -72,6 +73,8 @@ mera requires the WebAuthn PRF extension, discoverable credentials, and user ver
 | Bitwarden                | Chrome                            | Desktop                     | Not supported (2026-06-01) |                                              |
 | Dashlane                 | Chrome                            | Desktop                     | Not supported (2026-06-01) |                                              |
 | Proton Pass              | Chrome                            | Desktop                     | ✓                          | Latest public version (2026-06)              |
+
+On desktop Chrome, only passkeys saved to Google Password Manager carry PRF. The local Chrome profile authenticator does not implement the CTAP2 `hmac-secret` extension, so a passkey created there returns `prf.enabled: false`. Creation lands on the local profile authenticator instead of Google Password Manager when Chrome's "Offer to save passwords and passkeys" setting is off, or when a third-party password-manager extension intercepts WebAuthn and relays the browser-fallback ceremony. For the broader PRF compatibility matrix, see Corbado's [Passkeys & WebAuthn PRF for End-to-End Encryption](https://www.corbado.com/blog/passkeys-prf-webauthn).
 
 ## API reference
 

@@ -1,4 +1,5 @@
 import * as secp from "@noble/secp256k1";
+import { copyBytes } from "./encoding.js";
 import { PasskeyAccountError } from "./errors.js";
 import { createSigningKey } from "./session.js";
 import type {
@@ -6,8 +7,6 @@ import type {
   Secp256k1Signature,
   Secp256k1SigningSession,
 } from "./types.js";
-
-const SECP256K1_DIGEST_LENGTH = 32;
 
 /**
  * Derives an uncompressed secp256k1 public key from a private key.
@@ -72,18 +71,17 @@ function createSecp256k1SigningSession({
   return {
     publicKey,
     async signDigest(digest32: Uint8Array): Promise<Secp256k1Signature> {
-      const unlockedKey = key.use();
-
-      if (digest32.length !== SECP256K1_DIGEST_LENGTH) {
+      if (digest32.length !== 32) {
         throw new PasskeyAccountError(
           "INPUT_INVALID",
           "Digest must be 32 bytes",
         );
       }
 
-      // `digest32` is passed through without copying: noble's `prepMsg` returns the
-      // same reference unchanged when `prehash: false`.
-      const signature = await secp.signAsync(digest32, unlockedKey, {
+      // Signing reads the buffer after an await; copy it now so a later mutation can't change the signed bytes.
+      const digest = copyBytes(digest32);
+      const unlockedKey = key.use();
+      const signature = await secp.signAsync(digest, unlockedKey, {
         format: "recovered",
         lowS: true,
         prehash: false,

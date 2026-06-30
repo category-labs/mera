@@ -1,13 +1,12 @@
 import * as ed25519 from "@noble/ed25519";
 import { sha512 } from "@noble/hashes/sha2.js";
+import { copyBytes } from "./encoding.js";
 import { PasskeyAccountError } from "./errors.js";
 import { createSigningKey } from "./session.js";
 import type {
   CreateSigningSessionOptions,
   Ed25519SigningSession,
 } from "./types.js";
-
-const ED25519_SEED_LENGTH = 32;
 
 /**
  * Derives the 32-byte Ed25519 public key for a 32-byte Ed25519 seed.
@@ -18,7 +17,7 @@ const ED25519_SEED_LENGTH = 32;
  * @throws PasskeyAccountError with code `INPUT_INVALID` when `privateKey` is not 32 bytes.
  */
 function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array {
-  if (privateKey.length !== ED25519_SEED_LENGTH) {
+  if (privateKey.length !== 32) {
     throw new PasskeyAccountError(
       "INPUT_INVALID",
       "Ed25519 private key must be 32 bytes",
@@ -53,7 +52,9 @@ function createEd25519SigningSession({
   return {
     publicKey,
     async signMessage(message: Uint8Array): Promise<Uint8Array> {
-      return new Uint8Array(await ed25519.signAsync(message, key.use()));
+      // Signing reads the buffer after an await; copy it now so a later mutation can't change the signed bytes.
+      const messageCopy = copyBytes(message);
+      return new Uint8Array(await ed25519.signAsync(messageCopy, key.use()));
     },
     exportPrivateKey(): Uint8Array {
       return key.exportCopy();

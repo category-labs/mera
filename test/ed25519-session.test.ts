@@ -55,3 +55,23 @@ test("zeroes the caller's buffer when the private key is the wrong length", () =
 
   expect(buffer).toEqual(new Uint8Array(31));
 });
+
+test("signs the message snapshot taken at call time, not later mutations", async () => {
+  const session = createEd25519SigningSession({
+    consumePrivateKey: new Uint8Array(RFC_SECRET),
+  });
+
+  const original = new TextEncoder().encode("mera demo");
+  const message = new Uint8Array(original); // caller-owned buffer we will mutate
+  const pending = session.signMessage(message); // not awaited
+  message.fill(0); // mutate before noble reads the buffer (it reads after its await)
+  const signature = await pending;
+
+  // The signature is over the bytes at call time, not the later mutation.
+  expect(
+    await ed25519.verifyAsync(signature, original, session.publicKey),
+  ).toBe(true);
+  expect(await ed25519.verifyAsync(signature, message, session.publicKey)).toBe(
+    false,
+  );
+});

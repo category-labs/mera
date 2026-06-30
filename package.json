@@ -1,5 +1,5 @@
 {
-  "name": "mera",
+  "name": "@category-labs/mera",
   "version": "0.1.0",
   "description": "Primitive-first passkey-backed signing utilities for secp256k1 (EVM) and Ed25519 (Solana).",
   "type": "module",
@@ -7,20 +7,25 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "sideEffects": false,
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
   ],
   "scripts": {
     "build": "tsc",
+    "clean": "rm -rf dist",
     "check": "biome check .",
     "format": "biome format --write .",
     "lint": "biome lint .",
     "test": "npm run build && playwright test",
-    "test:e2e": "npm run build && playwright test --project=chromium --grep @e2e"
+    "test:e2e": "npm run build && playwright test --project=chromium --grep @e2e",
+    "prepublishOnly": "npm run clean && npm run lint && npm run build"
   },
   "dependencies": {
     "@noble/ed25519": "^3.1.0",
@@ -37,5 +42,28 @@
   "engines": {
     "node": ">=24"
   },
-  "license": "(MIT OR Apache-2.0)"
+  "license": "(MIT OR Apache-2.0)",
+  "keywords": [
+    "passkey",
+    "webauthn",
+    "prf",
+    "secp256k1",
+    "ed25519",
+    "evm",
+    "solana",
+    "signing",
+    "cryptography"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/category-labs/mera.git"
+  },
+  "homepage": "https://github.com/category-labs/mera#readme",
+  "bugs": {
+    "url": "https://github.com/category-labs/mera/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
 }

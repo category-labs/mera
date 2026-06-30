@@ -1,0 +1,62 @@
+name: Mera - Release
+
+# Publishes @category-labs/mera to npm when a version tag is pushed.
+#
+# The artifact is built inside the repo Dockerfile (the single source of truth
+# for the build environment, identical to a local `docker build`). The tarball
+# is then published from the runner so npm provenance can attest to it using the
+# runner's OIDC token (provenance cannot be generated inside the container).
+#
+# Cut a release:
+#   npm version <patch|minor|major>   # bumps package.json + creates the tag
+#   git push --follow-tags
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # required for npm provenance
+
+jobs:
+  release:
+    name: Build (Docker) and publish
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # Build the tarball in the pinned container and extract it to ./out.
+      - name: Build tarball in Docker
+        run: docker build -o type=local,dest=./out .
+
+      - name: Locate tarball
+        id: tarball
+        run: echo "path=$(ls out/*.tgz)" >> "$GITHUB_OUTPUT"
+
+      # Node is only needed on the runner to invoke `npm publish` (with
+      # provenance). The build itself already happened in the container.
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          registry-url: https://registry.npmjs.org
+
+      - name: Guard against publishing an already-published version
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          if npm view "${name}@${version}" version >/dev/null 2>&1; then
+            echo "::error::${name}@${version} is already published. Bump the version."
+            exit 1
+          fi
+
+      # publishConfig in package.json sets access:public + provenance:true.
+      - name: Publish to npm
+        run: npm publish "${{ steps.tarball.outputs.path }}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

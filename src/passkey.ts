@@ -409,9 +409,9 @@ function assertPublicKeyCredential(
  * into a fresh `Uint8Array` that never aliases the input.
  *
  * The typed forms are already constrained to bytes. A plain array-like is not,
- * so each element is validated as an integer in [0, 255] before use; otherwise
- * `Uint8Array.from` would silently coerce malformed values (mod 256, `NaN` -> 0)
- * into HKDF key material instead of failing.
+ * so each element is validated as an integer in [0, 255] while it is copied; a
+ * bare `Uint8Array.from(value)` would instead silently coerce malformed values
+ * (mod 256, `NaN` -> 0) into HKDF key material.
  *
  * @throws PasskeyAccountError with code `PRF_UNAVAILABLE` when a plain array-like
  * contains a value that is not an integer in [0, 255].
@@ -429,20 +429,17 @@ function copyPrfOutput(value: BufferSource | ArrayLike<number>): Uint8Array {
   }
 
   // Plain array-like (for example, 1Password's extension returns a number[]).
-  // Element values are unconstrained here, so reject anything that is not a byte
-  // rather than letting Uint8Array.from coerce it into key material.
-  const bytes = new Uint8Array(value.length);
-  for (let i = 0; i < bytes.length; i++) {
-    const byte = value[i];
+  // Validate each element as it is copied so a non-byte value fails closed
+  // instead of being silently coerced (mod 256, NaN -> 0) into key material.
+  return Uint8Array.from(value, (byte) => {
     if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
       throw new PasskeyAccountError(
         "PRF_UNAVAILABLE",
         "PRF output must contain only byte values (integers 0-255)",
       );
     }
-    bytes[i] = byte;
-  }
-  return bytes;
+    return byte;
+  });
 }
 
 /** Options accepted by `createPasskey`. */

@@ -281,6 +281,8 @@ async function unwrapSecretVault({
  *
  * Only version 1 vaults are accepted. The credential, PRF salt, nonce, and ciphertext are canonicalized to base64url and length-checked.
  *
+ * Fields outside the version-1 schema — unknown top-level keys and unknown `credential` keys — are ignored and absent from the returned vault.
+ *
  * @param value - Secret vault as JSON text or an untrusted object.
  * @returns A canonicalized secret vault.
  * @throws PasskeyAccountError with code `VAULT_FORMAT_INVALID` when required structure, version, or encoded data is invalid.
@@ -371,6 +373,7 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
     );
   }
 
+  // Allowlist: only v1 schema fields are copied, so unknown input keys are dropped.
   return { version: 1, credential, prfSalt, nonce, ciphertext };
 }
 

@@ -101,6 +101,8 @@ Secret-vault flows, demo HD derivation recipes (BIP-39/BIP-32, SLIP-0010), the s
 
 Keys are not protected once unlocked inside a compromised JavaScript runtime. Host apps should serve over HTTPS, use a strict CSP, avoid untrusted scripts, and keep unlocked sessions short-lived — call `session.lock()` as soon as you're done signing.
 
+**Dependency scope.** The published package ships a deliberately minimal dependency tree — the `@noble/*` and `@scure/*` primitives declared in the root manifest. Dependency audits and security alerts apply to that tree. The `demo/` app is a non-published example (`private: true`) with its own, larger dependency tree; those packages never reach consumers and are out of scope for the package's security guarantees.
+
 ## License
 
 Licensed under either of [Apache License](./LICENSE-APACHE), Version

@@ -1,13 +1,16 @@
 # Dependabot version updates.
-# Scope mirrors the "Dependency scope" note in README.md: the published
-# package's dependency tree (root) is kept current here, alongside the CI
-# GitHub Actions. The private demo/ app is out of scope and is intentionally
-# not listed. Minor/patch bumps are grouped into a single PR per ecosystem;
-# major bumps arrive as individual PRs so they can be reviewed on their own.
+# Keeps the root library package current — its runtime dependencies (the
+# shipped surface named in README.md's "Dependency scope" note) and its
+# build/test/lint toolchain — plus the GitHub Actions used by CI. The private
+# demo/ app is intentionally not listed, matching that note's scope.
+# Runtime and tooling bumps are grouped separately so runtime-dependency PRs
+# (the consumer-facing surface) stand on their own; major bumps arrive as
+# individual PRs.
 version: 2
 
 updates:
-  # Published library — the security-relevant dependency tree.
+  # Root library package: runtime dependencies (the shipped surface) and the
+  # build/test/lint toolchain, grouped separately.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -19,9 +22,13 @@ updates:
       prefix: "build"
       include: "scope"
     groups:
-      library:
-        patterns:
-          - "*"
+      library-runtime:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      library-tooling:
+        dependency-type: "development"
         update-types:
           - "minor"
           - "patch"

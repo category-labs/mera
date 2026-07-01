@@ -18,6 +18,10 @@ import { getCrypto, hkdfSha256AesGcmKey, randomBytes } from "./webcrypto.js";
 const PRF_SALT_LENGTH = 32;
 const PRF_OUTPUT_LENGTH = 32;
 const NONCE_LENGTH = 12;
+// AES-256-GCM authentication tag length in bytes (WebCrypto's 128-bit default,
+// since aesGcmEncrypt does not set tagLength). Ciphertext carries its tag, so
+// any authentic ciphertext is at least this long.
+const GCM_TAG_LENGTH = 16;
 
 // HKDF info and AAD for the secret vault. The HKDF info keeps the wrapping key
 // distinct from any other key derived from the same PRF output. The AAD is a
@@ -133,7 +137,7 @@ function readBase64Url(
   value: unknown,
   name: string,
   errorCode: PasskeyAccountErrorCode,
-  expectedLength?: number,
+  byteLength?: number | { min: number },
 ): string {
   if (typeof value !== "string") {
     throw new PasskeyAccountError(errorCode, `${name} must be base64url`);
@@ -148,10 +152,17 @@ function readBase64Url(
     });
   }
 
-  if (expectedLength !== undefined && bytes.length !== expectedLength) {
+  if (typeof byteLength === "number" && bytes.length !== byteLength) {
     throw new PasskeyAccountError(
       errorCode,
-      `${name} must be ${expectedLength} bytes`,
+      `${name} must be ${byteLength} bytes`,
+    );
+  }
+
+  if (typeof byteLength === "object" && bytes.length < byteLength.min) {
+    throw new PasskeyAccountError(
+      errorCode,
+      `${name} must be at least ${byteLength.min} bytes`,
     );
   }
 
@@ -202,13 +213,8 @@ async function createSecretVault({
     credential.credentialId,
     "credential.credentialId",
     "INPUT_INVALID",
+    { min: 1 },
   );
-  if (credentialId.length === 0) {
-    throw new PasskeyAccountError(
-      "INPUT_INVALID",
-      "credential.credentialId must not be empty",
-    );
-  }
 
   if (prfSalt.length !== PRF_SALT_LENGTH) {
     throw new PasskeyAccountError("INPUT_INVALID", "PRF salt must be 32 bytes");
@@ -322,14 +328,8 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
     vault.credential.credentialId,
     "credential.credentialId",
     "VAULT_FORMAT_INVALID",
+    { min: 1 },
   );
-
-  if (credentialId.length === 0) {
-    throw new PasskeyAccountError(
-      "VAULT_FORMAT_INVALID",
-      "credential.credentialId must not be empty",
-    );
-  }
 
   const credential: PasskeySecretVault["credential"] = { credentialId };
 
@@ -364,14 +364,8 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
     vault.ciphertext,
     "ciphertext",
     "VAULT_FORMAT_INVALID",
+    { min: GCM_TAG_LENGTH },
   );
-
-  if (ciphertext.length === 0) {
-    throw new PasskeyAccountError(
-      "VAULT_FORMAT_INVALID",
-      "ciphertext must not be empty",
-    );
-  }
 
   // Allowlist: only v1 schema fields are copied, so unknown input keys are dropped.
   return { version: 1, credential, prfSalt, nonce, ciphertext };

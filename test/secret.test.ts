@@ -165,6 +165,27 @@ test("parseSecretVault rejects empty ciphertext", async () => {
   );
 });
 
+test("parseSecretVault rejects a non-empty ciphertext shorter than the GCM tag", async () => {
+  const vault = await createTestVault();
+
+  // 20 base64url chars decode to 15 bytes: one byte short of the 16-byte
+  // AES-GCM tag, so it cannot be an authentic ciphertext even though the
+  // encoded string is non-empty.
+  expectError(
+    () => parseSecretVault({ ...vault, ciphertext: "A".repeat(20) }),
+    "VAULT_FORMAT_INVALID",
+  );
+});
+
+test("parseSecretVault accepts a ciphertext of exactly the GCM tag length", async () => {
+  const vault = await createTestVault();
+
+  // 22 base64url chars decode to 16 bytes: the shortest structurally valid
+  // AES-GCM output (a bare tag), so parsing passes it through unchanged.
+  const parsed = parseSecretVault({ ...vault, ciphertext: "A".repeat(22) });
+  expect(parsed.ciphertext).toBe("A".repeat(22));
+});
+
 test("createSecretVault rejects an empty secret", async () => {
   await expect(
     createSecretVault({

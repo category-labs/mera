@@ -33,7 +33,9 @@ updates:
           - "minor"
           - "patch"
 
-  # GitHub Actions used by CI workflows — keeps action pins on the latest release.
+  # GitHub Actions in CI. The workflows track floating major tags
+  # (e.g. actions/checkout@v7), which already pick up minor and patch
+  # releases; Dependabot opens a PR when a new major tag is available.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -45,10 +47,3 @@ updates:
     commit-message:
       prefix: "ci"
       include: "scope"
-    groups:
-      github-actions:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"

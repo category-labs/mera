@@ -1,4 +1,4 @@
-import type { EvmAddress, Secp256k1SigningSession } from "mera";
+import type { EvmAddress, Secp256k1SigningSession } from "@category-labs/mera";
 import {
   type ReactElement,
   useCallback,

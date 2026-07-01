@@ -1,7 +1,29 @@
 {
-  "name": "mera",
+  "name": "@category-labs/mera",
   "version": "0.1.0",
   "description": "Primitive-first passkey-backed signing utilities for secp256k1 (EVM) and Ed25519 (Solana).",
+  "keywords": [
+    "passkey",
+    "webauthn",
+    "prf",
+    "secp256k1",
+    "ed25519",
+    "ethereum",
+    "evm",
+    "solana",
+    "signing",
+    "crypto"
+  ],
+  "homepage": "https://github.com/category-labs/mera#readme",
+  "bugs": {
+    "url": "https://github.com/category-labs/mera/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/category-labs/mera.git"
+  },
+  "license": "(MIT OR Apache-2.0)",
+  "author": "Category Labs",
   "type": "module",
   "exports": {
     ".": {
@@ -12,11 +34,20 @@
   "sideEffects": false,
   "files": [
     "dist",
-    "README.md"
+    "src",
+    "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
   ],
+  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc",
+    "prepack": "npm run build",
     "check": "biome check .",
+    "check:pack": "npm run build && node scripts/verify-tarball.mjs && publint --strict",
     "format": "biome format --write .",
     "lint": "biome lint .",
     "test": "npm run build && playwright test",
@@ -32,10 +63,10 @@
     "@biomejs/biome": "2.5.0",
     "@playwright/test": "^1.61.0",
     "@types/node": "^25.9.3",
+    "publint": "^0.3.21",
     "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=24"
-  },
-  "license": "(MIT OR Apache-2.0)"
+  }
 }

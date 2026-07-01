@@ -17,7 +17,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      mera: libEntry,
+      "@category-labs/mera": libEntry,
     },
   },
   server: {

@@ -14,7 +14,7 @@ import {
   parseSecretVault,
   type Secp256k1SigningSession,
   unwrapSecretVault,
-} from "mera";
+} from "@category-labs/mera";
 import {
   deriveEthereumPrivateKey,
   deriveSolanaSeed,

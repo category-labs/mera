@@ -1,3 +1,12 @@
+### Core Values
+
+Simplicity, elegance, and correctness are the bar for everything here — code, documentation, tests, and examples alike.
+
+- Correctness comes first: prefer the obviously correct implementation over a shorter or cleverer one.
+- Write the simplest code that solves the problem; reach for a plainer construct over a clever one a reader has to decode.
+- Treat elegance as what remains after removing the unnecessary — fewer moving parts and clearer names, not more abstraction.
+- Write documentation in plain language: explain things directly, avoid jargon, and define a domain term only when the reader genuinely needs it.
+
 ### API Design Philosophy
 
 This repository is a library. Its API is part of its documentation.

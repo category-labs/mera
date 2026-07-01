@@ -12,15 +12,30 @@ import { cachePerNetwork, type NetworkMode } from "../network";
 
 const SOLANA_MAINNET_RPC_URL = "https://solana-rpc.publicnode.com";
 
-// Genesis hashes uniquely identify each Solana cluster. Mirrors the chain-id
-// probe in `getEthereumContext` so the cluster is resolved from the RPC itself
-// rather than guessed from the URL — many providers (Helius, publicnode, …)
-// host all clusters under hostnames that don't contain the cluster name.
-const GENESIS_HASH_TO_CLUSTER: Record<string, Cluster> = {
-  "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d": "mainnet-beta",
-  EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG: "devnet",
-  "4uhcVJyU9pJkvQyS88uRDiswHXSCkY3zQawwpjk2NsNY": "testnet",
-};
+// Each Solana cluster the demo recognizes, keyed by genesis hash and tagged
+// with the network mode it belongs to. Resolution looks the RPC's genesis hash
+// up here and requires the mode to match, so the "Testnet"/"Mainnet" toggle can
+// never disagree with the cluster that is signed for and broadcast to. Mirrors
+// the chain-id table in `ethereum.ts`.
+//
+// The genesis hash identifies the cluster from the RPC itself rather than
+// guessing from the URL — many providers (Helius, publicnode, …) host every
+// cluster under hostnames that don't contain the cluster name.
+const KNOWN_CLUSTERS: Record<string, { cluster: Cluster; mode: NetworkMode }> =
+  {
+    "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d": {
+      cluster: "mainnet-beta",
+      mode: "mainnet",
+    },
+    EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG: {
+      cluster: "devnet",
+      mode: "testnet",
+    },
+    "4uhcVJyU9pJkvQyS88uRDiswHXSCkY3zQawwpjk2NsNY": {
+      cluster: "testnet",
+      mode: "testnet",
+    },
+  };
 
 type SolanaContext = {
   cluster: Cluster;
@@ -44,10 +59,13 @@ async function resolveSolanaContext(
   const rpcUrl = rpcUrlForMode(networkMode);
   const connection = new Connection(rpcUrl, "confirmed");
   const genesis = await connection.getGenesisHash();
-  const fallbackCluster: Cluster =
-    networkMode === "mainnet" ? "mainnet-beta" : "devnet";
-  const cluster = GENESIS_HASH_TO_CLUSTER[genesis] ?? fallbackCluster;
-  return { cluster, connection, rpcUrl, symbol: "SOL" };
+  const known = KNOWN_CLUSTERS[genesis];
+  if (!known || known.mode !== networkMode) {
+    throw new Error(
+      `The ${networkMode} RPC reports an unrecognized or mismatched Solana cluster.`,
+    );
+  }
+  return { cluster: known.cluster, connection, rpcUrl, symbol: "SOL" };
 }
 
 /**

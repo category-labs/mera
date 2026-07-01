@@ -3,7 +3,6 @@ import {
   type Chain,
   createPublicClient,
   createWalletClient as createViemTransactionClient,
-  defineChain,
   type HttpTransport,
   http,
   type PublicClient,
@@ -14,12 +13,16 @@ import { cachePerNetwork, type NetworkMode } from "../network";
 
 const MONAD_MAINNET_RPC_URL = "https://rpc.monad.xyz";
 
-const KNOWN_CHAINS: Record<number, Chain> = {
-  [mainnet.id]: mainnet,
-  [sepolia.id]: sepolia,
-  [foundry.id]: foundry,
-  [monad.id]: monad,
-  [monadTestnet.id]: monadTestnet,
+// Each chain the demo recognizes, keyed by chain id and tagged with the network
+// mode it belongs to. Resolution looks the RPC's chain id up here and requires
+// the mode to match, so the "Testnet"/"Mainnet" toggle can never disagree with
+// the chain that is signed for and broadcast to. Add a row to support a new one.
+const KNOWN_CHAINS: Record<number, { chain: Chain; mode: NetworkMode }> = {
+  [mainnet.id]: { chain: mainnet, mode: "mainnet" },
+  [monad.id]: { chain: monad, mode: "mainnet" },
+  [sepolia.id]: { chain: sepolia, mode: "testnet" },
+  [monadTestnet.id]: { chain: monadTestnet, mode: "testnet" },
+  [foundry.id]: { chain: foundry, mode: "testnet" },
 };
 
 /** A resolved chain paired with a public client bound to it. */
@@ -47,16 +50,17 @@ async function resolveEthereumContext(
   const rpcUrl = rpcUrlForMode(networkMode);
   const bootstrap = createPublicClient({ transport: http(rpcUrl) });
   const id = await bootstrap.getChainId();
-  const chain =
-    KNOWN_CHAINS[id] ??
-    defineChain({
-      id,
-      name: `Chain ${id}`,
-      nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-      rpcUrls: { default: { http: [rpcUrl] } },
-    });
-  const publicClient = createPublicClient({ chain, transport: http(rpcUrl) });
-  return { chain, publicClient, rpcUrl };
+  const known = KNOWN_CHAINS[id];
+  if (!known || known.mode !== networkMode) {
+    throw new Error(
+      `The ${networkMode} RPC reports chain id ${id}, which is not a recognized ${networkMode} chain.`,
+    );
+  }
+  const publicClient = createPublicClient({
+    chain: known.chain,
+    transport: http(rpcUrl),
+  });
+  return { chain: known.chain, publicClient, rpcUrl };
 }
 
 /**

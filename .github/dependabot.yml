@@ -1,11 +1,5 @@
-# Dependabot version updates.
-# Keeps the root library package current — its runtime dependencies (the
-# shipped surface named in README.md's "Dependency scope" note) and its
-# build/test/lint toolchain — plus the GitHub Actions used by CI. The private
-# demo/ app is intentionally not listed, matching that note's scope.
-# Runtime and tooling bumps are grouped separately so runtime-dependency PRs
-# (the consumer-facing surface) stand on their own; major bumps arrive as
-# individual PRs.
+# Dependabot version updates. The private demo/ app is intentionally not
+# covered.
 version: 2
 
 updates:

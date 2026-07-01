@@ -62,7 +62,7 @@ async function resolveSolanaContext(
   const known = KNOWN_CLUSTERS[genesis];
   if (!known || known.mode !== networkMode) {
     throw new Error(
-      `The ${networkMode} RPC reports an unrecognized or mismatched Solana cluster.`,
+      `The ${networkMode} RPC reports genesis hash ${genesis}, which is not a recognized ${networkMode} cluster.`,
     );
   }
   return { cluster: known.cluster, connection, rpcUrl, symbol: "SOL" };

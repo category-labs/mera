@@ -72,6 +72,18 @@ test("parseSecretVault round-trips canonical vault JSON", async () => {
   expect(parseSecretVault(JSON.stringify(vault))).toEqual(vault);
 });
 
+test("parseSecretVault drops fields outside the v1 schema", async () => {
+  const vault = await createTestVault();
+
+  expect(
+    parseSecretVault({
+      ...vault,
+      unknown: "drop me",
+      credential: { ...vault.credential, unknown: "drop me" },
+    }),
+  ).toEqual(vault);
+});
+
 test("parseSecretVault reports VAULT_FORMAT_INVALID for malformed base64url", async () => {
   const vault = await createTestVault();
 

@@ -51,9 +51,14 @@ async function resolveEthereumContext(
   const bootstrap = createPublicClient({ transport: http(rpcUrl) });
   const id = await bootstrap.getChainId();
   const known = KNOWN_CHAINS[id];
-  if (!known || known.mode !== networkMode) {
+  if (!known) {
     throw new Error(
-      `The ${networkMode} RPC reports chain id ${id}, which is not a recognized ${networkMode} chain.`,
+      `The ${networkMode} RPC is on chain id ${id}, which the demo doesn't recognize.`,
+    );
+  }
+  if (known.mode !== networkMode) {
+    throw new Error(
+      `The ${networkMode} RPC is on ${known.chain.name} (chain id ${id}), which belongs to ${known.mode}.`,
     );
   }
   const publicClient = createPublicClient({

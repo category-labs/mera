@@ -1,0 +1,47 @@
+# Dependabot version updates.
+# Scope mirrors the "Dependency scope" note in README.md: the published
+# package's dependency tree (root) is kept current here, alongside the CI
+# GitHub Actions. The private demo/ app is out of scope and is intentionally
+# not listed. Minor/patch bumps are grouped into a single PR per ecosystem;
+# major bumps arrive as individual PRs so they can be reviewed on their own.
+version: 2
+
+updates:
+  # Published library — the security-relevant dependency tree.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "build"
+      include: "scope"
+    groups:
+      library:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions used by CI workflows — keeps action pins on the latest release.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"

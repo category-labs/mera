@@ -14,11 +14,15 @@ const REQUIRED_FILES = [
   "LICENSE-APACHE",
 ];
 
-// `npm pack --dry-run --json` reports the exact tarball file list (running the
-// prepack build first) without writing a .tgz to disk.
-const packOutput = execFileSync("npm", ["pack", "--dry-run", "--json"], {
-  encoding: "utf8",
-});
+// `npm pack --dry-run --json` reports the exact tarball file list without
+// writing a .tgz to disk. `--ignore-scripts` skips the `prepack` rebuild so
+// this inspects the dist `check:pack` already built (and lints with `publint`)
+// rather than building a second time.
+const packOutput = execFileSync(
+  "npm",
+  ["pack", "--dry-run", "--json", "--ignore-scripts"],
+  { encoding: "utf8" },
+);
 const shipped = new Set(
   JSON.parse(packOutput)[0].files.map((entry) => entry.path),
 );

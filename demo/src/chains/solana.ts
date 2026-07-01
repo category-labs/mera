@@ -60,9 +60,14 @@ async function resolveSolanaContext(
   const connection = new Connection(rpcUrl, "confirmed");
   const genesis = await connection.getGenesisHash();
   const known = KNOWN_CLUSTERS[genesis];
-  if (!known || known.mode !== networkMode) {
+  if (!known) {
     throw new Error(
-      `The ${networkMode} RPC reports genesis hash ${genesis}, which is not a recognized ${networkMode} cluster.`,
+      `The ${networkMode} RPC is on genesis hash ${genesis}, which the demo doesn't recognize.`,
+    );
+  }
+  if (known.mode !== networkMode) {
+    throw new Error(
+      `The ${networkMode} RPC is on the ${known.cluster} cluster, which belongs to ${known.mode}.`,
     );
   }
   return { cluster: known.cluster, connection, rpcUrl, symbol: "SOL" };

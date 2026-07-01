@@ -1,4 +1,7 @@
-import { getEvmAddress, type Secp256k1SigningSession } from "mera";
+import {
+  getEvmAddress,
+  type Secp256k1SigningSession,
+} from "@category-labs/mera";
 import {
   type Account,
   type Hex,

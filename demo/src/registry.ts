@@ -1,4 +1,4 @@
-import type { PasskeyCredentialTransport } from "mera";
+import type { PasskeyCredentialTransport } from "@category-labs/mera";
 
 /**
  * Non-secret metadata for a derived wallet created on this device.

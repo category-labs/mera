@@ -1,3 +1,4 @@
+import type { Ed25519SigningSession } from "@category-labs/mera";
 import {
   type Cluster,
   Connection,
@@ -7,7 +8,6 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { Buffer } from "buffer";
-import type { Ed25519SigningSession } from "mera";
 import { cachePerNetwork, type NetworkMode } from "../network";
 
 const SOLANA_MAINNET_RPC_URL = "https://solana-rpc.publicnode.com";

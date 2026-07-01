@@ -19,6 +19,12 @@ mera turns a WebAuthn passkey into stable, authenticator-bound entropy for walle
 
 **Wrapped.** An AES-256-GCM blob holds one secret — a recovery phrase, a private key, any bytes; only the passkey can unlock it. The blob can live in `localStorage`, a backend, or a sync service. Best for hot-wallet UX, returning users who want to sign many transactions per session, and importing an existing wallet.
 
+## Install
+
+```sh
+npm install @category-labs/mera
+```
+
 ## Quick example
 
 A derived-mode skeleton: one passkey ceremony, then app-owned wallet derivation.
@@ -29,7 +35,7 @@ import {
   createSecp256k1SigningSession,
   getEvmAddress,
   getPasskeyPrfOutput,
-} from "mera"
+} from "@category-labs/mera"
 import { derivePrivateKeyWithYourWalletScheme } from "./wallet-derivation"
 
 const rpId = "account.example.com"

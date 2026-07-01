@@ -1,4 +1,7 @@
-import { type Ed25519SigningSession, isSolanaAddress } from "mera";
+import {
+  type Ed25519SigningSession,
+  isSolanaAddress,
+} from "@category-labs/mera";
 import { type ReactElement, useCallback, useEffect, useState } from "react";
 import {
   clusterDisplayName,

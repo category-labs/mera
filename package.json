@@ -60,8 +60,8 @@
     "@scure/base": "^2.2.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.0",
-    "@playwright/test": "^1.61.0",
+    "@biomejs/biome": "2.5.2",
+    "@playwright/test": "^1.61.1",
     "@types/node": "^25.9.3",
     "publint": "^0.3.21",
     "typescript": "^6.0.3"

@@ -213,20 +213,22 @@ async function createPasskey({
 }
 
 /**
- * Performs a passkey assertion and returns the first WebAuthn PRF output.
+ * Requests a passkey PRF evaluation and returns the first output.
  *
  * When `credentialId` is omitted, WebAuthn may choose any discoverable credential for the relying party.
  *
- * @param options - Passkey assertion inputs.
- * @param options.rpId - Relying party ID for the WebAuthn assertion.
+ * @param options - Passkey PRF request inputs.
+ * @param options.rpId - Relying party ID for the WebAuthn request.
  * @param options.credentialId - Optional credential ID to restrict the assertion to one passkey.
  * @param options.transports - Optional transports associated with `credentialId`.
  * @param options.prfSalt - PRF salt. Must be exactly 32 bytes.
  * @param options.challenge - WebAuthn challenge. Defaults to 32 cryptographically random bytes.
  * @param options.timeout - WebAuthn timeout in milliseconds. Browser defaults apply when omitted.
- * @returns The selected credential ID and first WebAuthn PRF output.
- * @remarks Side effects: invokes `navigator.credentials.get()`, which may show browser or authenticator UI.
- * @remarks Caller assumptions: `prfSalt` must be stable for flows that need stable PRF output.
+ * @returns The selected credential ID and first WebAuthn PRF output for wallet derivation or unlock flows.
+ * @remarks
+ * Side effects: invokes `navigator.credentials.get()`, which may show browser or authenticator UI.
+ *
+ * Caller assumptions: `prfSalt` must be stable for flows that need stable PRF output.
  * @throws PasskeyAccountError with code `PRF_UNAVAILABLE` when the authenticator does not return a 32-byte PRF output.
  * @throws PasskeyAccountError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes or `credentialId` is not canonical base64url.
  * @throws PasskeyAccountError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.

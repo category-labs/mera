@@ -2,20 +2,20 @@
 
 Passkey-backed signing for multichain accounts — one biometric, many chains.
 
-mera turns a WebAuthn passkey into stable, authenticator-bound entropy for wallet apps. The browser's WebAuthn PRF extension gives mera 32 bytes per ceremony; apps can feed those bytes into their chosen wallet derivation scheme (for example BIP-39/BIP-32 or SLIP-0010) or wrap an app-held secret — a recovery phrase, a private key — into a passkey-encrypted vault. Same passkey, same biometric, multiple chains. No smart-account deploys, no custom on-chain verifier programs.
+mera turns a WebAuthn passkey into stable, authenticator-bound entropy for wallet apps. The browser's WebAuthn PRF extension gives mera 32 bytes per ceremony; apps can feed those bytes into their chosen wallet derivation scheme (for example BIP-39/BIP-32 or SLIP-0010) or wrap an app-held secret — a recovery phrase, a private key — into a passkey-encrypted vault. No smart-account deploys, no custom on-chain verifier programs.
 
 ## What you get
 
 - One passkey, multiple chains (EVM + Solana today).
 - One biometric per session, not per transaction.
-- The same passkey can reproduce the same wallet entropy on a new device when synced.
+- Derived mode reproduces the same PRF output for the same PRF-capable credential, `rpId`, and PRF salt. Cross-device use requires that credential to be available on the new device.
 - Apps can choose standard wallet derivation and offer explicit recovery-phrase export.
 - Sessions are explicitly lockable; private-key bytes are zeroed on `session.lock()`.
 - No silent extraction path: key export is an explicit app workflow.
 
 ## Modes
 
-**Derived.** Stateless. Mera reproduces the same PRF output using the passkey and Mera's fixed deterministic salt. The app derives wallet keys from that output using its chosen scheme. The demo uses BIP-39/BIP-32 for secp256k1 and SLIP-0010 for Ed25519, with account indexing handled by HD paths. Best for "log in from anywhere."
+**Derived.** Stateless. Mera uses its fixed deterministic salt to reproduce the same PRF output for the same PRF-capable credential and `rpId`; cross-device use requires that credential to be available on the new device. The app derives wallet keys from that output using its chosen scheme. The demo uses BIP-39/BIP-32 for secp256k1 and SLIP-0010 for Ed25519. Best for "log in from anywhere."
 
 **Wrapped.** An AES-256-GCM blob holds one secret — a recovery phrase, a private key, any bytes; only the passkey can unlock it. The blob can live in `localStorage`, a backend, or a sync service. Best for hot-wallet UX, returning users who want to sign many transactions per session, and importing an existing wallet.
 

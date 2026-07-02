@@ -597,9 +597,8 @@ clientDataJSON
         <ul>
           <li>
             <strong>Deterministic.</strong>
-            The secret is created once and reused: the same passkey and salt
-            return the same 32 bytes, forever, on every device the passkey syncs
-            to.
+            The secret is created once per credential. The same PRF-capable
+            credential, relying party, and salt return the same 32 bytes.
           </li>
           <li>
             <strong>Site-scoped.</strong>
@@ -658,11 +657,11 @@ clientDataJSON
         <h3 id="derived-mode">Derived mode</h3>
 
         <p>
-          In derived mode the account is computed entirely from the passkey.
-          mera pins a fixed salt (<code>createDeterministicPrfSalt()</code>), so
-          every ceremony with the same passkey returns the same 32 bytes. The
-          application runs those bytes through its derivation scheme of choice;
-          mera's demo wallet app feeds them into BIP-39 and derives keys with
+          In derived mode the account is computed from the passkey. mera pins a
+          fixed salt (<code>createDeterministicPrfSalt()</code>), so the same
+          passkey yields the same account. The application runs the
+          passkey-derived bytes through its derivation scheme of choice; mera's
+          demo wallet app feeds them into BIP-39 and derives keys with
           <a
             href="https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki"
             >BIP-32</a
@@ -808,10 +807,11 @@ const address = getEvmAddress(session.publicKey)</code></pre>
         <p>
           Nothing is stored: no database row, no localStorage entry, no blob to
           sync. Sign in on a new device with the synced passkey, and the same
-          addresses appear. No recovery flow. And because the derivation is
-          standard, the application can offer an explicit export: the entropy
-          maps to an ordinary recovery phrase that imports into any standard
-          wallet app, like MetaMask or Phantom.
+          account appears. Cross-device use follows the password manager's
+          normal sync and security assumptions. No recovery flow. And because
+          the derivation is standard, the application can offer an explicit
+          export: the entropy maps to an ordinary recovery phrase that imports
+          into any standard wallet app, like MetaMask or Phantom.
         </p>
 
         <h3 id="wrapped-mode">Wrapped mode</h3>
@@ -1030,13 +1030,13 @@ const address = getEvmAddress(session.publicKey)</code></pre>
             The same entropy derives accounts for every chain the app supports.
           </li>
           <li>
-            <strong>Backup comes for free.</strong>
-            A synced passkey is backed up the way logins already are — by a
-            credential manager like iCloud Keychain or Google Password Manager.
+            <strong>Backup is passkey sync.</strong>
+            A credential manager like iCloud Keychain or Google Password Manager
+            makes the passkey available across devices.
           </li>
           <li>
             <strong>A new device is a sign-in.</strong>
-            Same passkey, same addresses.
+            Sign in with the synced passkey, and the same account appears.
           </li>
           <li>
             <strong>There is a way out.</strong>

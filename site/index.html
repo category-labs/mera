@@ -597,8 +597,8 @@ clientDataJSON
         <ul>
           <li>
             <strong>Deterministic.</strong>
-            The secret is created once per credential. The same PRF-capable
-            credential, relying party, and salt return the same 32 bytes.
+            The secret is created once per passkey. The same passkey, relying
+            party, and salt return the same 32 bytes.
           </li>
           <li>
             <strong>Site-scoped.</strong>
@@ -1031,8 +1031,8 @@ const address = getEvmAddress(session.publicKey)</code></pre>
           </li>
           <li>
             <strong>Backup is passkey sync.</strong>
-            A credential manager like iCloud Keychain or Google Password Manager
-            makes the passkey available across devices.
+            A password manager with sync, which most now provide, makes the
+            passkey available across devices.
           </li>
           <li>
             <strong>A new device is a sign-in.</strong>

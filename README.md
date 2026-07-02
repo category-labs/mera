@@ -54,6 +54,11 @@ const session = createSecp256k1SigningSession({ consumePrivateKey: privateKey })
 const address = getEvmAddress(session.publicKey)
 ```
 
+Treat the PRF output as a starting secret. Do not reuse the same output
+unchanged for unrelated purposes, such as wallet derivation and app-data
+encryption. Use a different PRF salt for that purpose, or split one PRF output
+with a purpose-labeled KDF.
+
 Derived/reproducible-wallet flows pass a stable PRF salt such as `createDeterministicPrfSalt()`. Wrapped flows pass fresh random salt bytes.
 
 ## Supported authenticators

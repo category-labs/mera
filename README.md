@@ -19,6 +19,8 @@ mera turns a WebAuthn passkey into stable, authenticator-bound entropy for walle
 
 **Wrapped.** An AES-256-GCM blob holds one secret — a recovery phrase, a private key, any bytes; only the passkey can unlock it. The blob can live in `localStorage`, a backend, or a sync service. Best for hot-wallet UX, returning users who want to sign many transactions per session, and importing an existing wallet.
 
+Derived mode stores no app-owned secret to recover. If the passkey is deleted, not synced, tied to a lost provider account, or unavailable under the app's `rpId` after a domain migration, the account may be unrecoverable unless the app offers export, import, or another backup path.
+
 ## Install
 
 ```sh

@@ -56,9 +56,6 @@ function createEd25519SigningSession({
       const messageCopy = copyBytes(message);
       return new Uint8Array(await ed25519.signAsync(messageCopy, key.use()));
     },
-    exportPrivateKey(): Uint8Array {
-      return key.exportCopy();
-    },
     lock(): void {
       key.lock();
     },

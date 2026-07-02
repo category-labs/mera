@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { createSigningKey } from "../dist/session.js";
+import { expectError } from "./helpers.js";
 
 function sharedBytes(values: number[]): Uint8Array {
   const bytes = new Uint8Array(new SharedArrayBuffer(values.length));
@@ -24,8 +25,10 @@ test("derives the public key from the stored private-key snapshot", () => {
   expect(snapshot?.buffer).not.toBe(privateKey.buffer);
   expect(snapshot?.buffer).toBeInstanceOf(ArrayBuffer);
   expect(publicKey).toEqual(original);
-  expect(key.exportCopy()).toEqual(original);
+  expect(key.use()).toEqual(original);
   key.lock();
+  expect(snapshot).toEqual(new Uint8Array(4));
+  expectError(() => key.use(), "SESSION_LOCKED");
 });
 
 test("zeroes the stored private-key snapshot when validation fails", () => {

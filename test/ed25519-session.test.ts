@@ -25,11 +25,9 @@ test("signs messages and locks the session", async () => {
   expect(await ed25519.verifyAsync(signature, message, session.publicKey)).toBe(
     true,
   );
-  expect(session.exportPrivateKey()).toEqual(RFC_SECRET);
 
   session.lock();
 
-  expectError(() => session.exportPrivateKey(), "SESSION_LOCKED");
   await expect(session.signMessage(message)).rejects.toMatchObject({
     code: "SESSION_LOCKED",
   });

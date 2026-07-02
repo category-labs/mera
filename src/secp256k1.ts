@@ -52,7 +52,7 @@ function normalizeSecp256k1PublicKey(publicKey: Uint8Array): Uint8Array {
 /**
  * Wraps a secp256k1 private key in an explicitly lockable signing session.
  *
- * `signDigest` signs exactly 32 bytes without prehashing. Calling `lock` zeroes the active private-key copy and makes future signing or export fail.
+ * `signDigest` signs exactly 32 bytes without prehashing. Calling `lock` zeroes the active private-key copy and makes future signing fail.
  *
  * @param options - Signing session inputs.
  * @param options.consumePrivateKey - secp256k1 private key. Copied into one session-owned snapshot, then zeroed before this call returns or throws.
@@ -91,9 +91,6 @@ function createSecp256k1SigningSession({
         compact: signature.slice(1),
         recovery: signature[0],
       };
-    },
-    exportPrivateKey(): Uint8Array {
-      return key.exportCopy();
     },
     lock(): void {
       key.lock();

@@ -11,7 +11,7 @@ mera turns a WebAuthn passkey into stable, authenticator-bound entropy for walle
 - Derived mode reproduces the same PRF output for the same PRF-capable passkey, `rpId`, and PRF salt. Cross-device use requires that passkey to be available on the new device.
 - Apps can choose standard wallet derivation and offer explicit recovery-phrase export.
 - Sessions are explicitly lockable; private-key bytes are zeroed on `session.lock()`.
-- No silent extraction path: key export is an explicit app workflow.
+- Recovery export is an app-owned flow behind a fresh passkey or vault ceremony.
 
 ## Modes
 
@@ -106,7 +106,7 @@ Secret-vault flows, demo HD derivation recipes (BIP-39/BIP-32, SLIP-0010), the s
 
 ## Security
 
-Keys are not protected once unlocked inside a compromised JavaScript runtime. Host apps should serve over HTTPS, use a strict CSP, avoid untrusted scripts, and keep unlocked sessions short-lived — call `session.lock()` as soon as you're done signing.
+Keys are not protected once derived, imported, or unlocked inside a compromised JavaScript runtime: compromised code can observe key material during app-owned derivation/import and can sign with an unlocked session until `session.lock()`. Recovery export should be handled as a separate app-owned flow that reruns WebAuthn PRF or unwraps a vault with fresh user verification.
 
 **Dependency scope.** The library’s shipped runtime dependency tree is the root manifest’s `dependencies` (`@noble/*`, `@scure/*`). The root `devDependencies` are build/test/lint tooling (supply-chain only), and the `demo/` app is a non-published example (`private: true`) with its own, larger dependency tree; neither set of packages ships to library consumers.
 

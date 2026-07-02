@@ -12,7 +12,7 @@ const MODES: { id: AccountMode; label: string; hint: string }[] = [
   {
     id: "derived",
     label: "Derived",
-    hint: "Accounts derived from your passkey — nothing is stored, and the same passkey restores them on any device.",
+    hint: "Accounts derived from your passkey — nothing is stored, and a synced passkey can restore them on another device.",
   },
   {
     id: "wrapped",

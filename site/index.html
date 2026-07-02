@@ -808,10 +808,10 @@ const address = getEvmAddress(session.publicKey)</code></pre>
           Nothing is stored: no database row, no localStorage entry, no blob to
           sync. Sign in on a new device with the synced passkey, and the same
           account appears. Cross-device use follows the password manager's
-          normal sync and security assumptions. No recovery flow. And because
-          the derivation is standard, the application can offer an explicit
-          export: the entropy maps to an ordinary recovery phrase that imports
-          into any standard wallet app, like MetaMask or Phantom.
+          normal sync and security assumptions. Because the derivation is
+          standard, the application can offer an explicit export: the entropy
+          maps to an ordinary recovery phrase that imports into any standard
+          wallet app, like MetaMask or Phantom.
         </p>
 
         <h3 id="wrapped-mode">Wrapped mode</h3>
@@ -963,7 +963,7 @@ const address = getEvmAddress(session.publicKey)</code></pre>
               </tr>
               <tr>
                 <th scope="row">New device</th>
-                <td>synced passkey is enough</td>
+                <td>synced passkey</td>
                 <td>passkey plus the blob</td>
               </tr>
               <tr>

@@ -3,7 +3,7 @@
  *
  * - `PASSKEY_OPERATION_FAILED`: WebAuthn or the browser credential API failed, was cancelled, or returned an unexpected credential.
  * - `PRF_UNAVAILABLE`: the authenticator did not enable or return a usable 32-byte WebAuthn PRF output.
- * - `SESSION_LOCKED`: a signing or export call was made after `lock()`.
+ * - `SESSION_LOCKED`: a signing call was made after `lock()`.
  * - `DECRYPT_FAILED`: AES-GCM authentication failed (wrong key, or tampered ciphertext or AAD).
  * - `INPUT_INVALID`: a caller-supplied value at a public boundary did not satisfy a length, range, encoding, or scalar constraint.
  * - `VAULT_FORMAT_INVALID`: untrusted vault data (JSON or object) was malformed, missing required fields, or used a non-canonical encoding.
@@ -53,7 +53,7 @@ function isPasskeyAccountError(error: unknown): error is PasskeyAccountError {
 /**
  * Returns the active private key for a signing session, or throws if the
  * session has been locked. Used by curve-specific session helpers to gate
- * `signDigest`/`signMessage`/`exportPrivateKey` after `lock()`.
+ * `signDigest`/`signMessage` after `lock()`.
  *
  * @throws PasskeyAccountError with code `SESSION_LOCKED` when `privateKey` is undefined.
  */

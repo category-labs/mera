@@ -9,7 +9,6 @@ const PRIVATE_KEY_ONE = hexToBytes(
 );
 
 test("signs 32-byte digests and locks the session", async () => {
-  const original = new Uint8Array(PRIVATE_KEY_ONE);
   const buffer = new Uint8Array(PRIVATE_KEY_ONE);
   const session = createSecp256k1SigningSession({ consumePrivateKey: buffer });
   const digest = new Uint8Array(32).fill(1);
@@ -27,11 +26,9 @@ test("signs 32-byte digests and locks the session", async () => {
       prehash: false,
     }),
   ).toBe(true);
-  expect(session.exportPrivateKey()).toEqual(original);
 
   session.lock();
 
-  expectError(() => session.exportPrivateKey(), "SESSION_LOCKED");
   await expect(session.signDigest(digest)).rejects.toMatchObject({
     code: "SESSION_LOCKED",
   });

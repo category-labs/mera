@@ -15,12 +15,6 @@ type LockableKey = {
    * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
    */
   use(): Uint8Array;
-  /**
-   * Returns a fresh copy of the session-owned key.
-   *
-   * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
-   */
-  exportCopy(): Uint8Array;
   /** Zeroes the session-owned key and permanently locks this handle. */
   lock(): void;
 };
@@ -46,16 +40,13 @@ function createSigningKey(
 
   try {
     // Derive and store from the same owned snapshot, so the public key cannot
-    // diverge from the private key later used for signing or export.
+    // diverge from the private key later used for signing.
     activePrivateKey = copyBytes(consumePrivateKey);
     const publicKey = derivePublicKey(activePrivateKey);
 
     const key: LockableKey = {
       use(): Uint8Array {
         return requireUnlocked(activePrivateKey);
-      },
-      exportCopy(): Uint8Array {
-        return new Uint8Array(requireUnlocked(activePrivateKey));
       },
       lock(): void {
         if (activePrivateKey !== undefined) {

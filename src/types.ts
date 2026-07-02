@@ -108,16 +108,9 @@ type Secp256k1SigningSession = {
    */
   signDigest(digest32: Uint8Array): Promise<Secp256k1Signature>;
   /**
-   * Returns a copy of the active private key.
-   *
-   * @returns A copy of the active private key.
-   * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
-   */
-  exportPrivateKey(): Uint8Array;
-  /**
    * Clears the active private key and permanently locks this session.
    *
-   * @remarks Side effects: overwrites the session-owned private-key copy with zeros and makes future signing or export fail.
+   * @remarks Side effects: overwrites the session-owned private-key copy with zeros and makes future signing fail.
    * @remarks If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
    */
   lock(): void;
@@ -137,16 +130,9 @@ type Ed25519SigningSession = {
    */
   signMessage(message: Uint8Array): Promise<Uint8Array>;
   /**
-   * Returns a copy of the active private key (Ed25519 seed).
-   *
-   * @returns A copy of the active 32-byte seed.
-   * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
-   */
-  exportPrivateKey(): Uint8Array;
-  /**
    * Clears the active private key and permanently locks this session.
    *
-   * @remarks Side effects: overwrites the session-owned seed copy with zeros and makes future signing or export fail.
+   * @remarks Side effects: overwrites the session-owned seed copy with zeros and makes future signing fail.
    * @remarks If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
    */
   lock(): void;

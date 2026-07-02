@@ -87,7 +87,7 @@ type CreateSigningSessionOptions = {
   /**
    * Curve private key. Must be exactly 32 bytes; secp256k1 must also be a valid scalar.
    *
-   * Zeroed before the call returns or throws. Pass a fresh copy if the bytes are needed elsewhere.
+   * Copied into one session-owned snapshot, then zeroed before the call returns or throws. Pass a fresh copy if the bytes are needed elsewhere.
    */
   consumePrivateKey: Uint8Array;
 };

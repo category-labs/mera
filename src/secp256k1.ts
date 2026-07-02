@@ -55,9 +55,9 @@ function normalizeSecp256k1PublicKey(publicKey: Uint8Array): Uint8Array {
  * `signDigest` signs exactly 32 bytes without prehashing. Calling `lock` zeroes the active private-key copy and makes future signing or export fail.
  *
  * @param options - Signing session inputs.
- * @param options.consumePrivateKey - secp256k1 private key. Zeroed before this call returns or throws.
+ * @param options.consumePrivateKey - secp256k1 private key. Copied into one session-owned snapshot, then zeroed before this call returns or throws.
  * @returns An unlocked secp256k1 signing session.
- * @remarks Side effects: zeroes `consumePrivateKey` on every path; on success first copies it into session memory, which `lock()` later zeroes.
+ * @remarks Side effects: zeroes `consumePrivateKey` on every path; public-key derivation and later signing use one session-owned copy, which `lock()` later zeroes.
  * @throws PasskeyAccountError with code `INPUT_INVALID` when `consumePrivateKey` is not a valid secp256k1 scalar.
  */
 function createSecp256k1SigningSession({

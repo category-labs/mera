@@ -8,14 +8,14 @@ mera turns a WebAuthn passkey into stable, authenticator-bound entropy for walle
 
 - One passkey, multiple chains (EVM + Solana today).
 - One biometric per session, not per transaction.
-- Derived mode reproduces the same PRF output for the same PRF-capable credential, `rpId`, and PRF salt. Cross-device use requires that credential to be available on the new device.
+- Derived mode reproduces the same PRF output for the same PRF-capable passkey, `rpId`, and PRF salt. Cross-device use requires that passkey to be available on the new device.
 - Apps can choose standard wallet derivation and offer explicit recovery-phrase export.
 - Sessions are explicitly lockable; private-key bytes are zeroed on `session.lock()`.
 - No silent extraction path: key export is an explicit app workflow.
 
 ## Modes
 
-**Derived.** Stateless. Mera uses its fixed deterministic salt to reproduce the same PRF output for the same PRF-capable credential and `rpId`; cross-device use requires that credential to be available on the new device. The app derives wallet keys from that output using its chosen scheme. The demo uses BIP-39/BIP-32 for secp256k1 and SLIP-0010 for Ed25519. Best for "log in from anywhere."
+**Derived.** Stateless. Mera uses its fixed deterministic salt to reproduce the same PRF output for the same PRF-capable passkey and `rpId`; cross-device use requires that passkey to be available on the new device. The app derives wallet keys from that output using its chosen scheme. The demo uses BIP-39/BIP-32 for secp256k1 and SLIP-0010 for Ed25519. Best for "log in from anywhere."
 
 **Wrapped.** An AES-256-GCM blob holds one secret — a recovery phrase, a private key, any bytes; only the passkey can unlock it. The blob can live in `localStorage`, a backend, or a sync service. Best for hot-wallet UX, returning users who want to sign many transactions per session, and importing an existing wallet.
 

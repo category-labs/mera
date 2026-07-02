@@ -16,6 +16,17 @@ export {
 } from "./passkey.js";
 export { createSecp256k1SigningSession } from "./secp256k1.js";
 export type {
+  CreateSecretVaultOptions,
+  GetSecretVaultPrfOutputOptions,
+  UnwrapSecretVaultOptions,
+} from "./secret.js";
+export {
+  createSecretVault,
+  getSecretVaultPrfOutput,
+  parseSecretVault,
+  unwrapSecretVault,
+} from "./secret.js";
+export type {
   CreatePasskeyResult,
   CreatePasskeyWithPrfOutputResult,
   CreateSigningSessionOptions,
@@ -29,14 +40,3 @@ export type {
   Secp256k1SigningSession,
   SigningCurve,
 } from "./types.js";
-export type {
-  CreateSecretVaultOptions,
-  GetSecretVaultPrfOutputOptions,
-  UnwrapSecretVaultOptions,
-} from "./secret.js";
-export {
-  createSecretVault,
-  getSecretVaultPrfOutput,
-  parseSecretVault,
-  unwrapSecretVault,
-} from "./secret.js";

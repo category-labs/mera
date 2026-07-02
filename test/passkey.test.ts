@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { copyPrfOutput } from "../dist/passkey.js";
+import { copyPrfOutput, createPasskeyWithPrfOutput } from "../dist/passkey.js";
 import { expectError } from "./helpers.js";
+
+const ORIGINAL_NAVIGATOR = Object.getOwnPropertyDescriptor(
+  globalThis,
+  "navigator",
+);
 
 test("copyPrfOutput copies a plain ArrayBuffer without aliasing", () => {
   const source = new Uint8Array([1, 2, 3, 4]);
@@ -48,4 +53,70 @@ test("copyPrfOutput rejects non-byte array values instead of coercing them", () 
   expectError(() => copyPrfOutput([-1]), "PRF_UNAVAILABLE");
   expectError(() => copyPrfOutput([1.5]), "PRF_UNAVAILABLE");
   expectError(() => copyPrfOutput([Number.NaN]), "PRF_UNAVAILABLE");
+});
+
+test("createPasskeyWithPrfOutput snapshots prfSalt for fallback and result", async () => {
+  const originalSalt = Uint8Array.from({ length: 32 }, (_, index) => index);
+  const prfSalt = new Uint8Array(originalSalt);
+  let fallbackSalt: Uint8Array | undefined;
+
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      credentials: {
+        async create() {
+          await Promise.resolve();
+          return {
+            type: "public-key",
+            rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+            response: {
+              getTransports: () => ["internal"],
+            },
+            getClientExtensionResults: () => ({ prf: { enabled: true } }),
+          };
+        },
+        async get({ publicKey }: CredentialRequestOptions) {
+          const first = publicKey?.extensions?.prf?.eval?.first;
+          if (!(first instanceof ArrayBuffer)) {
+            throw new Error("expected fallback PRF salt");
+          }
+
+          fallbackSalt = new Uint8Array(first);
+          return {
+            type: "public-key",
+            rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+            getClientExtensionResults: () => ({
+              prf: { results: { first } },
+            }),
+          };
+        },
+      },
+    },
+  });
+
+  try {
+    const pending = createPasskeyWithPrfOutput({
+      rp: { id: "example.com", name: "Mera Test" },
+      user: {
+        id: new Uint8Array([1]),
+        name: "nad",
+        displayName: "nad",
+      },
+      prfSalt,
+    });
+
+    prfSalt.fill(255);
+
+    const result = await pending;
+
+    expect(result.prfSalt).toEqual(originalSalt);
+    expect(result.prfOutput).toEqual(originalSalt);
+    expect(fallbackSalt).toEqual(originalSalt);
+  } finally {
+    if (ORIGINAL_NAVIGATOR) {
+      Object.defineProperty(globalThis, "navigator", ORIGINAL_NAVIGATOR);
+    } else {
+      Reflect.deleteProperty(globalThis, "navigator");
+    }
+  }
 });

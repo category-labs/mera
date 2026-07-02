@@ -45,6 +45,32 @@ test("creates a secret vault and unwraps the exact bytes", async () => {
   ).resolves.toEqual(SECRET);
 });
 
+test("createSecretVault snapshots caller-owned byte inputs before async work", async () => {
+  const prfSalt = new Uint8Array(PRF_SALT);
+  const prfOutput = new Uint8Array(PRF_OUTPUT);
+  const secret = new Uint8Array(SECRET);
+
+  const pending = createSecretVault({
+    credential: {
+      credentialId: "AQIDBA",
+      prfSalt,
+      prfOutput,
+    },
+    secret,
+  });
+
+  prfSalt.fill(1);
+  prfOutput.fill(2);
+  secret.fill(0);
+
+  const vault = await pending;
+
+  expect(vault.prfSalt).toBe("CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk");
+  await expect(
+    unwrapSecretVault({ vault, prfOutput: PRF_OUTPUT }),
+  ).resolves.toEqual(SECRET);
+});
+
 test("unwrapSecretVault fails with the wrong PRF output", async () => {
   const vault = await createTestVault();
 

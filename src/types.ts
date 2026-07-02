@@ -50,7 +50,7 @@ type CreatePasskeyWithPrfOutputResult = {
   credentialId: string;
   /** Authenticator transports reported by the browser, when available. */
   transports?: PasskeyCredentialTransport[];
-  /** PRF salt that was evaluated. Always 32 bytes. */
+  /** PRF salt that was evaluated. Always 32 bytes and never aliases the caller input. */
   prfSalt: Uint8Array;
   /** First WebAuthn PRF output for `prfSalt`. Always 32 bytes. */
   prfOutput: Uint8Array;

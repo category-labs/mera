@@ -3,6 +3,7 @@ import {
   base64UrlDecode,
   base64UrlEncode,
   canonicalEncode,
+  copyBytes,
   uint32Be,
   utf8ToBytes,
 } from "./encoding.js";
@@ -196,9 +197,12 @@ type CreateSecretVaultInput = {
 /**
  * Encrypts an arbitrary secret into a passkey-protected vault.
  *
- * The secret is opaque: no curve, no public key, no length or scalar checks. An AES-256-GCM wrapping key is derived from the PRF output with secret-specific HKDF info, and the secret is encrypted under canonical AAD. The input `secret` buffer is not mutated; callers that hold sensitive bytes should zero them when done.
+ * The secret is opaque: no curve, no public key, no length or scalar checks. An AES-256-GCM wrapping key is derived from the PRF output with secret-specific HKDF info, and the secret is encrypted under canonical AAD.
  *
- * @remarks Security: a vault is bound to its `prfOutput` only — not to the credential ID, salt, or nonce (the AAD is a fixed constant). Use a fresh `prfSalt` per secret. Secrets wrapped under one reused PRF output share a wrapping key, so their ciphertexts are interchangeable by anyone who can rewrite stored vault JSON.
+ * @remarks
+ * The input byte buffers are copied before async cryptographic work starts; post-call mutation does not change the vault being produced. Caller-owned input buffers are not modified or zeroed.
+ *
+ * Security: a vault is bound to its `prfOutput` only — not to the credential ID, salt, or nonce (the AAD is a fixed constant). Use a fresh `prfSalt` per secret. Secrets wrapped under one reused PRF output share a wrapping key, so their ciphertexts are interchangeable by anyone who can rewrite stored vault JSON.
  * @param options - Credential material and the secret to wrap.
  * @returns A JSON-safe secret vault.
  * @throws PasskeyAccountError with code `INPUT_INVALID` when the credential ID is empty, the PRF salt or output is not 32 bytes, or `secret` is empty.
@@ -224,26 +228,35 @@ async function createSecretVault({
     throw new PasskeyAccountError("INPUT_INVALID", "secret must not be empty");
   }
 
-  const wrappingKey = await deriveWrappingKey({
-    info: SECRET_WRAP_INFO,
-    prfOutput,
-  });
-  const encrypted = await aesGcmEncrypt({
-    plaintext: secret,
-    wrappingKey,
-    aad: SECRET_AAD,
-  });
+  const prfSaltCopy = copyBytes(prfSalt);
+  const prfOutputCopy = copyBytes(prfOutput);
+  const secretCopy = copyBytes(secret);
 
-  return {
-    version: 1,
-    credential: {
-      credentialId,
-      ...(transports !== undefined ? { transports: [...transports] } : {}),
-    },
-    prfSalt: base64UrlEncode(prfSalt),
-    nonce: base64UrlEncode(encrypted.nonce),
-    ciphertext: base64UrlEncode(encrypted.ciphertext),
-  };
+  try {
+    const wrappingKey = await deriveWrappingKey({
+      info: SECRET_WRAP_INFO,
+      prfOutput: prfOutputCopy,
+    });
+    const encrypted = await aesGcmEncrypt({
+      plaintext: secretCopy,
+      wrappingKey,
+      aad: SECRET_AAD,
+    });
+
+    return {
+      version: 1,
+      credential: {
+        credentialId,
+        ...(transports !== undefined ? { transports: [...transports] } : {}),
+      },
+      prfSalt: base64UrlEncode(prfSaltCopy),
+      nonce: base64UrlEncode(encrypted.nonce),
+      ciphertext: base64UrlEncode(encrypted.ciphertext),
+    };
+  } finally {
+    prfOutputCopy.fill(0);
+    secretCopy.fill(0);
+  }
 }
 
 /** Inputs for decrypting a secret vault. */

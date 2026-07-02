@@ -1,4 +1,9 @@
-import { asArrayBuffer, base64UrlDecode, base64UrlEncode } from "./encoding.js";
+import {
+  asArrayBuffer,
+  base64UrlDecode,
+  base64UrlEncode,
+  copyBytes,
+} from "./encoding.js";
 import { isPasskeyAccountError, PasskeyAccountError } from "./errors.js";
 import type {
   CreatePasskeyResult,
@@ -308,8 +313,12 @@ async function getPasskeyPrfOutput({
  *
  * @param options - Passkey creation inputs. `rp.id` is required so the fallback ceremony can target the same relying party. `prfSalt` must be exactly 32 bytes.
  * @returns Credential metadata and the first PRF output.
- * @remarks Side effects: invokes `navigator.credentials.create()`. On authenticators that do not evaluate PRF during creation, also invokes `navigator.credentials.get()` — which means a second browser prompt for the user.
- * @remarks Caller assumptions: call from a secure browser context where WebAuthn and PRF are available.
+ * @remarks
+ * Side effects: invokes `navigator.credentials.create()`. On authenticators that do not evaluate PRF during creation, also invokes `navigator.credentials.get()` — which means a second browser prompt for the user.
+ *
+ * `prfSalt` is copied before async WebAuthn work starts; post-call mutation of the input does not change the fallback ceremony or returned salt.
+ *
+ * Caller assumptions: call from a secure browser context where WebAuthn and PRF are available.
  * @throws PasskeyAccountError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or does not return PRF output on the fallback ceremony.
  * @throws PasskeyAccountError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
  * @throws PasskeyAccountError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
@@ -322,13 +331,15 @@ async function createPasskeyWithPrfOutput({
   attestation,
   prfSalt,
 }: CreatePasskeyWithPrfOutputInput): Promise<CreatePasskeyWithPrfOutputResult> {
+  const prfSaltCopy = copyBytes(prfSalt);
+
   const credential = await createPasskey({
     rp,
     user,
     challenge,
     timeout,
     attestation,
-    prfSalt,
+    prfSalt: prfSaltCopy,
   });
 
   const prfOutput =
@@ -338,15 +349,14 @@ async function createPasskeyWithPrfOutput({
         rpId: rp.id,
         credentialId: credential.credentialId,
         transports: credential.transports,
-        prfSalt,
+        prfSalt: prfSaltCopy,
         timeout,
       })
     ).prfOutput;
 
   const result: CreatePasskeyWithPrfOutputResult = {
     credentialId: credential.credentialId,
-    // Copy so the returned salt is stable even if the caller mutates theirs.
-    prfSalt: new Uint8Array(prfSalt),
+    prfSalt: prfSaltCopy,
     prfOutput,
   };
 

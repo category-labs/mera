@@ -101,6 +101,8 @@ Secret-vault flows, demo HD derivation recipes (BIP-39/BIP-32, SLIP-0010), the s
 
 Keys are not protected once unlocked inside a compromised JavaScript runtime. Host apps should serve over HTTPS, use a strict CSP, avoid untrusted scripts, and keep unlocked sessions short-lived — call `session.lock()` as soon as you're done signing.
 
+Recovery phrases become JavaScript strings when displayed or exported. Unlike `Uint8Array` buffers, strings cannot be zeroed in place; apps can only drop references and keep their lifetime short. Mera zeroes owned byte buffers where possible, but host apps should treat revealed recovery phrases as high-risk UI state.
+
 **Dependency scope.** The library’s shipped runtime dependency tree is the root manifest’s `dependencies` (`@noble/*`, `@scure/*`). The root `devDependencies` are build/test/lint tooling (supply-chain only), and the `demo/` app is a non-published example (`private: true`) with its own, larger dependency tree; neither set of packages ships to library consumers.
 
 ## License

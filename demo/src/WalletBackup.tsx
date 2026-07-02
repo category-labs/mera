@@ -4,7 +4,7 @@ import { useCopyButton } from "./useCopyButton";
 type WalletBackupProps = {
   /** The revealed recovery phrase to display (12 or 24 words). */
   phrase: string;
-  /** Return to the account view, dropping the phrase from memory. */
+  /** Return to the account view, dropping the phrase reference. */
   onHide: () => void;
 };
 

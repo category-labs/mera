@@ -42,13 +42,13 @@ function isEvmAddress(value: string): value is EvmAddress {
 // already lowercase; mixed-case input would produce a wrong checksum.
 function toChecksumAddress(lowercaseHex: string): EvmAddress {
   const hash = keccak_256(utf8ToBytes(lowercaseHex));
-  let result = "0x";
+  let body = "";
   for (let i = 0; i < lowercaseHex.length; i += 1) {
     const char = lowercaseHex[i];
     const hashNibble = (hash[i >> 1] >> (i % 2 === 0 ? 4 : 0)) & 0xf;
-    result += hashNibble >= 8 ? char.toUpperCase() : char;
+    body += hashNibble >= 8 ? char.toUpperCase() : char;
   }
-  return result as EvmAddress;
+  return `0x${body}`;
 }
 
 export { getEvmAddress, isEvmAddress };

@@ -2,6 +2,7 @@ import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
 import {
   createSecretVault,
+  getSecretVaultPrfOutput,
   type PasskeySecretVault,
   parseSecretVault,
   unwrapSecretVault,
@@ -71,12 +72,48 @@ test("createSecretVault snapshots caller-owned byte inputs before async work", a
   ).resolves.toEqual(SECRET);
 });
 
+test("createSecretVault rejects unknown transports", async () => {
+  await expect(
+    createSecretVault({
+      credential: {
+        credentialId: "AQIDBA",
+        transports: ["future" as unknown as AuthenticatorTransport],
+        prfSalt: PRF_SALT,
+        prfOutput: PRF_OUTPUT,
+      },
+      secret: SECRET,
+    }),
+  ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+});
+
 test("unwrapSecretVault fails with the wrong PRF output", async () => {
   const vault = await createTestVault();
 
   await expect(
     unwrapSecretVault({ vault, prfOutput: new Uint8Array(32).fill(1) }),
   ).rejects.toMatchObject({ code: "DECRYPT_FAILED" });
+});
+
+test("unwrapSecretVault validates vault structure before decrypting", async () => {
+  const vault = await createTestVault();
+
+  await expect(
+    unwrapSecretVault({
+      vault: { ...vault, nonce: "AQ" },
+      prfOutput: PRF_OUTPUT,
+    }),
+  ).rejects.toMatchObject({ code: "VAULT_FORMAT_INVALID" });
+});
+
+test("getSecretVaultPrfOutput validates vault structure before WebAuthn", async () => {
+  const vault = await createTestVault();
+
+  await expect(
+    getSecretVaultPrfOutput({
+      rpId: "example.com",
+      vault: { ...vault, prfSalt: "AQ" },
+    }),
+  ).rejects.toMatchObject({ code: "VAULT_FORMAT_INVALID" });
 });
 
 test("secret vault AAD is independent of credential metadata and PRF salt", async () => {
@@ -169,7 +206,7 @@ test("parseSecretVault rejects a missing or non-object credential", async () => 
   );
 });
 
-test("parseSecretVault rejects non-string transports", async () => {
+test("parseSecretVault rejects invalid transports", async () => {
   const vault = await createTestVault();
 
   expectError(
@@ -177,6 +214,14 @@ test("parseSecretVault rejects non-string transports", async () => {
       parseSecretVault({
         ...vault,
         credential: { ...vault.credential, transports: ["internal", 42] },
+      }),
+    "VAULT_FORMAT_INVALID",
+  );
+  expectError(
+    () =>
+      parseSecretVault({
+        ...vault,
+        credential: { ...vault.credential, transports: ["future"] },
       }),
     "VAULT_FORMAT_INVALID",
   );

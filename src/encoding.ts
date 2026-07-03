@@ -1,4 +1,4 @@
-import { concatBytes, utf8ToBytes } from "@noble/hashes/utils.js";
+import { concatBytes } from "@noble/hashes/utils.js";
 import { base64urlnopad } from "@scure/base";
 import { PasskeyAccountError } from "./errors.js";
 
@@ -58,7 +58,7 @@ function base64UrlDecode(value: string): Uint8Array {
  *
  * @param value - Integer to encode.
  * @returns Four big-endian bytes.
- * @remarks Caller assumptions: `value` is already a uint32 integer.
+ * @remarks `DataView#setUint32` applies the uint32 conversion.
  */
 function uint32Be(value: number): Uint8Array {
   const output = new Uint8Array(4);
@@ -82,8 +82,6 @@ export {
   base64UrlDecode,
   base64UrlEncode,
   canonicalEncode,
-  concatBytes,
   copyBytes,
   uint32Be,
-  utf8ToBytes,
 };

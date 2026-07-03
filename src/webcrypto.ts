@@ -6,7 +6,7 @@ import { PasskeyAccountError } from "./errors.js";
  *
  * @param length - Number of random bytes to return.
  * @returns Cryptographically random bytes.
- * @remarks Side effects: reads from the host Web Crypto CSPRNG.
+ * @remarks Reads from the host Web Crypto CSPRNG.
  * @throws PasskeyAccountError with code `PASSKEY_OPERATION_FAILED` when Web Crypto is unavailable.
  */
 function randomBytes(length: number): Uint8Array {
@@ -38,7 +38,7 @@ function getCrypto(): Crypto {
  * @param ikm - Input keying material.
  * @param info - HKDF info/context bytes.
  * @returns A non-extractable AES-GCM `CryptoKey` usable for encryption and decryption.
- * @remarks Caller assumptions: callers choose domain-separated `info` values appropriate for the wrapping key.
+ * @remarks The `info` bytes domain-separate the derived wrapping key.
  * @throws PasskeyAccountError with code `PASSKEY_OPERATION_FAILED` when Web Crypto is unavailable.
  */
 async function hkdfSha256AesGcmKey(

@@ -29,37 +29,45 @@ npm install @category-labs/mera
 
 ## Quick example
 
-A derived-mode skeleton: one passkey ceremony, then app-owned wallet derivation.
+Wrap one Ed25519 seed behind a passkey, then unlock it into a signing session.
 
 ```ts
 import {
-  createDeterministicPrfSalt,
-  createSecp256k1SigningSession,
-  getEvmAddress,
-  getPasskeyPrfOutput,
+  createEd25519SigningSession,
+  createPasskeyWithPrfOutput,
+  createSecretVault,
+  getSecretVaultPrfOutput,
+  getSolanaAddress,
+  unwrapSecretVault,
 } from "@category-labs/mera"
-import { derivePrivateKeyWithYourWalletScheme } from "./wallet-derivation"
 
-const rpId = "account.example.com"
+const rp = { id: "account.example.com", name: "Example" }
+const user = { name: "demo", displayName: "Demo" }
+const seed = crypto.getRandomValues(new Uint8Array(32))
 
-const prfSalt = createDeterministicPrfSalt()
-const { prfOutput } = await getPasskeyPrfOutput({ rpId, prfSalt })
-
-const privateKey = derivePrivateKeyWithYourWalletScheme({
-  entropy: prfOutput,
-  path: "m/44'/60'/0'/0/0",
+const credential = await createPasskeyWithPrfOutput({
+  rp,
+  user,
+  prfSalt: crypto.getRandomValues(new Uint8Array(32)),
 })
 
-const session = createSecp256k1SigningSession({ consumePrivateKey: privateKey })
-const address = getEvmAddress(session.publicKey)
+const vault = await createSecretVault({ credential, secret: seed })
+seed.fill(0)
+
+const { prfOutput } = await getSecretVaultPrfOutput({
+  rpId: rp.id,
+  vault,
+})
+const unlockedSeed = await unwrapSecretVault({ vault, prfOutput })
+prfOutput.fill(0)
+
+const session = createEd25519SigningSession({
+  consumePrivateKey: unlockedSeed,
+})
+const address = getSolanaAddress(session.publicKey)
 ```
 
-Treat the PRF output as a starting secret. Do not reuse the same output
-unchanged for unrelated purposes, such as wallet derivation and app-data
-encryption. Use a different PRF salt for that purpose, or split one PRF output
-with a purpose-labeled KDF.
-
-Derived/reproducible-wallet flows pass a stable PRF salt such as `createDeterministicPrfSalt()`. Wrapped flows pass fresh random salt bytes.
+Treat each PRF output as a starting secret. Reusing the same output unchanged for unrelated purposes, such as wallet derivation and app-data encryption, couples those purposes. Derived/reproducible-wallet flows pass a stable PRF salt such as `createDeterministicPrfSalt()`. Wrapped flows pass fresh random salt bytes.
 
 ## Supported authenticators
 
@@ -91,7 +99,7 @@ On desktop Chrome, only passkeys saved to Google Password Manager carry PRF. The
 
 ## API reference
 
-Names only — your editor's hover surfaces the full JSDoc.
+Names only. Editor hovers surface the full JSDoc shipped with the package.
 
 - **Passkey ceremonies** — `createPasskey`, `createPasskeyWithPrfOutput`, `getPasskeyPrfOutput`
 - **Deterministic PRF salt** — `createDeterministicPrfSalt`
@@ -100,19 +108,19 @@ Names only — your editor's hover surfaces the full JSDoc.
 - **Chain addresses** — `getEvmAddress`, `isEvmAddress`, `getSolanaAddress`, `isSolanaAddress`
 - **Errors** — `PasskeyAccountError`, `isPasskeyAccountError`, `PasskeyAccountErrorCode`
 
-## Detailed docs
+## More examples
 
-Secret-vault flows, demo HD derivation recipes (BIP-39/BIP-32, SLIP-0010), the secret vault format, and the viem adapter live in the developer documentation.
+The `demo/` app contains app-owned integration examples for BIP-39/BIP-32, SLIP-0010, secret-vault flows, and viem account adaptation.
 
 ## Security
 
-Keys are not protected once derived, imported, or unlocked inside a compromised JavaScript runtime: compromised code can observe key material during app-owned derivation/import and can sign with an unlocked session until `session.lock()`. Recovery export should be handled as a separate app-owned flow that reruns WebAuthn PRF or unwraps a vault with fresh user verification.
+Keys are not protected once derived, imported, or unlocked inside a compromised JavaScript runtime: compromised code can observe key material during app-owned derivation/import and can sign with an unlocked session until `session.lock()`. Recovery export is a separate app-owned flow that reruns WebAuthn PRF or unwraps a vault with fresh user verification.
 
-Recovery phrases become JavaScript strings when displayed or exported. Unlike `Uint8Array` buffers, strings cannot be zeroed in place; apps can only drop references and keep their lifetime short. Mera zeroes owned byte buffers where possible, but host apps should treat revealed recovery phrases as high-risk UI state.
+Recovery phrases become JavaScript strings when displayed or exported. Unlike `Uint8Array` buffers, strings cannot be zeroed in place; apps can only drop references and keep their lifetime short. Mera zeroes owned byte buffers where possible; revealed recovery phrases remain high-risk UI state.
 
 **Dependency scope.** The library’s shipped runtime dependency tree is the root manifest’s `dependencies` (`@noble/*`, `@scure/*`). The root `devDependencies` are build/test/lint tooling (supply-chain only), and the `demo/` app is a non-published example (`private: true`) with its own, larger dependency tree; neither set of packages ships to library consumers.
 
 ## License
 
 Licensed under either of [Apache License](./LICENSE-APACHE), Version
-2.0 or [MIT License](./LICENSE-MIT) at your option.
+2.0 or [MIT License](./LICENSE-MIT), at the licensee's option.

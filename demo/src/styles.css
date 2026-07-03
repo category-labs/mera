@@ -91,6 +91,27 @@ h1 {
   color: var(--muted);
 }
 
+input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+input::placeholder {
+  color: color-mix(in srgb, var(--muted) 75%, transparent);
+}
+
+input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
 .network-toggle {
   position: relative;
   display: flex;
@@ -327,36 +348,10 @@ h1 {
   gap: 8px;
 }
 
-.field-head .link {
-  text-transform: none;
-  letter-spacing: normal;
-}
-
 /* Wrapped-mode recovery-phrase section on the connect screen. */
 .secret {
   display: grid;
   gap: 10px;
-}
-
-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--field);
-  color: var(--text);
-  font: inherit;
-  font-size: 14px;
-}
-
-input::placeholder {
-  color: color-mix(in srgb, var(--muted) 75%, transparent);
-}
-
-input:focus-visible {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 /* Buttons */
@@ -424,6 +419,11 @@ input:focus-visible {
 .link:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+.field-head .link {
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .hint {

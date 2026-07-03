@@ -7,6 +7,7 @@ import {
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
+// biome-ignore lint/style/useNodejsImportProtocol: Vite maps this package to the browser Buffer polyfill for the demo.
 import { Buffer } from "buffer";
 import { cachePerNetwork, type NetworkMode } from "../network";
 

@@ -1,5 +1,5 @@
 import { sha256 } from "@noble/hashes/sha2.js";
-import { utf8ToBytes } from "./encoding.js";
+import { utf8ToBytes } from "@noble/hashes/utils.js";
 
 const DETERMINISTIC_PRF_DOMAIN = utf8ToBytes("mera.v1.deterministic.prf");
 // The domain is a compile-time constant, so the salt is constant too: compute
@@ -15,7 +15,7 @@ const DETERMINISTIC_PRF_SALT = sha256(DETERMINISTIC_PRF_DOMAIN);
  * SLIP-0010.
  *
  * @returns Mera's fixed v1 deterministic 32-byte PRF salt.
- * @remarks Caller assumptions: wallet account selection belongs in the caller's wallet derivation scheme, not in this salt.
+ * @remarks Wallet account selection is not encoded in this salt; app-owned derivation schemes own that step.
  */
 function createDeterministicPrfSalt(): Uint8Array {
   return new Uint8Array(DETERMINISTIC_PRF_SALT);

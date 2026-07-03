@@ -6,18 +6,12 @@
  */
 type EvmAddress = `0x${string}`;
 
-/** Supported signing curves. */
-type SigningCurve = "secp256k1" | "ed25519";
-
-/** WebAuthn authenticator transport metadata, including future browser transport values. */
-type PasskeyCredentialTransport = AuthenticatorTransport | (string & {});
-
 /** Metadata needed to ask WebAuthn for a previously created passkey. */
 type PasskeyCredentialMetadata = {
   /** Credential ID encoded as canonical unpadded base64url. */
   credentialId: string;
   /** Authenticator transports reported by the browser, when available. */
-  transports?: PasskeyCredentialTransport[];
+  transports?: AuthenticatorTransport[];
 };
 
 /** Result of a successful passkey assertion with the WebAuthn PRF extension. */
@@ -33,7 +27,7 @@ type CreatePasskeyResult = {
   /** Credential ID encoded as canonical unpadded base64url. */
   credentialId: string;
   /** Authenticator transports reported by the browser, when available. */
-  transports?: PasskeyCredentialTransport[];
+  transports?: AuthenticatorTransport[];
   /** First WebAuthn PRF output when `prfSalt` was provided and evaluated during creation. */
   prfOutput?: Uint8Array;
 };
@@ -41,16 +35,15 @@ type CreatePasskeyResult = {
 /**
  * Result of creating a passkey together with its first PRF output.
  *
- * `prfSalt` is the caller-provided salt WebAuthn evaluated, so downstream
- * helpers (in particular `createSecretVault`) can be invoked with this result
- * alone.
+ * `prfSalt` is the salt WebAuthn evaluated, so downstream helpers (in
+ * particular `createSecretVault`) can be invoked with this result alone.
  */
 type CreatePasskeyWithPrfOutputResult = {
   /** Credential ID encoded as canonical unpadded base64url. */
   credentialId: string;
   /** Authenticator transports reported by the browser, when available. */
-  transports?: PasskeyCredentialTransport[];
-  /** PRF salt that was evaluated. Always 32 bytes and never aliases the caller input. */
+  transports?: AuthenticatorTransport[];
+  /** PRF salt that was evaluated. Always 32 bytes and never aliases the provided input. */
   prfSalt: Uint8Array;
   /** First WebAuthn PRF output for `prfSalt`. Always 32 bytes. */
   prfOutput: Uint8Array;
@@ -59,7 +52,7 @@ type CreatePasskeyWithPrfOutputResult = {
 /**
  * Versioned JSON-safe vault holding one arbitrary secret encrypted behind a passkey.
  *
- * The secret is opaque — no curve and no public key. Callers decide what the bytes mean (a seed phrase's entropy, a backup blob, …).
+ * The secret is opaque: no curve, no public key, and no package-defined meaning.
  */
 type PasskeySecretVault = {
   /** Secret-vault format version. */
@@ -87,7 +80,7 @@ type CreateSigningSessionOptions = {
   /**
    * Curve private key. Must be exactly 32 bytes; secp256k1 must also be a valid scalar.
    *
-   * Copied into one session-owned snapshot, then zeroed before the call returns or throws. Pass a fresh copy if the bytes are needed elsewhere.
+   * Copied into one session-owned snapshot, then zeroed before the call returns or throws.
    */
   consumePrivateKey: Uint8Array;
 };
@@ -101,8 +94,9 @@ type Secp256k1SigningSession = {
    *
    * @param digest32 - Exactly 32 bytes to sign.
    * @returns A compact secp256k1 ECDSA signature with its recovery ID.
-   * @remarks Caller assumptions: `digest32` must already be the digest to sign; this method does not hash it.
-   * @remarks `digest32` is copied before use; the original buffer is not modified.
+   * @remarks
+   * `digest32` is copied before use; the original buffer is not modified. This method does not hash `digest32`.
+   *
    * @throws PasskeyAccountError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
    * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
    */
@@ -110,8 +104,8 @@ type Secp256k1SigningSession = {
   /**
    * Clears the active private key and permanently locks this session.
    *
-   * @remarks Side effects: overwrites the session-owned private-key copy with zeros and makes future signing fail.
-   * @remarks If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
+   * @remarks
+   * Overwrites the session-owned private-key copy with zeros and makes future signing fail. If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
    */
   lock(): void;
 };
@@ -125,15 +119,17 @@ type Ed25519SigningSession = {
    *
    * @param message - Message bytes to sign. Hashing happens inside Ed25519 itself.
    * @returns A 64-byte Ed25519 signature (`R || s`).
-   * @remarks `message` is copied before use; the original buffer is not modified.
+   * @remarks
+   * `message` is copied before use; the original buffer is not modified.
+   *
    * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
    */
   signMessage(message: Uint8Array): Promise<Uint8Array>;
   /**
    * Clears the active private key and permanently locks this session.
    *
-   * @remarks Side effects: overwrites the session-owned seed copy with zeros and makes future signing fail.
-   * @remarks If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
+   * @remarks
+   * Overwrites the session-owned seed copy with zeros and makes future signing fail. If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
    */
   lock(): void;
 };
@@ -145,10 +141,8 @@ export type {
   Ed25519SigningSession,
   EvmAddress,
   PasskeyCredentialMetadata,
-  PasskeyCredentialTransport,
   PasskeyPrfResult,
   PasskeySecretVault,
   Secp256k1Signature,
   Secp256k1SigningSession,
-  SigningCurve,
 };

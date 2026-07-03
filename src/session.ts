@@ -1,11 +1,11 @@
 import { copyBytes } from "./encoding.js";
-import { requireUnlocked } from "./errors.js";
+import { PasskeyAccountError } from "./errors.js";
 
 /**
  * Handle to a session-owned private key whose lifetime is gated by `lock`.
  *
  * Centralizes the key-zeroing lifecycle shared by every signing session: the
- * caller's buffer is consumed (copied into one owned snapshot, then zeroed) on
+ * input buffer is consumed (copied into one owned snapshot, then zeroed) on
  * creation, access throws once locked, and `lock` zeroes the session-owned copy.
  */
 type LockableKey = {
@@ -22,14 +22,14 @@ type LockableKey = {
 /**
  * Consumes a private key into a lockable signing key and derives its public key.
  *
- * The caller's buffer is copied into one owned snapshot, which is used for
- * public-key derivation and signing. The caller's buffer is zeroed before this
+ * The input buffer is copied into one owned snapshot, which is used for
+ * public-key derivation and signing. The input buffer is zeroed before this
  * function returns or throws.
  *
  * @param consumePrivateKey - Private key to consume. Zeroed before this function returns or throws.
  * @param derivePublicKey - Derives the public key from the owned private-key snapshot; a throw doubles as private-key validation.
  * @returns The {@link LockableKey} handle gating access on lock state, paired with the derived public key.
- * @remarks Side effects: zeroes `consumePrivateKey` on every path; the owned snapshot is zeroed by `lock()` on success or before rethrowing a validation failure.
+ * @remarks `consumePrivateKey` is zeroed on every path; the owned snapshot is zeroed by `lock()` on success or before rethrowing a validation failure.
  * @throws Rethrows whatever `derivePublicKey` throws, after zeroing the owned snapshot and `consumePrivateKey`.
  */
 function createSigningKey(
@@ -63,6 +63,17 @@ function createSigningKey(
   } finally {
     consumePrivateKey.fill(0);
   }
+}
+
+function requireUnlocked(privateKey: Uint8Array | undefined): Uint8Array {
+  if (privateKey === undefined) {
+    throw new PasskeyAccountError(
+      "SESSION_LOCKED",
+      "Signing session is locked",
+    );
+  }
+
+  return privateKey;
 }
 
 export type { LockableKey };

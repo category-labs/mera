@@ -38,7 +38,7 @@ function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array {
  * @param options - Signing session inputs.
  * @param options.consumePrivateKey - Ed25519 seed. Must be 32 bytes. Copied into one session-owned snapshot, then zeroed before this call returns or throws.
  * @returns An unlocked Ed25519 signing session.
- * @remarks Side effects: zeroes `consumePrivateKey` on every path; public-key derivation and later signing use one session-owned copy, which `lock()` later zeroes.
+ * @remarks `consumePrivateKey` is zeroed on every path; public-key derivation and later signing use one session-owned copy, which `lock()` later zeroes.
  * @throws PasskeyAccountError with code `INPUT_INVALID` when `consumePrivateKey` is not 32 bytes.
  */
 function createEd25519SigningSession({

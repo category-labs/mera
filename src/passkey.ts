@@ -5,10 +5,13 @@ import {
   copyBytes,
 } from "./encoding.js";
 import { isPasskeyAccountError, PasskeyAccountError } from "./errors.js";
+import {
+  filterKnownAuthenticatorTransports,
+  readAuthenticatorTransports,
+} from "./transports.js";
 import type {
   CreatePasskeyResult,
   CreatePasskeyWithPrfOutputResult,
-  PasskeyCredentialTransport,
   PasskeyPrfResult,
 } from "./types.js";
 import { randomBytes } from "./webcrypto.js";
@@ -35,7 +38,7 @@ type CreatePasskeyInput = {
   /**
    * Optional 32-byte PRF salt to evaluate during creation. When provided and the authenticator supports PRF eval at create time, the returned `prfOutput` lets a derived-mode flow open the account in a single ceremony.
    *
-   * Authenticators that do not support PRF eval during creation silently ignore this field; callers should fall back to `getPasskeyPrfOutput` if `prfOutput` is undefined.
+   * Authenticators that do not support PRF eval during creation silently ignore this field; `prfOutput` is undefined in that case.
    */
   prfSalt?: Uint8Array;
 };
@@ -64,7 +67,7 @@ type GetPasskeyPrfOutputInput = {
   /** Optional credential ID (canonical unpadded base64url) to restrict the assertion to one passkey. */
   credentialId?: string;
   /** Optional transports associated with `credentialId`. */
-  transports?: PasskeyCredentialTransport[];
+  transports?: AuthenticatorTransport[];
   /** PRF salt as 32 raw bytes. */
   prfSalt: Uint8Array;
   /** WebAuthn challenge. Defaults to 32 cryptographically random bytes. */
@@ -102,8 +105,9 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * @param options.attestation - WebAuthn attestation preference. Defaults to `"none"`.
  * @param options.prfSalt - Optional 32-byte PRF salt to evaluate at create time.
  * @returns Credential metadata and, when `prfSalt` was provided and the authenticator supports it, the first PRF output.
- * @remarks Side effects: invokes `navigator.credentials.create()`, which may show browser or authenticator UI and create a discoverable passkey.
- * @remarks Caller assumptions: call from a secure browser context where WebAuthn and PRF are available.
+ * @remarks
+ * Invokes `navigator.credentials.create()`, which may show browser or authenticator UI and create a discoverable passkey. WebAuthn requires a secure browser context with PRF support.
+ *
  * @throws PasskeyAccountError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF.
  * @throws PasskeyAccountError with code `INPUT_INVALID` when `prfSalt` is provided but not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
  * @throws PasskeyAccountError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
@@ -176,7 +180,7 @@ async function createPasskey({
       publicKeyCredential.response as AuthenticatorAttestationResponse;
     const transports =
       typeof response.getTransports === "function"
-        ? response.getTransports()
+        ? filterKnownAuthenticatorTransports(response.getTransports())
         : undefined;
 
     const result: CreatePasskeyResult = {
@@ -226,11 +230,12 @@ async function createPasskey({
  * @param options.timeout - WebAuthn timeout in milliseconds. Browser defaults apply when omitted.
  * @returns The selected credential ID and first WebAuthn PRF output for wallet derivation or unlock flows.
  * @remarks
- * Side effects: invokes `navigator.credentials.get()`, which may show browser or authenticator UI.
+ * Invokes `navigator.credentials.get()`, which may show browser or authenticator UI.
  *
- * Caller assumptions: `prfSalt` must be stable for flows that need stable PRF output.
+ * Stable `prfSalt` bytes produce stable PRF output for the same credential and relying party.
+ *
  * @throws PasskeyAccountError with code `PRF_UNAVAILABLE` when the authenticator does not return a 32-byte PRF output.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes or `credentialId` is not canonical base64url.
+ * @throws PasskeyAccountError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes, `credentialId` is empty or not canonical base64url, or `transports` contains an unknown WebAuthn transport.
  * @throws PasskeyAccountError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function getPasskeyPrfOutput({
@@ -261,14 +266,17 @@ async function getPasskeyPrfOutput({
       extensions: { prf },
     };
 
-    if (credentialId) {
-      publicKey.allowCredentials = [
-        {
-          id: asArrayBuffer(base64UrlDecode(credentialId)),
-          type: "public-key",
-          transports: transports as AuthenticatorTransport[] | undefined,
-        },
-      ];
+    const transportHints = readAuthenticatorTransports(
+      transports,
+      "transports",
+      "INPUT_INVALID",
+    );
+    const credentialDescriptor = createCredentialDescriptor(
+      credentialId,
+      transportHints,
+    );
+    if (credentialDescriptor !== undefined) {
+      publicKey.allowCredentials = [credentialDescriptor];
     }
 
     const credential = await navigator.credentials.get({ publicKey });
@@ -311,16 +319,17 @@ async function getPasskeyPrfOutput({
 /**
  * Creates a passkey and returns the first WebAuthn PRF output, falling back to a second ceremony only when the authenticator does not evaluate PRF at create time.
  *
- * This is the canonical "open this account right after creating it" entry point. It is equivalent to calling `createPasskey` and, when `prfOutput` is undefined, `getPasskeyPrfOutput` with the same salt. The lower-level entry points remain available for callers that want to drive the two ceremonies independently (for example, to show UI between them).
+ * This is the canonical "open this account right after creating it" entry point. It is equivalent to calling `createPasskey` and, when `prfOutput` is undefined, `getPasskeyPrfOutput` with the same salt. The lower-level entry points remain available for flows that drive the two ceremonies independently (for example, to show UI between them).
  *
  * @param options - Passkey creation inputs. `rp.id` is required so the fallback ceremony can target the same relying party. `prfSalt` must be exactly 32 bytes.
  * @returns Credential metadata and the first PRF output.
  * @remarks
- * Side effects: invokes `navigator.credentials.create()`. On authenticators that do not evaluate PRF during creation, also invokes `navigator.credentials.get()` — which means a second browser prompt for the user.
+ * Invokes `navigator.credentials.create()`. On authenticators that do not evaluate PRF during creation, also invokes `navigator.credentials.get()`; this means a second browser prompt.
  *
  * `prfSalt` is copied before async WebAuthn work starts; post-call mutation of the input does not change the fallback ceremony or returned salt.
  *
- * Caller assumptions: call from a secure browser context where WebAuthn and PRF are available.
+ * WebAuthn requires a secure browser context with PRF support.
+ *
  * @throws PasskeyAccountError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or does not return PRF output on the fallback ceremony.
  * @throws PasskeyAccountError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
  * @throws PasskeyAccountError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
@@ -410,6 +419,37 @@ function assertPublicKeyCredential(
   }
 
   return publicKeyCredential;
+}
+
+/**
+ * Builds the optional WebAuthn descriptor for the stored credential.
+ *
+ * Empty credential IDs are rejected instead of omitted, so a malformed stored
+ * ID cannot widen the assertion to any discoverable credential.
+ *
+ * @internal
+ */
+function createCredentialDescriptor(
+  credentialId: string | undefined,
+  transports: AuthenticatorTransport[] | undefined,
+): PublicKeyCredentialDescriptor | undefined {
+  if (credentialId === undefined) {
+    return undefined;
+  }
+
+  const id = base64UrlDecode(credentialId);
+  if (id.length === 0) {
+    throw new PasskeyAccountError(
+      "INPUT_INVALID",
+      "credentialId must not be empty",
+    );
+  }
+
+  return {
+    id: asArrayBuffer(id),
+    type: "public-key",
+    ...(transports !== undefined ? { transports } : {}),
+  };
 }
 
 /**

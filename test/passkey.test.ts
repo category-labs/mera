@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { copyPrfOutput, createPasskeyWithPrfOutput } from "../dist/passkey.js";
+import {
+  copyPrfOutput,
+  createPasskeyWithPrfOutput,
+  getPasskeyPrfOutput,
+} from "../dist/passkey.js";
 import { expectError } from "./helpers.js";
 
 const ORIGINAL_NAVIGATOR = Object.getOwnPropertyDescriptor(
@@ -55,6 +59,65 @@ test("copyPrfOutput rejects non-byte array values instead of coercing them", () 
   expectError(() => copyPrfOutput([Number.NaN]), "PRF_UNAVAILABLE");
 });
 
+test("getPasskeyPrfOutput rejects an empty credential id", async () => {
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      credentials: {
+        async get() {
+          throw new Error("credential assertion should not start");
+        },
+      },
+    },
+  });
+
+  try {
+    await expect(
+      getPasskeyPrfOutput({
+        rpId: "example.com",
+        credentialId: "",
+        prfSalt: new Uint8Array(32),
+      }),
+    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+  } finally {
+    if (ORIGINAL_NAVIGATOR) {
+      Object.defineProperty(globalThis, "navigator", ORIGINAL_NAVIGATOR);
+    } else {
+      Reflect.deleteProperty(globalThis, "navigator");
+    }
+  }
+});
+
+test("getPasskeyPrfOutput rejects unknown transports before WebAuthn", async () => {
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      credentials: {
+        async get() {
+          throw new Error("credential assertion should not start");
+        },
+      },
+    },
+  });
+
+  try {
+    await expect(
+      getPasskeyPrfOutput({
+        rpId: "example.com",
+        credentialId: "AQIDBA",
+        transports: ["future" as unknown as AuthenticatorTransport],
+        prfSalt: new Uint8Array(32),
+      }),
+    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+  } finally {
+    if (ORIGINAL_NAVIGATOR) {
+      Object.defineProperty(globalThis, "navigator", ORIGINAL_NAVIGATOR);
+    } else {
+      Reflect.deleteProperty(globalThis, "navigator");
+    }
+  }
+});
+
 test("createPasskeyWithPrfOutput snapshots prfSalt for fallback and result", async () => {
   const originalSalt = Uint8Array.from({ length: 32 }, (_, index) => index);
   const prfSalt = new Uint8Array(originalSalt);
@@ -70,7 +133,7 @@ test("createPasskeyWithPrfOutput snapshots prfSalt for fallback and result", asy
             type: "public-key",
             rawId: new Uint8Array([1, 2, 3, 4]).buffer,
             response: {
-              getTransports: () => ["internal"],
+              getTransports: () => ["future", "internal"],
             },
             getClientExtensionResults: () => ({ prf: { enabled: true } }),
           };
@@ -109,6 +172,7 @@ test("createPasskeyWithPrfOutput snapshots prfSalt for fallback and result", asy
 
     const result = await pending;
 
+    expect(result.transports).toEqual(["internal"]);
     expect(result.prfSalt).toEqual(originalSalt);
     expect(result.prfOutput).toEqual(originalSalt);
     expect(fallbackSalt).toEqual(originalSalt);

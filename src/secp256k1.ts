@@ -14,7 +14,7 @@ import type {
  * @internal
  * @param privateKey - A 32-byte secp256k1 private key.
  * @returns A 65-byte public key with the `0x04` uncompressed prefix.
- * @remarks Caller assumptions: the private key must be secret key material; the function does not clear or mutate the input.
+ * @remarks The input is not cleared or mutated.
  * @throws PasskeyAccountError with code `INPUT_INVALID` when `privateKey` is not a valid secp256k1 scalar.
  */
 function getSecp256k1PublicKey(privateKey: Uint8Array): Uint8Array {
@@ -57,7 +57,7 @@ function normalizeSecp256k1PublicKey(publicKey: Uint8Array): Uint8Array {
  * @param options - Signing session inputs.
  * @param options.consumePrivateKey - secp256k1 private key. Copied into one session-owned snapshot, then zeroed before this call returns or throws.
  * @returns An unlocked secp256k1 signing session.
- * @remarks Side effects: zeroes `consumePrivateKey` on every path; public-key derivation and later signing use one session-owned copy, which `lock()` later zeroes.
+ * @remarks `consumePrivateKey` is zeroed on every path; public-key derivation and later signing use one session-owned copy, which `lock()` later zeroes.
  * @throws PasskeyAccountError with code `INPUT_INVALID` when `consumePrivateKey` is not a valid secp256k1 scalar.
  */
 function createSecp256k1SigningSession({

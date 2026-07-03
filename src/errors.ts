@@ -50,23 +50,5 @@ function isPasskeyAccountError(error: unknown): error is PasskeyAccountError {
   return error instanceof PasskeyAccountError;
 }
 
-/**
- * Returns the active private key for a signing session, or throws if the
- * session has been locked. Used by curve-specific session helpers to gate
- * `signDigest`/`signMessage` after `lock()`.
- *
- * @throws PasskeyAccountError with code `SESSION_LOCKED` when `privateKey` is undefined.
- */
-function requireUnlocked(privateKey: Uint8Array | undefined): Uint8Array {
-  if (privateKey === undefined) {
-    throw new PasskeyAccountError(
-      "SESSION_LOCKED",
-      "Signing session is locked",
-    );
-  }
-
-  return privateKey;
-}
-
 export type { PasskeyAccountErrorCode };
-export { isPasskeyAccountError, PasskeyAccountError, requireUnlocked };
+export { isPasskeyAccountError, PasskeyAccountError };

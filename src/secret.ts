@@ -37,7 +37,7 @@ function canonicalEncode(parts: Uint8Array[]): Uint8Array {
 // HKDF info and AAD for the secret vault. The HKDF info keeps the wrapping key
 // distinct from any other key derived from the same PRF output. The AAD is a
 // precomputed constant (domain ‖ version): a secret vault has no public key to
-// bind, unlike a per-account vault.
+// bind.
 const SECRET_WRAP_INFO = utf8ToBytes("mera.v1.wrap.secret");
 const SECRET_AAD_DOMAIN = utf8ToBytes("mera.v1.secret.aad");
 const SECRET_AAD_VERSION = 1;
@@ -147,9 +147,7 @@ function readBase64Url(
   try {
     bytes = base64UrlDecode(value);
   } catch (cause) {
-    throw new MeraError(errorCode, `${name} must be base64url`, {
-      cause,
-    });
+    throw new MeraError(errorCode, `${name} must be base64url`, { cause });
   }
 
   if (typeof byteLength === "number" && bytes.length !== byteLength) {
@@ -193,15 +191,23 @@ type CreateSecretVaultInput = {
 /**
  * Encrypts an arbitrary secret into a passkey-protected vault.
  *
- * The secret is opaque: no curve, no public key, no length or scalar checks. An AES-256-GCM wrapping key is derived from the PRF output with secret-specific HKDF info, and the secret is encrypted under canonical AAD.
+ * An AES-256-GCM wrapping key is derived from the PRF output with
+ * secret-specific HKDF info, and the secret is encrypted under fixed
+ * additional authenticated data (AAD).
  *
  * @remarks
- * The input byte buffers are copied before async cryptographic work starts; post-call mutation does not change the vault being produced. Caller-owned input buffers are not modified or zeroed.
+ * The input byte buffers are copied before async cryptographic work starts;
+ * post-call mutation does not change the vault being produced. Caller-owned
+ * input buffers are not modified or zeroed.
  *
- * Security: a vault is bound to its `prfOutput` only — not to the credential ID, salt, or nonce (the AAD is a fixed constant). Use a fresh `prfSalt` per secret. Secrets wrapped under one reused PRF output share a wrapping key, so their ciphertexts are interchangeable by anyone who can rewrite stored vault JSON.
+ * Security: a vault is bound to its `prfOutput` only — not to the credential
+ * ID, salt, or nonce. Secrets wrapped under one reused PRF output share a
+ * wrapping key, so their ciphertexts are interchangeable by anyone who can
+ * rewrite stored vault JSON; a fresh `prfSalt` per secret avoids the shared key.
  * @param options - Credential material and the secret to wrap.
  * @returns A JSON-safe secret vault.
- * @throws MeraError with code `INPUT_INVALID` when the credential ID is empty, the PRF salt or output is not 32 bytes, or `secret` is empty.
+ * @throws MeraError with code `INPUT_INVALID` when the credential ID is empty or not canonical base64url, the PRF salt or output is not 32 bytes, or `secret` is empty.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when Web Crypto is unavailable.
  */
 async function createSecretVault({
   credential,
@@ -264,10 +270,10 @@ type UnwrapSecretVaultInput = {
  * Decrypts the secret from a secret vault.
  *
  * @param options - Vault and PRF output.
- * @returns The decrypted secret bytes, exactly as passed to `createSecretVault`.
- * @remarks Side effects: callers should zero the returned buffer when finished.
+ * @returns The decrypted secret bytes, exactly as passed to `createSecretVault`. The returned buffer is a fresh allocation; the library keeps no reference to it and never zeroes it.
  * @throws MeraError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url (already validated for vaults from `parseSecretVault`).
  * @throws MeraError with code `DECRYPT_FAILED` when authentication fails.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when Web Crypto is unavailable.
  */
 async function unwrapSecretVault({
   vault,
@@ -288,12 +294,12 @@ async function unwrapSecretVault({
 /**
  * Parses and validates untrusted secret-vault JSON or objects.
  *
- * Only version 1 vaults are accepted. The credential, PRF salt, nonce, and ciphertext are canonicalized to base64url and length-checked.
- *
- * Fields outside the version-1 schema — unknown top-level keys and unknown `credential` keys — are ignored and absent from the returned vault.
+ * Only version 1 vaults are accepted. The credential ID, PRF salt, nonce, and
+ * ciphertext are validated as canonical base64url and length-checked. Unknown
+ * fields are dropped from the returned vault.
  *
  * @param value - Secret vault as JSON text or an untrusted object.
- * @returns A canonicalized secret vault.
+ * @returns A validated secret vault.
  * @throws MeraError with code `VAULT_FORMAT_INVALID` when required structure, version, or encoded data is invalid.
  */
 function parseSecretVault(value: unknown): PasskeySecretVault {
@@ -376,12 +382,14 @@ type GetSecretVaultPrfOutputInput = {
 /**
  * Performs the WebAuthn assertion needed to unlock a secret vault.
  *
- * Reads the credential metadata and PRF salt from a parsed vault; pass JSON through `parseSecretVault` first.
+ * Reads the credential metadata and PRF salt from a parsed vault and delegates
+ * to `getPasskeyPrfOutput`.
  *
  * @param options - Secret-vault PRF inputs.
  * @returns The selected credential ID and first WebAuthn PRF output.
- * @remarks Side effects: invokes `navigator.credentials.get()`, which may show browser or authenticator UI.
- * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a 32-byte PRF output.
+ * @remarks Invokes `navigator.credentials.get()`, which may show browser or authenticator UI.
+ * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
+ * @throws MeraError with code `INPUT_INVALID` when the vault's `prfSalt` or `credentialId` is not canonical base64url (already validated for vaults from `parseSecretVault`).
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function getSecretVaultPrfOutput({

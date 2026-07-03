@@ -1,4 +1,3 @@
-import { concatBytes, utf8ToBytes } from "@noble/hashes/utils.js";
 import { base64urlnopad } from "@scure/base";
 import { MeraError } from "./errors.js";
 
@@ -53,37 +52,4 @@ function base64UrlDecode(value: string): Uint8Array {
   }
 }
 
-/**
- * Encodes a non-negative uint32 using big-endian byte order.
- *
- * @param value - Integer to encode.
- * @returns Four big-endian bytes.
- * @remarks Caller assumptions: `value` is already a uint32 integer.
- */
-function uint32Be(value: number): Uint8Array {
-  const output = new Uint8Array(4);
-  const view = new DataView(output.buffer);
-  view.setUint32(0, value, false);
-  return output;
-}
-
-/**
- * Canonically encodes byte values using uint32 big-endian length prefixes.
- *
- * @param parts - Byte arrays to encode in order.
- * @returns A new byte array containing each part with a four-byte length prefix.
- */
-function canonicalEncode(parts: Uint8Array[]): Uint8Array {
-  return concatBytes(...parts.flatMap((part) => [uint32Be(part.length), part]));
-}
-
-export {
-  asArrayBuffer,
-  base64UrlDecode,
-  base64UrlEncode,
-  canonicalEncode,
-  concatBytes,
-  copyBytes,
-  uint32Be,
-  utf8ToBytes,
-};
+export { asArrayBuffer, base64UrlDecode, base64UrlEncode, copyBytes };

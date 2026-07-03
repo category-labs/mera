@@ -1,11 +1,9 @@
+import { concatBytes, utf8ToBytes } from "@noble/hashes/utils.js";
 import {
   asArrayBuffer,
   base64UrlDecode,
   base64UrlEncode,
-  canonicalEncode,
   copyBytes,
-  uint32Be,
-  utf8ToBytes,
 } from "./encoding.js";
 import { MeraError, type MeraErrorCode } from "./errors.js";
 import { getPasskeyPrfOutput } from "./passkey.js";
@@ -23,6 +21,18 @@ const NONCE_LENGTH = 12;
 // since aesGcmEncrypt does not set tagLength). Ciphertext carries its tag, so
 // any authentic ciphertext is at least this long.
 const GCM_TAG_LENGTH = 16;
+
+/** Encodes a non-negative uint32 as four big-endian bytes. */
+function uint32Be(value: number): Uint8Array {
+  const output = new Uint8Array(4);
+  new DataView(output.buffer).setUint32(0, value, false);
+  return output;
+}
+
+/** Length-prefixes each part with its uint32 big-endian byte length, making the concatenation unambiguous. */
+function canonicalEncode(parts: Uint8Array[]): Uint8Array {
+  return concatBytes(...parts.flatMap((part) => [uint32Be(part.length), part]));
+}
 
 // HKDF info and AAD for the secret vault. The HKDF info keeps the wrapping key
 // distinct from any other key derived from the same PRF output. The AAD is a

@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   copyPrfOutput,
+  createPasskey,
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
 } from "../dist/passkey.js";
@@ -10,6 +11,15 @@ const ORIGINAL_NAVIGATOR = Object.getOwnPropertyDescriptor(
   globalThis,
   "navigator",
 );
+const ORIGINAL_CRYPTO = Object.getOwnPropertyDescriptor(globalThis, "crypto");
+
+function restoreGlobalCrypto(): void {
+  if (ORIGINAL_CRYPTO) {
+    Object.defineProperty(globalThis, "crypto", ORIGINAL_CRYPTO);
+  } else {
+    Reflect.deleteProperty(globalThis, "crypto");
+  }
+}
 
 test("copyPrfOutput copies a plain ArrayBuffer without aliasing", () => {
   const source = Uint8Array.from({ length: 32 }, (_, index) => index + 1);
@@ -72,6 +82,43 @@ test("copyPrfOutput rejects PRF output that is not 32 bytes", () => {
   expectError(() => copyPrfOutput(new ArrayBuffer(33)), "PRF_UNAVAILABLE");
   // Valid byte values, so a plain array fails on length, not element checks.
   expectError(() => copyPrfOutput([1, 2, 3]), "PRF_UNAVAILABLE");
+});
+
+test("passkey helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavailable", async () => {
+  Object.defineProperty(globalThis, "crypto", {
+    configurable: true,
+    value: undefined,
+  });
+
+  try {
+    const user = { name: "nad", displayName: "nad" };
+    const prfSalt = new Uint8Array(32);
+
+    await expect(
+      createPasskey({
+        rp: { id: "example.com", name: "Mera Test" },
+        user,
+        prfSalt,
+      }),
+    ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
+
+    await expect(
+      getPasskeyPrfOutput({
+        rpId: "example.com",
+        prfSalt,
+      }),
+    ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
+
+    await expect(
+      createPasskeyWithPrfOutput({
+        rp: { id: "example.com", name: "Mera Test" },
+        user,
+        prfSalt,
+      }),
+    ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
+  } finally {
+    restoreGlobalCrypto();
+  }
 });
 
 test("getPasskeyPrfOutput rejects an empty credentialId without prompting", async () => {

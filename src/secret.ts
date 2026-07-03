@@ -221,7 +221,7 @@ type CreateSecretVaultInput = {
  * @param options - Credential material and the secret to wrap; fields are documented on {@link CreateSecretVaultOptions}.
  * @returns A JSON-safe secret vault.
  * @throws MeraError with code `INPUT_INVALID` when the credential ID is empty or not canonical base64url, the PRF salt or output is not 32 bytes, or `secret` is empty.
- * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when Web Crypto is unavailable.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  */
 async function createSecretVault({
   credential,
@@ -287,7 +287,7 @@ type UnwrapSecretVaultInput = {
  * @returns The decrypted secret bytes, exactly as passed to `createSecretVault`. The returned buffer is a fresh allocation; the library keeps no reference to it and never zeroes it.
  * @throws MeraError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url (already validated for vaults from `parseSecretVault`).
  * @throws MeraError with code `DECRYPT_FAILED` when authentication fails.
- * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when Web Crypto is unavailable.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  */
 async function unwrapSecretVault({
   vault,

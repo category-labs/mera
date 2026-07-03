@@ -38,5 +38,4 @@ export type {
   PasskeySecretVault,
   Secp256k1Signature,
   Secp256k1SigningSession,
-  SigningCurve,
 } from "./types.js";

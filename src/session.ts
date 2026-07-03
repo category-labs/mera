@@ -65,5 +65,4 @@ function createSigningKey(
   }
 }
 
-export type { LockableKey };
 export { createSigningKey };

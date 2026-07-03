@@ -6,9 +6,6 @@
  */
 type EvmAddress = `0x${string}`;
 
-/** Supported signing curves. */
-type SigningCurve = "secp256k1" | "ed25519";
-
 /** WebAuthn authenticator transport metadata, including future browser transport values. */
 type PasskeyCredentialTransport = AuthenticatorTransport | (string & {});
 
@@ -28,12 +25,8 @@ type PasskeyPrfResult = {
   prfOutput: Uint8Array;
 };
 
-/** Result of creating a passkey. `prfOutput` is populated when `prfSalt` was provided and the authenticator returned it during creation. */
-type CreatePasskeyResult = {
-  /** Credential ID encoded as canonical unpadded base64url. */
-  credentialId: string;
-  /** Authenticator transports reported by the browser, when available. */
-  transports?: PasskeyCredentialTransport[];
+/** Result of creating a passkey. */
+type CreatePasskeyResult = PasskeyCredentialMetadata & {
   /** First WebAuthn PRF output when `prfSalt` was provided and evaluated during creation. */
   prfOutput?: Uint8Array;
 };
@@ -41,15 +34,10 @@ type CreatePasskeyResult = {
 /**
  * Result of creating a passkey together with its first PRF output.
  *
- * `prfSalt` is the caller-provided salt WebAuthn evaluated, so downstream
- * helpers (in particular `createSecretVault`) can be invoked with this result
- * alone.
+ * `prfSalt` is the salt WebAuthn evaluated, so downstream helpers (in
+ * particular `createSecretVault`) can be invoked with this result alone.
  */
-type CreatePasskeyWithPrfOutputResult = {
-  /** Credential ID encoded as canonical unpadded base64url. */
-  credentialId: string;
-  /** Authenticator transports reported by the browser, when available. */
-  transports?: PasskeyCredentialTransport[];
+type CreatePasskeyWithPrfOutputResult = PasskeyCredentialMetadata & {
   /** PRF salt that was evaluated. Always 32 bytes and never aliases the caller input. */
   prfSalt: Uint8Array;
   /** First WebAuthn PRF output for `prfSalt`. Always 32 bytes. */
@@ -150,5 +138,4 @@ export type {
   PasskeySecretVault,
   Secp256k1Signature,
   Secp256k1SigningSession,
-  SigningCurve,
 };

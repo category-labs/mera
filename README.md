@@ -33,8 +33,8 @@ A derived-mode skeleton: one passkey ceremony, then app-owned wallet derivation.
 
 ```ts
 import {
-  createDeterministicPrfSalt,
   createSecp256k1SigningSession,
+  getDeterministicPrfSaltV1,
   getEvmAddress,
   getPasskeyPrfOutput,
 } from "@category-labs/mera"
@@ -42,7 +42,7 @@ import { derivePrivateKeyWithYourWalletScheme } from "./wallet-derivation"
 
 const rpId = "account.example.com"
 
-const prfSalt = createDeterministicPrfSalt()
+const prfSalt = getDeterministicPrfSaltV1()
 const { prfOutput } = await getPasskeyPrfOutput({ rpId, prfSalt })
 
 const privateKey = derivePrivateKeyWithYourWalletScheme({
@@ -59,7 +59,7 @@ unchanged for unrelated purposes, such as wallet derivation and app-data
 encryption. Use a different PRF salt for that purpose, or split one PRF output
 with a purpose-labeled KDF.
 
-Derived/reproducible-wallet flows pass a stable PRF salt such as `createDeterministicPrfSalt()`. Wrapped flows pass fresh random salt bytes.
+Derived/reproducible-wallet flows pass a stable PRF salt such as `getDeterministicPrfSaltV1()`. Wrapped flows pass fresh random salt bytes.
 
 ## Supported authenticators
 
@@ -94,7 +94,7 @@ On desktop Chrome, only passkeys saved to Google Password Manager carry PRF. The
 Names only — your editor's hover surfaces the full JSDoc.
 
 - **Passkey ceremonies** — `createPasskey`, `createPasskeyWithPrfOutput`, `getPasskeyPrfOutput`
-- **Deterministic PRF salt** — `createDeterministicPrfSalt`
+- **Deterministic PRF salt** — `getDeterministicPrfSaltV1`
 - **Signing sessions** — `createSecp256k1SigningSession`, `createEd25519SigningSession`
 - **Secret vault** — `createSecretVault`, `unwrapSecretVault`, `parseSecretVault`, `getSecretVaultPrfOutput`
 - **Chain addresses** — `getEvmAddress`, `isEvmAddress`, `getSolanaAddress`, `isSolanaAddress`

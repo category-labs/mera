@@ -1,11 +1,11 @@
 import {
-  createDeterministicPrfSalt,
   createEd25519SigningSession,
   createPasskeyWithPrfOutput,
   createSecp256k1SigningSession,
   createSecretVault,
   type Ed25519SigningSession,
   type EvmAddress,
+  getDeterministicPrfSaltV1,
   getEvmAddress,
   getPasskeyPrfOutput,
   getSecretVaultPrfOutput,
@@ -150,7 +150,7 @@ function buildDerivedWallet(
 async function createDerived(label: string): Promise<ConnectResult> {
   // `user.id` is left to default (32 random bytes), so every "Create" is a
   // distinct, parallel passkey rather than silently overwriting an existing one.
-  const prfSalt = createDeterministicPrfSalt();
+  const prfSalt = getDeterministicPrfSaltV1();
   const credential = await createPasskeyWithPrfOutput({
     rp: { id: rpId, name: RP_NAME },
     user: { name: label, displayName: label },
@@ -175,7 +175,7 @@ async function openDerived(): Promise<ConnectResult> {
   // Pin to the passkey created on this device when we know it; otherwise fall
   // back to a discoverable credential so a freshly synced device still works.
   const known = currentDerivedWallet();
-  const prfSalt = createDeterministicPrfSalt();
+  const prfSalt = getDeterministicPrfSaltV1();
   const { prfOutput, credentialId } = await getPasskeyPrfOutput({
     rpId,
     ...(known?.credentialId ? { credentialId: known.credentialId } : {}),
@@ -338,7 +338,7 @@ async function revealMnemonic(wallet: ConnectedWallet): Promise<string> {
   }
 
   const record = currentDerivedWallet();
-  const prfSalt = createDeterministicPrfSalt();
+  const prfSalt = getDeterministicPrfSaltV1();
   const { prfOutput } = await getPasskeyPrfOutput({
     rpId,
     ...(wallet.credentialId ? { credentialId: wallet.credentialId } : {}),

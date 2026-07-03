@@ -658,7 +658,7 @@ clientDataJSON
 
         <p>
           In derived mode the account is computed from the passkey. mera pins a
-          fixed salt (<code>createDeterministicPrfSalt()</code>), so the same
+          fixed salt (<code>getDeterministicPrfSaltV1()</code>), so the same
           passkey yields the same account. The application runs the
           passkey-derived bytes through its derivation scheme of choice; mera's
           demo wallet app feeds them into BIP-39 and derives keys with
@@ -784,7 +784,7 @@ clientDataJSON
         <p>The skeleton — one ceremony, then app-owned derivation:</p>
 
         <pre><code class="language-typescript">import {
-  createDeterministicPrfSalt,
+  getDeterministicPrfSaltV1,
   createSecp256k1SigningSession,
   getEvmAddress,
   getPasskeyPrfOutput,
@@ -793,7 +793,7 @@ import { derivePrivateKeyWithYourWalletScheme } from "./wallet-derivation"
 
 const rpId = "account.example.com"
 
-const prfSalt = createDeterministicPrfSalt()
+const prfSalt = getDeterministicPrfSaltV1()
 const { prfOutput } = await getPasskeyPrfOutput({ rpId, prfSalt })
 
 const privateKey = derivePrivateKeyWithYourWalletScheme({

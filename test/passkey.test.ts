@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { copyPrfOutput, createPasskeyWithPrfOutput } from "../dist/passkey.js";
+import {
+  copyPrfOutput,
+  createPasskeyWithPrfOutput,
+  getPasskeyPrfOutput,
+} from "../dist/passkey.js";
 import { expectError } from "./helpers.js";
 
 const ORIGINAL_NAVIGATOR = Object.getOwnPropertyDescriptor(
@@ -66,6 +70,41 @@ test("copyPrfOutput rejects non-byte array values instead of coercing them", () 
 test("copyPrfOutput rejects PRF output that is not 32 bytes", () => {
   expectError(() => copyPrfOutput(new Uint8Array(31)), "PRF_UNAVAILABLE");
   expectError(() => copyPrfOutput(new ArrayBuffer(33)), "PRF_UNAVAILABLE");
+});
+
+test("getPasskeyPrfOutput rejects an empty credentialId without prompting", async () => {
+  // A malformed stored ID must fail closed instead of silently widening the
+  // assertion to any discoverable credential for the relying party.
+  let asserted = false;
+
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      credentials: {
+        async get() {
+          asserted = true;
+          throw new Error("assertion must not start");
+        },
+      },
+    },
+  });
+
+  try {
+    await expect(
+      getPasskeyPrfOutput({
+        rpId: "example.com",
+        credentialId: "",
+        prfSalt: new Uint8Array(32),
+      }),
+    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+    expect(asserted).toBe(false);
+  } finally {
+    if (ORIGINAL_NAVIGATOR) {
+      Object.defineProperty(globalThis, "navigator", ORIGINAL_NAVIGATOR);
+    } else {
+      Reflect.deleteProperty(globalThis, "navigator");
+    }
+  }
 });
 
 test("createPasskeyWithPrfOutput snapshots prfSalt for fallback and result", async () => {

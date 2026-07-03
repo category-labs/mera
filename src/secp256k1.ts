@@ -9,13 +9,12 @@ import type {
 } from "./types.js";
 
 /**
- * Derives an uncompressed secp256k1 public key from a private key.
+ * Derives an uncompressed secp256k1 public key from a 32-byte private key.
+ * The input is not modified.
  *
- * @internal
- * @param privateKey - A 32-byte secp256k1 private key.
  * @returns A 65-byte public key with the `0x04` uncompressed prefix.
- * @remarks Caller assumptions: the private key must be secret key material; the function does not clear or mutate the input.
  * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not a valid secp256k1 scalar.
+ * @internal
  */
 function getSecp256k1PublicKey(privateKey: Uint8Array): Uint8Array {
   try {
@@ -32,10 +31,9 @@ function getSecp256k1PublicKey(privateKey: Uint8Array): Uint8Array {
 /**
  * Converts a compressed or uncompressed secp256k1 public key to uncompressed form.
  *
- * @internal
- * @param publicKey - A compressed or uncompressed secp256k1 public key.
  * @returns A 65-byte public key with the `0x04` uncompressed prefix.
  * @throws MeraError with code `INPUT_INVALID` when the key length, prefix, or curve point is invalid.
+ * @internal
  */
 function normalizeSecp256k1PublicKey(publicKey: Uint8Array): Uint8Array {
   try {
@@ -50,12 +48,11 @@ function normalizeSecp256k1PublicKey(publicKey: Uint8Array): Uint8Array {
 /**
  * Wraps a secp256k1 private key in an explicitly lockable signing session.
  *
- * `signDigest` signs exactly 32 bytes without prehashing. Calling `lock` zeroes the active private-key copy and makes future signing fail.
+ * `signDigest` signs exactly 32 bytes without prehashing. `lock` zeroes the
+ * session-owned private-key copy and makes future signing fail.
  *
  * @param options - Signing session inputs.
- * @param options.consumePrivateKey - secp256k1 private key. Copied into one session-owned snapshot, then zeroed before this call returns or throws.
  * @returns An unlocked secp256k1 signing session.
- * @remarks Side effects: zeroes `consumePrivateKey` on every path; public-key derivation and later signing use one session-owned copy, which `lock()` later zeroes.
  * @throws MeraError with code `INPUT_INVALID` when `consumePrivateKey` is not a valid secp256k1 scalar.
  */
 function createSecp256k1SigningSession({
@@ -82,6 +79,7 @@ function createSecp256k1SigningSession({
         prehash: false,
       });
 
+      // noble's "recovered" format is 65 bytes: the recovery ID, then r || s.
       return {
         compact: signature.slice(1),
         recovery: signature[0],

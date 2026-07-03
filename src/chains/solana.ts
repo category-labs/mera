@@ -21,8 +21,6 @@ function getSolanaAddress(publicKey: Uint8Array): string {
 /**
  * Returns true when a string is a valid base58-encoded Solana address.
  *
- * Validates both the base58 alphabet and the 32-byte decoded length.
- *
  * @param value - String to check.
  * @returns `true` when `value` decodes to 32 base58 bytes.
  */

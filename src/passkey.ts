@@ -104,7 +104,7 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * @returns Credential metadata and, when `prfSalt` was provided and the authenticator supports it, the first PRF output.
  * @remarks Side effects: invokes `navigator.credentials.create()`, which may show browser or authenticator UI and create a discoverable passkey.
  * @remarks Caller assumptions: call from a secure browser context where WebAuthn and PRF are available.
- * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF.
+ * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or returns a malformed create-time PRF output.
  * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is provided but not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
@@ -182,11 +182,7 @@ async function createPasskey({
     }
 
     if (prfSalt !== undefined && prf.results?.first) {
-      const prfOutput = copyPrfOutput(prf.results.first);
-      if (prfOutput.length !== 32) {
-        throw new MeraError("PRF_UNAVAILABLE", "PRF output must be 32 bytes");
-      }
-      result.prfOutput = prfOutput;
+      result.prfOutput = copyPrfOutput(prf.results.first);
     }
 
     return result;
@@ -218,7 +214,7 @@ async function createPasskey({
  * Side effects: invokes `navigator.credentials.get()`, which may show browser or authenticator UI.
  *
  * Caller assumptions: `prfSalt` must be stable for flows that need stable PRF output.
- * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a 32-byte PRF output.
+ * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes or `credentialId` is not canonical base64url.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
@@ -269,14 +265,9 @@ async function getPasskeyPrfOutput({
       );
     }
 
-    const prfOutput = copyPrfOutput(first);
-    if (prfOutput.length !== 32) {
-      throw new MeraError("PRF_UNAVAILABLE", "PRF output must be 32 bytes");
-    }
-
     return {
       credentialId: base64UrlEncode(new Uint8Array(publicKeyCredential.rawId)),
-      prfOutput,
+      prfOutput: copyPrfOutput(first),
     };
   } catch (error) {
     if (isMeraError(error)) {
@@ -393,7 +384,7 @@ function assertPublicKeyCredential(
 }
 
 /**
- * Copies a WebAuthn PRF result into standalone bytes.
+ * Copies a WebAuthn PRF result into standalone 32-byte output.
  *
  * Authenticators surface PRF output inconsistently: most return an `ArrayBuffer`,
  * some return an `ArrayBufferView`, and others (notably the 1Password browser
@@ -405,33 +396,37 @@ function assertPublicKeyCredential(
  * bare `Uint8Array.from(value)` would instead silently coerce malformed values
  * (mod 256, `NaN` -> 0) into HKDF key material.
  *
- * @throws MeraError with code `PRF_UNAVAILABLE` when a plain array-like
- * contains a value that is not an integer in [0, 255].
+ * @throws MeraError with code `PRF_UNAVAILABLE` when the output is not exactly
+ * 32 bytes, or a plain array-like contains a value that is not an integer in
+ * [0, 255].
  * @internal
  */
 function copyPrfOutput(value: BufferSource | ArrayLike<number>): Uint8Array {
+  let output: Uint8Array;
+
   if (ArrayBuffer.isView(value)) {
-    return new Uint8Array(
+    output = new Uint8Array(
       value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength),
     );
+  } else if (value instanceof ArrayBuffer) {
+    output = new Uint8Array(value.slice(0));
+  } else {
+    output = Uint8Array.from(value, (byte) => {
+      if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
+        throw new MeraError(
+          "PRF_UNAVAILABLE",
+          "PRF output must contain only byte values (integers 0-255)",
+        );
+      }
+      return byte;
+    });
   }
 
-  if (value instanceof ArrayBuffer) {
-    return new Uint8Array(value.slice(0));
+  if (output.length !== 32) {
+    throw new MeraError("PRF_UNAVAILABLE", "PRF output must be 32 bytes");
   }
 
-  // Plain array-like (for example, 1Password's extension returns a number[]).
-  // Validate each element as it is copied so a non-byte value fails closed
-  // instead of being silently coerced (mod 256, NaN -> 0) into key material.
-  return Uint8Array.from(value, (byte) => {
-    if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
-      throw new MeraError(
-        "PRF_UNAVAILABLE",
-        "PRF output must contain only byte values (integers 0-255)",
-      );
-    }
-    return byte;
-  });
+  return output;
 }
 
 /** Options accepted by `createPasskey`. */

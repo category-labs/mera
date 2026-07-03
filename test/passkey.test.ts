@@ -8,51 +8,64 @@ const ORIGINAL_NAVIGATOR = Object.getOwnPropertyDescriptor(
 );
 
 test("copyPrfOutput copies a plain ArrayBuffer without aliasing", () => {
-  const source = new Uint8Array([1, 2, 3, 4]);
+  const source = Uint8Array.from({ length: 32 }, (_, index) => index + 1);
   const out = copyPrfOutput(source.buffer);
 
   expect(out).toBeInstanceOf(Uint8Array);
-  expect([...out]).toEqual([1, 2, 3, 4]);
+  expect([...out]).toEqual([...source]);
 
   // Mutating the source buffer must not affect the copy.
-  new Uint8Array(source.buffer)[0] = 99;
+  source[0] = 99;
   expect(out[0]).toBe(1);
 });
 
 test("copyPrfOutput copies only an ArrayBufferView's window without aliasing", () => {
-  // A 4-byte view sitting in the middle of an 8-byte buffer.
-  const { buffer } = new Uint8Array([0, 0, 5, 6, 7, 8, 0, 0]);
-  const view = new Uint8Array(buffer, 2, 4);
+  // A 32-byte view sitting in the middle of a 40-byte buffer.
+  const backing = new Uint8Array(40);
+  backing.set(
+    Uint8Array.from({ length: 32 }, (_, index) => index + 1),
+    4,
+  );
+  const view = new Uint8Array(backing.buffer, 4, 32);
   const out = copyPrfOutput(view);
 
   expect(out).toBeInstanceOf(Uint8Array);
-  expect([...out]).toEqual([5, 6, 7, 8]);
+  expect([...out]).toEqual([...view]);
 
   // Mutating the underlying buffer must not affect the copy.
-  new Uint8Array(buffer)[2] = 99;
-  expect(out[0]).toBe(5);
+  backing[4] = 99;
+  expect(out[0]).toBe(1);
 });
 
 test("copyPrfOutput copies a plain array of byte values", () => {
-  // The 1Password browser extension returns PRF output as a plain number array.
-  const out = copyPrfOutput([10, 20, 30]);
+  // The 1Password browser extension returns PRF output as a plain number
+  // array. Includes the boundary values 0 and 255, which must stay uncoerced.
+  const values = Array.from({ length: 32 }, (_, index) => index);
+  values[31] = 255;
+  const out = copyPrfOutput(values);
 
   expect(out).toBeInstanceOf(Uint8Array);
-  expect([...out]).toEqual([10, 20, 30]);
-});
-
-test("copyPrfOutput accepts the boundary byte values 0 and 255", () => {
-  expect([...copyPrfOutput([0, 255])]).toEqual([0, 255]);
+  expect([...out]).toEqual(values);
 });
 
 test("copyPrfOutput rejects non-byte array values instead of coercing them", () => {
   // Uint8Array.from would silently coerce each of these (256 -> 0, -1 -> 255,
   // 1.5 -> 1, NaN -> 0). The result becomes HKDF key material, so a malformed
   // plain array must fail with PRF_UNAVAILABLE instead.
-  expectError(() => copyPrfOutput([256]), "PRF_UNAVAILABLE");
-  expectError(() => copyPrfOutput([-1]), "PRF_UNAVAILABLE");
-  expectError(() => copyPrfOutput([1.5]), "PRF_UNAVAILABLE");
-  expectError(() => copyPrfOutput([Number.NaN]), "PRF_UNAVAILABLE");
+  const withFirstValue = (value: number) => [value, ...new Array(31).fill(0)];
+
+  expectError(() => copyPrfOutput(withFirstValue(256)), "PRF_UNAVAILABLE");
+  expectError(() => copyPrfOutput(withFirstValue(-1)), "PRF_UNAVAILABLE");
+  expectError(() => copyPrfOutput(withFirstValue(1.5)), "PRF_UNAVAILABLE");
+  expectError(
+    () => copyPrfOutput(withFirstValue(Number.NaN)),
+    "PRF_UNAVAILABLE",
+  );
+});
+
+test("copyPrfOutput rejects PRF output that is not 32 bytes", () => {
+  expectError(() => copyPrfOutput(new Uint8Array(31)), "PRF_UNAVAILABLE");
+  expectError(() => copyPrfOutput(new ArrayBuffer(33)), "PRF_UNAVAILABLE");
 });
 
 test("createPasskeyWithPrfOutput snapshots prfSalt for fallback and result", async () => {

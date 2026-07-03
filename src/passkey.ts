@@ -35,8 +35,8 @@ type CreatePasskeyInput = {
   /**
    * Optional 32-byte PRF salt to evaluate during creation. Authenticators that
    * do not support PRF eval at create time silently ignore it and the result
-   * omits `prfOutput`; a later `getPasskeyPrfOutput` with the same salt
-   * returns it.
+   * omits `prfOutput`; a later `getPasskeyPrfOutput` with the same `rpId`,
+   * `credentialId`, and salt yields the PRF output.
    */
   prfSalt?: Uint8Array;
 };

@@ -50,20 +50,5 @@ function isMeraError(error: unknown): error is MeraError {
   return error instanceof MeraError;
 }
 
-/**
- * Returns the active private key for a signing session, or throws if the
- * session has been locked. Used by curve-specific session helpers to gate
- * `signDigest`/`signMessage` after `lock()`.
- *
- * @throws MeraError with code `SESSION_LOCKED` when `privateKey` is undefined.
- */
-function requireUnlocked(privateKey: Uint8Array | undefined): Uint8Array {
-  if (privateKey === undefined) {
-    throw new MeraError("SESSION_LOCKED", "Signing session is locked");
-  }
-
-  return privateKey;
-}
-
 export type { MeraErrorCode };
-export { isMeraError, MeraError, requireUnlocked };
+export { isMeraError, MeraError };

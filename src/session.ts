@@ -1,5 +1,5 @@
 import { copyBytes } from "./encoding.js";
-import { requireUnlocked } from "./errors.js";
+import { MeraError } from "./errors.js";
 
 /**
  * Handle to a session-owned private key whose lifetime is gated by `lock`.
@@ -46,7 +46,10 @@ function createSigningKey(
 
     const key: LockableKey = {
       use(): Uint8Array {
-        return requireUnlocked(activePrivateKey);
+        if (activePrivateKey === undefined) {
+          throw new MeraError("SESSION_LOCKED", "Signing session is locked");
+        }
+        return activePrivateKey;
       },
       lock(): void {
         if (activePrivateKey !== undefined) {

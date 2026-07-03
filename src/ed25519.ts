@@ -11,6 +11,8 @@ import type {
 /**
  * Derives the 32-byte Ed25519 public key for a 32-byte Ed25519 seed.
  *
+ * @param privateKey - A 32-byte Ed25519 seed.
+ * @returns The 32-byte Ed25519 public key.
  * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not 32 bytes.
  * @internal
  */

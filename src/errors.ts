@@ -21,7 +21,14 @@ class MeraError extends Error {
   /** Machine-readable category for the failure. */
   readonly code: MeraErrorCode;
 
-  /** Creates an error with a stable `code` and a human-readable `message`. `options.cause` carries the original failure, when available. */
+  /**
+   * Creates a package error with a stable error code.
+   *
+   * @param code - Machine-readable category for the failure.
+   * @param message - Human-readable error message.
+   * @param options - Optional error construction options.
+   * @param options.cause - Original cause for this error, when available.
+   */
   constructor(
     code: MeraErrorCode,
     message: string,
@@ -33,7 +40,12 @@ class MeraError extends Error {
   }
 }
 
-/** Returns true when `error` is a `MeraError`. */
+/**
+ * Returns true when an unknown error is a `MeraError`.
+ *
+ * @param error - Value to check.
+ * @returns `true` when `error` is a `MeraError`.
+ */
 function isMeraError(error: unknown): error is MeraError {
   return error instanceof MeraError;
 }

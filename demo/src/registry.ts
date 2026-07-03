@@ -49,5 +49,4 @@ function isDerivedWalletRecord(value: unknown): value is DerivedWalletRecord {
   );
 }
 
-export type { DerivedWalletRecord };
 export { currentDerivedWallet, rememberDerivedWallet, setDerivedAccountCount };

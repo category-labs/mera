@@ -1,9 +1,12 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { startTestServer } from "./server.js";
 
-test("creates a PRF-capable passkey and returns stable PRF output @e2e", async ({
-  page,
-}) => {
+// Owns the shared e2e harness: test server, CDP virtual authenticator
+// (PRF-capable, discoverable, user-verified), page navigation, and teardown.
+async function withVirtualAuthenticator(
+  page: Page,
+  run: () => Promise<void>,
+): Promise<void> {
   const server = await startTestServer();
   const client = await page.context().newCDPSession(page);
 
@@ -23,12 +26,22 @@ test("creates a PRF-capable passkey and returns stable PRF output @e2e", async (
     });
 
     await page.goto(server.url);
+    await run();
+  } finally {
+    await client.send("WebAuthn.disable").catch(() => undefined);
+    await server.close();
+  }
+}
 
+test("creates a PRF-capable passkey and returns stable PRF output @e2e", async ({
+  page,
+}) => {
+  await withVirtualAuthenticator(page, async () => {
     const result = await page.evaluate(async () => {
-      const account = await import("/dist/index.js");
+      const mera = await import("@category-labs/mera");
       const salt = new Uint8Array(32).fill(5);
       const otherSalt = new Uint8Array(32).fill(6);
-      const credential = await account.createPasskey({
+      const credential = await mera.createPasskey({
         rp: { id: "localhost", name: "Mera Test" },
         user: {
           id: crypto.getRandomValues(new Uint8Array(32)),
@@ -37,12 +50,18 @@ test("creates a PRF-capable passkey and returns stable PRF output @e2e", async (
         },
         prfSalt: salt,
       });
-      const second = await account.getPasskeyPrfOutput({
+      const second = await mera.getPasskeyPrfOutput({
         rpId: "localhost",
         credentialId: credential.credentialId,
         prfSalt: salt,
       });
-      const other = await account.getPasskeyPrfOutput({
+      // The README quick-example path: no credentialId, so WebAuthn selects a
+      // discoverable credential for the relying party.
+      const discovered = await mera.getPasskeyPrfOutput({
+        rpId: "localhost",
+        prfSalt: salt,
+      });
+      const other = await mera.getPasskeyPrfOutput({
         rpId: "localhost",
         credentialId: credential.credentialId,
         prfSalt: otherSalt,
@@ -54,6 +73,8 @@ test("creates a PRF-capable passkey and returns stable PRF output @e2e", async (
           ? Array.from(credential.prfOutput)
           : null,
         second: Array.from(second.prfOutput),
+        discoveredCredentialId: discovered.credentialId,
+        discovered: Array.from(discovered.prfOutput),
         other: Array.from(other.prfOutput),
       };
     });
@@ -62,38 +83,18 @@ test("creates a PRF-capable passkey and returns stable PRF output @e2e", async (
     expect(result.atCreate).not.toBeNull();
     expect(result.atCreate).toHaveLength(32);
     expect(result.atCreate).toEqual(result.second);
+    expect(result.discoveredCredentialId).toBe(result.credentialId);
+    expect(result.discovered).toEqual(result.second);
     expect(result.atCreate).not.toEqual(result.other);
-  } finally {
-    await client.send("WebAuthn.disable").catch(() => undefined);
-    await server.close();
-  }
+  });
 });
 
 test("createPasskeyWithPrfOutput returns the first PRF output in one call @e2e", async ({
   page,
 }) => {
-  const server = await startTestServer();
-  const client = await page.context().newCDPSession(page);
-
-  try {
-    await client.send("WebAuthn.enable");
-    await client.send("WebAuthn.addVirtualAuthenticator", {
-      options: {
-        protocol: "ctap2",
-        ctap2Version: "ctap2_1",
-        transport: "internal",
-        hasResidentKey: true,
-        hasUserVerification: true,
-        isUserVerified: true,
-        hasPrf: true,
-        automaticPresenceSimulation: true,
-      },
-    });
-
-    await page.goto(server.url);
-
+  await withVirtualAuthenticator(page, async () => {
     const result = await page.evaluate(async () => {
-      const mera = await import("/dist/index.js");
+      const mera = await import("@category-labs/mera");
       const prfSalt = crypto.getRandomValues(new Uint8Array(32));
       const created = await mera.createPasskeyWithPrfOutput({
         rp: { id: "localhost", name: "Mera Test" },
@@ -124,37 +125,15 @@ test("createPasskeyWithPrfOutput returns the first PRF output in one call @e2e",
     expect(result.prfSalt).toHaveLength(32);
     expect(result.prfOutput).toHaveLength(32);
     expect(result.prfOutput).toEqual(result.repeated);
-  } finally {
-    await client.send("WebAuthn.disable").catch(() => undefined);
-    await server.close();
-  }
+  });
 });
 
 test("createSecretVault round-trips a secret through a real passkey ceremony @e2e", async ({
   page,
 }) => {
-  const server = await startTestServer();
-  const client = await page.context().newCDPSession(page);
-
-  try {
-    await client.send("WebAuthn.enable");
-    await client.send("WebAuthn.addVirtualAuthenticator", {
-      options: {
-        protocol: "ctap2",
-        ctap2Version: "ctap2_1",
-        transport: "internal",
-        hasResidentKey: true,
-        hasUserVerification: true,
-        isUserVerified: true,
-        hasPrf: true,
-        automaticPresenceSimulation: true,
-      },
-    });
-
-    await page.goto(server.url);
-
+  await withVirtualAuthenticator(page, async () => {
     const result = await page.evaluate(async () => {
-      const mera = await import("/dist/index.js");
+      const mera = await import("@category-labs/mera");
       const phrase =
         "legal winner thank year wave sausage worth useful legal winner thank yellow";
       const credential = await mera.createPasskeyWithPrfOutput({
@@ -181,8 +160,5 @@ test("createSecretVault round-trips a secret through a real passkey ceremony @e2
     });
 
     expect(result.revealed).toBe(result.phrase);
-  } finally {
-    await client.send("WebAuthn.disable").catch(() => undefined);
-    await server.close();
-  }
+  });
 });

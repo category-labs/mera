@@ -46,10 +46,7 @@ function createSigningKey(
 
     const key: LockableKey = {
       use(): Uint8Array {
-        if (activePrivateKey === undefined) {
-          throw new MeraError("SESSION_LOCKED", "Signing session is locked");
-        }
-        return activePrivateKey;
+        return requireUnlocked(activePrivateKey);
       },
       lock(): void {
         if (activePrivateKey !== undefined) {

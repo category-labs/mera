@@ -17,6 +17,8 @@ const DETERMINISTIC_PRF_SALT = sha256(DETERMINISTIC_PRF_DOMAIN);
  * @returns A fresh 32-byte copy of the fixed salt.
  */
 function getDeterministicPrfSaltV1(): Uint8Array {
+  // A fresh copy per call: a Uint8Array cannot be frozen, so a shared buffer
+  // mutated by one caller would silently change every later derivation.
   return new Uint8Array(DETERMINISTIC_PRF_SALT);
 }
 

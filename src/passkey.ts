@@ -19,7 +19,17 @@ type CreatePasskeyInput = {
   rp: PublicKeyCredentialRpEntity;
   /** User identity passed to WebAuthn. `id` is copied before use. */
   user: {
-    /** Stable user handle for the relying party. Must be 1 to 64 bytes when provided (WebAuthn's user-handle limit). Defaults to 32 cryptographically random bytes. */
+    /**
+     * User handle for the relying party. Must be 1 to 64 bytes when provided
+     * (WebAuthn's user-handle limit).
+     *
+     * Authenticators key discoverable credentials by `(rp.id, user.id)`.
+     * Passing the same `rp.id` and `user.id` lets creation replace the existing
+     * passkey for that user handle. When omitted, a fresh 32-byte random handle
+     * is generated for each call, so repeated calls add parallel passkeys
+     * instead of replacing one, and the generated handle is not correlated with
+     * an app account.
+     */
     id?: Uint8Array;
     /** User name displayed or stored by the authenticator. */
     name: string;

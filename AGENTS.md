@@ -29,13 +29,13 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 ### Documentation and Examples
 
 - Public SDK functions should have complete, accurate JSDoc.
-- Use appropriate JSDoc tags to describe the API contract, return behavior, caller assumptions, observable side effects, and failure modes.
+- Use appropriate JSDoc tags to describe the API contract, return behavior, input constraints, observable side effects, and failure modes.
 - Document security-sensitive behavior explicitly, especially for key material, randomness, WebAuthn prompts, encryption nonces, storage formats, and mutation/zeroing behavior.
 - Document thrown `MeraError` codes with the appropriate JSDoc tag.
 - Examples should be runnable, concise, and focused on library behavior, not on provider boilerplate.
 - README examples should reflect actual tested behavior.
 - Keep documentation prose neutral: name keys, secrets, and passkeys plainly ("the passkey", "one encrypted secret") rather than attributing them to the reader ("your passkey", "a secret you provide" / "you own").
-- Internal helpers with non-obvious invariants should have short comments or docstrings.
+- Internal helpers with non-obvious invariants should have short `//` comments or full JSDoc.
 - Document observable behavior, not caller instructions: state what a function does to its inputs and outputs (for example, "the input is copied before use; the original buffer is not modified") rather than what the caller may or should do with them. Callers derive correct usage from the stated facts.
 - When a comment or doc gives a rationale, explain the mechanism, not just the claim: a reader should see *why* from the text (for example, "signing reads the buffer after an await, so copy it first") rather than having to reconstruct the cause.
 - For section-style JSDoc/TSDoc block tags, use one tag per semantic section and continue with paragraphs until the next block tag. Put the tag on its own line when the content is multi-sentence. Repeat only naturally repeatable tags such as `@param`, `@throws`, `@example`, and `@see`; do not repeat section-style tags such as `@remarks` just to split paragraphs.

@@ -239,9 +239,12 @@ async function getPasskeyPrfOutput({
     };
 
     if (credentialId !== undefined) {
-      // The minimum length rejects an empty ID rather than fall through to
-      // discoverable selection: a malformed stored ID must not silently widen
-      // the assertion to any passkey.
+      // WebAuthn floors only randomly generated credential IDs at 16 bytes;
+      // the encrypted-credential-source form has no stated minimum, so only
+      // emptiness is rejected here: an empty ID must not silently widen the
+      // assertion to any discoverable passkey. A short-but-nonempty ID fails
+      // closed at the browser as a non-matching allowCredentials entry.
+      // https://www.w3.org/TR/webauthn-3/#credential-id
       publicKey.allowCredentials = [
         {
           id: asArrayBuffer(

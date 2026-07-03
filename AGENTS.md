@@ -59,9 +59,9 @@ This file should stay stable and process-oriented.
 
 - architectural decisions
 - coding and API design principles
-- testing and verification workflow
 - safety and review expectations
-- essential project commands
+
+Project commands and the testing workflow live in the README's Development section.
 
 ### What Not to Include
 

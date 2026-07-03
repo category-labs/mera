@@ -104,6 +104,16 @@ Recovery phrases become JavaScript strings when displayed or exported. Unlike `U
 
 **Dependency scope.** Runtime dependencies are `@noble/*` and `@scure/*` only. The root `devDependencies` (build/test tooling) and the unpublished `demo/` app never ship to library consumers.
 
+## Development
+
+```sh
+npm ci
+npm test            # build, typecheck the tests, run the full Playwright suite
+npm run test:e2e    # end-to-end passkey ceremonies only (virtual authenticator)
+npm run check       # Biome lint + format
+npm run check:pack  # verify the publishable tarball
+```
+
 ## License
 
 Licensed under either of [Apache License](./LICENSE-APACHE), Version

@@ -53,7 +53,7 @@ function normalizeSecp256k1PublicKey(publicKey: Uint8Array): Uint8Array {
  * `signDigest` signs exactly 32 bytes without prehashing. `lock` zeroes the
  * session-owned private-key copy and makes future signing fail.
  *
- * @param options - Signing session inputs.
+ * @param options - Signing session inputs; fields are documented on {@link CreateSigningSessionOptions}.
  * @returns An unlocked secp256k1 signing session.
  * @throws MeraError with code `INPUT_INVALID` when `consumePrivateKey` is not a valid secp256k1 scalar.
  */

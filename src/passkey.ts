@@ -94,7 +94,7 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * time, the result includes the first PRF output, so no second ceremony is
  * needed to open a derived account.
  *
- * @param options - Passkey creation inputs.
+ * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyOptions}.
  * @returns Credential metadata, plus the first PRF output when it was evaluated during creation.
  * @remarks
  * Invokes `navigator.credentials.create()`, which may show browser or
@@ -200,7 +200,7 @@ async function createPasskey({
  *
  * When `credentialId` is omitted, WebAuthn may choose any discoverable credential for the relying party.
  *
- * @param options - Passkey PRF request inputs.
+ * @param options - Passkey PRF request inputs; fields are documented on {@link GetPasskeyPrfOutputOptions}.
  * @returns The selected credential ID and first WebAuthn PRF output.
  * @remarks
  * Invokes `navigator.credentials.get()`, which may show browser or
@@ -283,7 +283,7 @@ async function getPasskeyPrfOutput({
  * time. Equivalent to `createPasskey` followed, when `prfOutput` is absent, by
  * `getPasskeyPrfOutput` with the same salt.
  *
- * @param options - Passkey creation inputs. `rp.id` is required so the fallback ceremony can target the same relying party. `prfSalt` must be exactly 32 bytes.
+ * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyWithPrfOutputOptions}. `rp.id` is required so the fallback ceremony can target the same relying party. `prfSalt` must be exactly 32 bytes.
  * @returns Credential metadata and the first PRF output.
  * @remarks
  * Invokes `navigator.credentials.create()`. On authenticators that do not

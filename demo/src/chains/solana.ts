@@ -7,6 +7,7 @@ import {
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
+// biome-ignore lint/style/useNodejsImportProtocol: Vite maps the bare "buffer" specifier to the browser Buffer polyfill; "node:buffer" would bypass the alias.
 import { Buffer } from "buffer";
 import { cachePerNetwork, type NetworkMode } from "../network";
 

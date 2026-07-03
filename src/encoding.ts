@@ -1,6 +1,6 @@
 import { concatBytes, utf8ToBytes } from "@noble/hashes/utils.js";
 import { base64urlnopad } from "@scure/base";
-import { PasskeyAccountError } from "./errors.js";
+import { MeraError } from "./errors.js";
 
 /**
  * Copies bytes into a standalone `Uint8Array`.
@@ -41,13 +41,13 @@ function base64UrlEncode(value: Uint8Array): string {
  *
  * @param value - Canonical unpadded base64url text.
  * @returns Decoded bytes.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `value` uses invalid characters, invalid length, or non-canonical padding.
+ * @throws MeraError with code `INPUT_INVALID` when `value` uses invalid characters, invalid length, or non-canonical padding.
  */
 function base64UrlDecode(value: string): Uint8Array {
   try {
     return base64urlnopad.decode(value);
   } catch (cause) {
-    throw new PasskeyAccountError("INPUT_INVALID", "value must be base64url", {
+    throw new MeraError("INPUT_INVALID", "value must be base64url", {
       cause,
     });
   }

@@ -1,5 +1,5 @@
 import { base58 } from "@scure/base";
-import { PasskeyAccountError } from "../errors.js";
+import { MeraError } from "../errors.js";
 
 const ED25519_PUBLIC_KEY_LENGTH = 32;
 
@@ -8,14 +8,11 @@ const ED25519_PUBLIC_KEY_LENGTH = 32;
  *
  * @param publicKey - A 32-byte Ed25519 public key.
  * @returns The base58-encoded Solana address.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `publicKey` is not 32 bytes.
+ * @throws MeraError with code `INPUT_INVALID` when `publicKey` is not 32 bytes.
  */
 function getSolanaAddress(publicKey: Uint8Array): string {
   if (publicKey.length !== ED25519_PUBLIC_KEY_LENGTH) {
-    throw new PasskeyAccountError(
-      "INPUT_INVALID",
-      "Ed25519 public key must be 32 bytes",
-    );
+    throw new MeraError("INPUT_INVALID", "Ed25519 public key must be 32 bytes");
   }
 
   return base58.encode(publicKey);

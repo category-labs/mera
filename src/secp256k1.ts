@@ -1,6 +1,6 @@
 import * as secp from "@noble/secp256k1";
 import { copyBytes } from "./encoding.js";
-import { PasskeyAccountError } from "./errors.js";
+import { MeraError } from "./errors.js";
 import { createSigningKey } from "./session.js";
 import type {
   CreateSigningSessionOptions,
@@ -15,13 +15,13 @@ import type {
  * @param privateKey - A 32-byte secp256k1 private key.
  * @returns A 65-byte public key with the `0x04` uncompressed prefix.
  * @remarks Caller assumptions: the private key must be secret key material; the function does not clear or mutate the input.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `privateKey` is not a valid secp256k1 scalar.
+ * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not a valid secp256k1 scalar.
  */
 function getSecp256k1PublicKey(privateKey: Uint8Array): Uint8Array {
   try {
     return new Uint8Array(secp.getPublicKey(privateKey, false));
   } catch (cause) {
-    throw new PasskeyAccountError(
+    throw new MeraError(
       "INPUT_INVALID",
       "Private key is not a valid secp256k1 scalar",
       { cause },
@@ -35,17 +35,15 @@ function getSecp256k1PublicKey(privateKey: Uint8Array): Uint8Array {
  * @internal
  * @param publicKey - A compressed or uncompressed secp256k1 public key.
  * @returns A 65-byte public key with the `0x04` uncompressed prefix.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when the key length, prefix, or curve point is invalid.
+ * @throws MeraError with code `INPUT_INVALID` when the key length, prefix, or curve point is invalid.
  */
 function normalizeSecp256k1PublicKey(publicKey: Uint8Array): Uint8Array {
   try {
     return new Uint8Array(secp.Point.fromBytes(publicKey).toBytes(false));
   } catch (cause) {
-    throw new PasskeyAccountError(
-      "INPUT_INVALID",
-      "Public key is not valid secp256k1",
-      { cause },
-    );
+    throw new MeraError("INPUT_INVALID", "Public key is not valid secp256k1", {
+      cause,
+    });
   }
 }
 
@@ -58,7 +56,7 @@ function normalizeSecp256k1PublicKey(publicKey: Uint8Array): Uint8Array {
  * @param options.consumePrivateKey - secp256k1 private key. Copied into one session-owned snapshot, then zeroed before this call returns or throws.
  * @returns An unlocked secp256k1 signing session.
  * @remarks Side effects: zeroes `consumePrivateKey` on every path; public-key derivation and later signing use one session-owned copy, which `lock()` later zeroes.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `consumePrivateKey` is not a valid secp256k1 scalar.
+ * @throws MeraError with code `INPUT_INVALID` when `consumePrivateKey` is not a valid secp256k1 scalar.
  */
 function createSecp256k1SigningSession({
   consumePrivateKey,
@@ -72,10 +70,7 @@ function createSecp256k1SigningSession({
     publicKey,
     async signDigest(digest32: Uint8Array): Promise<Secp256k1Signature> {
       if (digest32.length !== 32) {
-        throw new PasskeyAccountError(
-          "INPUT_INVALID",
-          "Digest must be 32 bytes",
-        );
+        throw new MeraError("INPUT_INVALID", "Digest must be 32 bytes");
       }
 
       // Signing reads the buffer after an await; copy it now so a later mutation can't change the signed bytes.

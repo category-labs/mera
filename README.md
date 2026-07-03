@@ -98,7 +98,7 @@ Names only — your editor's hover surfaces the full JSDoc.
 - **Signing sessions** — `createSecp256k1SigningSession`, `createEd25519SigningSession`
 - **Secret vault** — `createSecretVault`, `unwrapSecretVault`, `parseSecretVault`, `getSecretVaultPrfOutput`
 - **Chain addresses** — `getEvmAddress`, `isEvmAddress`, `getSolanaAddress`, `isSolanaAddress`
-- **Errors** — `PasskeyAccountError`, `isPasskeyAccountError`, `PasskeyAccountErrorCode`
+- **Errors** — `MeraError`, `isMeraError`, `MeraErrorCode`
 
 ## Detailed docs
 

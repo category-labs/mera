@@ -103,8 +103,8 @@ type Secp256k1SigningSession = {
    * @returns A compact secp256k1 ECDSA signature with its recovery ID.
    * @remarks Caller assumptions: `digest32` must already be the digest to sign; this method does not hash it.
    * @remarks `digest32` is copied before use; the original buffer is not modified.
-   * @throws PasskeyAccountError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
-   * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
+   * @throws MeraError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
+   * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
    */
   signDigest(digest32: Uint8Array): Promise<Secp256k1Signature>;
   /**
@@ -126,7 +126,7 @@ type Ed25519SigningSession = {
    * @param message - Message bytes to sign. Hashing happens inside Ed25519 itself.
    * @returns A 64-byte Ed25519 signature (`R || s`).
    * @remarks `message` is copied before use; the original buffer is not modified.
-   * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
+   * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
    */
   signMessage(message: Uint8Array): Promise<Uint8Array>;
   /**

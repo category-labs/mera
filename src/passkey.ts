@@ -239,15 +239,14 @@ async function getPasskeyPrfOutput({
     };
 
     if (credentialId !== undefined) {
-      const credentialIdBytes = base64UrlDecode(credentialId);
-      // Reject an empty ID rather than fall through to discoverable selection:
-      // a malformed stored ID must not silently widen the assertion to any passkey.
-      if (credentialIdBytes.length === 0) {
-        throw new MeraError("INPUT_INVALID", "credentialId must not be empty");
-      }
+      // The minimum length rejects an empty ID rather than fall through to
+      // discoverable selection: a malformed stored ID must not silently widen
+      // the assertion to any passkey.
       publicKey.allowCredentials = [
         {
-          id: asArrayBuffer(credentialIdBytes),
+          id: asArrayBuffer(
+            base64UrlDecode(credentialId, { minByteLength: 1 }),
+          ),
           type: "public-key",
           transports: transports as AuthenticatorTransport[] | undefined,
         },

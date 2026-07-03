@@ -68,18 +68,14 @@ type EncryptedBytes = {
   ciphertext: Uint8Array;
 };
 
-async function deriveWrappingKey({
-  prfOutput,
-  info,
-}: {
-  prfOutput: Uint8Array;
-  info: Uint8Array;
-}): Promise<CryptoKey> {
+// Derives the vault wrapping key. The 32-byte check validates caller-supplied
+// PRF output at the public boundary before it becomes key material.
+async function deriveWrappingKey(prfOutput: Uint8Array): Promise<CryptoKey> {
   if (prfOutput.length !== PRF_OUTPUT_LENGTH) {
-    throw new MeraError("INPUT_INVALID", "prfOutput must be 32 bytes");
+    throw new MeraError("INPUT_INVALID", "PRF output must be 32 bytes");
   }
 
-  return hkdfSha256AesGcmKey(prfOutput, info);
+  return hkdfSha256AesGcmKey(prfOutput, SECRET_WRAP_INFO);
 }
 
 // AES-256-GCM encrypt. subtle.encrypt copies its inputs synchronously and the
@@ -247,10 +243,7 @@ async function createSecretVault({
   const secretCopy = copyBytes(secret);
 
   try {
-    const wrappingKey = await deriveWrappingKey({
-      info: SECRET_WRAP_INFO,
-      prfOutput: prfOutputCopy,
-    });
+    const wrappingKey = await deriveWrappingKey(prfOutputCopy);
     const encrypted = await aesGcmEncrypt({
       plaintext: secretCopy,
       wrappingKey,
@@ -294,10 +287,7 @@ async function unwrapSecretVault({
   vault,
   prfOutput,
 }: UnwrapSecretVaultInput): Promise<Uint8Array> {
-  const wrappingKey = await deriveWrappingKey({
-    info: SECRET_WRAP_INFO,
-    prfOutput,
-  });
+  const wrappingKey = await deriveWrappingKey(prfOutput);
 
   return aesGcmDecrypt({
     encrypted: {
@@ -325,10 +315,6 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
 
   if (!isRecord(vault)) {
     throw new MeraError("VAULT_FORMAT_INVALID", "Vault must be an object");
-  }
-
-  if (!("version" in vault)) {
-    throw new MeraError("VAULT_FORMAT_INVALID", "Vault version is required");
   }
 
   if (vault.version !== 1) {
@@ -389,6 +375,18 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
   return { version: 1, credential, prfSalt, nonce, ciphertext };
 }
 
+/** Inputs for the WebAuthn assertion that unlocks a secret vault. */
+type GetSecretVaultPrfOutputInput = {
+  /** Relying party ID for the WebAuthn assertion. */
+  rpId: string;
+  /** Parsed secret vault. */
+  vault: PasskeySecretVault;
+  /** WebAuthn challenge. Defaults to 32 cryptographically random bytes. */
+  challenge?: Uint8Array;
+  /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
+  timeout?: number;
+};
+
 /**
  * Performs the WebAuthn assertion needed to unlock a secret vault.
  *
@@ -405,16 +403,7 @@ async function getSecretVaultPrfOutput({
   vault,
   challenge,
   timeout,
-}: {
-  /** Relying party ID for the WebAuthn assertion. */
-  rpId: string;
-  /** Parsed secret vault. */
-  vault: PasskeySecretVault;
-  /** WebAuthn challenge. Defaults to 32 cryptographically random bytes. */
-  challenge?: Uint8Array;
-  /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
-  timeout?: number;
-}): Promise<PasskeyPrfResult> {
+}: GetSecretVaultPrfOutputInput): Promise<PasskeyPrfResult> {
   return getPasskeyPrfOutput({
     rpId,
     credentialId: vault.credential.credentialId,

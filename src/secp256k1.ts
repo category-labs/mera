@@ -12,6 +12,7 @@ import type {
  * Derives an uncompressed secp256k1 public key from a 32-byte private key.
  * The input is not modified.
  *
+ * @param privateKey - A 32-byte secp256k1 private key.
  * @returns A 65-byte public key with the `0x04` uncompressed prefix.
  * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not a valid secp256k1 scalar.
  * @internal
@@ -31,6 +32,7 @@ function getSecp256k1PublicKey(privateKey: Uint8Array): Uint8Array {
 /**
  * Converts a compressed or uncompressed secp256k1 public key to uncompressed form.
  *
+ * @param publicKey - A compressed or uncompressed secp256k1 public key.
  * @returns A 65-byte public key with the `0x04` uncompressed prefix.
  * @throws MeraError with code `INPUT_INVALID` when the key length, prefix, or curve point is invalid.
  * @internal

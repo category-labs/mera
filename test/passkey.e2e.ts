@@ -55,8 +55,8 @@ test("creates a PRF-capable passkey and returns stable PRF output @e2e", async (
         credentialId: credential.credentialId,
         prfSalt: salt,
       });
-      // The README quick-example path: no credentialId, so WebAuthn selects a
-      // discoverable credential for the relying party.
+      // No credentialId: WebAuthn selects a discoverable credential for the
+      // relying party, so this is a distinct path from the pinned call above.
       const discovered = await mera.getPasskeyPrfOutput({
         rpId: "localhost",
         prfSalt: salt,

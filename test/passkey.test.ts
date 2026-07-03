@@ -70,6 +70,8 @@ test("copyPrfOutput rejects non-byte array values instead of coercing them", () 
 test("copyPrfOutput rejects PRF output that is not 32 bytes", () => {
   expectError(() => copyPrfOutput(new Uint8Array(31)), "PRF_UNAVAILABLE");
   expectError(() => copyPrfOutput(new ArrayBuffer(33)), "PRF_UNAVAILABLE");
+  // Valid byte values, so a plain array fails on length, not element checks.
+  expectError(() => copyPrfOutput([1, 2, 3]), "PRF_UNAVAILABLE");
 });
 
 test("getPasskeyPrfOutput rejects an empty credentialId without prompting", async () => {

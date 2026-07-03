@@ -159,7 +159,6 @@ function clusterShortName(cluster: Cluster): string {
 export type { SolanaContext };
 export {
   clusterDisplayName,
-  clusterShortName,
   explorerTxUrl,
   getSolanaContext,
   getSolBalance,

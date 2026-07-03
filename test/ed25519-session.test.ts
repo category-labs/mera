@@ -33,16 +33,6 @@ test("signs messages and locks the session", async () => {
   });
 });
 
-test("rejects non-32-byte private keys", () => {
-  expectError(
-    () =>
-      createEd25519SigningSession({
-        consumePrivateKey: new Uint8Array(31),
-      }),
-    "INPUT_INVALID",
-  );
-});
-
 test("zeroes the caller's buffer when the private key is the wrong length", () => {
   const buffer = new Uint8Array(31).fill(7);
 

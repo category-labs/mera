@@ -26,12 +26,8 @@ type CreatePasskeyInput = {
     /** Human-readable display name for the authenticator UI. */
     displayName: string;
   };
-  /** WebAuthn challenge. Defaults to 32 cryptographically random bytes. */
-  challenge?: Uint8Array;
   /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
   timeout?: number;
-  /** WebAuthn attestation preference. Defaults to `"none"`. */
-  attestation?: AttestationConveyancePreference;
   /**
    * Optional 32-byte PRF salt to evaluate during creation. Authenticators that
    * do not support PRF eval at create time silently ignore it and the result
@@ -66,8 +62,6 @@ type GetPasskeyPrfOutputInput = {
   credential?: PasskeyCredentialMetadata;
   /** PRF salt as 32 raw bytes. */
   prfSalt: Uint8Array;
-  /** WebAuthn challenge. Defaults to 32 cryptographically random bytes. */
-  challenge?: Uint8Array;
   /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
   timeout?: number;
 };
@@ -98,8 +92,12 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * Invokes `navigator.credentials.create()`, which may show browser or
  * authenticator UI and create a discoverable passkey.
  *
+ * The WebAuthn challenge is generated internally. The raw attestation response
+ * is not returned.
+ *
  * The credential is requested with fixed parameters: ES256 or RS256 key types,
- * a required resident key, and required user verification.
+ * attestation `"none"`, a required resident key, and required user
+ * verification.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or returns a malformed create-time PRF output.
  * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is provided but not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
@@ -108,12 +106,12 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
 async function createPasskey({
   rp,
   user,
-  challenge = randomBytes(32),
   timeout,
-  attestation = "none",
   prfSalt,
 }: CreatePasskeyInput): Promise<CreatePasskeyResult> {
   try {
+    const challenge = randomBytes(32);
+
     assertCredentialApiAvailable();
 
     if (prfSalt !== undefined && prfSalt.length !== 32) {
@@ -141,7 +139,7 @@ async function createPasskey({
           { type: "public-key", alg: -257 },
         ],
         timeout,
-        attestation,
+        attestation: "none",
         authenticatorSelection: {
           residentKey: "required",
           requireResidentKey: true,
@@ -205,6 +203,9 @@ async function createPasskey({
  * Invokes `navigator.credentials.get()`, which may show browser or
  * authenticator UI.
  *
+ * The WebAuthn challenge is generated internally. The raw assertion response is
+ * not returned.
+ *
  * The PRF output is a deterministic function of the credential, `rpId`, and
  * `prfSalt`: the same three inputs reproduce the same output, and a different
  * salt yields an unrelated output.
@@ -217,10 +218,11 @@ async function getPasskeyPrfOutput({
   rpId,
   credential: allowCredential,
   prfSalt,
-  challenge = randomBytes(32),
   timeout,
 }: GetPasskeyPrfOutputInput): Promise<PasskeyPrfResult> {
   try {
+    const challenge = randomBytes(32);
+
     assertCredentialApiAvailable();
 
     if (prfSalt.length !== 32) {
@@ -301,6 +303,9 @@ async function getPasskeyPrfOutput({
  * evaluate PRF during creation, also invokes `navigator.credentials.get()` — a
  * second browser prompt.
  *
+ * WebAuthn challenges are generated internally. Raw attestation and assertion
+ * responses are not returned.
+ *
  * `prfSalt` is copied before async WebAuthn work starts; post-call mutation of
  * the input does not change the fallback ceremony or returned salt.
  *
@@ -316,9 +321,7 @@ async function getPasskeyPrfOutput({
 async function createPasskeyWithPrfOutput({
   rp,
   user,
-  challenge,
   timeout,
-  attestation,
   prfSalt,
 }: CreatePasskeyWithPrfOutputInput): Promise<CreatePasskeyWithPrfOutputResult> {
   const prfSaltCopy = copyBytes(prfSalt);
@@ -326,9 +329,7 @@ async function createPasskeyWithPrfOutput({
   const credential = await createPasskey({
     rp,
     user,
-    challenge,
     timeout,
-    attestation,
     prfSalt: prfSaltCopy,
   });
 

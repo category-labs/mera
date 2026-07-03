@@ -387,8 +387,6 @@ type GetSecretVaultPrfOutputInput = {
   rpId: string;
   /** Parsed secret vault. */
   vault: PasskeySecretVault;
-  /** WebAuthn challenge. Defaults to 32 cryptographically random bytes. */
-  challenge?: Uint8Array;
   /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
   timeout?: number;
 };
@@ -401,22 +399,26 @@ type GetSecretVaultPrfOutputInput = {
  *
  * @param options - Secret-vault PRF inputs; fields are documented on {@link GetSecretVaultPrfOutputOptions}.
  * @returns The selected credential ID and first WebAuthn PRF output.
- * @remarks Invokes `navigator.credentials.get()`, which may show browser or authenticator UI.
+ * @remarks
+ * Invokes `navigator.credentials.get()`, which may show browser or
+ * authenticator UI.
+ *
+ * The WebAuthn challenge is generated internally and the raw assertion
+ * response is not returned.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when the vault's `prfSalt` or `credentialId` is not canonical base64url (already validated for vaults from `parseSecretVault`).
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function getSecretVaultPrfOutput({
   rpId,
   vault,
-  challenge,
   timeout,
 }: GetSecretVaultPrfOutputInput): Promise<PasskeyPrfResult> {
   return getPasskeyPrfOutput({
     rpId,
     credential: vault.credential,
     prfSalt: base64UrlDecode(vault.prfSalt),
-    challenge,
     timeout,
   });
 }

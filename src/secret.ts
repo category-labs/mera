@@ -414,8 +414,7 @@ async function getSecretVaultPrfOutput({
 }: GetSecretVaultPrfOutputInput): Promise<PasskeyPrfResult> {
   return getPasskeyPrfOutput({
     rpId,
-    credentialId: vault.credential.credentialId,
-    transports: vault.credential.transports,
+    credential: vault.credential,
     prfSalt: base64UrlDecode(vault.prfSalt),
     challenge,
     timeout,

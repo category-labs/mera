@@ -178,8 +178,14 @@ async function openDerived(): Promise<ConnectResult> {
   const prfSalt = getDeterministicPrfSaltV1();
   const { prfOutput, credentialId } = await getPasskeyPrfOutput({
     rpId,
-    ...(known?.credentialId ? { credentialId: known.credentialId } : {}),
-    ...(known?.transports ? { transports: known.transports } : {}),
+    ...(known?.credentialId
+      ? {
+          credential: {
+            credentialId: known.credentialId,
+            ...(known.transports ? { transports: known.transports } : {}),
+          },
+        }
+      : {}),
     prfSalt,
   });
 
@@ -341,9 +347,16 @@ async function revealMnemonic(wallet: ConnectedWallet): Promise<string> {
   const prfSalt = getDeterministicPrfSaltV1();
   const { prfOutput } = await getPasskeyPrfOutput({
     rpId,
-    ...(wallet.credentialId ? { credentialId: wallet.credentialId } : {}),
-    ...(record?.credentialId === wallet.credentialId && record?.transports
-      ? { transports: record.transports }
+    ...(wallet.credentialId
+      ? {
+          credential: {
+            credentialId: wallet.credentialId,
+            ...(record?.credentialId === wallet.credentialId &&
+            record?.transports
+              ? { transports: record.transports }
+              : {}),
+          },
+        }
       : {}),
     prfSalt,
   });

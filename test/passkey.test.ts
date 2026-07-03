@@ -142,7 +142,7 @@ test("getPasskeyPrfOutput rejects an empty credentialId without prompting", asyn
     await expect(
       getPasskeyPrfOutput({
         rpId: "example.com",
-        credentialId: "",
+        credential: { credentialId: "" },
         prfSalt: new Uint8Array(32),
       }),
     ).rejects.toMatchObject({ code: "INPUT_INVALID" });

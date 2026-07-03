@@ -1,7 +1,7 @@
 import * as ed25519 from "@noble/ed25519";
 import { sha512 } from "@noble/hashes/sha2.js";
 import { copyBytes } from "./encoding.js";
-import { PasskeyAccountError } from "./errors.js";
+import { MeraError } from "./errors.js";
 import { createSigningKey } from "./session.js";
 import type {
   CreateSigningSessionOptions,
@@ -14,11 +14,11 @@ import type {
  * @internal
  * @param privateKey - A 32-byte Ed25519 seed.
  * @returns The 32-byte Ed25519 public key.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `privateKey` is not 32 bytes.
+ * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not 32 bytes.
  */
 function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array {
   if (privateKey.length !== 32) {
-    throw new PasskeyAccountError(
+    throw new MeraError(
       "INPUT_INVALID",
       "Ed25519 private key must be 32 bytes",
     );
@@ -39,7 +39,7 @@ function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array {
  * @param options.consumePrivateKey - Ed25519 seed. Must be 32 bytes. Copied into one session-owned snapshot, then zeroed before this call returns or throws.
  * @returns An unlocked Ed25519 signing session.
  * @remarks Side effects: zeroes `consumePrivateKey` on every path; public-key derivation and later signing use one session-owned copy, which `lock()` later zeroes.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `consumePrivateKey` is not 32 bytes.
+ * @throws MeraError with code `INPUT_INVALID` when `consumePrivateKey` is not 32 bytes.
  */
 function createEd25519SigningSession({
   consumePrivateKey,

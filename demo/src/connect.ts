@@ -10,7 +10,7 @@ import {
   getPasskeyPrfOutput,
   getSecretVaultPrfOutput,
   getSolanaAddress,
-  isPasskeyAccountError,
+  isMeraError,
   parseSecretVault,
   type Secp256k1SigningSession,
   unwrapSecretVault,
@@ -357,7 +357,7 @@ async function revealMnemonic(wallet: ConnectedWallet): Promise<string> {
 
 /** Turns library and chain errors into short, friendly status text. */
 function describeError(error: unknown): string {
-  if (isPasskeyAccountError(error)) {
+  if (isMeraError(error)) {
     switch (error.code) {
       case "PRF_UNAVAILABLE":
         return "This browser or authenticator doesn't support the WebAuthn PRF extension this demo needs.";

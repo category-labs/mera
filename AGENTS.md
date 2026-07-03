@@ -31,7 +31,7 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 - Public SDK functions should have complete, accurate JSDoc.
 - Use appropriate JSDoc tags to describe the API contract, return behavior, caller assumptions, observable side effects, and failure modes.
 - Document security-sensitive behavior explicitly, especially for key material, randomness, WebAuthn prompts, encryption nonces, storage formats, and mutation/zeroing behavior.
-- Document thrown `PasskeyAccountError` codes with the appropriate JSDoc tag.
+- Document thrown `MeraError` codes with the appropriate JSDoc tag.
 - Examples should be runnable, concise, and focused on library behavior, not on provider boilerplate.
 - README examples should reflect actual tested behavior.
 - Keep documentation prose neutral: name keys, secrets, and passkeys plainly ("the passkey", "one encrypted secret") rather than attributing them to the reader ("your passkey", "a secret you provide" / "you own").

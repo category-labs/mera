@@ -8,7 +8,7 @@
  * - `INPUT_INVALID`: a caller-supplied value at a public boundary did not satisfy a length, range, encoding, or scalar constraint.
  * - `VAULT_FORMAT_INVALID`: untrusted vault data (JSON or object) was malformed, missing required fields, or used a non-canonical encoding.
  */
-type PasskeyAccountErrorCode =
+type MeraErrorCode =
   | "PASSKEY_OPERATION_FAILED"
   | "PRF_UNAVAILABLE"
   | "SESSION_LOCKED"
@@ -17,9 +17,9 @@ type PasskeyAccountErrorCode =
   | "VAULT_FORMAT_INVALID";
 
 /** Error type thrown by this package with a stable coarse-grained code. */
-class PasskeyAccountError extends Error {
+class MeraError extends Error {
   /** Machine-readable category for the failure. */
-  readonly code: PasskeyAccountErrorCode;
+  readonly code: MeraErrorCode;
 
   /**
    * Creates a package error with a stable error code.
@@ -30,24 +30,24 @@ class PasskeyAccountError extends Error {
    * @param options.cause - Original cause for this error, when available.
    */
   constructor(
-    code: PasskeyAccountErrorCode,
+    code: MeraErrorCode,
     message: string,
     options?: { cause?: unknown },
   ) {
     super(message, options);
-    this.name = "PasskeyAccountError";
+    this.name = "MeraError";
     this.code = code;
   }
 }
 
 /**
- * Returns true when an unknown error is a `PasskeyAccountError`.
+ * Returns true when an unknown error is a `MeraError`.
  *
  * @param error - Value to check.
- * @returns `true` when `error` is a `PasskeyAccountError`.
+ * @returns `true` when `error` is a `MeraError`.
  */
-function isPasskeyAccountError(error: unknown): error is PasskeyAccountError {
-  return error instanceof PasskeyAccountError;
+function isMeraError(error: unknown): error is MeraError {
+  return error instanceof MeraError;
 }
 
 /**
@@ -55,18 +55,15 @@ function isPasskeyAccountError(error: unknown): error is PasskeyAccountError {
  * session has been locked. Used by curve-specific session helpers to gate
  * `signDigest`/`signMessage` after `lock()`.
  *
- * @throws PasskeyAccountError with code `SESSION_LOCKED` when `privateKey` is undefined.
+ * @throws MeraError with code `SESSION_LOCKED` when `privateKey` is undefined.
  */
 function requireUnlocked(privateKey: Uint8Array | undefined): Uint8Array {
   if (privateKey === undefined) {
-    throw new PasskeyAccountError(
-      "SESSION_LOCKED",
-      "Signing session is locked",
-    );
+    throw new MeraError("SESSION_LOCKED", "Signing session is locked");
   }
 
   return privateKey;
 }
 
-export type { PasskeyAccountErrorCode };
-export { isPasskeyAccountError, PasskeyAccountError, requireUnlocked };
+export type { MeraErrorCode };
+export { isMeraError, MeraError, requireUnlocked };

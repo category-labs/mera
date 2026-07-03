@@ -4,7 +4,7 @@ import {
   base64UrlEncode,
   copyBytes,
 } from "./encoding.js";
-import { isPasskeyAccountError, PasskeyAccountError } from "./errors.js";
+import { isMeraError, MeraError } from "./errors.js";
 import type {
   CreatePasskeyResult,
   CreatePasskeyWithPrfOutputResult,
@@ -104,9 +104,9 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * @returns Credential metadata and, when `prfSalt` was provided and the authenticator supports it, the first PRF output.
  * @remarks Side effects: invokes `navigator.credentials.create()`, which may show browser or authenticator UI and create a discoverable passkey.
  * @remarks Caller assumptions: call from a secure browser context where WebAuthn and PRF are available.
- * @throws PasskeyAccountError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `prfSalt` is provided but not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
- * @throws PasskeyAccountError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
+ * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF.
+ * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is provided but not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function createPasskey({
   rp,
@@ -120,17 +120,11 @@ async function createPasskey({
     assertCredentialApiAvailable();
 
     if (prfSalt !== undefined && prfSalt.length !== 32) {
-      throw new PasskeyAccountError(
-        "INPUT_INVALID",
-        "PRF salt must be 32 bytes",
-      );
+      throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
     }
 
     if (user.id !== undefined && (user.id.length < 1 || user.id.length > 64)) {
-      throw new PasskeyAccountError(
-        "INPUT_INVALID",
-        "user.id must be 1 to 64 bytes",
-      );
+      throw new MeraError("INPUT_INVALID", "user.id must be 1 to 64 bytes");
     }
 
     const prfExtension =
@@ -166,7 +160,7 @@ async function createPasskey({
     const prf = publicKeyCredential.getClientExtensionResults().prf;
 
     if (!prf?.enabled) {
-      throw new PasskeyAccountError(
+      throw new MeraError(
         "PRF_UNAVAILABLE",
         "Authenticator did not enable PRF",
       );
@@ -190,25 +184,20 @@ async function createPasskey({
     if (prfSalt !== undefined && prf.results?.first) {
       const prfOutput = copyPrfOutput(prf.results.first);
       if (prfOutput.length !== 32) {
-        throw new PasskeyAccountError(
-          "PRF_UNAVAILABLE",
-          "PRF output must be 32 bytes",
-        );
+        throw new MeraError("PRF_UNAVAILABLE", "PRF output must be 32 bytes");
       }
       result.prfOutput = prfOutput;
     }
 
     return result;
   } catch (error) {
-    if (isPasskeyAccountError(error)) {
+    if (isMeraError(error)) {
       throw error;
     }
 
-    throw new PasskeyAccountError(
-      "PASSKEY_OPERATION_FAILED",
-      "Passkey creation failed",
-      { cause: error },
-    );
+    throw new MeraError("PASSKEY_OPERATION_FAILED", "Passkey creation failed", {
+      cause: error,
+    });
   }
 }
 
@@ -229,9 +218,9 @@ async function createPasskey({
  * Side effects: invokes `navigator.credentials.get()`, which may show browser or authenticator UI.
  *
  * Caller assumptions: `prfSalt` must be stable for flows that need stable PRF output.
- * @throws PasskeyAccountError with code `PRF_UNAVAILABLE` when the authenticator does not return a 32-byte PRF output.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes or `credentialId` is not canonical base64url.
- * @throws PasskeyAccountError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
+ * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a 32-byte PRF output.
+ * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes or `credentialId` is not canonical base64url.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function getPasskeyPrfOutput({
   rpId,
@@ -245,10 +234,7 @@ async function getPasskeyPrfOutput({
     assertCredentialApiAvailable();
 
     if (prfSalt.length !== 32) {
-      throw new PasskeyAccountError(
-        "INPUT_INVALID",
-        "PRF salt must be 32 bytes",
-      );
+      throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
     }
 
     const prf = { eval: { first: asArrayBuffer(prfSalt) } };
@@ -277,7 +263,7 @@ async function getPasskeyPrfOutput({
       publicKeyCredential.getClientExtensionResults().prf?.results?.first;
 
     if (!first) {
-      throw new PasskeyAccountError(
+      throw new MeraError(
         "PRF_UNAVAILABLE",
         "Authenticator did not return PRF output",
       );
@@ -285,10 +271,7 @@ async function getPasskeyPrfOutput({
 
     const prfOutput = copyPrfOutput(first);
     if (prfOutput.length !== 32) {
-      throw new PasskeyAccountError(
-        "PRF_UNAVAILABLE",
-        "PRF output must be 32 bytes",
-      );
+      throw new MeraError("PRF_UNAVAILABLE", "PRF output must be 32 bytes");
     }
 
     return {
@@ -296,11 +279,11 @@ async function getPasskeyPrfOutput({
       prfOutput,
     };
   } catch (error) {
-    if (isPasskeyAccountError(error)) {
+    if (isMeraError(error)) {
       throw error;
     }
 
-    throw new PasskeyAccountError(
+    throw new MeraError(
       "PASSKEY_OPERATION_FAILED",
       "Passkey assertion failed",
       { cause: error },
@@ -321,9 +304,9 @@ async function getPasskeyPrfOutput({
  * `prfSalt` is copied before async WebAuthn work starts; post-call mutation of the input does not change the fallback ceremony or returned salt.
  *
  * Caller assumptions: call from a secure browser context where WebAuthn and PRF are available.
- * @throws PasskeyAccountError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or does not return PRF output on the fallback ceremony.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
- * @throws PasskeyAccountError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
+ * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or does not return PRF output on the fallback ceremony.
+ * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function createPasskeyWithPrfOutput({
   rp,
@@ -372,14 +355,11 @@ async function createPasskeyWithPrfOutput({
 /**
  * Asserts that the WebAuthn credential API is available.
  *
- * @throws PasskeyAccountError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable.
  */
 function assertCredentialApiAvailable(): void {
   if (!globalThis.navigator?.credentials) {
-    throw new PasskeyAccountError(
-      "PASSKEY_OPERATION_FAILED",
-      "WebAuthn is unavailable",
-    );
+    throw new MeraError("PASSKEY_OPERATION_FAILED", "WebAuthn is unavailable");
   }
 }
 
@@ -388,13 +368,13 @@ function assertCredentialApiAvailable(): void {
  *
  * @param credential - Credential returned by WebAuthn.
  * @returns The credential narrowed to the PRF-aware public-key credential shape.
- * @throws PasskeyAccountError with code `PASSKEY_OPERATION_FAILED` when WebAuthn returned no usable public-key credential.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn returned no usable public-key credential.
  */
 function assertPublicKeyCredential(
   credential: Credential | null,
 ): PublicKeyCredentialWithPrf {
   if (credential?.type !== "public-key" || !("rawId" in credential)) {
-    throw new PasskeyAccountError(
+    throw new MeraError(
       "PASSKEY_OPERATION_FAILED",
       "WebAuthn returned no public key credential",
     );
@@ -403,7 +383,7 @@ function assertPublicKeyCredential(
   const publicKeyCredential = credential as PublicKeyCredentialWithPrf;
 
   if (typeof publicKeyCredential.getClientExtensionResults !== "function") {
-    throw new PasskeyAccountError(
+    throw new MeraError(
       "PASSKEY_OPERATION_FAILED",
       "WebAuthn extension results are unavailable",
     );
@@ -425,7 +405,7 @@ function assertPublicKeyCredential(
  * bare `Uint8Array.from(value)` would instead silently coerce malformed values
  * (mod 256, `NaN` -> 0) into HKDF key material.
  *
- * @throws PasskeyAccountError with code `PRF_UNAVAILABLE` when a plain array-like
+ * @throws MeraError with code `PRF_UNAVAILABLE` when a plain array-like
  * contains a value that is not an integer in [0, 255].
  * @internal
  */
@@ -445,7 +425,7 @@ function copyPrfOutput(value: BufferSource | ArrayLike<number>): Uint8Array {
   // instead of being silently coerced (mod 256, NaN -> 0) into key material.
   return Uint8Array.from(value, (byte) => {
     if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
-      throw new PasskeyAccountError(
+      throw new MeraError(
         "PRF_UNAVAILABLE",
         "PRF output must contain only byte values (integers 0-255)",
       );

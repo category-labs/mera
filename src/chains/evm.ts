@@ -10,7 +10,7 @@ import type { EvmAddress } from "../types.js";
  *
  * @param publicKey - A compressed or uncompressed secp256k1 public key.
  * @returns The EIP-55 mixed-case checksummed EVM address.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `publicKey` is not valid secp256k1.
+ * @throws MeraError with code `INPUT_INVALID` when `publicKey` is not valid secp256k1.
  */
 function getEvmAddress(publicKey: Uint8Array): EvmAddress {
   const uncompressed = normalizeSecp256k1PublicKey(publicKey);

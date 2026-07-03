@@ -12,7 +12,7 @@ type LockableKey = {
   /**
    * Returns the live session-owned key for immediate use.
    *
-   * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
+   * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
    */
   use(): Uint8Array;
   /** Zeroes the session-owned key and permanently locks this handle. */

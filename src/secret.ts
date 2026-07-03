@@ -7,7 +7,7 @@ import {
   uint32Be,
   utf8ToBytes,
 } from "./encoding.js";
-import { PasskeyAccountError, type PasskeyAccountErrorCode } from "./errors.js";
+import { MeraError, type MeraErrorCode } from "./errors.js";
 import { getPasskeyPrfOutput } from "./passkey.js";
 import type {
   PasskeyCredentialTransport,
@@ -52,10 +52,7 @@ async function deriveWrappingKey({
   info: Uint8Array;
 }): Promise<CryptoKey> {
   if (prfOutput.length !== PRF_OUTPUT_LENGTH) {
-    throw new PasskeyAccountError(
-      "INPUT_INVALID",
-      "prfOutput must be 32 bytes",
-    );
+    throw new MeraError("INPUT_INVALID", "prfOutput must be 32 bytes");
   }
 
   return hkdfSha256AesGcmKey(prfOutput, info);
@@ -114,11 +111,9 @@ async function aesGcmDecrypt({
     );
     return new Uint8Array(plaintext);
   } catch (error) {
-    throw new PasskeyAccountError(
-      "DECRYPT_FAILED",
-      "Unable to decrypt ciphertext",
-      { cause: error },
-    );
+    throw new MeraError("DECRYPT_FAILED", "Unable to decrypt ciphertext", {
+      cause: error,
+    });
   }
 }
 
@@ -126,42 +121,37 @@ function parseJsonVault(value: string): unknown {
   try {
     return JSON.parse(value);
   } catch (error) {
-    throw new PasskeyAccountError(
-      "VAULT_FORMAT_INVALID",
-      "Vault JSON is invalid",
-      { cause: error },
-    );
+    throw new MeraError("VAULT_FORMAT_INVALID", "Vault JSON is invalid", {
+      cause: error,
+    });
   }
 }
 
 function readBase64Url(
   value: unknown,
   name: string,
-  errorCode: PasskeyAccountErrorCode,
+  errorCode: MeraErrorCode,
   byteLength?: number | { min: number },
 ): string {
   if (typeof value !== "string") {
-    throw new PasskeyAccountError(errorCode, `${name} must be base64url`);
+    throw new MeraError(errorCode, `${name} must be base64url`);
   }
 
   let bytes: Uint8Array;
   try {
     bytes = base64UrlDecode(value);
   } catch (cause) {
-    throw new PasskeyAccountError(errorCode, `${name} must be base64url`, {
+    throw new MeraError(errorCode, `${name} must be base64url`, {
       cause,
     });
   }
 
   if (typeof byteLength === "number" && bytes.length !== byteLength) {
-    throw new PasskeyAccountError(
-      errorCode,
-      `${name} must be ${byteLength} bytes`,
-    );
+    throw new MeraError(errorCode, `${name} must be ${byteLength} bytes`);
   }
 
   if (typeof byteLength === "object" && bytes.length < byteLength.min) {
-    throw new PasskeyAccountError(
+    throw new MeraError(
       errorCode,
       `${name} must be at least ${byteLength.min} bytes`,
     );
@@ -205,7 +195,7 @@ type CreateSecretVaultInput = {
  * Security: a vault is bound to its `prfOutput` only — not to the credential ID, salt, or nonce (the AAD is a fixed constant). Use a fresh `prfSalt` per secret. Secrets wrapped under one reused PRF output share a wrapping key, so their ciphertexts are interchangeable by anyone who can rewrite stored vault JSON.
  * @param options - Credential material and the secret to wrap.
  * @returns A JSON-safe secret vault.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when the credential ID is empty, the PRF salt or output is not 32 bytes, or `secret` is empty.
+ * @throws MeraError with code `INPUT_INVALID` when the credential ID is empty, the PRF salt or output is not 32 bytes, or `secret` is empty.
  */
 async function createSecretVault({
   credential,
@@ -221,11 +211,11 @@ async function createSecretVault({
   );
 
   if (prfSalt.length !== PRF_SALT_LENGTH) {
-    throw new PasskeyAccountError("INPUT_INVALID", "PRF salt must be 32 bytes");
+    throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
   }
 
   if (secret.length === 0) {
-    throw new PasskeyAccountError("INPUT_INVALID", "secret must not be empty");
+    throw new MeraError("INPUT_INVALID", "secret must not be empty");
   }
 
   const prfSaltCopy = copyBytes(prfSalt);
@@ -273,8 +263,8 @@ type UnwrapSecretVaultInput = {
  * @param options - Vault and PRF output.
  * @returns The decrypted secret bytes, exactly as passed to `createSecretVault`.
  * @remarks Side effects: callers should zero the returned buffer when finished.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url (already validated for vaults from `parseSecretVault`).
- * @throws PasskeyAccountError with code `DECRYPT_FAILED` when authentication fails.
+ * @throws MeraError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url (already validated for vaults from `parseSecretVault`).
+ * @throws MeraError with code `DECRYPT_FAILED` when authentication fails.
  */
 async function unwrapSecretVault({
   vault,
@@ -304,34 +294,25 @@ async function unwrapSecretVault({
  *
  * @param value - Secret vault as JSON text or an untrusted object.
  * @returns A canonicalized secret vault.
- * @throws PasskeyAccountError with code `VAULT_FORMAT_INVALID` when required structure, version, or encoded data is invalid.
+ * @throws MeraError with code `VAULT_FORMAT_INVALID` when required structure, version, or encoded data is invalid.
  */
 function parseSecretVault(value: unknown): PasskeySecretVault {
   const vault = typeof value === "string" ? parseJsonVault(value) : value;
 
   if (!isRecord(vault)) {
-    throw new PasskeyAccountError(
-      "VAULT_FORMAT_INVALID",
-      "Vault must be an object",
-    );
+    throw new MeraError("VAULT_FORMAT_INVALID", "Vault must be an object");
   }
 
   if (!("version" in vault)) {
-    throw new PasskeyAccountError(
-      "VAULT_FORMAT_INVALID",
-      "Vault version is required",
-    );
+    throw new MeraError("VAULT_FORMAT_INVALID", "Vault version is required");
   }
 
   if (vault.version !== 1) {
-    throw new PasskeyAccountError(
-      "VAULT_FORMAT_INVALID",
-      "Vault version must be 1",
-    );
+    throw new MeraError("VAULT_FORMAT_INVALID", "Vault version must be 1");
   }
 
   if (!isRecord(vault.credential)) {
-    throw new PasskeyAccountError(
+    throw new MeraError(
       "VAULT_FORMAT_INVALID",
       "Vault credential must be an object",
     );
@@ -353,7 +334,7 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
         (transport) => typeof transport !== "string",
       )
     ) {
-      throw new PasskeyAccountError(
+      throw new MeraError(
         "VAULT_FORMAT_INVALID",
         "credential.transports must be an array of strings or omitted",
       );
@@ -392,8 +373,8 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
  * @param options - Secret-vault PRF inputs.
  * @returns The selected credential ID and first WebAuthn PRF output.
  * @remarks Side effects: invokes `navigator.credentials.get()`, which may show browser or authenticator UI.
- * @throws PasskeyAccountError with code `PRF_UNAVAILABLE` when the authenticator does not return a 32-byte PRF output.
- * @throws PasskeyAccountError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
+ * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a 32-byte PRF output.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function getSecretVaultPrfOutput({
   rpId,

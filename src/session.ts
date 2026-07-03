@@ -46,10 +46,7 @@ function createSigningKey(
 
     const key: LockableKey = {
       use(): Uint8Array {
-        if (activePrivateKey === undefined) {
-          throw new MeraError("SESSION_LOCKED", "Signing session is locked");
-        }
-        return activePrivateKey;
+        return requireUnlocked(activePrivateKey);
       },
       lock(): void {
         if (activePrivateKey !== undefined) {
@@ -66,6 +63,21 @@ function createSigningKey(
   } finally {
     consumePrivateKey.fill(0);
   }
+}
+
+/**
+ * Returns the active private key, or throws once the session has been locked.
+ *
+ * @param privateKey - Session-owned private key, or `undefined` after `lock`.
+ * @returns The live session-owned private key.
+ * @throws MeraError with code `SESSION_LOCKED` when `privateKey` is undefined.
+ */
+function requireUnlocked(privateKey: Uint8Array | undefined): Uint8Array {
+  if (privateKey === undefined) {
+    throw new MeraError("SESSION_LOCKED", "Signing session is locked");
+  }
+
+  return privateKey;
 }
 
 export { createSigningKey };

@@ -37,7 +37,7 @@ function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array {
  * SHA-512. `lock` zeroes the session-owned seed copy and makes future signing
  * fail.
  *
- * @param options - Signing session inputs.
+ * @param options - Signing session inputs; fields are documented on {@link CreateSigningSessionOptions}.
  * @returns An unlocked Ed25519 signing session.
  * @throws MeraError with code `INPUT_INVALID` when `consumePrivateKey` is not 32 bytes.
  */

@@ -789,14 +789,14 @@ clientDataJSON
   getEvmAddress,
   getPasskeyPrfOutput,
 } from "mera"
-import { derivePrivateKeyWithYourWalletScheme } from "./wallet-derivation"
+import { deriveWalletPrivateKey } from "./wallet-derivation"
 
 const rpId = "account.example.com"
 
 const prfSalt = getDeterministicPrfSaltV1()
 const { prfOutput } = await getPasskeyPrfOutput({ rpId, prfSalt })
 
-const privateKey = derivePrivateKeyWithYourWalletScheme({
+const privateKey = deriveWalletPrivateKey({
   entropy: prfOutput,
   path: "m/44'/60'/0'/0/0",
 })

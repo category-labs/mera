@@ -8,7 +8,7 @@ import { isMeraError, MeraError } from "./errors.js";
 import type {
   CreatePasskeyResult,
   CreatePasskeyWithPrfOutputResult,
-  PasskeyCredentialTransport,
+  PasskeyCredentialMetadata,
   PasskeyPrfResult,
 } from "./types.js";
 import { randomBytes } from "./webcrypto.js";
@@ -62,10 +62,8 @@ type CreatePasskeyWithPrfOutputInput = Omit<
 type GetPasskeyPrfOutputInput = {
   /** Relying party ID for the WebAuthn assertion. */
   rpId: string;
-  /** Optional credential ID (canonical unpadded base64url) to restrict the assertion to one passkey. */
-  credentialId?: string;
-  /** Optional transports associated with `credentialId`. */
-  transports?: PasskeyCredentialTransport[];
+  /** Optional credential metadata to restrict the assertion to one passkey. */
+  credential?: PasskeyCredentialMetadata;
   /** PRF salt as 32 raw bytes. */
   prfSalt: Uint8Array;
   /** WebAuthn challenge. Defaults to 32 cryptographically random bytes. */
@@ -199,7 +197,7 @@ async function createPasskey({
 /**
  * Requests a passkey PRF evaluation and returns the first output.
  *
- * When `credentialId` is omitted, WebAuthn may choose any discoverable credential for the relying party.
+ * When `credential` is omitted, WebAuthn may choose any discoverable credential for the relying party.
  *
  * @param options - Passkey PRF request inputs; fields are documented on {@link GetPasskeyPrfOutputOptions}.
  * @returns The selected credential ID and first WebAuthn PRF output.
@@ -211,14 +209,13 @@ async function createPasskey({
  * `prfSalt`: the same three inputs reproduce the same output, and a different
  * salt yields an unrelated output.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
- * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes, or `credentialId` is empty or not canonical base64url.
+ * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes, or `credential.credentialId` is empty or not canonical base64url.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function getPasskeyPrfOutput({
   rpId,
-  credentialId,
-  transports,
+  credential: allowCredential,
   prfSalt,
   challenge = randomBytes(32),
   timeout,
@@ -240,7 +237,7 @@ async function getPasskeyPrfOutput({
       extensions: { prf },
     };
 
-    if (credentialId !== undefined) {
+    if (allowCredential !== undefined) {
       // WebAuthn floors only randomly generated credential IDs at 16 bytes;
       // the encrypted-credential-source form has no stated minimum, so only
       // emptiness is rejected here: an empty ID must not silently widen the
@@ -250,10 +247,14 @@ async function getPasskeyPrfOutput({
       publicKey.allowCredentials = [
         {
           id: asArrayBuffer(
-            base64UrlDecode(credentialId, { minByteLength: 1 }),
+            base64UrlDecode(allowCredential.credentialId, {
+              minByteLength: 1,
+            }),
           ),
           type: "public-key",
-          transports: transports as AuthenticatorTransport[] | undefined,
+          transports: allowCredential.transports as
+            | AuthenticatorTransport[]
+            | undefined,
         },
       ];
     }
@@ -336,8 +337,12 @@ async function createPasskeyWithPrfOutput({
     (
       await getPasskeyPrfOutput({
         rpId: rp.id,
-        credentialId: credential.credentialId,
-        transports: credential.transports,
+        credential: {
+          credentialId: credential.credentialId,
+          ...(credential.transports !== undefined
+            ? { transports: credential.transports }
+            : {}),
+        },
         prfSalt: prfSaltCopy,
         timeout,
       })

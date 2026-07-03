@@ -52,10 +52,10 @@ test("creates a PRF-capable passkey and returns stable PRF output @e2e", async (
       });
       const second = await mera.getPasskeyPrfOutput({
         rpId: "localhost",
-        credentialId: credential.credentialId,
+        credential,
         prfSalt: salt,
       });
-      // No credentialId: WebAuthn selects a discoverable credential for the
+      // No credential: WebAuthn selects a discoverable credential for the
       // relying party, so this is a distinct path from the pinned call above.
       const discovered = await mera.getPasskeyPrfOutput({
         rpId: "localhost",
@@ -63,7 +63,7 @@ test("creates a PRF-capable passkey and returns stable PRF output @e2e", async (
       });
       const other = await mera.getPasskeyPrfOutput({
         rpId: "localhost",
-        credentialId: credential.credentialId,
+        credential,
         prfSalt: otherSalt,
       });
 
@@ -109,7 +109,7 @@ test("createPasskeyWithPrfOutput returns the first PRF output in one call @e2e",
       // Same salt against the same credential reproduces the PRF output.
       const repeated = await mera.getPasskeyPrfOutput({
         rpId: "localhost",
-        credentialId: created.credentialId,
+        credential: created,
         prfSalt: created.prfSalt,
       });
 

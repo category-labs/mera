@@ -359,6 +359,8 @@ function assertCredentialApiAvailable(): void {
 /**
  * Narrows a WebAuthn result to a public-key credential with extension results.
  *
+ * @param credential - Credential returned by WebAuthn.
+ * @returns The credential narrowed to the PRF-aware public-key credential shape.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn returned no usable public-key credential.
  */
 function assertPublicKeyCredential(

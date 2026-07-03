@@ -1,6 +1,6 @@
 export { getEvmAddress, isEvmAddress } from "./chains/evm.js";
 export { getSolanaAddress, isSolanaAddress } from "./chains/solana.js";
-export { createDeterministicPrfSalt } from "./derived.js";
+export { getDeterministicPrfSaltV1 } from "./derived.js";
 export { createEd25519SigningSession } from "./ed25519.js";
 export type { MeraErrorCode } from "./errors.js";
 export { isMeraError, MeraError } from "./errors.js";

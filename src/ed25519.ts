@@ -11,10 +11,8 @@ import type {
 /**
  * Derives the 32-byte Ed25519 public key for a 32-byte Ed25519 seed.
  *
- * @internal
- * @param privateKey - A 32-byte Ed25519 seed.
- * @returns The 32-byte Ed25519 public key.
  * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not 32 bytes.
+ * @internal
  */
 function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array {
   if (privateKey.length !== 32) {
@@ -33,12 +31,12 @@ function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array {
 /**
  * Wraps an Ed25519 seed in an explicitly lockable signing session.
  *
- * `signMessage` signs the raw message bytes with Ed25519 (Ed25519pure); the curve hashes internally with SHA-512.
+ * `signMessage` signs the raw message bytes; Ed25519 hashes internally with
+ * SHA-512. `lock` zeroes the session-owned seed copy and makes future signing
+ * fail.
  *
  * @param options - Signing session inputs.
- * @param options.consumePrivateKey - Ed25519 seed. Must be 32 bytes. Copied into one session-owned snapshot, then zeroed before this call returns or throws.
  * @returns An unlocked Ed25519 signing session.
- * @remarks Side effects: zeroes `consumePrivateKey` on every path; public-key derivation and later signing use one session-owned copy, which `lock()` later zeroes.
  * @throws MeraError with code `INPUT_INVALID` when `consumePrivateKey` is not 32 bytes.
  */
 function createEd25519SigningSession({

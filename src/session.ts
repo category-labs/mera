@@ -22,15 +22,14 @@ type LockableKey = {
 /**
  * Consumes a private key into a lockable signing key and derives its public key.
  *
- * The caller's buffer is copied into one owned snapshot, which is used for
- * public-key derivation and signing. The caller's buffer is zeroed before this
- * function returns or throws.
+ * `consumePrivateKey` is copied into one session-owned snapshot and zeroed
+ * before this function returns or throws. The snapshot is zeroed by `lock` or,
+ * when `derivePublicKey` throws, before the error is rethrown.
  *
- * @param consumePrivateKey - Private key to consume. Zeroed before this function returns or throws.
- * @param derivePublicKey - Derives the public key from the owned private-key snapshot; a throw doubles as private-key validation.
- * @returns The {@link LockableKey} handle gating access on lock state, paired with the derived public key.
- * @remarks Side effects: zeroes `consumePrivateKey` on every path; the owned snapshot is zeroed by `lock()` on success or before rethrowing a validation failure.
- * @throws Rethrows whatever `derivePublicKey` throws, after zeroing the owned snapshot and `consumePrivateKey`.
+ * @param consumePrivateKey - Private key to consume.
+ * @param derivePublicKey - Derives the public key from the owned snapshot; a throw doubles as private-key validation.
+ * @returns The lockable key handle paired with the derived public key.
+ * @throws Rethrows whatever `derivePublicKey` throws.
  */
 function createSigningKey(
   consumePrivateKey: Uint8Array,

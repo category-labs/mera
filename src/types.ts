@@ -47,7 +47,7 @@ type CreatePasskeyWithPrfOutputResult = PasskeyCredentialMetadata & {
 /**
  * Versioned JSON-safe vault holding one arbitrary secret encrypted behind a passkey.
  *
- * The secret is opaque — no curve and no public key. Callers decide what the bytes mean (a seed phrase's entropy, a backup blob, …).
+ * The secret bytes are opaque to the library; callers decide what they mean.
  */
 type PasskeySecretVault = {
   /** Secret-vault format version. */
@@ -75,7 +75,7 @@ type CreateSigningSessionOptions = {
   /**
    * Curve private key. Must be exactly 32 bytes; secp256k1 must also be a valid scalar.
    *
-   * Copied into one session-owned snapshot, then zeroed before the call returns or throws. Pass a fresh copy if the bytes are needed elsewhere.
+   * Copied into one session-owned snapshot; the input is zeroed before the call returns or throws.
    */
   consumePrivateKey: Uint8Array;
 };
@@ -87,18 +87,15 @@ type Secp256k1SigningSession = {
   /**
    * Signs a 32-byte digest without prehashing it.
    *
-   * @param digest32 - Exactly 32 bytes to sign.
+   * @param digest32 - Exactly 32 bytes to sign; copied before use, the original buffer is not modified.
    * @returns A compact secp256k1 ECDSA signature with its recovery ID.
-   * @remarks Caller assumptions: `digest32` must already be the digest to sign; this method does not hash it.
-   * @remarks `digest32` is copied before use; the original buffer is not modified.
    * @throws MeraError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
    * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
    */
   signDigest(digest32: Uint8Array): Promise<Secp256k1Signature>;
   /**
-   * Clears the active private key and permanently locks this session.
+   * Zeroes the session-owned private-key copy and permanently locks this session; later signing throws `SESSION_LOCKED`.
    *
-   * @remarks Side effects: overwrites the session-owned private-key copy with zeros and makes future signing fail.
    * @remarks If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
    */
   lock(): void;
@@ -109,18 +106,16 @@ type Ed25519SigningSession = {
   /** 32-byte Ed25519 public key for the session. */
   publicKey: Uint8Array;
   /**
-   * Signs an arbitrary-length message with Ed25519 (Ed25519pure).
+   * Signs an arbitrary-length message with Ed25519.
    *
-   * @param message - Message bytes to sign. Hashing happens inside Ed25519 itself.
+   * @param message - Message bytes to sign; copied before use, the original buffer is not modified. Hashing happens inside Ed25519 itself.
    * @returns A 64-byte Ed25519 signature (`R || s`).
-   * @remarks `message` is copied before use; the original buffer is not modified.
    * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
    */
   signMessage(message: Uint8Array): Promise<Uint8Array>;
   /**
-   * Clears the active private key and permanently locks this session.
+   * Zeroes the session-owned seed copy and permanently locks this session; later signing throws `SESSION_LOCKED`.
    *
-   * @remarks Side effects: overwrites the session-owned seed copy with zeros and makes future signing fail.
    * @remarks If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
    */
   lock(): void;

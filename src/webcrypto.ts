@@ -2,11 +2,8 @@ import { asArrayBuffer } from "./encoding.js";
 import { MeraError } from "./errors.js";
 
 /**
- * Returns cryptographically random bytes from Web Crypto.
+ * Returns `length` cryptographically random bytes from Web Crypto.
  *
- * @param length - Number of random bytes to return.
- * @returns Cryptographically random bytes.
- * @remarks Side effects: reads from the host Web Crypto CSPRNG.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when Web Crypto is unavailable.
  */
 function randomBytes(length: number): Uint8Array {
@@ -18,7 +15,6 @@ function randomBytes(length: number): Uint8Array {
 /**
  * Returns the host Web Crypto implementation.
  *
- * @returns `globalThis.crypto` when Web Crypto is available.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when Web Crypto is unavailable.
  */
 function getCrypto(): Crypto {
@@ -35,10 +31,8 @@ function getCrypto(): Crypto {
 /**
  * Derives a non-extractable AES-256-GCM key with HKDF-SHA-256 and an empty salt.
  *
- * @param ikm - Input keying material.
- * @param info - HKDF info/context bytes.
- * @returns A non-extractable AES-GCM `CryptoKey` usable for encryption and decryption.
- * @remarks Caller assumptions: callers choose domain-separated `info` values appropriate for the wrapping key.
+ * `info` domain-separates keys derived from the same input keying material `ikm`.
+ *
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when Web Crypto is unavailable.
  */
 async function hkdfSha256AesGcmKey(

@@ -14,11 +14,11 @@ const DETERMINISTIC_PRF_SALT = sha256(DETERMINISTIC_PRF_DOMAIN);
  * credential and relying party. The salt encodes no account selection; that
  * happens in the derivation scheme the app applies to the PRF output.
  *
- * @returns A fresh 32-byte copy of the fixed salt.
+ * @returns A fresh 32-byte copy of the fixed salt: a `Uint8Array` cannot be
+ * frozen, so a shared buffer mutated by one caller would silently change every
+ * later derivation.
  */
 function getDeterministicPrfSaltV1(): Uint8Array {
-  // A fresh copy per call: a Uint8Array cannot be frozen, so a shared buffer
-  // mutated by one caller would silently change every later derivation.
   return new Uint8Array(DETERMINISTIC_PRF_SALT);
 }
 

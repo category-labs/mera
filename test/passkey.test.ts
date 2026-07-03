@@ -121,6 +121,81 @@ test("passkey helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavailable",
   }
 });
 
+test("passkey helpers generate internal challenges and request no attestation", async () => {
+  let createOptions: PublicKeyCredentialCreationOptions | undefined;
+  let getOptions: PublicKeyCredentialRequestOptions | undefined;
+
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      credentials: {
+        async create({ publicKey }: CredentialCreationOptions) {
+          createOptions = publicKey;
+          return {
+            type: "public-key",
+            rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+            response: {
+              getTransports: () => ["internal"],
+            },
+            getClientExtensionResults: () => ({
+              prf: {
+                enabled: true,
+                results: { first: new Uint8Array(32).buffer },
+              },
+            }),
+          };
+        },
+        async get({ publicKey }: CredentialRequestOptions) {
+          getOptions = publicKey;
+          return {
+            type: "public-key",
+            rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+            getClientExtensionResults: () => ({
+              prf: { results: { first: new Uint8Array(32).buffer } },
+            }),
+          };
+        },
+      },
+    },
+  });
+
+  try {
+    await createPasskey({
+      rp: { id: "example.com", name: "Mera Test" },
+      user: {
+        id: new Uint8Array([1]),
+        name: "nad",
+        displayName: "nad",
+      },
+      prfSalt: new Uint8Array(32),
+    });
+    await getPasskeyPrfOutput({
+      rpId: "example.com",
+      prfSalt: new Uint8Array(32),
+    });
+
+    if (createOptions === undefined || getOptions === undefined) {
+      throw new Error("expected WebAuthn options to be captured");
+    }
+
+    expect(createOptions.challenge).toBeInstanceOf(ArrayBuffer);
+    expect(new Uint8Array(createOptions.challenge as ArrayBuffer)).toHaveLength(
+      32,
+    );
+    expect(createOptions.attestation).toBe("none");
+    expect(getOptions.challenge).toBeInstanceOf(ArrayBuffer);
+    expect(new Uint8Array(getOptions.challenge as ArrayBuffer)).toHaveLength(
+      32,
+    );
+  } finally {
+    if (ORIGINAL_NAVIGATOR) {
+      Object.defineProperty(globalThis, "navigator", ORIGINAL_NAVIGATOR);
+    } else {
+      Reflect.deleteProperty(globalThis, "navigator");
+    }
+  }
+});
+
 test("getPasskeyPrfOutput rejects an empty credentialId without prompting", async () => {
   // A malformed stored ID must fail closed instead of silently widening the
   // assertion to any discoverable credential for the relying party.

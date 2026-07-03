@@ -104,6 +104,7 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * a required resident key, and required user verification.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or returns a malformed create-time PRF output.
  * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is provided but not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function createPasskey({
@@ -211,6 +212,7 @@ async function createPasskey({
  * salt yields an unrelated output.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes, or `credentialId` is empty or not canonical base64url.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function getPasskeyPrfOutput({
@@ -307,6 +309,7 @@ async function getPasskeyPrfOutput({
  * directly keeps the credential ID across that failure.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or does not return PRF output on the fallback ceremony.
  * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function createPasskeyWithPrfOutput({

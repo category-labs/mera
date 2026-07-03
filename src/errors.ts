@@ -1,7 +1,8 @@
 /**
  * Stable coarse-grained error codes thrown by this package.
  *
- * - `PASSKEY_OPERATION_FAILED`: WebAuthn failed, was cancelled, or returned an unexpected credential, or a required browser API (the credential API, Web Crypto) is unavailable.
+ * - `PASSKEY_OPERATION_FAILED`: WebAuthn failed, was cancelled, returned an unexpected credential, or the credential API is unavailable.
+ * - `CRYPTO_UNAVAILABLE`: Web Crypto is unavailable.
  * - `PRF_UNAVAILABLE`: the authenticator did not enable or return a usable 32-byte WebAuthn PRF output.
  * - `SESSION_LOCKED`: a signing call was made after `lock()`.
  * - `DECRYPT_FAILED`: AES-GCM authentication failed (wrong key, or tampered ciphertext or additional authenticated data).
@@ -10,6 +11,7 @@
  */
 type MeraErrorCode =
   | "PASSKEY_OPERATION_FAILED"
+  | "CRYPTO_UNAVAILABLE"
   | "PRF_UNAVAILABLE"
   | "SESSION_LOCKED"
   | "DECRYPT_FAILED"

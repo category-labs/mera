@@ -365,6 +365,8 @@ function describeError(error: unknown): string {
         return "Couldn't unlock the account with that passkey.";
       case "SESSION_LOCKED":
         return "Your session is locked — connect again.";
+      case "CRYPTO_UNAVAILABLE":
+        return "This browser doesn't provide the Web Crypto APIs this demo needs.";
       case "PASSKEY_OPERATION_FAILED":
         return "The passkey request was cancelled or failed.";
       case "VAULT_FORMAT_INVALID":

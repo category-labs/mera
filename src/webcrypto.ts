@@ -6,7 +6,7 @@ import { MeraError } from "./errors.js";
  *
  * @param length - Number of random bytes to return.
  * @returns Cryptographically random bytes.
- * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when Web Crypto is unavailable.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  */
 function randomBytes(length: number): Uint8Array {
   const output = new Uint8Array(length);
@@ -18,14 +18,11 @@ function randomBytes(length: number): Uint8Array {
  * Returns the host Web Crypto implementation.
  *
  * @returns `globalThis.crypto` when Web Crypto is available.
- * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when Web Crypto is unavailable.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  */
 function getCrypto(): Crypto {
   if (!globalThis.crypto?.subtle || !globalThis.crypto.getRandomValues) {
-    throw new MeraError(
-      "PASSKEY_OPERATION_FAILED",
-      "Web Crypto is unavailable",
-    );
+    throw new MeraError("CRYPTO_UNAVAILABLE", "Web Crypto is unavailable");
   }
 
   return globalThis.crypto;
@@ -37,7 +34,7 @@ function getCrypto(): Crypto {
  * @param ikm - Input keying material.
  * @param info - HKDF info/context bytes; domain-separates keys derived from the same `ikm`.
  * @returns A non-extractable AES-GCM `CryptoKey` usable for encryption and decryption.
- * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when Web Crypto is unavailable.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  */
 async function hkdfSha256AesGcmKey(
   ikm: Uint8Array,

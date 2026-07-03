@@ -10,6 +10,7 @@ import { expectError } from "./helpers.js";
 
 const PRF_OUTPUT = new Uint8Array(32).fill(7);
 const PRF_SALT = new Uint8Array(32).fill(9);
+const ORIGINAL_CRYPTO = Object.getOwnPropertyDescriptor(globalThis, "crypto");
 // A real 12-word BIP-39 phrase stands in for an opaque secret; the library
 // neither knows nor cares that these bytes are a mnemonic.
 const SECRET = utf8ToBytes(
@@ -28,6 +29,14 @@ async function createTestVault(
     },
     secret,
   });
+}
+
+function restoreGlobalCrypto(): void {
+  if (ORIGINAL_CRYPTO) {
+    Object.defineProperty(globalThis, "crypto", ORIGINAL_CRYPTO);
+  } else {
+    Reflect.deleteProperty(globalThis, "crypto");
+  }
 }
 
 test("creates a secret vault and unwraps the exact bytes", async () => {
@@ -77,6 +86,26 @@ test("unwrapSecretVault fails with the wrong PRF output", async () => {
   await expect(
     unwrapSecretVault({ vault, prfOutput: new Uint8Array(32).fill(1) }),
   ).rejects.toMatchObject({ code: "DECRYPT_FAILED" });
+});
+
+test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavailable", async () => {
+  const vault = await createTestVault();
+
+  Object.defineProperty(globalThis, "crypto", {
+    configurable: true,
+    value: undefined,
+  });
+
+  try {
+    await expect(createTestVault()).rejects.toMatchObject({
+      code: "CRYPTO_UNAVAILABLE",
+    });
+    await expect(
+      unwrapSecretVault({ vault, prfOutput: PRF_OUTPUT }),
+    ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
+  } finally {
+    restoreGlobalCrypto();
+  }
 });
 
 test("secret vault AAD is independent of credential metadata and PRF salt", async () => {

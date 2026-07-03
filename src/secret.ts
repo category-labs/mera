@@ -22,14 +22,28 @@ const NONCE_LENGTH = 12;
 // any authentic ciphertext is at least this long.
 const GCM_TAG_LENGTH = 16;
 
-/** Encodes a non-negative uint32 as four big-endian bytes. */
+/**
+ * Encodes a non-negative uint32 using big-endian byte order.
+ *
+ * @param value - Integer to encode.
+ * @returns Four big-endian bytes.
+ * @remarks `value` is not range-checked; `DataView.setUint32` applies the
+ * uint32 conversion, so out-of-range input wraps.
+ */
 function uint32Be(value: number): Uint8Array {
   const output = new Uint8Array(4);
   new DataView(output.buffer).setUint32(0, value, false);
   return output;
 }
 
-/** Length-prefixes each part with its uint32 big-endian byte length, making the concatenation unambiguous. */
+/**
+ * Canonically encodes byte values using uint32 big-endian length prefixes.
+ *
+ * The length prefixes make the concatenation unambiguous.
+ *
+ * @param parts - Byte arrays to encode in order.
+ * @returns A new byte array containing each part with a four-byte length prefix.
+ */
 function canonicalEncode(parts: Uint8Array[]): Uint8Array {
   return concatBytes(...parts.flatMap((part) => [uint32Be(part.length), part]));
 }

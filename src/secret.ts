@@ -284,8 +284,8 @@ type UnwrapSecretVaultInput = {
  * Decrypts the secret from a secret vault.
  *
  * @remarks
- * `prfOutput` is copied before async cryptographic work starts; post-call
- * mutation does not change the decryption result. The caller-owned buffer is
+ * `prfOutput` is copied before async cryptographic work starts, so post-call
+ * mutation does not change the decryption result; the caller-owned buffer is
  * not modified or zeroed.
  *
  * @param options - Vault and PRF output; fields are documented on {@link UnwrapSecretVaultOptions}.

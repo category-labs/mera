@@ -178,7 +178,7 @@ function EthereumAccountCard({
   return (
     <section className="card">
       <div className="card-head">
-        <span className="badge chain-ethereum">Ethereum · {mode}</span>
+        <span className="badge">Ethereum · {mode}</span>
         <button type="button" className="link" onClick={onLock}>
           Lock
         </button>

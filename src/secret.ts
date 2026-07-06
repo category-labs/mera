@@ -215,9 +215,9 @@ type CreateSecretVaultInput = {
  * input buffers are not modified or zeroed.
  *
  * Security: a vault is bound to its `prfOutput` only — not to the credential
- * ID, salt, or nonce. Secrets wrapped under one reused PRF output share a
- * wrapping key, so their ciphertexts are interchangeable by anyone who can
- * rewrite stored vault JSON; a fresh `prfSalt` per secret avoids the shared key.
+ * ID or salt. Secrets wrapped under one reused PRF output share a wrapping key,
+ * so their nonce/ciphertext pairs are interchangeable by anyone who can rewrite
+ * stored vault JSON; a fresh `prfSalt` per secret avoids the shared key.
  * @param options - Credential material and the secret to wrap; fields are documented on {@link CreateSecretVaultOptions}.
  * @returns A JSON-safe secret vault.
  * @throws MeraError with code `INPUT_INVALID` when the credential ID is empty or not canonical base64url, the PRF salt or output is not 32 bytes, or `secret` is empty.

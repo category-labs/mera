@@ -461,10 +461,10 @@
 
         <p>
           Passkeys looked like the answer on both fronts. A passkey is a keypair
-          in the device's secure hardware, gated by a biometric and synced by
-          the platform, and it ships with every phone, laptop, and browser. For
-          the user that means no phrase and no password; for the developer it
-          means generation, storage, locking, and cross-device sync are the
+          in the device's secure hardware, gated by OS authentication and synced
+          by the platform, and it ships with every phone, laptop, and browser.
+          For the user that means no phrase and no password; for the developer
+          it means generation, storage, locking, and cross-device sync are the
           platform's job. Crypto adopted passkeys through smart accounts, where
           the passkey signs and a contract on the chain verifies.
         </p>
@@ -581,8 +581,8 @@ clientDataJSON
           and never leaves the authenticator. Each evaluation is one
           <a href="https://www.rfc-editor.org/rfc/rfc2104">HMAC-SHA-256</a>
           keyed by that secret, computed inside the authenticator behind the
-          same biometric check as the signature. The application passes a salt
-          (an input it chooses) and gets 32 bytes back; it never sees the
+          same user-verification check as the signature. The application passes
+          a salt (an input it chooses) and gets 32 bytes back; it never sees the
           secret. (This is FIDO2's
           <a
             href="https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html#sctn-hmac-secret-extension"
@@ -618,11 +618,11 @@ clientDataJSON
 
         <p>
           This moves where WebAuthn meets the chain. Instead of teaching each
-          chain to verify WebAuthn envelopes, an application takes
-          biometric-gated entropy out of the ceremony and derives ordinary keys
-          from it, using whatever key derivation function (KDF) and curve the
-          target chain needs. The chain sees a normal signature from a normal
-          account; everything WebAuthn-specific stays on the client.
+          chain to verify WebAuthn envelopes, an application takes user-verified
+          entropy out of the ceremony and derives ordinary keys from it, using
+          whatever key derivation function (KDF) and curve the target chain
+          needs. The chain sees a normal signature from a normal account;
+          everything WebAuthn-specific stays on the client.
         </p>
 
         <p>
@@ -644,7 +644,7 @@ clientDataJSON
           it; how entropy becomes keys (the KDF, the paths, the account model)
           belongs to the application. A session keeps key bytes in memory and
           zeroes them on <code>session.lock()</code>. One ceremony per session
-          is enough: one biometric check, then any number of signatures.
+          is enough: one user-verification check, then any number of signatures.
         </p>
 
         <p>

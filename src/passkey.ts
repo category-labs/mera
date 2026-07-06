@@ -91,8 +91,8 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * Creates a discoverable, user-verified passkey and requires WebAuthn PRF support.
  *
  * When the authenticator evaluates PRF at create time, the result includes the
- * first PRF output for `prfSalt`, so no second ceremony is needed to open a
- * derived account.
+ * first PRF output for `prfSalt`, so no second ceremony is needed to obtain the
+ * PRF output.
  *
  * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyOptions}.
  * @returns Credential metadata, plus the first PRF output when it was evaluated during creation.

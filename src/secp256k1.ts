@@ -98,8 +98,12 @@ function createSecp256k1SigningSession({
       // practice. Such a signature cannot be address-recovered from `r` and a
       // parity bit alone, so fail loudly instead of returning an unusable
       // recovery ID. The check also narrows the byte to the declared `0 | 1`.
+      // INPUT_INVALID is a stretch (the recovery ID is not caller-supplied),
+      // but a range constraint failed at a public boundary and the event is
+      // unreachable in practice, so it does not warrant its own code.
       if (recovery !== 0 && recovery !== 1) {
-        throw new Error(
+        throw new MeraError(
+          "INPUT_INVALID",
           `Signature recovery ID must be 0 or 1, got ${recovery}`,
         );
       }

@@ -87,7 +87,7 @@ type PasskeySecretVault = {
 type Secp256k1Signature = {
   /** Compact 64-byte `r || s` ECDSA signature. */
   readonly compact: Uint8Array<ArrayBuffer>;
-  /** Recovery ID for the signature. */
+  /** Recovery ID (0 or 1) for the signature. */
   readonly recovery: 0 | 1;
 };
 

@@ -91,7 +91,7 @@ function createSecp256k1SigningSession({
       const recovery = signature[0];
 
       // A recovery ID of 2 or 3 requires the signature's r to be at least the
-      // curve order, which happens with probability about 2^-127 — never in
+      // curve order, which happens with probability about 2^-127, never in
       // practice. Such a signature cannot be address-recovered from `r` and a
       // parity bit alone, so fail loudly instead of returning an unusable
       // recovery ID. The check also narrows the byte to the declared `0 | 1`.

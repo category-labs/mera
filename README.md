@@ -1,18 +1,18 @@
 # mera
 
-Passkey-backed signing for multichain accounts — one biometric, many chains.
+Passkey-backed signing for multichain accounts: one biometric, many chains.
 
-mera turns a WebAuthn passkey into stable, authenticator-bound entropy for wallet apps. The browser's WebAuthn PRF extension gives mera 32 bytes per ceremony; apps can feed those bytes into their chosen wallet derivation scheme or wrap an app-held secret — a recovery phrase, a private key — into a passkey-encrypted vault. No smart-account deploys, no custom on-chain verifier programs.
+mera turns a WebAuthn passkey into stable, authenticator-bound entropy for wallet apps. The browser's WebAuthn PRF extension gives mera 32 bytes per ceremony; apps can feed those bytes into their chosen derivation scheme or wrap an app-held secret (a recovery phrase, a private key) into a passkey-encrypted vault. None of it needs a smart-account deploy or a custom on-chain verifier program.
 
-- One passkey, multiple chains (EVM + Solana today).
-- One biometric per session, not per transaction.
-- Wallet derivation stays app-owned — mera hands the app entropy, not a derivation path.
+- Signing sessions for secp256k1 and Ed25519, address helpers for EVM and Solana.
+- One biometric unlocks a whole session of signatures.
+- Key derivation stays app-owned; mera hands the app entropy.
 
 ## Modes
 
-**Derived.** mera uses its fixed deterministic salt to reproduce the same PRF output for the same PRF-capable passkey and `rpId`; cross-device use requires that passkey to be available on the new device. The app derives wallet keys from that output using its chosen scheme — the demo uses BIP-39/BIP-32 for secp256k1 and SLIP-0010 for Ed25519. Best for stateless wallet access across devices.
+**Derived.** mera uses its fixed deterministic salt to reproduce the same PRF output for the same PRF-capable passkey and `rpId`; cross-device use requires that passkey to be available on the new device. The app derives account keys from that output using its chosen scheme; the demo uses BIP-39/BIP-32 for secp256k1 and SLIP-0010 for Ed25519. Best for stateless account access across devices.
 
-**Wrapped.** An AES-256-GCM blob holds one secret — a recovery phrase, a private key, any bytes; only the passkey can unlock it. The blob can live in `localStorage`, a backend, or a sync service. Best for hot-wallet UX, returning users who sign many transactions per session, and importing an existing wallet.
+**Wrapped.** An AES-256-GCM blob holds one secret (a recovery phrase, a private key, any bytes); only the passkey can unlock it. The blob can live in `localStorage`, a backend, or a sync service. Suits returning users who sign many transactions per session, and imports of an existing account.
 
 Derived mode stores no app-owned secret to recover. If the passkey is deleted, not synced, tied to a lost provider account, or unavailable under the app's `rpId` after a domain migration, the account may be unrecoverable unless the app offers export, import, or another backup path.
 
@@ -24,7 +24,7 @@ npm install @category-labs/mera
 
 ## Quick example
 
-A derived-mode skeleton: one passkey ceremony, then app-owned wallet derivation.
+A derived-mode skeleton: one passkey ceremony, then app-owned key derivation.
 
 ```ts
 import {
@@ -33,14 +33,14 @@ import {
   getEvmAddress,
   getPasskeyPrfOutput,
 } from "@category-labs/mera"
-import { deriveWalletPrivateKey } from "./wallet-derivation"
+import { deriveAccountPrivateKey } from "./account-derivation"
 
 const rpId = "account.example.com"
 
 const prfSalt = getDeterministicPrfSaltV1()
 const { prfOutput } = await getPasskeyPrfOutput({ rpId, prfSalt })
 
-const privateKey = deriveWalletPrivateKey({
+const privateKey = deriveAccountPrivateKey({
   entropy: prfOutput,
   path: "m/44'/60'/0'/0/0",
 })
@@ -49,9 +49,9 @@ const session = createSecp256k1SigningSession({ consumePrivateKey: privateKey })
 const address = getEvmAddress(session.publicKey)
 ```
 
-Reusing one PRF output unchanged for unrelated purposes — wallet derivation and app-data encryption, say — links those secrets. Use a different PRF salt per purpose, or split one output with a purpose-labeled KDF.
+Reusing one PRF output unchanged for unrelated purposes (key derivation and app-data encryption, say) links those secrets. Use a different PRF salt per purpose, or split one output with a purpose-labeled KDF.
 
-Derived/reproducible-wallet flows pass a stable PRF salt such as `getDeterministicPrfSaltV1()`. Wrapped flows pass 32 fresh random salt bytes.
+Derived, reproducible-account flows pass a stable PRF salt such as `getDeterministicPrfSaltV1()`. Wrapped flows pass 32 fresh random salt bytes.
 
 ## Supported authenticators
 
@@ -85,12 +85,12 @@ On desktop Chrome, only passkeys saved to Google Password Manager carry PRF. The
 
 Names only; editor hover shows the full JSDoc.
 
-- **Passkey ceremonies** — `createPasskey`, `createPasskeyWithPrfOutput`, `getPasskeyPrfOutput`
-- **Deterministic PRF salt** — `getDeterministicPrfSaltV1`
-- **Signing sessions** — `createSecp256k1SigningSession`, `createEd25519SigningSession`
-- **Secret vault** — `createSecretVault`, `unwrapSecretVault`, `parseSecretVault`, `getSecretVaultPrfOutput`
-- **Chain addresses** — `getEvmAddress`, `isEvmAddress`, `getSolanaAddress`, `isSolanaAddress`
-- **Errors** — `MeraError`, `isMeraError`, `MeraErrorCode`
+- **Passkey ceremonies**: `createPasskey`, `createPasskeyWithPrfOutput`, `getPasskeyPrfOutput`
+- **Deterministic PRF salt**: `getDeterministicPrfSaltV1`
+- **Signing sessions**: `createSecp256k1SigningSession`, `createEd25519SigningSession`
+- **Secret vault**: `createSecretVault`, `unwrapSecretVault`, `parseSecretVault`, `getSecretVaultPrfOutput`
+- **Chain addresses**: `getEvmAddress`, `isEvmAddress`, `getSolanaAddress`, `isSolanaAddress`
+- **Errors**: `MeraError`, `isMeraError`, `MeraErrorCode`
 
 ## Detailed docs
 

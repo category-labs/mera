@@ -41,6 +41,8 @@ type CreatePasskeyInput = {
    * do not support PRF eval at create time silently ignore it and the result
    * omits `prfOutput`; a later `getPasskeyPrfOutput` with the same `rpId`,
    * `credentialId`, and salt yields the PRF output.
+   *
+   * Copied before use; the original buffer is not modified.
    */
   prfSalt?: Uint8Array;
 };
@@ -68,7 +70,7 @@ type GetPasskeyPrfOutputInput = {
   rpId: string;
   /** Credential metadata to restrict the assertion to one passkey. */
   credential?: PasskeyCredentialMetadata;
-  /** PRF salt as 32 raw bytes. */
+  /** PRF salt as 32 raw bytes; copied before use, the original buffer is not modified. */
   prfSalt: Uint8Array;
   /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
   timeout?: number;

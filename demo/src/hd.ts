@@ -12,19 +12,17 @@ import { wordlist } from "@scure/bip39/wordlists/english.js";
 
 const PRF_OUTPUT_LENGTH = 32;
 
-// BIP-44 account paths. Ethereum varies the address index on the external
-// chain (the MetaMask convention); Solana varies the account index and is
-// hardened end to end (the Phantom / Solflare convention).
+// BIP-44 Ethereum path: the address index varies on the external chain
+// (the MetaMask convention).
 const ethereumPath = (index: number): string => `m/44'/60'/0'/0/${index}`;
 
 /**
  * Converts a 32-byte WebAuthn PRF output into the BIP-39 mnemonic that every
  * standard HD wallet derives from.
  *
- * Treating the PRF output as 256 bits of BIP-39 entropy is the single decision
- * that makes these accounts exportable: the same phrase, imported into MetaMask
- * or Phantom, reproduces the exact addresses derived here. It is also why the
- * derivation can never change without changing everyone's addresses.
+ * The PRF output is used as 256 bits of BIP-39 entropy, so the same phrase
+ * imported into MetaMask or Phantom reproduces the same addresses. Changing
+ * this mapping would change every derived address.
  */
 function prfOutputToMnemonic(prfOutput: Uint8Array): string {
   if (prfOutput.length !== PRF_OUTPUT_LENGTH) {
@@ -61,6 +59,8 @@ function deriveEthereumPrivateKey(seed: Uint8Array, index: number): Uint8Array {
 /** Ed25519 seed for Solana account `index` (SLIP-0010 over BIP-44). */
 function deriveSolanaSeed(seed: Uint8Array, index: number): Uint8Array {
   let node = slip10Master(seed);
+  // m/44'/501'/{index}'/0' -- BIP-44 with the account index varying,
+  // hardened end to end (see the SLIP-0010 section below).
   for (const pathIndex of [44, 501, index, 0]) {
     node = slip10ChildHardened(node, pathIndex);
   }
@@ -68,10 +68,9 @@ function deriveSolanaSeed(seed: Uint8Array, index: number): Uint8Array {
 }
 
 // ----- SLIP-0010 for Ed25519 ------------------------------------------------
-// Ed25519 supports only hardened derivation. This implementation is validated
-// against the official SLIP-0010 ed25519 test vectors and against the canonical
-// BIP-39 test mnemonic's Phantom address; Phantom and Solflare derive Solana
-// keys this exact way.
+// Ed25519 supports only hardened derivation. Phantom and Solflare derive Solana
+// keys this exact way, so importing the same mnemonic there reproduces these
+// addresses.
 
 const ED25519_DOMAIN = utf8ToBytes("ed25519 seed");
 const HARDENED_OFFSET = 0x80000000;

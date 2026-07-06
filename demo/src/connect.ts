@@ -15,6 +15,7 @@ import {
   type Secp256k1SigningSession,
   unwrapSecretVault,
 } from "@category-labs/mera";
+import { currentDerivedWallet, rememberDerivedWallet } from "./derivedWallet";
 import {
   deriveEthereumPrivateKey,
   deriveSolanaSeed,
@@ -22,7 +23,6 @@ import {
   mnemonicToSeed,
   prfOutputToMnemonic,
 } from "./hd";
-import { currentDerivedWallet, rememberDerivedWallet } from "./registry";
 
 /** The two account modes the demo offers (mera itself is mode-agnostic). */
 type AccountMode = "wrapped" | "derived";
@@ -50,7 +50,7 @@ type AccountSlot = {
  */
 type ConnectedWallet = {
   mode: AccountMode;
-  /** Credential to pin on the next sign-in (derived mode); absent otherwise. */
+  /** Credential to pin when re-running a ceremony for this wallet; derived mode only, absent otherwise. */
   credentialId?: string;
   /** Returns the account at `index`, deriving and caching it on first use. */
   deriveAccount(index: number): AccountSlot;
@@ -67,11 +67,16 @@ const DEFAULT_USER = "nad";
 
 const rpId = location.hostname;
 
-function buildAccountSlot(
-  index: number,
-  secpSession: Secp256k1SigningSession,
-  ed25519Session: Ed25519SigningSession,
-): AccountSlot {
+/** Derives both chain sessions for one HD account index from the master seed. */
+function deriveSlotFromSeed(seed: Uint8Array, index: number): AccountSlot {
+  // Each derive* call returns a fresh buffer the session takes ownership of and
+  // zeroes; the master `seed` itself is never handed to a session.
+  const secpSession = createSecp256k1SigningSession({
+    consumePrivateKey: deriveEthereumPrivateKey(seed, index),
+  });
+  const ed25519Session = createEd25519SigningSession({
+    consumePrivateKey: deriveSolanaSeed(seed, index),
+  });
   return {
     index,
     ethereum: {
@@ -83,19 +88,6 @@ function buildAccountSlot(
       address: getSolanaAddress(ed25519Session.publicKey),
     },
   };
-}
-
-/** Derives both chain sessions for one HD account index from the master seed. */
-function deriveSlotFromSeed(seed: Uint8Array, index: number): AccountSlot {
-  // Each derive* call returns a fresh buffer the session takes ownership of and
-  // zeroes; the master `seed` itself is never handed to a session.
-  const secpSession = createSecp256k1SigningSession({
-    consumePrivateKey: deriveEthereumPrivateKey(seed, index),
-  });
-  const ed25519Session = createEd25519SigningSession({
-    consumePrivateKey: deriveSolanaSeed(seed, index),
-  });
-  return buildAccountSlot(index, secpSession, ed25519Session);
 }
 
 // ----- Derived mode: one PRF output is the HD master for every account -------
@@ -159,7 +151,7 @@ async function createDerived(label: string): Promise<ConnectResult> {
 
   rememberDerivedWallet({
     credentialId: credential.credentialId,
-    ...(credential.transports ? { transports: credential.transports } : {}),
+    transports: credential.transports,
     label,
     accountCount: 1,
   });
@@ -178,14 +170,9 @@ async function openDerived(): Promise<ConnectResult> {
   const prfSalt = getDeterministicPrfSaltV1();
   const { prfOutput, credentialId } = await getPasskeyPrfOutput({
     rpId,
-    ...(known?.credentialId
-      ? {
-          credential: {
-            credentialId: known.credentialId,
-            ...(known.transports ? { transports: known.transports } : {}),
-          },
-        }
-      : {}),
+    credential: known?.credentialId
+      ? { credentialId: known.credentialId, transports: known.transports }
+      : undefined,
     prfSalt,
   });
 
@@ -196,7 +183,7 @@ async function openDerived(): Promise<ConnectResult> {
   const accountCount = record?.accountCount ?? 1;
   rememberDerivedWallet({
     credentialId,
-    ...(record?.transports ? { transports: record.transports } : {}),
+    transports: record?.transports,
     label,
     accountCount,
   });
@@ -333,10 +320,10 @@ function connect(
  *
  * Derived wallets re-derive the phrase from the passkey PRF output; wrapped
  * wallets decrypt the phrase the user generated or imported out of the secret
- * vault. Either way the mnemonic is fetched on demand rather than held in
- * memory: revealing the whole-wallet backup is a high-privilege action, so it
- * is gated behind a fresh biometric, byte buffers are zeroed where possible,
- * and the returned string is dropped when the backup view hides or unmounts.
+ * vault. Either way the mnemonic is fetched on demand behind a fresh biometric.
+ * PRF output and decrypted secret bytes are zeroed where possible before the
+ * function returns. The phrase is returned as a JavaScript string, which cannot
+ * be zeroed in place.
  */
 async function revealMnemonic(wallet: ConnectedWallet): Promise<string> {
   if (wallet.mode === "wrapped") {
@@ -347,17 +334,15 @@ async function revealMnemonic(wallet: ConnectedWallet): Promise<string> {
   const prfSalt = getDeterministicPrfSaltV1();
   const { prfOutput } = await getPasskeyPrfOutput({
     rpId,
-    ...(wallet.credentialId
+    credential: wallet.credentialId
       ? {
-          credential: {
-            credentialId: wallet.credentialId,
-            ...(record?.credentialId === wallet.credentialId &&
-            record?.transports
-              ? { transports: record.transports }
-              : {}),
-          },
+          credentialId: wallet.credentialId,
+          transports:
+            record?.credentialId === wallet.credentialId
+              ? record?.transports
+              : undefined,
         }
-      : {}),
+      : undefined,
     prfSalt,
   });
 

@@ -10,8 +10,8 @@ import {
   type ConnectResult,
   describeError,
 } from "./connect";
+import { setDerivedAccountCount } from "./derivedWallet";
 import type { NetworkMode } from "./network";
-import { setDerivedAccountCount } from "./registry";
 
 /** Root component: holds the connected wallet + accounts, fetches network info. */
 function App(): ReactElement {

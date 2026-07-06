@@ -12,11 +12,7 @@ function trimAmount(value: string): string {
 
 /** Encodes bytes as classical (padded) base64 for display alongside other byte blobs. */
 function bytesToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  }
-  return btoa(binary);
+  return btoa(String.fromCharCode(...bytes));
 }
 
 export { bytesToBase64, shorten, trimAmount };

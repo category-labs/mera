@@ -3,10 +3,6 @@ import { MeraError } from "./errors.js";
 
 /**
  * Handle to a session-owned private key whose lifetime is gated by `lock`.
- *
- * Centralizes the key-zeroing lifecycle shared by every signing session: the
- * caller's buffer is consumed (copied into one owned snapshot, then zeroed) on
- * creation, access throws once locked, and `lock` zeroes the session-owned copy.
  */
 type LockableKey = {
   /**

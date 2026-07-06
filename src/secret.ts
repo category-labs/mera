@@ -283,6 +283,11 @@ type UnwrapSecretVaultInput = {
 /**
  * Decrypts the secret from a secret vault.
  *
+ * @remarks
+ * `prfOutput` is copied before async cryptographic work starts; post-call
+ * mutation does not change the decryption result. The caller-owned buffer is
+ * not modified or zeroed.
+ *
  * @param options - Vault and PRF output; fields are documented on {@link UnwrapSecretVaultOptions}.
  * @returns The decrypted secret bytes, exactly as passed to `createSecretVault`. The returned buffer is a fresh allocation; the library keeps no reference to it and never zeroes it.
  * @throws MeraError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url (already validated for vaults from `parseSecretVault`).

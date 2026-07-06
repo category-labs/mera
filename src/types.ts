@@ -6,15 +6,26 @@
  */
 type EvmAddress = `0x${string}`;
 
+declare const brand: unique symbol;
+
+/**
+ * Nominal branding helper: tags `T` with a type-only discriminant.
+ *
+ * The symbol key is never exported, so branded values cannot be produced
+ * structurally or read back as a property; only the library functions
+ * documented on each branded type mint them. Nothing exists at runtime.
+ */
+type Brand<T, Name extends string> = T & { readonly [brand]: Name };
+
 /**
  * A base58-encoded 32-byte Solana address.
  *
  * Branded nominal type: base58 has no structural shape the way `EvmAddress`
  * does, so values are produced by `getSolanaAddress` or narrowed from strings
  * by `isSolanaAddress`. The brand exists only in the type system; at runtime
- * the value is a plain string with no `__brand` property.
+ * the value is a plain string.
  */
-type SolanaAddress = string & { readonly __brand: "SolanaAddress" };
+type SolanaAddress = Brand<string, "SolanaAddress">;
 
 /** WebAuthn authenticator transport metadata, including future browser transport values. */
 type PasskeyCredentialTransport = AuthenticatorTransport | (string & {});

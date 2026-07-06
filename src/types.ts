@@ -6,6 +6,18 @@
  */
 type EvmAddress = `0x${string}`;
 
+declare const solanaAddressBrand: unique symbol;
+
+/**
+ * A base58-encoded 32-byte Solana address.
+ *
+ * Branded nominal type: base58 has no structural shape the way `EvmAddress`
+ * does, so values are produced by `getSolanaAddress` or narrowed from strings
+ * by `isSolanaAddress`. The brand exists only in the type system; at runtime
+ * the value is a plain string.
+ */
+type SolanaAddress = string & { readonly [solanaAddressBrand]: true };
+
 /** WebAuthn authenticator transport metadata, including future browser transport values. */
 type PasskeyCredentialTransport = AuthenticatorTransport | (string & {});
 
@@ -145,4 +157,5 @@ export type {
   PasskeySecretVault,
   Secp256k1Signature,
   Secp256k1SigningSession,
+  SolanaAddress,
 };

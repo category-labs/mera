@@ -124,15 +124,9 @@ function createPasskey(
  * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyOptions}.
  * @returns Credential metadata for the created passkey.
  * @remarks
- * Invokes `navigator.credentials.create()`, which may show browser or
- * authenticator UI and create a discoverable passkey.
- *
- * The WebAuthn challenge is generated internally. The raw attestation response
- * is not returned.
- *
- * The credential is requested with fixed parameters: ES256 or RS256 key types,
- * attestation `"none"`, a required resident key, and required user
- * verification.
+ * The ceremony is the one documented on the `prfSalt` overload: the same
+ * browser or authenticator UI, internally generated challenge, and fixed
+ * WebAuthn parameters, minus the PRF salt evaluation.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF.
  * @throws MeraError with code `INPUT_INVALID` when `user.id` is provided but not 1 to 64 bytes.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.

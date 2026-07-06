@@ -91,10 +91,22 @@ function createSecp256k1SigningSession({
       });
 
       // noble's "recovered" format is 65 bytes: the recovery ID, then r || s.
+      const recovery = signature[0];
+
+      // A recovery ID of 2 or 3 requires the signature's r to be at least the
+      // curve order, which happens with probability about 2^-127 — never in
+      // practice. Such a signature cannot be address-recovered from `r` and a
+      // parity bit alone, so fail loudly instead of returning an unusable
+      // recovery ID. The check also narrows the byte to the declared `0 | 1`.
+      if (recovery !== 0 && recovery !== 1) {
+        throw new Error(
+          `Signature recovery ID must be 0 or 1, got ${recovery}`,
+        );
+      }
+
       return {
         compact: signature.slice(1),
-        // biome-ignore lint/style/noNonNullAssertion: the recovered format is fixed-width, so byte 0 always exists; noble types it as a plain Uint8Array.
-        recovery: signature[0]!,
+        recovery,
       };
     },
     lock,

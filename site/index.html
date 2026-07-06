@@ -3,9 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>
-      A passkey is enough: ordinary private keys, no smart accounts · mera
-    </title>
+    <title>mera: crypto onboarding with only a passkey on any network</title>
     <meta
       name="description"
       content="How a passkey becomes ordinary private keys with any derivation scheme and any chain, without smart accounts or on-chain infrastructure."
@@ -14,7 +12,7 @@
     <meta property="og:site_name" content="mera">
     <meta
       property="og:title"
-      content="A passkey is enough: ordinary private keys, no smart accounts"
+      content="mera: crypto onboarding with only a passkey on any network"
     >
     <meta
       property="og:description"
@@ -398,21 +396,25 @@
           mainstream authenticators.
         </p>
 
-        <h2 id="where-crypto-onboarding-starts">
-          Where crypto onboarding starts
+        <h2 id="the-current-state-of-crypto-onboarding">
+          The current state of crypto onboarding
         </h2>
 
         <p>
-          Self-custody onboarding, where no one else can move the funds, still
-          usually starts with a recovery phrase: a
+          Self-custody onboarding (where no one but the user can move the funds)
+          has not changed much in a decade. The app generates a recovery phrase
+          (a
           <a
             href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki"
             >BIP-39</a
           >
-          mnemonic of twelve or twenty-four words. The scheme works across
-          wallet apps. It also puts the hardest part of the product first: copy
-          the words, re-enter some of them, and keep the phrase safe for as long
-          as the account matters.
+          mnemonic of twelve or twenty-four words) and asks the user to write it
+          down. The scheme works in every wallet app, but its costs land before
+          the app has done anything useful. The first is the flow itself: no
+          ordinary app asks a new user to transcribe those words and re-enter
+          some of them before first use. The second outlasts onboarding. The
+          user is now responsible for backing up a secret that controls all
+          future funds.
         </p>
 
         <p>
@@ -1004,28 +1006,28 @@ const address = getEvmAddress(session.publicKey)</code></pre>
           >.
         </p>
 
-        <h2 id="what-changes-for-users-and-developers">
-          What changes for users and developers
+        <h2 id="what-users-and-developers-get">
+          What users and developers get
         </h2>
 
         <p>For users:</p>
 
         <ul>
           <li>
-            <strong>One prompt at the start.</strong>
+            <strong>Onboarding is one passkey prompt.</strong>
             Create a passkey, see an address. Nothing to transcribe.
           </li>
           <li>
-            <strong>The same entropy can feed several chains.</strong>
-            Accounts for each supported chain come from those bytes.
+            <strong>One passkey, many chains.</strong>
+            The same entropy derives accounts for every chain the app supports.
           </li>
           <li>
-            <strong>Backup follows passkey sync.</strong>
+            <strong>Backup is passkey sync.</strong>
             A synced password manager carries the passkey across devices, so a
             new device is just a sign-in: the same account appears.
           </li>
           <li>
-            <strong>Export can stay standard.</strong>
+            <strong>There is a way out.</strong>
             Where the app offers export, the recovery phrase imports into
             MetaMask, Phantom, or any other standard wallet app.
           </li>
@@ -1055,9 +1057,10 @@ const address = getEvmAddress(session.publicKey)</code></pre>
             Ordinary HD derivation lives in the demo, outside the library.
           </li>
           <li>
-            <strong>The output is just bytes.</strong>
-            32 deterministic, authenticator-bound bytes feed any KDF for any
-            curve. They can also key client-side encryption of app data.
+            <strong>The primitive is general.</strong>
+            The output is 32 deterministic, authenticator-bound bytes. Apps can
+            feed it into any KDF for any curve, or use it outside chains
+            entirely, such as client-side encryption of app data.
           </li>
         </ul>
 

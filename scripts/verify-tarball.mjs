@@ -16,8 +16,8 @@ const REQUIRED_FILES = [
 
 // `npm pack --dry-run --json` reports the exact tarball file list without
 // writing a .tgz to disk. `--ignore-scripts` skips the `prepack` rebuild so
-// this inspects the dist `check:pack` already built (and lints with `publint`)
-// rather than building a second time.
+// this inspects the dist `check:pack` already built rather than building a
+// second time.
 const packOutput = execFileSync(
   "npm",
   ["pack", "--dry-run", "--json", "--ignore-scripts"],

@@ -159,7 +159,7 @@ async function createDerived(label: string): Promise<ConnectResult> {
 
   rememberDerivedWallet({
     credentialId: credential.credentialId,
-    ...(credential.transports ? { transports: credential.transports } : {}),
+    transports: credential.transports,
     label,
     accountCount: 1,
   });
@@ -178,14 +178,9 @@ async function openDerived(): Promise<ConnectResult> {
   const prfSalt = getDeterministicPrfSaltV1();
   const { prfOutput, credentialId } = await getPasskeyPrfOutput({
     rpId,
-    ...(known?.credentialId
-      ? {
-          credential: {
-            credentialId: known.credentialId,
-            ...(known.transports ? { transports: known.transports } : {}),
-          },
-        }
-      : {}),
+    credential: known?.credentialId
+      ? { credentialId: known.credentialId, transports: known.transports }
+      : undefined,
     prfSalt,
   });
 
@@ -196,7 +191,7 @@ async function openDerived(): Promise<ConnectResult> {
   const accountCount = record?.accountCount ?? 1;
   rememberDerivedWallet({
     credentialId,
-    ...(record?.transports ? { transports: record.transports } : {}),
+    transports: record?.transports,
     label,
     accountCount,
   });
@@ -347,17 +342,15 @@ async function revealMnemonic(wallet: ConnectedWallet): Promise<string> {
   const prfSalt = getDeterministicPrfSaltV1();
   const { prfOutput } = await getPasskeyPrfOutput({
     rpId,
-    ...(wallet.credentialId
+    credential: wallet.credentialId
       ? {
-          credential: {
-            credentialId: wallet.credentialId,
-            ...(record?.credentialId === wallet.credentialId &&
-            record?.transports
-              ? { transports: record.transports }
-              : {}),
-          },
+          credentialId: wallet.credentialId,
+          transports:
+            record?.credentialId === wallet.credentialId
+              ? record?.transports
+              : undefined,
         }
-      : {}),
+      : undefined,
     prfSalt,
   });
 

@@ -51,7 +51,7 @@ const address = getEvmAddress(session.publicKey)
 
 Reusing one PRF output unchanged for unrelated purposes — wallet derivation and app-data encryption, say — links those secrets. Use a different PRF salt per purpose, or split one output with a purpose-labeled KDF.
 
-Derived/reproducible-wallet flows pass a stable PRF salt such as `getDeterministicPrfSaltV1()`. Wrapped flows pass fresh random salt bytes.
+Derived/reproducible-wallet flows pass a stable PRF salt such as `getDeterministicPrfSaltV1()`. Wrapped flows pass 32 fresh random salt bytes.
 
 ## Supported authenticators
 

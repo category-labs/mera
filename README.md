@@ -10,7 +10,7 @@ mera turns a WebAuthn passkey into stable, authenticator-bound entropy for walle
 
 ## Modes
 
-**Derived.** Mera uses its fixed deterministic salt to reproduce the same PRF output for the same PRF-capable passkey and `rpId`; cross-device use requires that passkey to be available on the new device. The app derives wallet keys from that output using its chosen scheme — the demo uses BIP-39/BIP-32 for secp256k1 and SLIP-0010 for Ed25519. Best for stateless wallet access across devices.
+**Derived.** mera uses its fixed deterministic salt to reproduce the same PRF output for the same PRF-capable passkey and `rpId`; cross-device use requires that passkey to be available on the new device. The app derives wallet keys from that output using its chosen scheme — the demo uses BIP-39/BIP-32 for secp256k1 and SLIP-0010 for Ed25519. Best for stateless wallet access across devices.
 
 **Wrapped.** An AES-256-GCM blob holds one secret — a recovery phrase, a private key, any bytes; only the passkey can unlock it. The blob can live in `localStorage`, a backend, or a sync service. Best for hot-wallet UX, returning users who sign many transactions per session, and importing an existing wallet.
 
@@ -100,7 +100,7 @@ Secret-vault flows, demo HD derivation recipes (BIP-39/BIP-32, SLIP-0010), the s
 
 A compromised JavaScript runtime can observe key material during app-owned derivation or import, and can sign with an unlocked session until `session.lock()`. Recovery export should be handled as a separate app-owned flow that reruns WebAuthn PRF or unwraps a vault with fresh user verification.
 
-Recovery phrases become JavaScript strings when displayed or exported. Unlike `Uint8Array` buffers, strings cannot be zeroed in place; apps can only drop references and keep their lifetime short. Mera zeroes owned byte buffers where possible, but host apps should treat revealed recovery phrases as high-risk UI state.
+Recovery phrases become JavaScript strings when displayed or exported. Unlike `Uint8Array` buffers, strings cannot be zeroed in place; apps can only drop references and keep their lifetime short. mera zeroes owned byte buffers where possible, but host apps should treat revealed recovery phrases as high-risk UI state.
 
 **Dependency scope.** Runtime dependencies are `@noble/*` and `@scure/*` only. The root `devDependencies` (build/test tooling) and the unpublished `demo/` app never ship to library consumers.
 

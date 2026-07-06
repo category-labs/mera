@@ -33,10 +33,6 @@ function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array<ArrayBuffer> {
 /**
  * Wraps an Ed25519 private key in an explicitly lockable signing session.
  *
- * `signMessage` signs the raw message bytes; Ed25519 hashes internally with
- * SHA-512. `lock` zeroes the session-owned private-key copy and makes future
- * signing fail.
- *
  * @param options - Signing session inputs; fields are documented on {@link CreateSigningSessionOptions}.
  * @returns An unlocked Ed25519 signing session.
  * @throws MeraError with code `INPUT_INVALID` when `consumePrivateKey` is not 32 bytes.

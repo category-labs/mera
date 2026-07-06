@@ -2,6 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
+    // Tests and the Playwright config emit no declarations, so the library's
+    // isolatedDeclarations requirement does not apply to them.
+    "isolatedDeclarations": false,
     "rootDir": ".",
     "types": ["node"]
   },

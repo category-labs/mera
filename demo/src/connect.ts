@@ -333,10 +333,10 @@ function connect(
  *
  * Derived wallets re-derive the phrase from the passkey PRF output; wrapped
  * wallets decrypt the phrase the user generated or imported out of the secret
- * vault. Either way the mnemonic is fetched on demand rather than held in
- * memory: revealing the whole-wallet backup is a high-privilege action, so it
- * is gated behind a fresh biometric, byte buffers are zeroed where possible,
- * and the returned string is dropped when the backup view hides or unmounts.
+ * vault. Either way the mnemonic is fetched on demand behind a fresh biometric.
+ * PRF output and decrypted secret bytes are zeroed where possible before the
+ * function returns. The phrase is returned as a JavaScript string, which cannot
+ * be zeroed in place.
  */
 async function revealMnemonic(wallet: ConnectedWallet): Promise<string> {
   if (wallet.mode === "wrapped") {

@@ -98,7 +98,7 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * @returns Credential metadata, plus the first PRF output when it was evaluated during creation.
  * @remarks
  * Invokes `navigator.credentials.create()`, which may show browser or
- * authenticator UI and create a discoverable passkey.
+ * authenticator UI.
  *
  * The WebAuthn challenge is generated internally. The raw attestation response
  * is not returned.

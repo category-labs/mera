@@ -222,7 +222,7 @@ function SolanaAccountCard({
                 onClick={showChip ? switchToManual : restoreSuggestion}
                 disabled={busy}
               >
-                {showChip ? "Change" : `Use ${suggestedLabel}`}
+                {showChip ? "Change" : `${suggestedLabel}`}
               </button>
             )}
           </span>

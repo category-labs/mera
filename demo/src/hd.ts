@@ -21,10 +21,9 @@ const ethereumPath = (index: number): string => `m/44'/60'/0'/0/${index}`;
  * Converts a 32-byte WebAuthn PRF output into the BIP-39 mnemonic that every
  * standard HD wallet derives from.
  *
- * Treating the PRF output as 256 bits of BIP-39 entropy is the single decision
- * that makes these accounts exportable: the same phrase, imported into MetaMask
- * or Phantom, reproduces the exact addresses derived here. It is also why the
- * derivation can never change without changing everyone's addresses.
+ * The PRF output is used as 256 bits of BIP-39 entropy, so the same phrase
+ * imported into MetaMask or Phantom reproduces the same addresses. Changing
+ * this mapping would change every derived address.
  */
 function prfOutputToMnemonic(prfOutput: Uint8Array): string {
   if (prfOutput.length !== PRF_OUTPUT_LENGTH) {

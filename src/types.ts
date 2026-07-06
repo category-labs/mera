@@ -99,6 +99,12 @@ type Secp256k1SigningSession = {
    * @remarks If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
    */
   lock(): void;
+  /**
+   * Calls `lock`, so a `using` declaration locks the session when its scope
+   * exits. Sessions bound with `const` or `let` are unaffected; disposal runs
+   * only where a caller opts in with `using`.
+   */
+  [Symbol.dispose](): void;
 };
 
 /** Ed25519 signing session that can sign messages until `lock` is called. */
@@ -119,6 +125,12 @@ type Ed25519SigningSession = {
    * @remarks If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
    */
   lock(): void;
+  /**
+   * Calls `lock`, so a `using` declaration locks the session when its scope
+   * exits. Sessions bound with `const` or `let` are unaffected; disposal runs
+   * only where a caller opts in with `using`.
+   */
+  [Symbol.dispose](): void;
 };
 
 export type {

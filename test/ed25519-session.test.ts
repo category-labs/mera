@@ -44,6 +44,22 @@ test("zeroes the caller's buffer when the private key is the wrong length", () =
   expect(buffer).toEqual(new Uint8Array(31));
 });
 
+test("a using declaration locks the session when its scope exits", async () => {
+  let escaped: ReturnType<typeof createEd25519SigningSession> | undefined;
+
+  {
+    using session = createEd25519SigningSession({
+      consumePrivateKey: new Uint8Array(RFC_SECRET),
+    });
+    await session.signMessage(new TextEncoder().encode("mera demo"));
+    escaped = session;
+  }
+
+  await expect(
+    escaped.signMessage(new TextEncoder().encode("mera demo")),
+  ).rejects.toMatchObject({ code: "SESSION_LOCKED" });
+});
+
 test("signs the message snapshot taken at call time, not later mutations", async () => {
   const session = createEd25519SigningSession({
     consumePrivateKey: new Uint8Array(RFC_SECRET),

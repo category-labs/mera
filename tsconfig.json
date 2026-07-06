@@ -12,7 +12,7 @@
     "sourceMap": true,
     "rootDir": "src",
     "outDir": "dist",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022", "ESNext.Disposable", "DOM", "DOM.Iterable"],
     "skipLibCheck": true
   },
   "include": ["src/**/*.ts"]

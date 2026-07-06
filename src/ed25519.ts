@@ -59,6 +59,9 @@ function createEd25519SigningSession({
     lock(): void {
       key.lock();
     },
+    [Symbol.dispose](): void {
+      key.lock();
+    },
   };
 }
 

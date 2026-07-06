@@ -56,6 +56,22 @@ test("zeroes the caller's buffer when the private key is an invalid scalar", () 
   expect(buffer).toEqual(new Uint8Array(32));
 });
 
+test("a using declaration locks the session when its scope exits", async () => {
+  let escaped: ReturnType<typeof createSecp256k1SigningSession> | undefined;
+
+  {
+    using session = createSecp256k1SigningSession({
+      consumePrivateKey: new Uint8Array(PRIVATE_KEY_ONE),
+    });
+    await session.signDigest(new Uint8Array(32).fill(1));
+    escaped = session;
+  }
+
+  await expect(
+    escaped.signDigest(new Uint8Array(32).fill(1)),
+  ).rejects.toMatchObject({ code: "SESSION_LOCKED" });
+});
+
 test("signs the digest snapshot taken at call time, not later mutations", async () => {
   const session = createSecp256k1SigningSession({
     consumePrivateKey: new Uint8Array(PRIVATE_KEY_ONE),

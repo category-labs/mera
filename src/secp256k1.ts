@@ -95,6 +95,9 @@ function createSecp256k1SigningSession({
     lock(): void {
       key.lock();
     },
+    [Symbol.dispose](): void {
+      key.lock();
+    },
   };
 }
 

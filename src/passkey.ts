@@ -107,10 +107,10 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  *
  * The credential is requested with fixed parameters: ES256 or RS256 key types,
  * attestation `"none"`, a required resident key, and required user
- * verification. User verification is the authenticator's local check, and the
- * platform chooses the gesture: a biometric, a device PIN, or a password all
- * satisfy it. The requirement is not configurable because the PRF extension
- * always evaluates the credential's user-verified PRF and overrides a weaker
+ * verification. User verification is the authenticator's local check; the
+ * gesture depends on the platform (a biometric, a device PIN, or a password).
+ * The requirement is not configurable because the PRF extension always
+ * evaluates the credential's user-verified PRF and overrides a weaker
  * `userVerification` setting, so exposing the setting could neither change
  * the PRF output nor remove the check.
  * @see {@link https://www.w3.org/TR/webauthn-3/#user-verification | WebAuthn: user verification}

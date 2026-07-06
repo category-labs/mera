@@ -411,7 +411,7 @@ type GetSecretVaultPrfOutputInput = {
  * The WebAuthn challenge is generated internally and the raw assertion
  * response is not returned.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
- * @throws MeraError with code `INPUT_INVALID` when the vault's `prfSalt` or `credentialId` is not canonical base64url (already validated for vaults from `parseSecretVault`).
+ * @throws MeraError with code `INPUT_INVALID` when the vault's `prfSalt` is not canonical base64url or does not decode to 32 bytes, or `credentialId` is empty or not canonical base64url (already validated for vaults from `parseSecretVault`).
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */

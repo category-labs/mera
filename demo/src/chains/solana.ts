@@ -41,7 +41,6 @@ const KNOWN_CLUSTERS: Record<string, { cluster: Cluster; mode: NetworkMode }> =
 type SolanaContext = {
   cluster: Cluster;
   connection: Connection;
-  rpcUrl: string;
   symbol: "SOL";
 };
 
@@ -71,7 +70,7 @@ async function resolveSolanaContext(
       `The ${networkMode} RPC is on the ${known.cluster} cluster, which belongs to ${known.mode}.`,
     );
   }
-  return { cluster: known.cluster, connection, rpcUrl, symbol: "SOL" };
+  return { cluster: known.cluster, connection, symbol: "SOL" };
 }
 
 /**

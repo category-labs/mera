@@ -4,6 +4,8 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,

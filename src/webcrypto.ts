@@ -8,7 +8,7 @@ import { MeraError } from "./errors.js";
  * @returns Cryptographically random bytes.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  */
-function randomBytes(length: number): Uint8Array {
+function randomBytes(length: number): Uint8Array<ArrayBuffer> {
   const output = new Uint8Array(length);
   getCrypto().getRandomValues(output);
   return output;

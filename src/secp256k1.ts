@@ -17,7 +17,9 @@ import type {
  * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not a valid secp256k1 scalar.
  * @internal
  */
-function getSecp256k1PublicKey(privateKey: Uint8Array): Uint8Array {
+function getSecp256k1PublicKey(
+  privateKey: Uint8Array,
+): Uint8Array<ArrayBuffer> {
   try {
     return new Uint8Array(secp.getPublicKey(privateKey, false));
   } catch (cause) {
@@ -37,7 +39,9 @@ function getSecp256k1PublicKey(privateKey: Uint8Array): Uint8Array {
  * @throws MeraError with code `INPUT_INVALID` when the key length, prefix, or curve point is invalid.
  * @internal
  */
-function normalizeSecp256k1PublicKey(publicKey: Uint8Array): Uint8Array {
+function normalizeSecp256k1PublicKey(
+  publicKey: Uint8Array,
+): Uint8Array<ArrayBuffer> {
   try {
     return new Uint8Array(secp.Point.fromBytes(publicKey).toBytes(false));
   } catch (cause) {
@@ -84,7 +88,8 @@ function createSecp256k1SigningSession({
       // noble's "recovered" format is 65 bytes: the recovery ID, then r || s.
       return {
         compact: signature.slice(1),
-        recovery: signature[0],
+        // biome-ignore lint/style/noNonNullAssertion: the recovered format is fixed-width, so byte 0 always exists; noble types it as a plain Uint8Array.
+        recovery: signature[0]!,
       };
     },
     lock(): void {

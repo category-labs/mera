@@ -41,10 +41,13 @@ function isEvmAddress(value: string): value is EvmAddress {
 function toChecksumAddress(lowercaseHex: string): EvmAddress {
   const hash = keccak_256(utf8ToBytes(lowercaseHex));
   let body = "";
-  for (let i = 0; i < lowercaseHex.length; i += 1) {
-    const char = lowercaseHex[i];
-    const hashNibble = (hash[i >> 1] >> (i % 2 === 0 ? 4 : 0)) & 0xf;
-    body += hashNibble >= 8 ? char.toUpperCase() : char;
+  for (const [i, hashByte] of hash
+    .subarray(0, lowercaseHex.length / 2)
+    .entries()) {
+    const high = lowercaseHex.charAt(i * 2);
+    const low = lowercaseHex.charAt(i * 2 + 1);
+    body += hashByte >> 4 >= 8 ? high.toUpperCase() : high;
+    body += (hashByte & 0xf) >= 8 ? low.toUpperCase() : low;
   }
   return `0x${body}`;
 }

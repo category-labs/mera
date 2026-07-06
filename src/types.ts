@@ -12,23 +12,23 @@ type PasskeyCredentialTransport = AuthenticatorTransport | (string & {});
 /** Metadata needed to ask WebAuthn for a previously created passkey. */
 type PasskeyCredentialMetadata = {
   /** Credential ID encoded as canonical unpadded base64url. */
-  credentialId: string;
+  readonly credentialId: string;
   /** Authenticator transports reported by the browser, when available. */
-  transports?: PasskeyCredentialTransport[];
+  readonly transports?: readonly PasskeyCredentialTransport[];
 };
 
 /** Result of a successful passkey assertion with the WebAuthn PRF extension. */
 type PasskeyPrfResult = {
   /** Credential ID selected by the browser, as canonical unpadded base64url. */
-  credentialId: string;
+  readonly credentialId: string;
   /** First PRF output from WebAuthn. Always 32 bytes. */
-  prfOutput: Uint8Array;
+  readonly prfOutput: Uint8Array<ArrayBuffer>;
 };
 
 /** Result of creating a passkey. */
 type CreatePasskeyResult = PasskeyCredentialMetadata & {
   /** First WebAuthn PRF output when `prfSalt` was provided and evaluated during creation. */
-  prfOutput?: Uint8Array;
+  readonly prfOutput?: Uint8Array<ArrayBuffer>;
 };
 
 /**
@@ -39,9 +39,9 @@ type CreatePasskeyResult = PasskeyCredentialMetadata & {
  */
 type CreatePasskeyWithPrfOutputResult = PasskeyCredentialMetadata & {
   /** PRF salt that was evaluated. Always 32 bytes and never aliases the caller input. */
-  prfSalt: Uint8Array;
+  readonly prfSalt: Uint8Array<ArrayBuffer>;
   /** First WebAuthn PRF output for `prfSalt`. Always 32 bytes. */
-  prfOutput: Uint8Array;
+  readonly prfOutput: Uint8Array<ArrayBuffer>;
 };
 
 /**
@@ -51,23 +51,23 @@ type CreatePasskeyWithPrfOutputResult = PasskeyCredentialMetadata & {
  */
 type PasskeySecretVault = {
   /** Secret-vault format version. */
-  version: 1;
+  readonly version: 1;
   /** Passkey credential that unlocks this secret. */
-  credential: PasskeyCredentialMetadata;
+  readonly credential: PasskeyCredentialMetadata;
   /** PRF salt for this secret, as canonical unpadded base64url. */
-  prfSalt: string;
+  readonly prfSalt: string;
   /** AES-GCM nonce as canonical unpadded base64url. */
-  nonce: string;
+  readonly nonce: string;
   /** AES-GCM ciphertext (including tag) as canonical unpadded base64url. */
-  ciphertext: string;
+  readonly ciphertext: string;
 };
 
 /** secp256k1 ECDSA signature returned by an unlocked signing session. */
 type Secp256k1Signature = {
   /** Compact 64-byte `r || s` ECDSA signature. */
-  compact: Uint8Array;
+  readonly compact: Uint8Array<ArrayBuffer>;
   /** Recovery ID (0 or 1) for the signature. */
-  recovery: number;
+  readonly recovery: number;
 };
 
 /** Inputs for creating an explicitly lockable curve signing session. */
@@ -83,7 +83,7 @@ type CreateSigningSessionOptions = {
 /** secp256k1 signing session that can sign 32-byte digests until `lock` is called. */
 type Secp256k1SigningSession = {
   /** Uncompressed secp256k1 public key for the session. */
-  publicKey: Uint8Array;
+  readonly publicKey: Uint8Array<ArrayBuffer>;
   /**
    * Signs a 32-byte digest without prehashing it.
    *
@@ -104,7 +104,7 @@ type Secp256k1SigningSession = {
 /** Ed25519 signing session that can sign messages until `lock` is called. */
 type Ed25519SigningSession = {
   /** 32-byte Ed25519 public key for the session. */
-  publicKey: Uint8Array;
+  readonly publicKey: Uint8Array<ArrayBuffer>;
   /**
    * Signs an arbitrary-length message with Ed25519.
    *
@@ -112,7 +112,7 @@ type Ed25519SigningSession = {
    * @returns A 64-byte Ed25519 signature (`R || s`).
    * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
    */
-  signMessage(message: Uint8Array): Promise<Uint8Array>;
+  signMessage(message: Uint8Array): Promise<Uint8Array<ArrayBuffer>>;
   /**
    * Zeroes the session-owned seed copy and permanently locks this session; later signing throws `SESSION_LOCKED`.
    *

@@ -16,7 +16,7 @@ import type {
  * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not 32 bytes.
  * @internal
  */
-function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array {
+function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array<ArrayBuffer> {
   if (privateKey.length !== 32) {
     throw new MeraError(
       "INPUT_INVALID",
@@ -51,7 +51,7 @@ function createEd25519SigningSession({
 
   return {
     publicKey,
-    async signMessage(message: Uint8Array): Promise<Uint8Array> {
+    async signMessage(message: Uint8Array): Promise<Uint8Array<ArrayBuffer>> {
       // Signing reads the buffer after an await; copy it now so a later mutation can't change the signed bytes.
       const messageCopy = copyBytes(message);
       return new Uint8Array(await ed25519.signAsync(messageCopy, key.use()));

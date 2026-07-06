@@ -14,7 +14,7 @@ type LockableKey = {
    *
    * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
    */
-  use(): Uint8Array;
+  use(): Uint8Array<ArrayBuffer>;
   /** Zeroes the session-owned key and permanently locks this handle. */
   lock(): void;
 };
@@ -33,9 +33,9 @@ type LockableKey = {
  */
 function createSigningKey(
   consumePrivateKey: Uint8Array,
-  derivePublicKey: (privateKey: Uint8Array) => Uint8Array,
-): { key: LockableKey; publicKey: Uint8Array } {
-  let activePrivateKey: Uint8Array | undefined;
+  derivePublicKey: (privateKey: Uint8Array) => Uint8Array<ArrayBuffer>,
+): { key: LockableKey; publicKey: Uint8Array<ArrayBuffer> } {
+  let activePrivateKey: Uint8Array<ArrayBuffer> | undefined;
 
   try {
     // Derive and store from the same owned snapshot, so the public key cannot
@@ -44,7 +44,7 @@ function createSigningKey(
     const publicKey = derivePublicKey(activePrivateKey);
 
     const key: LockableKey = {
-      use(): Uint8Array {
+      use(): Uint8Array<ArrayBuffer> {
         return requireUnlocked(activePrivateKey);
       },
       lock(): void {
@@ -71,7 +71,9 @@ function createSigningKey(
  * @returns The live session-owned private key.
  * @throws MeraError with code `SESSION_LOCKED` when `privateKey` is undefined.
  */
-function requireUnlocked(privateKey: Uint8Array | undefined): Uint8Array {
+function requireUnlocked(
+  privateKey: Uint8Array<ArrayBuffer> | undefined,
+): Uint8Array<ArrayBuffer> {
   if (privateKey === undefined) {
     throw new MeraError("SESSION_LOCKED", "Signing session is locked");
   }

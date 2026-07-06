@@ -18,7 +18,7 @@ const DETERMINISTIC_PRF_SALT = sha256(DETERMINISTIC_PRF_DOMAIN);
  * frozen, so a shared buffer mutated by one caller would silently change every
  * later derivation.
  */
-function getDeterministicPrfSaltV1(): Uint8Array {
+function getDeterministicPrfSaltV1(): Uint8Array<ArrayBuffer> {
   return new Uint8Array(DETERMINISTIC_PRF_SALT);
 }
 

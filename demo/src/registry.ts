@@ -11,7 +11,7 @@ import type { PasskeyCredentialTransport } from "@category-labs/mera";
  */
 type DerivedWalletRecord = {
   credentialId: string;
-  transports?: PasskeyCredentialTransport[];
+  transports?: readonly PasskeyCredentialTransport[];
   label: string;
   accountCount: number;
 };

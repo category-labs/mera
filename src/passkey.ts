@@ -90,9 +90,9 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
 /**
  * Creates a discoverable, user-verified passkey and requires WebAuthn PRF support.
  *
- * When `prfSalt` is provided and the authenticator evaluates PRF at create
- * time, the result includes the first PRF output, so no second ceremony is
- * needed to open a derived account.
+ * When the authenticator evaluates PRF at create time, the result includes the
+ * first PRF output for `prfSalt`, so no second ceremony is needed to open a
+ * derived account.
  *
  * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyOptions}.
  * @returns Credential metadata, plus the first PRF output when it was evaluated during creation.
@@ -107,10 +107,40 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * attestation `"none"`, a required resident key, and required user
  * verification.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or returns a malformed create-time PRF output.
- * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is provided but not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
+ * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
+function createPasskey(
+  options: CreatePasskeyInput & { prfSalt: Uint8Array },
+): Promise<CreatePasskeyResult>;
+/**
+ * Creates a discoverable, user-verified passkey and requires WebAuthn PRF support.
+ *
+ * Without `prfSalt`, no PRF evaluation happens during creation, so the result
+ * carries credential metadata only; a later `getPasskeyPrfOutput` call with a
+ * salt produces PRF output for this passkey.
+ *
+ * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyOptions}.
+ * @returns Credential metadata for the created passkey.
+ * @remarks
+ * Invokes `navigator.credentials.create()`, which may show browser or
+ * authenticator UI and create a discoverable passkey.
+ *
+ * The WebAuthn challenge is generated internally. The raw attestation response
+ * is not returned.
+ *
+ * The credential is requested with fixed parameters: ES256 or RS256 key types,
+ * attestation `"none"`, a required resident key, and required user
+ * verification.
+ * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF.
+ * @throws MeraError with code `INPUT_INVALID` when `user.id` is provided but not 1 to 64 bytes.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
+ */
+function createPasskey(
+  options: Omit<CreatePasskeyInput, "prfSalt">,
+): Promise<PasskeyCredentialMetadata>;
 async function createPasskey({
   rp,
   user,
@@ -146,7 +176,7 @@ async function createPasskey({
           { type: "public-key", alg: -7 },
           { type: "public-key", alg: -257 },
         ],
-        timeout,
+        ...(timeout !== undefined ? { timeout } : {}),
         attestation: "none",
         authenticatorSelection: {
           residentKey: "required",
@@ -176,19 +206,13 @@ async function createPasskey({
         ? response.getTransports()
         : undefined;
 
-    const result: CreatePasskeyResult = {
+    return {
       credentialId: base64UrlEncode(new Uint8Array(publicKeyCredential.rawId)),
+      ...(transports !== undefined ? { transports } : {}),
+      ...(prfSalt !== undefined && prf.results?.first
+        ? { prfOutput: copyPrfOutput(prf.results.first) }
+        : {}),
     };
-
-    if (transports !== undefined) {
-      result.transports = transports;
-    }
-
-    if (prfSalt !== undefined && prf.results?.first) {
-      result.prfOutput = copyPrfOutput(prf.results.first);
-    }
-
-    return result;
   } catch (error) {
     if (isMeraError(error)) {
       throw error;
@@ -242,7 +266,7 @@ async function getPasskeyPrfOutput({
     const publicKey: PublicKeyCredentialRequestOptions = {
       rpId,
       challenge: asArrayBuffer(challenge),
-      timeout,
+      ...(timeout !== undefined ? { timeout } : {}),
       userVerification: "required",
       extensions: { prf },
     };
@@ -262,9 +286,12 @@ async function getPasskeyPrfOutput({
             }),
           ),
           type: "public-key",
-          transports: allowCredential.transports as
-            | AuthenticatorTransport[]
-            | undefined,
+          ...(allowCredential.transports !== undefined
+            ? {
+                transports:
+                  allowCredential.transports as AuthenticatorTransport[],
+              }
+            : {}),
         },
       ];
     }
@@ -337,7 +364,7 @@ async function createPasskeyWithPrfOutput({
   const credential = await createPasskey({
     rp,
     user,
-    timeout,
+    ...(timeout !== undefined ? { timeout } : {}),
     prfSalt: prfSaltCopy,
   });
 
@@ -353,21 +380,18 @@ async function createPasskeyWithPrfOutput({
             : {}),
         },
         prfSalt: prfSaltCopy,
-        timeout,
+        ...(timeout !== undefined ? { timeout } : {}),
       })
     ).prfOutput;
 
-  const result: CreatePasskeyWithPrfOutputResult = {
+  return {
     credentialId: credential.credentialId,
+    ...(credential.transports !== undefined
+      ? { transports: credential.transports }
+      : {}),
     prfSalt: prfSaltCopy,
     prfOutput,
   };
-
-  if (credential.transports !== undefined) {
-    result.transports = credential.transports;
-  }
-
-  return result;
 }
 
 /**
@@ -428,15 +452,17 @@ function assertPublicKeyCredential(
  * [0, 255].
  * @internal
  */
-function copyPrfOutput(value: BufferSource | ArrayLike<number>): Uint8Array {
-  let output: Uint8Array;
+function copyPrfOutput(
+  value: BufferSource | ArrayLike<number>,
+): Uint8Array<ArrayBuffer> {
+  let output: Uint8Array<ArrayBuffer>;
 
   if (ArrayBuffer.isView(value)) {
-    output = new Uint8Array(
-      value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength),
+    output = copyBytes(
+      new Uint8Array(value.buffer, value.byteOffset, value.byteLength),
     );
   } else if (value instanceof ArrayBuffer) {
-    output = new Uint8Array(value.slice(0));
+    output = copyBytes(new Uint8Array(value));
   } else {
     output = Uint8Array.from(value, (byte) => {
       if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
@@ -456,8 +482,13 @@ function copyPrfOutput(value: BufferSource | ArrayLike<number>): Uint8Array {
   return output;
 }
 
-/** Options accepted by `createPasskey`. */
-type CreatePasskeyOptions = Parameters<typeof createPasskey>[0];
+/**
+ * Options accepted by `createPasskey`.
+ *
+ * Aliased directly rather than via `Parameters<typeof createPasskey>[0]`
+ * because `Parameters` sees only the last overload.
+ */
+type CreatePasskeyOptions = CreatePasskeyInput;
 /** Options accepted by `createPasskeyWithPrfOutput`. */
 type CreatePasskeyWithPrfOutputOptions = Parameters<
   typeof createPasskeyWithPrfOutput

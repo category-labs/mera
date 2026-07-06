@@ -37,7 +37,7 @@ type CreatePasskeyInput = {
   /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
   timeout?: number;
   /**
-   * Optional 32-byte PRF salt to evaluate during creation. Authenticators that
+   * 32-byte PRF salt to evaluate during creation. Authenticators that
    * do not support PRF eval at create time silently ignore it and the result
    * omits `prfOutput`; a later `getPasskeyPrfOutput` with the same `rpId`,
    * `credentialId`, and salt yields the PRF output.
@@ -66,7 +66,7 @@ type CreatePasskeyWithPrfOutputInput = Omit<
 type GetPasskeyPrfOutputInput = {
   /** Relying party ID for the WebAuthn assertion. */
   rpId: string;
-  /** Optional credential metadata to restrict the assertion to one passkey. */
+  /** Credential metadata to restrict the assertion to one passkey. */
   credential?: PasskeyCredentialMetadata;
   /** PRF salt as 32 raw bytes. */
   prfSalt: Uint8Array;

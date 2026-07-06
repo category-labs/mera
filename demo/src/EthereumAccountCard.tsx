@@ -52,7 +52,8 @@ function EthereumAccountCard({
   const account = useMemo(() => toPasskeyAccount(session), [session]);
 
   const { copied, copy } = useCopyButton();
-  const [balance, setBalance] = useState<string | null>(null);
+  // Wei as the source of truth; formatting happens only for display.
+  const [balanceWei, setBalanceWei] = useState<bigint | null>(null);
   // Wei to reserve for a 21k-gas native transfer, refreshed with the balance so
   // the funding check accounts for gas, not just the amount.
   const [gasReserve, setGasReserve] = useState<bigint>(0n);
@@ -72,7 +73,6 @@ function EthereumAccountCard({
   const showChip = Boolean(suggestedRecipient) && !manual;
   const amountValid = /^\d*\.?\d+$/.test(amount) && Number(amount) > 0;
   const amountWei = amountValid ? parseEther(amount) : 0n;
-  const balanceWei = balance !== null ? parseEther(balance) : null;
   // Testnet gates Send on a *known* balance that covers amount + gas, and
   // prompts the faucet when it doesn't. Mainnet is unchanged: send on a valid
   // form. `covered` is false while the balance is still null (loading/failed),
@@ -101,16 +101,16 @@ function EthereumAccountCard({
         publicClient.getBalance({ address }),
         publicClient.estimateFeesPerGas(),
       ]);
-      setBalance(formatEther(wei));
+      setBalanceWei(wei);
       // 21000 gas is the base cost of a native transfer to an EOA.
       setGasReserve(21000n * fees.maxFeePerGas);
     } catch {
-      setBalance(null);
+      setBalanceWei(null);
     }
   }, [publicClient, address]);
 
   useEffect(() => {
-    setBalance(null);
+    setBalanceWei(null);
     setSigned(null);
     setTxHash(null);
     setError(null);
@@ -157,10 +157,9 @@ function EthereumAccountCard({
   }
 
   async function sendMax() {
-    if (balance === null || busy) return;
+    if (balanceWei === null || busy) return;
     setError(null);
     try {
-      const balanceWei = parseEther(balance);
       const { maxFeePerGas } = await publicClient.estimateFeesPerGas();
       // 21000 gas is the base cost of a native ETH transfer to an EOA.
       const gasCost = 21000n * maxFeePerGas;
@@ -197,7 +196,7 @@ function EthereumAccountCard({
 
       <div className="balance">
         <span className="amount">
-          {balance === null ? "…" : trimAmount(balance)}
+          {balanceWei === null ? "…" : trimAmount(formatEther(balanceWei))}
         </span>
         <span className="symbol">{chain.nativeCurrency.symbol}</span>
         {needsFunds && (
@@ -263,7 +262,7 @@ function EthereumAccountCard({
                 type="button"
                 className="link small"
                 onClick={() => void sendMax()}
-                disabled={busy || balance === null}
+                disabled={busy || balanceWei === null}
               >
                 Max
               </button>

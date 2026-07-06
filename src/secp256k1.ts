@@ -69,6 +69,11 @@ function createSecp256k1SigningSession({
     getSecp256k1PublicKey,
   );
 
+  // One function for both members, so lock and dispose cannot drift apart.
+  function lock(): void {
+    key.lock();
+  }
+
   return {
     publicKey,
     async signDigest(digest32: Uint8Array): Promise<Secp256k1Signature> {
@@ -92,12 +97,8 @@ function createSecp256k1SigningSession({
         recovery: signature[0]!,
       };
     },
-    lock(): void {
-      key.lock();
-    },
-    [Symbol.dispose](): void {
-      key.lock();
-    },
+    lock,
+    [Symbol.dispose]: lock,
   };
 }
 

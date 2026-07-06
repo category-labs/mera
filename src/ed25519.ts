@@ -49,6 +49,11 @@ function createEd25519SigningSession({
     getEd25519PublicKey,
   );
 
+  // One function for both members, so lock and dispose cannot drift apart.
+  function lock(): void {
+    key.lock();
+  }
+
   return {
     publicKey,
     async signMessage(message: Uint8Array): Promise<Uint8Array<ArrayBuffer>> {
@@ -56,12 +61,8 @@ function createEd25519SigningSession({
       const messageCopy = copyBytes(message);
       return new Uint8Array(await ed25519.signAsync(messageCopy, key.use()));
     },
-    lock(): void {
-      key.lock();
-    },
-    [Symbol.dispose](): void {
-      key.lock();
-    },
+    lock,
+    [Symbol.dispose]: lock,
   };
 }
 

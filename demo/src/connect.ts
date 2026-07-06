@@ -67,11 +67,16 @@ const DEFAULT_USER = "nad";
 
 const rpId = location.hostname;
 
-function buildAccountSlot(
-  index: number,
-  secpSession: Secp256k1SigningSession,
-  ed25519Session: Ed25519SigningSession,
-): AccountSlot {
+/** Derives both chain sessions for one HD account index from the master seed. */
+function deriveSlotFromSeed(seed: Uint8Array, index: number): AccountSlot {
+  // Each derive* call returns a fresh buffer the session takes ownership of and
+  // zeroes; the master `seed` itself is never handed to a session.
+  const secpSession = createSecp256k1SigningSession({
+    consumePrivateKey: deriveEthereumPrivateKey(seed, index),
+  });
+  const ed25519Session = createEd25519SigningSession({
+    consumePrivateKey: deriveSolanaSeed(seed, index),
+  });
   return {
     index,
     ethereum: {
@@ -83,19 +88,6 @@ function buildAccountSlot(
       address: getSolanaAddress(ed25519Session.publicKey),
     },
   };
-}
-
-/** Derives both chain sessions for one HD account index from the master seed. */
-function deriveSlotFromSeed(seed: Uint8Array, index: number): AccountSlot {
-  // Each derive* call returns a fresh buffer the session takes ownership of and
-  // zeroes; the master `seed` itself is never handed to a session.
-  const secpSession = createSecp256k1SigningSession({
-    consumePrivateKey: deriveEthereumPrivateKey(seed, index),
-  });
-  const ed25519Session = createEd25519SigningSession({
-    consumePrivateKey: deriveSolanaSeed(seed, index),
-  });
-  return buildAccountSlot(index, secpSession, ed25519Session);
 }
 
 // ----- Derived mode: one PRF output is the HD master for every account -------

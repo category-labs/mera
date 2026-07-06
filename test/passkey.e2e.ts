@@ -33,7 +33,7 @@ async function withVirtualAuthenticator(
   }
 }
 
-test("creates a PRF-capable passkey and returns stable PRF output @e2e", async ({
+test("creates a PRF-capable passkey and returns stable PRF output", async ({
   page,
 }) => {
   await withVirtualAuthenticator(page, async () => {
@@ -89,7 +89,7 @@ test("creates a PRF-capable passkey and returns stable PRF output @e2e", async (
   });
 });
 
-test("createPasskeyWithPrfOutput returns the first PRF output in one call @e2e", async ({
+test("createPasskeyWithPrfOutput returns the first PRF output in one call", async ({
   page,
 }) => {
   await withVirtualAuthenticator(page, async () => {
@@ -128,7 +128,7 @@ test("createPasskeyWithPrfOutput returns the first PRF output in one call @e2e",
   });
 });
 
-test("createSecretVault round-trips a secret through a real passkey ceremony @e2e", async ({
+test("createSecretVault round-trips a secret through a real passkey ceremony", async ({
   page,
 }) => {
   await withVirtualAuthenticator(page, async () => {

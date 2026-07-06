@@ -50,8 +50,9 @@ function canonicalEncode(parts: readonly Uint8Array[]): Uint8Array {
 
 // HKDF info and AAD for the secret vault. The HKDF info keeps the wrapping key
 // distinct from any other key derived from the same PRF output. The AAD is a
-// precomputed constant (domain ‖ version): a secret vault has no public key to
-// bind.
+// precomputed constant (domain ‖ version): vault fields such as the credential
+// ID and PRF salt are deliberately not bound; see the Security remark on
+// createSecretVault.
 const SECRET_WRAP_INFO = utf8ToBytes("mera.v1.wrap.secret");
 const SECRET_AAD_DOMAIN = utf8ToBytes("mera.v1.secret.aad");
 const SECRET_AAD_VERSION = 1;

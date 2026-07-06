@@ -340,7 +340,7 @@ async function getPasskeyPrfOutput({
  * time. Equivalent to `createPasskey` followed, when `prfOutput` is absent, by
  * `getPasskeyPrfOutput` with the same salt.
  *
- * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyWithPrfOutputOptions}. `rp.id` is required so the fallback ceremony can target the same relying party. `prfSalt` must be exactly 32 bytes.
+ * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyWithPrfOutputOptions}.
  * @returns Credential metadata and the first PRF output.
  * @remarks
  * Invokes `navigator.credentials.create()`. On authenticators that do not

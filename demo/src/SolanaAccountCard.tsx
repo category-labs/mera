@@ -54,6 +54,8 @@ function SolanaAccountCard({
       faucetUrl: SOLANA_FAUCET_URL,
       faucetText: `Get devnet ${solana.symbol} ↗`,
       recipientPlaceholder: "Solana address…",
+      balanceRefreshMs: 10_000,
+      suggestedSendAmount: "0.01",
       balanceTooLowError: "Balance is too low to cover the fee",
       isValidRecipient: isSolanaAddress,
       parseAmount: parseSolAmount,

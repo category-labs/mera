@@ -56,6 +56,8 @@ function EthereumAccountCard({
       faucetUrl: MONAD_FAUCET_URL,
       faucetText: `Get testnet ${symbol} ↗`,
       recipientPlaceholder: "0x…",
+      balanceRefreshMs: 10_000,
+      suggestedSendAmount: "0.01",
       balanceTooLowError: "Balance is too low to cover gas",
       isValidRecipient: isAddress,
       parseAmount: parseEthAmount,

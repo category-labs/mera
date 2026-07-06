@@ -4,9 +4,6 @@ import { QrCode } from "./QrCode";
 import { shorten, trimAmount } from "./ui";
 import { useCopyButton } from "./useCopyButton";
 
-const BALANCE_REFRESH_MS = 10_000;
-const DEMO_SEND_AMOUNT = "0.01";
-
 /**
  * Chain-specific behavior behind an account card. Amounts are bigints in the
  * chain's smallest unit (wei, lamports); `parseAmount` and `formatAmount`
@@ -23,6 +20,10 @@ type ChainAdapter = {
   /** Faucet link text, e.g. "Get testnet MON ↗". */
   faucetText: string;
   recipientPlaceholder: string;
+  /** How often the balance is re-fetched while the card is mounted. */
+  balanceRefreshMs: number;
+  /** Decimal amount pre-filled alongside a suggested recipient, e.g. "0.01". */
+  suggestedSendAmount: string;
   /** Error shown when Max is pressed but the balance cannot cover the fee reserve. */
   balanceTooLowError: string;
   isValidRecipient: (to: string) => boolean;
@@ -88,7 +89,7 @@ function ChainAccountCard({
   // re-seed on every account switch.
   const [to, setTo] = useState(() => suggestedRecipient ?? "");
   const [amount, setAmount] = useState(() =>
-    suggestedRecipient ? DEMO_SEND_AMOUNT : "",
+    suggestedRecipient ? adapter.suggestedSendAmount : "",
   );
   const [manual, setManual] = useState(() => !suggestedRecipient);
   const [busy, setBusy] = useState(false);
@@ -140,7 +141,7 @@ function ChainAccountCard({
     void refreshBalance();
     const interval = window.setInterval(() => {
       void refreshBalance();
-    }, BALANCE_REFRESH_MS);
+    }, adapter.balanceRefreshMs);
     // Refresh the moment the tab regains focus — e.g. returning from the
     // faucet — so the new balance shows without a manual Refresh button.
     const onVisible = () => {
@@ -151,7 +152,7 @@ function ChainAccountCard({
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [refreshBalance]);
+  }, [refreshBalance, adapter.balanceRefreshMs]);
 
   async function send(): Promise<void> {
     if (sendAmount === null) return;

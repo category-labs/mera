@@ -57,7 +57,7 @@ Derived/reproducible-wallet flows pass a stable PRF salt such as `getDeterminist
 
 mera requires the WebAuthn PRF extension, discoverable credentials, and user verification. If the browser/OS/authenticator combination can't deliver PRF, the library throws `PRF_UNAVAILABLE`.
 
-`✓` means a live PRF create + get cycle has been confirmed end-to-end; `Not supported` means a live test did not return PRF; blank means untested in this combination.
+`✓` means a live PRF create + get cycle has been confirmed end-to-end; `Not supported` means a live test did not return PRF.
 
 | Authenticator            | Browser                           | OS                          | Status                     | Supported since                              |
 | ------------------------ | --------------------------------- | --------------------------- | -------------------------- | -------------------------------------------- |

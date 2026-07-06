@@ -107,7 +107,14 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  *
  * The credential is requested with fixed parameters: ES256 or RS256 key types,
  * attestation `"none"`, a required resident key, and required user
- * verification.
+ * verification. User verification is the authenticator's local check, and the
+ * platform chooses the gesture: a biometric, a device PIN, or a password all
+ * satisfy it. The requirement is not configurable because the PRF extension
+ * always evaluates the credential's user-verified PRF and overrides a weaker
+ * `userVerification` setting, so exposing the setting could neither change
+ * the PRF output nor remove the check.
+ * @see {@link https://www.w3.org/TR/webauthn-3/#user-verification | WebAuthn: user verification}
+ * @see {@link https://www.w3.org/TR/webauthn-3/#prf-extension | WebAuthn: the PRF extension}
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or returns a malformed create-time PRF output.
  * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
@@ -250,6 +257,16 @@ async function createPasskey({
  * The PRF output is a deterministic function of the credential, `rpId`, and
  * `prfSalt`: the same three inputs reproduce the same output, and a different
  * salt yields an unrelated output.
+ *
+ * The assertion requires user verification, and the requirement is not
+ * configurable. Authenticators built on CTAP's `hmac-secret` keep two PRFs
+ * per credential, one for user-verified requests and one for the rest;
+ * WebAuthn exposes only the user-verified PRF and overrides a weaker
+ * `userVerification` setting when evaluating it. A configurable setting could
+ * therefore neither change the PRF output nor skip the user-verification
+ * check.
+ * @see {@link https://www.w3.org/TR/webauthn-3/#prf-extension | WebAuthn: the PRF extension}
+ * @see {@link https://www.w3.org/TR/webauthn-3/#enumdef-userverificationrequirement | WebAuthn: UserVerificationRequirement}
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes, or `credential.credentialId` is empty or not canonical base64url.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.

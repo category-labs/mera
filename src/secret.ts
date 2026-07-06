@@ -205,8 +205,9 @@ type CreateSecretVaultInput = {
 /**
  * Encrypts an arbitrary secret into a passkey-protected vault.
  *
- * An AES-256-GCM wrapping key is derived from the PRF output with
- * secret-specific HKDF info, and the secret is encrypted under fixed
+ * An AES-256-GCM wrapping key is derived from the PRF output with fixed
+ * HKDF info (`mera.v1.wrap.secret`), which separates it from other keys
+ * derived from the same PRF output. The secret is encrypted under fixed
  * additional authenticated data (AAD).
  *
  * @remarks

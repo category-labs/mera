@@ -2,6 +2,5 @@ dist/
 node_modules/
 playwright-report/
 test-results/
-coverage/
 .claude
 .DS_Store

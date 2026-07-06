@@ -4,6 +4,10 @@ import { QrCode } from "./QrCode";
 import { shorten, trimAmount } from "./ui";
 import { useCopyButton } from "./useCopyButton";
 
+const BALANCE_REFRESH_MS = 10_000;
+// Decimal amount pre-filled alongside a suggested recipient.
+const DEMO_SEND_AMOUNT = "0.01";
+
 /**
  * Chain-specific behavior behind an account card. Amounts are bigints in the
  * chain's smallest unit (wei, lamports); `parseAmount` and `formatAmount`
@@ -20,10 +24,6 @@ type ChainAdapter = {
   /** Faucet link text, e.g. "Get testnet MON ↗". */
   faucetText: string;
   recipientPlaceholder: string;
-  /** How often the balance is re-fetched while the card is mounted. */
-  balanceRefreshMs: number;
-  /** Decimal amount pre-filled alongside a suggested recipient, e.g. "0.01". */
-  suggestedSendAmount: string;
   /** Error shown when Max is pressed but the balance cannot cover the fee reserve. */
   balanceTooLowError: string;
   isValidRecipient: (to: string) => boolean;
@@ -37,32 +37,38 @@ type ChainAdapter = {
    */
   fetchBalance: () => Promise<{ balance: bigint; feeReserve: bigint }>;
   /**
-   * Signs and broadcasts a transfer, resolving with the chain's transaction
-   * identifier. Passes the signed transaction to `onSigned` as soon as it is
-   * available, so it stays on screen even when the broadcast then fails.
+   * Builds and signs a transfer, returning the signed transaction for display
+   * together with a `broadcast` function that submits it and resolves with
+   * the chain's transaction identifier. Signing and broadcasting are separate
+   * steps so the card shows the signed transaction even when the broadcast
+   * then fails.
    */
-  send: (
+  signTransfer: (
     to: string,
     amount: bigint,
-    onSigned: (signed: string) => void,
-  ) => Promise<string>;
+  ) => Promise<{ signed: string; broadcast: () => Promise<string> }>;
   explorerTxUrl: (id: string) => string | undefined;
+};
+
+/** A self-owned recipient the card pre-fills for a one-click transfer. */
+type RecipientSuggestion = {
+  address: string;
+  label: string;
+  /** Reveals the suggested recipient account after a send (switch to it or add it). */
+  onReveal: () => void;
 };
 
 type ChainAccountCardProps = {
   /**
-   * Chain behavior for the card. Build it with `useMemo`: the card resets and
-   * refetches whenever the adapter identity changes.
+   * Chain behavior for the card. Balance polling restarts when the adapter
+   * identity changes; all other card state is seeded once per mount. The demo
+   * remounts the card per account and network via `key`.
    */
   adapter: ChainAdapter;
   address: string;
   mode: AccountMode;
   isTestnet: boolean;
-  /** A self-owned recipient to pre-fill (testnet, derived mode); absent otherwise. */
-  suggestedRecipient?: string;
-  suggestedLabel?: string;
-  /** Reveals the suggested recipient account after a send (switch to it or add it). */
-  onRevealRecipient?: () => void;
+  suggestion?: RecipientSuggestion;
   onLock: () => void;
 };
 
@@ -72,9 +78,7 @@ function ChainAccountCard({
   address,
   mode,
   isTestnet,
-  suggestedRecipient,
-  suggestedLabel,
-  onRevealRecipient,
+  suggestion,
   onLock,
 }: ChainAccountCardProps): ReactElement {
   const { copied, copy } = useCopyButton();
@@ -87,17 +91,18 @@ function ChainAccountCard({
   // Pre-fill a one-click self-transfer when a suggested recipient is offered
   // (testnet, derived). The card remounts per account, so these initializers
   // re-seed on every account switch.
-  const [to, setTo] = useState(() => suggestedRecipient ?? "");
+  const [to, setTo] = useState(() => suggestion?.address ?? "");
   const [amount, setAmount] = useState(() =>
-    suggestedRecipient ? adapter.suggestedSendAmount : "",
+    suggestion ? DEMO_SEND_AMOUNT : "",
   );
-  const [manual, setManual] = useState(() => !suggestedRecipient);
+  const [manual, setManual] = useState(() => !suggestion);
   const [busy, setBusy] = useState(false);
   const [signed, setSigned] = useState<string | null>(null);
   const [broadcastId, setBroadcastId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const showChip = Boolean(suggestedRecipient) && !manual;
+  // The suggestion chip stays up until the user switches to manual entry.
+  const shownSuggestion = manual ? undefined : suggestion;
   const sendAmount = adapter.parseAmount(amount);
   // Testnet gates Send on a *known* balance that covers amount + fee reserve,
   // and prompts the faucet when it doesn't. Mainnet is unchanged: send on a
@@ -120,9 +125,9 @@ function ChainAccountCard({
 
   // Re-apply the suggested self-recipient after the user switched to manual.
   function restoreSuggestion(): void {
-    if (!suggestedRecipient) return;
+    if (!suggestion) return;
     setManual(false);
-    setTo(suggestedRecipient);
+    setTo(suggestion.address);
   }
 
   const refreshBalance = useCallback(async () => {
@@ -134,14 +139,10 @@ function ChainAccountCard({
   }, [adapter]);
 
   useEffect(() => {
-    setFunds(null);
-    setSigned(null);
-    setBroadcastId(null);
-    setError(null);
     void refreshBalance();
     const interval = window.setInterval(() => {
       void refreshBalance();
-    }, adapter.balanceRefreshMs);
+    }, BALANCE_REFRESH_MS);
     // Refresh the moment the tab regains focus — e.g. returning from the
     // faucet — so the new balance shows without a manual Refresh button.
     const onVisible = () => {
@@ -152,7 +153,7 @@ function ChainAccountCard({
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [refreshBalance, adapter.balanceRefreshMs]);
+  }, [refreshBalance]);
 
   async function send(): Promise<void> {
     if (sendAmount === null) return;
@@ -161,7 +162,10 @@ function ChainAccountCard({
     setSigned(null);
     setBroadcastId(null);
     try {
-      setBroadcastId(await adapter.send(to, sendAmount, setSigned));
+      const { signed: signedTransaction, broadcast } =
+        await adapter.signTransfer(to, sendAmount);
+      setSigned(signedTransaction);
+      setBroadcastId(await broadcast());
       void refreshBalance();
     } catch (caught) {
       setError(describeError(caught));
@@ -237,20 +241,22 @@ function ChainAccountCard({
         <div className="field">
           <span className="field-head">
             Recipient
-            {suggestedRecipient && (
+            {suggestion && (
               <button
                 type="button"
                 className="link small"
-                onClick={showChip ? switchToManual : restoreSuggestion}
+                onClick={shownSuggestion ? switchToManual : restoreSuggestion}
                 disabled={busy}
               >
-                {showChip ? "Change" : `${suggestedLabel}`}
+                {shownSuggestion ? "Change" : suggestion.label}
               </button>
             )}
           </span>
-          {showChip ? (
+          {shownSuggestion ? (
             <div className="recipient-chip">
-              <span className="recipient-name">Your {suggestedLabel}</span>
+              <span className="recipient-name">
+                Your {shownSuggestion.label}
+              </span>
               <span className="recipient-addr mono">{shorten(to)}</span>
             </div>
           ) : (
@@ -316,13 +322,13 @@ function ChainAccountCard({
           </p>
         )}
 
-        {broadcastId && showChip && onRevealRecipient && (
+        {broadcastId && shownSuggestion && (
           <button
             type="button"
             className="link reveal-recipient"
-            onClick={onRevealRecipient}
+            onClick={shownSuggestion.onReveal}
           >
-            View your {suggestedLabel} →
+            View your {shownSuggestion.label} →
           </button>
         )}
 
@@ -332,5 +338,5 @@ function ChainAccountCard({
   );
 }
 
-export type { ChainAdapter };
+export type { ChainAdapter, RecipientSuggestion };
 export { ChainAccountCard };

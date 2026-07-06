@@ -1,4 +1,5 @@
 import { type ReactElement, useMemo, useState } from "react";
+import { ChainAccountCard, type RecipientSuggestion } from "./ChainAccountCard";
 import type { EthereumContext } from "./chains/ethereum";
 import type { SolanaContext } from "./chains/solana";
 import {
@@ -7,9 +8,9 @@ import {
   describeError,
   revealMnemonic,
 } from "./connect";
-import { EthereumAccountCard } from "./EthereumAccountCard";
+import { createEthereumAdapter } from "./ethereumAdapter";
 import type { NetworkMode } from "./network";
-import { SolanaAccountCard } from "./SolanaAccountCard";
+import { createSolanaAdapter } from "./solanaAdapter";
 import { WalletBackup } from "./WalletBackup";
 
 type ChainKind = "ethereum" | "solana";
@@ -96,6 +97,39 @@ function AccountCard({
     else onAddAccount();
   }
 
+  // Shapes the suggestion for one chain's card, picking that chain's address.
+  function suggestionFor(kind: ChainKind): RecipientSuggestion | undefined {
+    if (!suggestion) return undefined;
+    return {
+      address: suggestion.slot[kind].address,
+      label: suggestion.label,
+      onReveal: () => revealAccount(suggestion.index),
+    };
+  }
+
+  const ethereumAdapter = useMemo(
+    () =>
+      ethereum
+        ? createEthereumAdapter(
+            active.ethereum.session,
+            active.ethereum.address,
+            ethereum,
+          )
+        : null,
+    [active, ethereum],
+  );
+  const solanaAdapter = useMemo(
+    () =>
+      solana
+        ? createSolanaAdapter(
+            active.solana.session,
+            active.solana.address,
+            solana,
+          )
+        : null,
+    [active, solana],
+  );
+
   // The recovery phrase takes over the card slot rather than stacking a second
   // card below it — keeps the embedded demo compact.
   if (phrase !== null) {
@@ -154,19 +188,14 @@ function AccountCard({
       </div>
 
       {chain === "ethereum" ? (
-        ethereum ? (
-          <EthereumAccountCard
+        ethereumAdapter ? (
+          <ChainAccountCard
             key={`eth-${active.index}-${networkMode}`}
-            session={active.ethereum.session}
+            adapter={ethereumAdapter}
             address={active.ethereum.address}
             mode={wallet.mode}
-            ethereum={ethereum}
             isTestnet={isTestnet}
-            suggestedRecipient={suggestion?.slot.ethereum.address}
-            suggestedLabel={suggestion?.label}
-            onRevealRecipient={
-              suggestion ? () => revealAccount(suggestion.index) : undefined
-            }
+            suggestion={suggestionFor("ethereum")}
             onLock={onLock}
           />
         ) : ethereumError ? (
@@ -174,19 +203,14 @@ function AccountCard({
         ) : (
           <p className="status">Connecting to Ethereum…</p>
         )
-      ) : solana ? (
-        <SolanaAccountCard
+      ) : solanaAdapter ? (
+        <ChainAccountCard
           key={`sol-${active.index}-${networkMode}`}
-          session={active.solana.session}
+          adapter={solanaAdapter}
           address={active.solana.address}
           mode={wallet.mode}
-          solana={solana}
           isTestnet={isTestnet}
-          suggestedRecipient={suggestion?.slot.solana.address}
-          suggestedLabel={suggestion?.label}
-          onRevealRecipient={
-            suggestion ? () => revealAccount(suggestion.index) : undefined
-          }
+          suggestion={suggestionFor("solana")}
           onLock={onLock}
         />
       ) : solanaError ? (

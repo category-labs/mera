@@ -88,7 +88,7 @@ async function getSolBalance(
   return BigInt(balance);
 }
 
-type SendSolOptions = {
+type SignSolTransferOptions = {
   connection: Connection;
   session: Ed25519SigningSession;
   fromAddress: string;
@@ -97,18 +97,18 @@ type SendSolOptions = {
 };
 
 /**
- * Builds, signs, and broadcasts a SOL transfer using the passkey-derived Ed25519 session.
- *
- * The serialized signed transaction is returned alongside the signature so the demo
- * can show "signed locally" alongside the broadcast result.
+ * Builds and signs a SOL transfer using the passkey-derived Ed25519 session,
+ * returning the serialized signed transaction. Broadcasting is left to the
+ * caller (via `Connection.sendRawTransaction`) so the signed transaction can
+ * be shown even when the broadcast then fails.
  */
-async function sendSol({
+async function signSolTransfer({
   connection,
   session,
   fromAddress,
   toAddress,
   lamports,
-}: SendSolOptions): Promise<{ signature: string; serialized: Uint8Array }> {
+}: SignSolTransferOptions): Promise<Uint8Array> {
   const fromPubkey = new PublicKey(fromAddress);
   const toPubkey = new PublicKey(toAddress);
   const { blockhash, lastValidBlockHeight } =
@@ -130,10 +130,7 @@ async function sendSol({
   const signature = await session.signMessage(messageBytes);
 
   transaction.addSignature(fromPubkey, Buffer.from(signature));
-  const serialized = transaction.serialize();
-  const sig = await connection.sendRawTransaction(serialized);
-
-  return { signature: sig, serialized };
+  return transaction.serialize();
 }
 
 /** Builds a Solana Explorer URL for a transaction signature. */
@@ -157,5 +154,5 @@ export {
   explorerTxUrl,
   getSolanaContext,
   getSolBalance,
-  sendSol,
+  signSolTransfer,
 };

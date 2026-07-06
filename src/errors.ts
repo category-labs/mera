@@ -7,7 +7,7 @@
  * - `SESSION_LOCKED`: a signing call was made after `lock()`.
  * - `DECRYPT_FAILED`: AES-GCM authentication failed (wrong key, or tampered ciphertext or additional authenticated data).
  * - `INPUT_INVALID`: a caller-supplied value at a public boundary did not satisfy a length, range, encoding, or scalar constraint.
- * - `VAULT_FORMAT_INVALID`: untrusted vault data (JSON or object) was malformed, missing required fields, or used a non-canonical encoding.
+ * - `VAULT_FORMAT_INVALID`: untrusted vault data (JSON or object) was malformed, missing required fields, used a non-canonical encoding, or declared an unsupported version.
  */
 type MeraErrorCode =
   | "PASSKEY_OPERATION_FAILED"

@@ -1,21 +1,25 @@
 # mera
 
-Passkey-backed signing for multichain accounts: one passkey, many chains.
+Passkey-backed signing sessions for accounts across chains.
 
-mera turns a WebAuthn passkey into stable, authenticator-bound entropy for wallet apps. The browser's WebAuthn PRF extension gives mera 32 bytes per ceremony; apps can feed those bytes into their chosen derivation scheme or wrap an app-held secret (a recovery phrase, a private key) into a passkey-encrypted vault. None of it needs a smart-account deploy or a custom on-chain verifier program.
+mera gets stable, authenticator-bound entropy from a WebAuthn passkey. The browser's WebAuthn PRF extension gives the library 32 bytes per ceremony. Apps can feed those bytes into their own account derivation, or wrap an app-held secret such as a recovery phrase or private key into a passkey-encrypted vault.
+
+The result is ordinary signing material for the app to use. No smart-account deployment or custom on-chain verifier is required.
 
 - Signing sessions for secp256k1 and Ed25519, address helpers for EVM and Solana.
-- One user-verification prompt unlocks a whole session of signatures.
+- One user-verification prompt can cover a session of signatures.
 - Key derivation stays app-owned; mera hands the app entropy.
 - Cross-platform: a native iOS or Android app tied to the same domain can use the same passkey and derive the same accounts.
 
 ## Modes
 
-**Derived.** mera uses its fixed deterministic salt to reproduce the same PRF output for the same PRF-capable passkey and `rpId`; cross-device use requires that passkey to be available on the new device. The app derives account keys from that output using its chosen scheme; the demo uses BIP-39/BIP-32 for secp256k1 and SLIP-0010 for Ed25519. Best for stateless account access across devices.
+**Derived.** mera uses its fixed deterministic salt to reproduce the same PRF output for the same PRF-capable passkey and `rpId`. The app derives account keys from that output with its chosen scheme. The demo uses BIP-39/BIP-32 for secp256k1 and SLIP-0010 for Ed25519.
 
-**Wrapped.** An AES-256-GCM blob holds one secret (a recovery phrase, a private key, any bytes); only the passkey can unlock it. The blob can live in `localStorage`, a backend, or a sync service. Suits returning users who sign many transactions per session, and imports of an existing account.
+Cross-device use requires the passkey to be available on the new device. This mode fits stateless account access across devices.
 
-Derived mode stores no app-owned secret to recover. If the passkey is deleted, not synced, tied to a lost provider account, or unavailable under the app's `rpId` after a domain migration, the account may be unrecoverable unless the app offers export, import, or another backup path.
+**Wrapped.** An AES-256-GCM blob holds one secret: a recovery phrase, a private key, or any bytes. The passkey ceremony produces the key material needed to decrypt it. The blob can live in `localStorage`, a backend, or a sync service. This mode fits existing-account imports and sessions that sign many transactions.
+
+Derived mode stores no app-owned secret to recover. The account may be unrecoverable if the passkey is deleted, not synced, tied to a lost provider account, or unavailable under the app's `rpId` after a domain migration. Recovery then depends on an app-provided export, import, or backup path.
 
 ## Install
 
@@ -80,7 +84,11 @@ mera requires the WebAuthn PRF extension, discoverable credentials, and user ver
 | Dashlane                 | Chrome                            | Desktop                     | Not supported (2026-06-01) |                                              |
 | Proton Pass              | Chrome                            | Desktop                     | ✓                          | Latest public version (2026-06)              |
 
-On desktop Chrome, only passkeys saved to Google Password Manager carry PRF. The local Chrome profile authenticator does not implement the CTAP2 `hmac-secret` extension, so a passkey created there returns `prf.enabled: false`. Creation lands on the local profile authenticator instead of Google Password Manager when Chrome's "Offer to save passwords and passkeys" setting is off, or when a third-party password-manager extension intercepts WebAuthn and relays the browser-fallback ceremony. For the broader PRF compatibility matrix, see Corbado's [Passkeys & WebAuthn PRF for End-to-End Encryption](https://www.corbado.com/blog/passkeys-prf-webauthn).
+On desktop Chrome, only passkeys saved to Google Password Manager carry PRF. The local Chrome profile authenticator does not implement the CTAP2 `hmac-secret` extension, so a passkey created there returns `prf.enabled: false`.
+
+Chrome may create the passkey in the local profile instead of Google Password Manager when its "Offer to save passwords and passkeys" setting is off, or when a third-party password-manager extension intercepts WebAuthn and relays the browser fallback ceremony.
+
+For the broader PRF compatibility matrix, see Corbado's [Passkeys & WebAuthn PRF for End-to-End Encryption](https://www.corbado.com/blog/passkeys-prf-webauthn).
 
 ## API reference
 
@@ -99,9 +107,11 @@ Secret-vault flows, demo HD derivation recipes (BIP-39/BIP-32, SLIP-0010), the s
 
 ## Security
 
-A compromised JavaScript runtime can observe key material during app-owned derivation or import, and can sign with an unlocked session until `session.lock()`. Recovery export should be handled as a separate app-owned flow that reruns WebAuthn PRF or unwraps a vault with fresh user verification.
+A compromised JavaScript runtime can observe key material during app-owned derivation or import, and can sign with an active session until `session.lock()`. Recovery export should be handled as a separate app-owned flow that reruns WebAuthn PRF or unwraps a vault with fresh user verification.
 
-Recovery phrases become JavaScript strings when displayed or exported. Unlike `Uint8Array` buffers, strings cannot be zeroed in place; apps can only drop references and keep their lifetime short. mera zeroes owned byte buffers where possible, but host apps should treat revealed recovery phrases as high-risk UI state.
+Recovery phrases become JavaScript strings when displayed or exported. Unlike `Uint8Array` buffers, strings cannot be zeroed in place; apps can only drop references and keep their lifetime short.
+
+mera zeroes owned byte buffers where possible, but host apps should treat revealed recovery phrases as high-risk UI state.
 
 **Dependency scope.** Runtime dependencies are `@noble/*` and `@scure/*` only. The root `devDependencies` (build/test tooling) and the unpublished `demo/` app never ship to library consumers.
 

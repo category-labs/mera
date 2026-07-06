@@ -376,7 +376,7 @@
         </figure>
 
         <p class="demo-note hero-note">
-          This embedded demo creates an actual passkey in your credential
+          This embedded demo creates an actual passkey in the credential
           manager. It's scoped to the demo and controls nothing else. If the
           prompt doesn't appear here,
           <a
@@ -398,25 +398,21 @@
           mainstream authenticators.
         </p>
 
-        <h2 id="the-current-state-of-crypto-onboarding">
-          The current state of crypto onboarding
+        <h2 id="where-crypto-onboarding-starts">
+          Where crypto onboarding starts
         </h2>
 
         <p>
-          Self-custody onboarding (where no one but the user can move the funds)
-          has not changed much in a decade. The app generates a recovery phrase
-          (a
+          Self-custody onboarding, where no one else can move the funds, still
+          usually starts with a recovery phrase: a
           <a
             href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki"
             >BIP-39</a
           >
-          mnemonic of twelve or twenty-four words) and asks the user to write it
-          down. The scheme works in every wallet app, but its costs land before
-          the app has done anything useful. The first is the flow itself: no
-          ordinary app asks a new user to transcribe those words and re-enter
-          some of them before first use. The second outlasts onboarding. The
-          user is now responsible for backing up a secret that controls all
-          future funds.
+          mnemonic of twelve or twenty-four words. The scheme works across
+          wallet apps. It also puts the hardest part of the product first: copy
+          the words, re-enter some of them, and keep the phrase safe for as long
+          as the account matters.
         </p>
 
         <p>
@@ -424,32 +420,31 @@
           another login provider; the key is held by a service or split across
           an MPC network (several servers that jointly sign, none holding the
           whole key) that signs against a valid login token. Onboarding becomes
-          a login form, but a third party now sits in every signature. The key
-          works only while the service exists and the account is in good
-          standing, and with no standard export path, moving the account
-          elsewhere is the vendor's decision, not the user's.
+          a login form. The trade-off is a third party in every signature. The
+          key works only while the service exists and the account is in good
+          standing. Without a standard export path, moving the account elsewhere
+          depends on the vendor.
         </p>
 
-        <h2 id="every-wallet-app-is-a-key-store-first">
-          Every wallet app is a key store first
+        <h2 id="key-storage-comes-before-product-work">
+          Key storage comes before product work
         </h2>
 
         <p>
-          Developers face a version of this too. Whatever a wallet app is
-          actually for (payments, trading, a game), it rests on a layer that has
-          nothing to do with the product: generate keys, store them, gate their
-          use, lock them when idle, recover them when a device is lost. All of
-          it has to work before the first feature ships. None of it sets the app
-          apart, and getting it wrong costs user funds.
+          Developers face a version of this too. A payments app, trading app, or
+          game still has to ship the key layer first: generate keys, store them,
+          gate their use, lock them when idle, recover them when a device is
+          lost. All of it has to work before the first feature ships. None of it
+          sets the app apart, and getting it wrong costs user funds.
         </p>
 
         <p>
-          Storage is the clearest example, and it is different on every
-          platform. iOS has the Keychain and the Secure Enclave, Android has the
-          Keystore, and the browser has nothing: localStorage and IndexedDB are
-          readable by any script that runs on the page. Even the mobile secure
-          hardware handles crypto's curves (the different families of key used
-          for signing) unevenly. The Secure Enclave signs
+          Storage shows the problem quickly because each platform gives a
+          different answer. iOS has the Keychain and the Secure Enclave, Android
+          has the Keystore, and the browser has nothing: localStorage and
+          IndexedDB are readable by any script that runs on the page. Even the
+          mobile secure hardware handles crypto's curves (the different families
+          of key used for signing) unevenly. The Secure Enclave signs
           <a href="https://csrc.nist.gov/pubs/sp/800/186/final">P-256</a>
           only, the Keystore's curve support depends on the Android version and
           the device, and neither signs
@@ -460,9 +455,9 @@
         </p>
 
         <p>
-          Passkeys looked like the answer on both fronts. A passkey is a keypair
-          in the device's secure hardware, gated by the device's unlock gesture
-          and synced by the platform, and it ships with every phone, laptop, and
+          Passkeys seemed to remove both chores. A passkey is a keypair in the
+          device's secure hardware, gated by a biometric, PIN, or password, and
+          synced by the platform. It ships with every phone, laptop, and
           browser. For the user that means no phrase and no password; for the
           developer it means generation, storage, locking, and cross-device sync
           are the platform's job. Crypto adopted passkeys through smart
@@ -475,10 +470,10 @@
         </h2>
 
         <p>
-          The problem is down in the details of
-          <a href="https://www.w3.org/TR/webauthn-3/">WebAuthn</a>, so a short
-          primer. Each passkey lives on an authenticator (a phone, a laptop, or
-          a security key) and is scoped to one site. The private key is never
+          The issue is in
+          <a href="https://www.w3.org/TR/webauthn-3/">WebAuthn</a>'s signing
+          rules. Each passkey lives on an authenticator (a phone, a laptop, or a
+          security key) and is scoped to one site. The private key is never
           exposed to the site; the server sees only the public key. Every use
           runs a ceremony: the relying party (the site the passkey belongs to)
           sends a one-time challenge, the browser passes it to the
@@ -487,8 +482,8 @@
         </p>
 
         <p>
-          The important detail is what gets signed. The authenticator does not
-          accept arbitrary payloads; it signs a fixed structure:
+          What gets signed matters. The authenticator does not accept arbitrary
+          payloads; it signs a fixed structure:
         </p>
 
         <pre
@@ -521,10 +516,10 @@ clientDataJSON
 
         <p>
           This envelope is where WebAuthn's phishing resistance comes from: the
-          browser, not the page, fills in the origin. It is also why an
-          assertion is not a signature over an arbitrary 32-byte hash. The app's
-          only input is the challenge: it can put
-          <code>keccak256(rlp(tx))</code>
+          browser fills in the origin before page JavaScript sees the result. It
+          is also why an assertion cannot stand in for a signature over an
+          arbitrary 32-byte hash. The app's only input is the challenge: it can
+          put <code>keccak256(rlp(tx))</code>
           there, but what comes back is a signature over the whole envelope,
           which no EVM node will accept. The curve is wrong too. Authenticators
           sign with P-256 in practice, while Ethereum expects secp256k1 and
@@ -533,9 +528,10 @@ clientDataJSON
         </p>
 
         <p>
-          The established workaround: teach the chain to verify the envelope. On
-          EVM chains that means a smart account per user that stores the
-          passkey's public key, and a P-256 verifier (a contract, or the
+          Smart-account designs handle this by making the chain verify the
+          envelope. On EVM chains that means a smart account per user that
+          stores the passkey's public key, and a P-256 verifier (a contract, or
+          the
           <a
             href="https://github.com/ethereum/RIPs/blob/master/RIPS/rip-7212.md"
             >RIP-7212</a
@@ -548,7 +544,7 @@ clientDataJSON
           app runs itself. Solana repeats the whole thing separately: its own
           P-256 precompile, a smart-account program such as LazorKit (or a
           third-party key service like Para or Privy), and a different address
-          scheme. Nothing is reused from the EVM side.
+          scheme. Solana uses a separate setup from the EVM side.
         </p>
 
         <p>
@@ -805,8 +801,8 @@ const session = createSecp256k1SigningSession({ consumePrivateKey: privateKey })
 const address = getEvmAddress(session.publicKey)</code></pre>
 
         <p>
-          Nothing is stored: no database row, no localStorage entry, no blob to
-          sync. Sign in on a new device with the synced passkey, and the same
+          Derived mode stores no database row, localStorage entry, or vault
+          blob. Sign in on a new device with the synced passkey, and the same
           account appears. Cross-device use follows the password manager's
           normal sync and security assumptions. Because the derivation is
           standard, the application can offer an explicit export: the entropy
@@ -817,12 +813,12 @@ const address = getEvmAddress(session.publicKey)</code></pre>
         <h3 id="wrapped-mode">Wrapped mode</h3>
 
         <p>
-          In wrapped mode the secret does not come from the passkey: it is
-          generated client-side or imported, and the PRF output derives the key
-          that encrypts it. The result is a small vault blob, useless without a
-          passkey ceremony, that the application can store anywhere:
-          localStorage, a backend, a sync service. mera defines the vault format
-          and the unwrap step; storage and lifecycle belong to the application.
+          Wrapped mode starts with an independent secret, generated client-side
+          or imported. The PRF output derives the key that encrypts it. The
+          result is a small vault blob, useless without a passkey ceremony, that
+          the application can store anywhere: localStorage, a backend, a sync
+          service. mera defines the vault format and the unwrap step; storage
+          and lifecycle belong to the application.
         </p>
 
         <figure class="diagram">
@@ -915,9 +911,7 @@ const address = getEvmAddress(session.publicKey)</code></pre>
           </svg>
         </figure>
 
-        <p>
-          Separating the secret from the passkey makes several things possible:
-        </p>
+        <p>That separation gives the app a few practical options:</p>
 
         <ul>
           <li>
@@ -928,9 +922,8 @@ const address = getEvmAddress(session.publicKey)</code></pre>
           </li>
           <li>
             <strong>A passkey as a second factor.</strong>
-            If the blob lives on the application's backend, having the blob is
-            not enough to spend, and neither is access to the user's login.
-            Spending requires the passkey ceremony on top.
+            If the blob lives on the application's backend, spending requires
+            both the blob and the passkey ceremony.
           </li>
           <li>
             <strong>Rotation.</strong>
@@ -976,18 +969,16 @@ const address = getEvmAddress(session.publicKey)</code></pre>
         </div>
 
         <p>
-          The modes compose: an application can onboard new users in derived
-          mode and offer wrapped vaults to those bringing an existing recovery
-          phrase or key.
+          An application can mix the modes: derived for new accounts, wrapped
+          for existing recovery phrases or keys.
         </p>
 
         <h2 id="try-it">Try it</h2>
 
         <p>
-          The same demo, embedded again. It runs both modes: create a passkey or
-          sign in with an existing one, switch between derived and wrapped, see
-          Ethereum and Solana addresses, and reveal the recovery phrase in
-          either mode.
+          The demo below runs both modes. Create a passkey or sign in with an
+          existing one, switch between derived and wrapped, see Ethereum and
+          Solana addresses, and reveal the recovery phrase in either mode.
         </p>
 
         <figure class="demo">
@@ -1013,28 +1004,28 @@ const address = getEvmAddress(session.publicKey)</code></pre>
           >.
         </p>
 
-        <h2 id="what-users-and-developers-get">
-          What users and developers get
+        <h2 id="what-changes-for-users-and-developers">
+          What changes for users and developers
         </h2>
 
         <p>For users:</p>
 
         <ul>
           <li>
-            <strong>Onboarding is one passkey prompt.</strong>
+            <strong>One prompt at the start.</strong>
             Create a passkey, see an address. Nothing to transcribe.
           </li>
           <li>
-            <strong>One passkey, many chains.</strong>
-            The same entropy derives accounts for every chain the app supports.
+            <strong>The same entropy can feed several chains.</strong>
+            Accounts for each supported chain come from those bytes.
           </li>
           <li>
-            <strong>Backup is passkey sync.</strong>
+            <strong>Backup follows passkey sync.</strong>
             A synced password manager carries the passkey across devices, so a
             new device is just a sign-in: the same account appears.
           </li>
           <li>
-            <strong>There is a way out.</strong>
+            <strong>Export can stay standard.</strong>
             Where the app offers export, the recovery phrase imports into
             MetaMask, Phantom, or any other standard wallet app.
           </li>
@@ -1044,30 +1035,29 @@ const address = getEvmAddress(session.publicKey)</code></pre>
 
         <ul>
           <li>
-            <strong>The key-store layer mostly disappears.</strong>
-            Derived mode stores nothing, wrapped mode stores a blob that is
-            useless without the passkey, and locking is one call.
+            <strong>The app stores less key material.</strong>
+            Derived mode stores no app-owned secret, wrapped mode stores a vault
+            blob that still needs the passkey ceremony, and locking is one call.
           </li>
           <li>
-            <strong>Nothing to deploy or operate.</strong>
-            No contracts, bundlers, paymasters, executor accounts, key servers,
-            or provider dependencies, and in derived mode no server-side state
-            at all.
+            <strong>Derived mode has no chain infrastructure.</strong>
+            It needs no contracts, bundlers, paymasters, executor accounts, key
+            servers, or provider dependencies. It also needs no server-side
+            account state.
           </li>
           <li>
-            <strong>The dependency is small and boring.</strong>
+            <strong>The dependency surface is small.</strong>
             Under 2,000 lines including its JSDoc, built from standard,
             well-studied primitives: WebAuthn, HMAC-SHA-256,
             <a href="https://www.rfc-editor.org/rfc/rfc5869">HKDF-SHA-256</a>,
             and
             <a href="https://csrc.nist.gov/pubs/sp/800/38/d/final">AES-GCM</a>.
-            Ordinary HD derivation lives in the demo rather than the library.
+            Ordinary HD derivation lives in the demo, outside the library.
           </li>
           <li>
-            <strong>The primitive is general.</strong>
+            <strong>The output is just bytes.</strong>
             32 deterministic, authenticator-bound bytes feed any KDF for any
-            curve, and they can key things that are not chains at all, such as
-            client-side encryption of app data.
+            curve. They can also key client-side encryption of app data.
           </li>
         </ul>
 

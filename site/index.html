@@ -461,12 +461,13 @@
 
         <p>
           Passkeys looked like the answer on both fronts. A passkey is a keypair
-          in the device's secure hardware, gated by OS authentication and synced
-          by the platform, and it ships with every phone, laptop, and browser.
-          For the user that means no phrase and no password; for the developer
-          it means generation, storage, locking, and cross-device sync are the
-          platform's job. Crypto adopted passkeys through smart accounts, where
-          the passkey signs and a contract on the chain verifies.
+          in the device's secure hardware, gated by the device's unlock gesture
+          and synced by the platform, and it ships with every phone, laptop, and
+          browser. For the user that means no phrase and no password; for the
+          developer it means generation, storage, locking, and cross-device sync
+          are the platform's job. Crypto adopted passkeys through smart
+          accounts, where the passkey signs and a contract on the chain
+          verifies.
         </p>
 
         <h2 id="why-a-passkey-cant-sign-a-transaction">
@@ -1016,37 +1017,59 @@ const address = getEvmAddress(session.publicKey)</code></pre>
           What users and developers get
         </h2>
 
-        <p>
-          For users, onboarding is one passkey prompt: create a passkey, see an
-          address, nothing to transcribe. Backup and new devices ride on passkey
-          sync, so signing in with the synced passkey on another device brings
-          up the same account, and the same entropy covers every chain the app
-          supports. There is also a way out: where the app offers export, the
-          recovery phrase imports into MetaMask, Phantom, or any other standard
-          wallet app.
-        </p>
+        <p>For users:</p>
 
-        <p>
-          For developers, the key-store layer mostly disappears. Derived mode
-          stores nothing, wrapped mode stores a blob that is useless without the
-          passkey, and locking is one call. There is nothing to deploy or
-          operate: no contracts, bundlers, paymasters, executor accounts, key
-          servers, or provider dependencies, and in derived mode no server-side
-          state at all.
-        </p>
+        <ul>
+          <li>
+            <strong>Onboarding is one passkey prompt.</strong>
+            Create a passkey, see an address. Nothing to transcribe.
+          </li>
+          <li>
+            <strong>One passkey, many chains.</strong>
+            The same entropy derives accounts for every chain the app supports.
+          </li>
+          <li>
+            <strong>Backup is passkey sync.</strong>
+            A synced password manager carries the passkey across devices, so a
+            new device is just a sign-in: the same account appears.
+          </li>
+          <li>
+            <strong>There is a way out.</strong>
+            Where the app offers export, the recovery phrase imports into
+            MetaMask, Phantom, or any other standard wallet app.
+          </li>
+        </ul>
 
-        <p>
-          The dependency itself is small and boring: under 2,000 lines including
-          its JSDoc, built from standard, well-studied primitives (WebAuthn,
-          HMAC-SHA-256,
-          <a href="https://www.rfc-editor.org/rfc/rfc5869">HKDF-SHA-256</a>, and
-          <a href="https://csrc.nist.gov/pubs/sp/800/38/d/final">AES-GCM</a>),
-          with ordinary HD derivation living in the demo rather than the
-          library. And the primitive is general: 32 deterministic,
-          authenticator-bound bytes feed any KDF for any curve, and they can key
-          things that are not chains at all, such as client-side encryption of
-          app data.
-        </p>
+        <p>For developers:</p>
+
+        <ul>
+          <li>
+            <strong>The key-store layer mostly disappears.</strong>
+            Derived mode stores nothing, wrapped mode stores a blob that is
+            useless without the passkey, and locking is one call.
+          </li>
+          <li>
+            <strong>Nothing to deploy or operate.</strong>
+            No contracts, bundlers, paymasters, executor accounts, key servers,
+            or provider dependencies, and in derived mode no server-side state
+            at all.
+          </li>
+          <li>
+            <strong>The dependency is small and boring.</strong>
+            Under 2,000 lines including its JSDoc, built from standard,
+            well-studied primitives: WebAuthn, HMAC-SHA-256,
+            <a href="https://www.rfc-editor.org/rfc/rfc5869">HKDF-SHA-256</a>,
+            and
+            <a href="https://csrc.nist.gov/pubs/sp/800/38/d/final">AES-GCM</a>.
+            Ordinary HD derivation lives in the demo rather than the library.
+          </li>
+          <li>
+            <strong>The primitive is general.</strong>
+            32 deterministic, authenticator-bound bytes feed any KDF for any
+            curve, and they can key things that are not chains at all, such as
+            client-side encryption of app data.
+          </li>
+        </ul>
 
         <h2 id="references">References</h2>
 

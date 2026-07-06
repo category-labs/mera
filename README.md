@@ -5,8 +5,9 @@ Passkey-backed signing for multichain accounts: one passkey, many chains.
 mera turns a WebAuthn passkey into stable, authenticator-bound entropy for wallet apps. The browser's WebAuthn PRF extension gives mera 32 bytes per ceremony; apps can feed those bytes into their chosen derivation scheme or wrap an app-held secret (a recovery phrase, a private key) into a passkey-encrypted vault. None of it needs a smart-account deploy or a custom on-chain verifier program.
 
 - Signing sessions for secp256k1 and Ed25519, address helpers for EVM and Solana.
-- One OS-authentication prompt unlocks a whole session of signatures.
+- One user-verification prompt unlocks a whole session of signatures.
 - Key derivation stays app-owned; mera hands the app entropy.
+- Cross-platform: a native iOS or Android app tied to the same domain can use the same passkey and derive the same accounts.
 
 ## Modes
 

@@ -394,8 +394,8 @@
           third-party trust assumptions. mera is powered by the
           <a href="https://www.w3.org/TR/webauthn-3/#prf-extension"
             >WebAuthn PRF extension</a
-          >, part of the standard behind passkeys. PRF ships today in the
-          authenticators bundled with major operating systems and browsers.
+          >, part of the standard behind passkeys and already shipping in
+          mainstream authenticators.
         </p>
 
         <h2 id="the-current-state-of-crypto-onboarding">
@@ -405,15 +405,15 @@
         <p>
           Self-custody onboarding (where no one but the user can move the funds)
           has not changed much in a decade. The app generates a recovery phrase
-          — a
+          (a
           <a
             href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki"
             >BIP-39</a
           >
-          mnemonic of twelve or twenty-four words — and asks the user to write
-          it down. The scheme works in every wallet app, but its costs land
-          before the app has done anything useful. The first is the flow itself:
-          no ordinary app asks a new user to transcribe those words and re-enter
+          mnemonic of twelve or twenty-four words) and asks the user to write it
+          down. The scheme works in every wallet app, but its costs land before
+          the app has done anything useful. The first is the flow itself: no
+          ordinary app asks a new user to transcribe those words and re-enter
           some of them before first use. The second outlasts onboarding. The
           user is now responsible for backing up a secret that controls all
           future funds.
@@ -436,11 +436,11 @@
 
         <p>
           Developers face a version of this too. Whatever a wallet app is
-          actually for — payments, trading, a game — it rests on a layer that
-          has nothing to do with the product: generate keys, store them, gate
-          their use, lock them when idle, recover them when a device is lost.
-          All of it has to work before the first feature ships. None of it sets
-          the app apart, and getting it wrong costs user funds.
+          actually for (payments, trading, a game), it rests on a layer that has
+          nothing to do with the product: generate keys, store them, gate their
+          use, lock them when idle, recover them when a device is lost. All of
+          it has to work before the first feature ships. None of it sets the app
+          apart, and getting it wrong costs user funds.
         </p>
 
         <p>
@@ -466,8 +466,7 @@
           the user that means no phrase and no password; for the developer it
           means generation, storage, locking, and cross-device sync are the
           platform's job. Crypto adopted passkeys through smart accounts, where
-          the passkey signs and a contract on the chain verifies. But the
-          approach has structural costs.
+          the passkey signs and a contract on the chain verifies.
         </p>
 
         <h2 id="why-a-passkey-cant-sign-a-transaction">
@@ -477,13 +476,13 @@
         <p>
           The problem is down in the details of
           <a href="https://www.w3.org/TR/webauthn-3/">WebAuthn</a>, so a short
-          primer. Each passkey lives on an authenticator — a phone, a laptop, or
-          a security key — and is scoped to one site. The private key is never
+          primer. Each passkey lives on an authenticator (a phone, a laptop, or
+          a security key) and is scoped to one site. The private key is never
           exposed to the site; the server sees only the public key. Every use
           runs a ceremony: the relying party (the site the passkey belongs to)
           sends a one-time challenge, the browser passes it to the
           authenticator, and the authenticator signs after a biometric or PIN
-          check — WebAuthn calls this user verification.
+          check; WebAuthn calls this user verification.
         </p>
 
         <p>
@@ -544,11 +543,11 @@ clientDataJSON
           start a transaction on its own, so something must submit it: a
           bundler, the relayer service defined by the smart-account standard
           <a href="https://eips.ethereum.org/EIPS/eip-4337">ERC-4337</a>
-          — with a paymaster if the app sponsors gas — or an executor account
-          the app runs itself. Solana repeats the whole thing separately — its
-          own P-256 precompile, a smart-account program such as LazorKit (or a
+          (with a paymaster if the app sponsors gas), or an executor account the
+          app runs itself. Solana repeats the whole thing separately: its own
+          P-256 precompile, a smart-account program such as LazorKit (or a
           third-party key service like Para or Privy), and a different address
-          scheme — with nothing reused from the EVM side.
+          scheme. Nothing is reused from the EVM side.
         </p>
 
         <p>
@@ -571,7 +570,7 @@ clientDataJSON
         <p>
           The PRF extension changes what an application can get out of a
           ceremony. Alongside the signature, the authenticator exposes a
-          per-credential pseudo-random function (PRF) — feed it an input, get
+          per-credential pseudo-random function (PRF). Feed it an input, get
           back fixed, unguessable bytes:
         </p>
 
@@ -607,8 +606,8 @@ clientDataJSON
             different credential. The browser also hashes a fixed prefix into
             the salt (<code>SHA-256("WebAuthn PRF" ‖ 0x00 ‖ salt)</code>), so a
             page can never evaluate the underlying hmac-secret PRF at arbitrary
-            points — WebAuthn's evaluations stay separate from the platform's
-            own uses of it.
+            points; WebAuthn's evaluations stay separate from the platform's own
+            uses of it.
           </li>
           <li>
             <strong>Full entropy.</strong>
@@ -621,9 +620,9 @@ clientDataJSON
           This moves where WebAuthn meets the chain. Instead of teaching each
           chain to verify WebAuthn envelopes, an application takes
           biometric-gated entropy out of the ceremony and derives ordinary keys
-          from it — whatever key derivation function (KDF) and curve the target
-          chain needs. The chain sees a normal signature from a normal account;
-          everything WebAuthn-specific stays on the client.
+          from it, using whatever key derivation function (KDF) and curve the
+          target chain needs. The chain sees a normal signature from a normal
+          account; everything WebAuthn-specific stays on the client.
         </p>
 
         <p>
@@ -781,7 +780,7 @@ clientDataJSON
           </svg>
         </figure>
 
-        <p>The skeleton — one ceremony, then app-owned derivation:</p>
+        <p>The skeleton: one ceremony, then app-owned derivation.</p>
 
         <pre><code class="language-typescript">import {
   getDeterministicPrfSaltV1,
@@ -789,14 +788,14 @@ clientDataJSON
   getEvmAddress,
   getPasskeyPrfOutput,
 } from "@category-labs/mera"
-import { deriveWalletPrivateKey } from "./wallet-derivation"
+import { deriveAccountPrivateKey } from "./account-derivation"
 
 const rpId = "account.example.com"
 
 const prfSalt = getDeterministicPrfSaltV1()
 const { prfOutput } = await getPasskeyPrfOutput({ rpId, prfSalt })
 
-const privateKey = deriveWalletPrivateKey({
+const privateKey = deriveAccountPrivateKey({
   entropy: prfOutput,
   path: "m/44'/60'/0'/0/0",
 })
@@ -929,7 +928,7 @@ const address = getEvmAddress(session.publicKey)</code></pre>
           <li>
             <strong>A passkey as a second factor.</strong>
             If the blob lives on the application's backend, having the blob is
-            not enough to spend — and neither is access to the user's login.
+            not enough to spend, and neither is access to the user's login.
             Spending requires the passkey ceremony on top.
           </li>
           <li>
@@ -1017,64 +1016,37 @@ const address = getEvmAddress(session.publicKey)</code></pre>
           What users and developers get
         </h2>
 
-        <p>For users:</p>
+        <p>
+          For users, onboarding is one passkey prompt: create a passkey, see an
+          address, nothing to transcribe. Backup and new devices ride on passkey
+          sync, so signing in with the synced passkey on another device brings
+          up the same account, and the same entropy covers every chain the app
+          supports. There is also a way out: where the app offers export, the
+          recovery phrase imports into MetaMask, Phantom, or any other standard
+          wallet app.
+        </p>
 
-        <ul>
-          <li>
-            <strong>Onboarding is one passkey prompt.</strong>
-            Create a passkey, see an address. Nothing to transcribe, nothing to
-            remember.
-          </li>
-          <li>
-            <strong>One passkey, many chains.</strong>
-            The same entropy derives accounts for every chain the app supports.
-          </li>
-          <li>
-            <strong>Backup is passkey sync.</strong>
-            A synced password manager makes the passkey available across
-            devices.
-          </li>
-          <li>
-            <strong>A new device is a sign-in.</strong>
-            Sign in with the synced passkey, and the same account appears.
-          </li>
-          <li>
-            <strong>There is a way out.</strong>
-            Where the app offers export, the recovery phrase imports into any
-            standard wallet app, like MetaMask or Phantom.
-          </li>
-        </ul>
+        <p>
+          For developers, the key-store layer mostly disappears. Derived mode
+          stores nothing, wrapped mode stores a blob that is useless without the
+          passkey, and locking is one call. There is nothing to deploy or
+          operate: no contracts, bundlers, paymasters, executor accounts, key
+          servers, or provider dependencies, and in derived mode no server-side
+          state at all.
+        </p>
 
-        <p>For developers:</p>
-
-        <ul>
-          <li>
-            <strong>The key-store layer mostly disappears.</strong>
-            Derived mode stores nothing; wrapped mode stores a blob that is
-            useless without the passkey; locking is one call.
-          </li>
-          <li>
-            <strong>Nothing to deploy or operate.</strong>
-            No contracts, bundlers, paymasters, executor accounts, key servers,
-            or provider dependencies — and in derived mode, no server-side state
-            at all.
-          </li>
-          <li>
-            <strong>The dependency is small and boring.</strong>
-            Under 2,000 lines including its JSDoc, built from standard,
-            well-studied primitives: WebAuthn, HMAC-SHA-256,
-            <a href="https://www.rfc-editor.org/rfc/rfc5869">HKDF-SHA-256</a>,
-            and
-            <a href="https://csrc.nist.gov/pubs/sp/800/38/d/final">AES-GCM</a>
-            — with ordinary HD derivation living in the demo, not the library.
-          </li>
-          <li>
-            <strong>The primitive is general.</strong>
-            32 deterministic, authenticator-bound bytes feed any KDF for any
-            curve — and they can key things that are not chains at all, such as
-            client-side encryption of app data.
-          </li>
-        </ul>
+        <p>
+          The dependency itself is small and boring: under 2,000 lines including
+          its JSDoc, built from standard, well-studied primitives (WebAuthn,
+          HMAC-SHA-256,
+          <a href="https://www.rfc-editor.org/rfc/rfc5869">HKDF-SHA-256</a>, and
+          <a href="https://csrc.nist.gov/pubs/sp/800/38/d/final">AES-GCM</a>),
+          with ordinary HD derivation living in the demo rather than the
+          library. And the primitive is general: 32 deterministic,
+          authenticator-bound bytes feed any KDF for any curve, and they can key
+          things that are not chains at all, such as client-side encryption of
+          app data.
+        </p>
 
         <h2 id="references">References</h2>
 
@@ -1085,7 +1057,7 @@ const address = getEvmAddress(session.publicKey)</code></pre>
                 >WebAuthn Level 3</a
               ></strong
             >
-            (W3C) — the passkey API. Specifically:
+            (W3C): the passkey API. Specifically
             <a href="https://www.w3.org/TR/webauthn-3/#sctn-authenticator-data"
               >authenticator data (§6.1)</a
             >,
@@ -1103,8 +1075,8 @@ const address = getEvmAddress(session.publicKey)</code></pre>
                 >CTAP 2.2</a
               ></strong
             >
-            (FIDO Alliance) — the authenticator protocol underneath WebAuthn.
-            Specifically:
+            (FIDO Alliance): the authenticator protocol underneath WebAuthn.
+            Specifically
             <a
               href="https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html#sctn-hmac-secret-extension"
               >the hmac-secret extension (§12.7)</a
@@ -1116,8 +1088,7 @@ const address = getEvmAddress(session.publicKey)</code></pre>
                 href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki"
                 >BIP-39</a
               ></strong
-            >
-            — mnemonic phrases from entropy.
+            >: mnemonic phrases from entropy.
           </li>
           <li>
             <strong
@@ -1125,8 +1096,7 @@ const address = getEvmAddress(session.publicKey)</code></pre>
                 href="https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki"
                 >BIP-32</a
               ></strong
-            >
-            — hierarchical deterministic derivation for secp256k1.
+            >: hierarchical deterministic derivation for secp256k1.
           </li>
           <li>
             <strong
@@ -1134,16 +1104,14 @@ const address = getEvmAddress(session.publicKey)</code></pre>
                 href="https://github.com/satoshilabs/slips/blob/master/slip-0010.md"
                 >SLIP-0010</a
               ></strong
-            >
-            — hierarchical deterministic derivation for Ed25519.
+            >: hierarchical deterministic derivation for Ed25519.
           </li>
           <li>
             <strong
               ><a href="https://eips.ethereum.org/EIPS/eip-4337"
                 >ERC-4337</a
               ></strong
-            >
-            — account abstraction.
+            >: account abstraction.
           </li>
           <li>
             <strong
@@ -1151,62 +1119,54 @@ const address = getEvmAddress(session.publicKey)</code></pre>
                 href="https://github.com/ethereum/RIPs/blob/master/RIPS/rip-7212.md"
                 >RIP-7212</a
               ></strong
-            >
-            — the P-256 signature-verification precompile.
+            >: the P-256 signature-verification precompile.
           </li>
           <li>
             <strong
               ><a href="https://eips.ethereum.org/EIPS/eip-1014"
                 >EIP-1014</a
               ></strong
-            >
-            — CREATE2, deterministic contract addresses.
+            >: CREATE2, deterministic contract addresses.
           </li>
           <li>
             <strong
               ><a href="https://www.rfc-editor.org/rfc/rfc2104"
                 >RFC 2104</a
               ></strong
-            >
-            — HMAC.
+            >: HMAC.
           </li>
           <li>
             <strong
               ><a href="https://www.rfc-editor.org/rfc/rfc5869"
                 >RFC 5869</a
               ></strong
-            >
-            — HKDF.
+            >: HKDF.
           </li>
           <li>
             <strong
               ><a href="https://csrc.nist.gov/pubs/sp/800/38/d/final"
                 >NIST SP 800-38D</a
               ></strong
-            >
-            — AES-GCM.
+            >: AES-GCM.
           </li>
           <li>
             <strong
               ><a href="https://www.rfc-editor.org/rfc/rfc8032"
                 >RFC 8032</a
               ></strong
-            >
-            — Ed25519 (EdDSA).
+            >: Ed25519 (EdDSA).
           </li>
           <li>
             <strong
               ><a href="https://www.secg.org/sec2-v2.pdf">SEC 2</a></strong
-            >
-            — the secp256k1 curve.
+            >: the secp256k1 curve.
           </li>
           <li>
             <strong
               ><a href="https://csrc.nist.gov/pubs/sp/800/186/final"
                 >NIST SP 800-186</a
               ></strong
-            >
-            — the P-256 curve.
+            >: the P-256 curve.
           </li>
         </ul>
       </article>

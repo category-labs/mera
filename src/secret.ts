@@ -216,7 +216,7 @@ type CreateSecretVaultInput = {
  * post-call mutation does not change the vault being produced. Caller-owned
  * input buffers are not modified or zeroed.
  *
- * Security: a vault is bound to its `prfOutput` only — not to the credential
+ * Security: a vault is bound to its `prfOutput` only, not to the credential
  * ID or salt. Secrets wrapped under one reused PRF output share a wrapping key,
  * so their nonce/ciphertext pairs are interchangeable by anyone who can rewrite
  * stored vault JSON; a fresh `prfSalt` per secret avoids the shared key.

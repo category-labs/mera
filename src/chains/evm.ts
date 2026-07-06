@@ -19,7 +19,9 @@ function getEvmAddress(publicKey: Uint8Array): EvmAddress {
 /**
  * Returns true when a string is a 20-byte `0x`-prefixed EVM address.
  *
- * All-lowercase and all-uppercase hex bodies are accepted as-is (no checksum to verify). Mixed-case inputs are validated against EIP-55: an inconsistent mixed-case address — a typo or a tampered string — is rejected.
+ * All-lowercase and all-uppercase hex bodies are accepted as-is (no checksum
+ * to verify). Mixed-case inputs are validated against EIP-55: an inconsistent
+ * mixed-case address (a typo or a tampered string) is rejected.
  *
  * @param value - String to check.
  * @returns `true` when `value` is a 20-byte `0x`-prefixed EVM address with a valid (or absent) EIP-55 checksum.

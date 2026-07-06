@@ -344,8 +344,8 @@ async function getPasskeyPrfOutput({
  * @returns Credential metadata and the first PRF output.
  * @remarks
  * Invokes `navigator.credentials.create()`. On authenticators that do not
- * evaluate PRF during creation, also invokes `navigator.credentials.get()` — a
- * second browser prompt.
+ * evaluate PRF during creation, also invokes `navigator.credentials.get()`,
+ * which means a second browser prompt.
  *
  * WebAuthn challenges are generated internally. Raw attestation and assertion
  * responses are not returned.

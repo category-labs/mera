@@ -156,21 +156,14 @@ function EthereumAccountCard({
     }
   }
 
-  async function sendMax() {
+  function sendMax(): void {
     if (balanceWei === null || busy) return;
     setError(null);
-    try {
-      const { maxFeePerGas } = await publicClient.estimateFeesPerGas();
-      // 21000 gas is the base cost of a native ETH transfer to an EOA.
-      const gasCost = 21000n * maxFeePerGas;
-      if (balanceWei <= gasCost) {
-        setError("Balance is too low to cover gas");
-        return;
-      }
-      setAmount(formatEther(balanceWei - gasCost));
-    } catch (caught) {
-      setError(describeError(caught));
+    if (balanceWei <= gasReserve) {
+      setError("Balance is too low to cover gas");
+      return;
     }
+    setAmount(formatEther(balanceWei - gasReserve));
   }
 
   const explorer = txHash ? explorerTxUrl(chain, txHash) : undefined;
@@ -261,7 +254,7 @@ function EthereumAccountCard({
               <button
                 type="button"
                 className="link small"
-                onClick={() => void sendMax()}
+                onClick={sendMax}
                 disabled={busy || balanceWei === null}
               >
                 Max

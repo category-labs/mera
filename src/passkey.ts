@@ -133,8 +133,21 @@ function createPasskey(
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 function createPasskey(
-  options: Omit<CreatePasskeyInput, "prfSalt">,
+  options: Omit<CreatePasskeyInput, "prfSalt"> & { prfSalt?: never },
 ): Promise<PasskeyCredentialMetadata>;
+/**
+ * Creates a discoverable, user-verified passkey and requires WebAuthn PRF support.
+ *
+ * Fallback overload for options where `prfSalt` presence is not statically
+ * known. The ceremony and failure modes are the ones documented on the
+ * `prfSalt` overload, with the salt evaluated only when present.
+ *
+ * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyOptions}.
+ * @returns Credential metadata, plus the first PRF output when `prfSalt` was provided and evaluated during creation.
+ */
+function createPasskey(
+  options: CreatePasskeyInput,
+): Promise<CreatePasskeyResult>;
 async function createPasskey({
   rp,
   user,

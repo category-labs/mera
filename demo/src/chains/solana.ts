@@ -145,16 +145,11 @@ function explorerTxUrl(cluster: Cluster, signature: string): string {
   return `https://explorer.solana.com/tx/${signature}?cluster=${cluster}`;
 }
 
-/** Full display name for the cluster, including the "Solana" prefix (e.g. "Solana Devnet"). */
+/** Full display name for the cluster (e.g. "Solana Devnet"). */
 function clusterDisplayName(cluster: Cluster): string {
-  return `Solana ${clusterShortName(cluster)}`;
-}
-
-/** Short cluster name without the "Solana" prefix (e.g. "Devnet"). */
-function clusterShortName(cluster: Cluster): string {
-  if (cluster === "mainnet-beta") return "Mainnet";
-  if (cluster === "devnet") return "Devnet";
-  return "Testnet";
+  if (cluster === "mainnet-beta") return "Solana Mainnet";
+  if (cluster === "devnet") return "Solana Devnet";
+  return "Solana Testnet";
 }
 
 export type { SolanaContext };

@@ -1,13 +1,4 @@
-import {
-  type Account,
-  type Chain,
-  createPublicClient,
-  createWalletClient as createViemTransactionClient,
-  type HttpTransport,
-  http,
-  type PublicClient,
-  type WalletClient as ViemTransactionClient,
-} from "viem";
+import { type Chain, createPublicClient, http, type PublicClient } from "viem";
 import { foundry, mainnet, monad, monadTestnet, sepolia } from "viem/chains";
 import { cachePerNetwork, type NetworkMode } from "../network";
 
@@ -74,21 +65,6 @@ async function resolveEthereumContext(
  */
 const getEthereumContext = cachePerNetwork(resolveEthereumContext);
 
-/**
- * Creates a viem transaction client bound to a passkey-backed account and chain.
- */
-function createTransactionClient(
-  account: Account,
-  chain: Chain,
-  rpcUrl: string,
-): ViemTransactionClient<HttpTransport, Chain, Account> {
-  return createViemTransactionClient({
-    account,
-    chain,
-    transport: http(rpcUrl),
-  });
-}
-
 /** Builds a block-explorer transaction URL for a chain. */
 function explorerTxUrl(chain: Chain, hash: string): string | undefined {
   const base = chain.blockExplorers?.default.url;
@@ -96,4 +72,4 @@ function explorerTxUrl(chain: Chain, hash: string): string | undefined {
 }
 
 export type { EthereumContext };
-export { createTransactionClient, explorerTxUrl, getEthereumContext };
+export { explorerTxUrl, getEthereumContext };

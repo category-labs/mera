@@ -6,13 +6,16 @@ import {
   useMemo,
   useState,
 } from "react";
-import { formatEther, getAddress, isAddress, parseEther } from "viem";
-import { toPasskeyAccount } from "./account";
 import {
-  createTransactionClient,
-  type EthereumContext,
-  explorerTxUrl,
-} from "./chains/ethereum";
+  createWalletClient,
+  formatEther,
+  getAddress,
+  http,
+  isAddress,
+  parseEther,
+} from "viem";
+import { toPasskeyAccount } from "./account";
+import { type EthereumContext, explorerTxUrl } from "./chains/ethereum";
 import { type AccountMode, describeError } from "./connect";
 import { QrCode } from "./QrCode";
 import { shorten, trimAmount } from "./ui";
@@ -136,7 +139,11 @@ function EthereumAccountCard({
     setSigned(null);
     setTxHash(null);
     try {
-      const transactionClient = createTransactionClient(account, chain, rpcUrl);
+      const transactionClient = createWalletClient({
+        account,
+        chain,
+        transport: http(rpcUrl),
+      });
       const request = await transactionClient.prepareTransactionRequest({
         to: getAddress(to),
         value: parseEther(amount),

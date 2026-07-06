@@ -1,26 +1,22 @@
 import type { EvmAddress, Secp256k1SigningSession } from "@category-labs/mera";
-import {
-  type ReactElement,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { type ReactElement, useMemo } from "react";
 import { formatEther, getAddress, isAddress, parseEther } from "viem";
 import { toPasskeyAccount } from "./account";
+import { ChainAccountCard, type ChainAdapter } from "./ChainAccountCard";
 import {
   createTransactionClient,
   type EthereumContext,
   explorerTxUrl,
 } from "./chains/ethereum";
-import { type AccountMode, describeError } from "./connect";
-import { QrCode } from "./QrCode";
-import { shorten, trimAmount } from "./ui";
-import { useCopyButton } from "./useCopyButton";
+import type { AccountMode } from "./connect";
 
-const BALANCE_REFRESH_MS = 10_000;
-const DEMO_SEND_AMOUNT = "0.01";
 const MONAD_FAUCET_URL = "https://faucet.monad.xyz/";
+
+// Positive decimal amounts only — parseEther alone would also accept "" and "0".
+function parseEthAmount(value: string): bigint | null {
+  if (!/^\d*\.?\d+$/.test(value) || Number(value) <= 0) return null;
+  return parseEther(value);
+}
 
 type EthereumAccountCardProps = {
   session: Secp256k1SigningSession;
@@ -48,269 +44,60 @@ function EthereumAccountCard({
   onRevealRecipient,
   onLock,
 }: EthereumAccountCardProps): ReactElement {
-  const { chain, publicClient, rpcUrl } = ethereum;
-  const account = useMemo(() => toPasskeyAccount(session), [session]);
-
-  const { copied, copy } = useCopyButton();
-  // Wei as the source of truth; formatting happens only for display.
-  const [balanceWei, setBalanceWei] = useState<bigint | null>(null);
-  // Wei to reserve for a 21k-gas native transfer, refreshed with the balance so
-  // the funding check accounts for gas, not just the amount.
-  const [gasReserve, setGasReserve] = useState<bigint>(0n);
-  // Pre-fill a one-click self-transfer when a suggested recipient is offered
-  // (testnet, derived). The card remounts per account, so these initializers
-  // re-seed on every account switch.
-  const [to, setTo] = useState(() => suggestedRecipient ?? "");
-  const [amount, setAmount] = useState(() =>
-    suggestedRecipient ? DEMO_SEND_AMOUNT : "",
-  );
-  const [manual, setManual] = useState(() => !suggestedRecipient);
-  const [busy, setBusy] = useState(false);
-  const [signed, setSigned] = useState<string | null>(null);
-  const [txHash, setTxHash] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const showChip = Boolean(suggestedRecipient) && !manual;
-  const amountValid = /^\d*\.?\d+$/.test(amount) && Number(amount) > 0;
-  const amountWei = amountValid ? parseEther(amount) : 0n;
-  // Testnet gates Send on a *known* balance that covers amount + gas, and
-  // prompts the faucet when it doesn't. Mainnet is unchanged: send on a valid
-  // form. `covered` is false while the balance is still null (loading/failed),
-  // so Send stays disabled until we actually know there are funds.
-  const covered = balanceWei !== null && balanceWei >= amountWei + gasReserve;
-  const needsFunds = isTestnet && balanceWei !== null && !covered;
-  const canSend =
-    isAddress(to) && amountValid && !busy && (!isTestnet || covered);
-
-  // Drop the pre-filled recipient and let the user type any address.
-  function switchToManual(): void {
-    setManual(true);
-    setTo("");
-  }
-
-  // Re-apply the suggested self-recipient after the user switched to manual.
-  function restoreSuggestion(): void {
-    if (!suggestedRecipient) return;
-    setManual(false);
-    setTo(suggestedRecipient);
-  }
-
-  const refreshBalance = useCallback(async () => {
-    try {
-      const [wei, fees] = await Promise.all([
-        publicClient.getBalance({ address }),
-        publicClient.estimateFeesPerGas(),
-      ]);
-      setBalanceWei(wei);
-      // 21000 gas is the base cost of a native transfer to an EOA.
-      setGasReserve(21000n * fees.maxFeePerGas);
-    } catch {
-      setBalanceWei(null);
-    }
-  }, [publicClient, address]);
-
-  useEffect(() => {
-    setBalanceWei(null);
-    setSigned(null);
-    setTxHash(null);
-    setError(null);
-    void refreshBalance();
-    const interval = window.setInterval(() => {
-      void refreshBalance();
-    }, BALANCE_REFRESH_MS);
-    // Refresh the moment the tab regains focus — e.g. returning from the
-    // faucet — so the new balance shows without a manual Refresh button.
-    const onVisible = () => {
-      if (document.visibilityState === "visible") void refreshBalance();
+  const adapter = useMemo<ChainAdapter>(() => {
+    const { chain, publicClient, rpcUrl } = ethereum;
+    const account = toPasskeyAccount(session);
+    const symbol = chain.nativeCurrency.symbol;
+    return {
+      chainName: "Ethereum",
+      badgeClassName: "badge",
+      symbol,
+      networkName: chain.name,
+      faucetUrl: MONAD_FAUCET_URL,
+      faucetText: `Get testnet ${symbol} ↗`,
+      recipientPlaceholder: "0x…",
+      balanceTooLowError: "Balance is too low to cover gas",
+      isValidRecipient: isAddress,
+      parseAmount: parseEthAmount,
+      formatAmount: formatEther,
+      async fetchBalance() {
+        const [balance, fees] = await Promise.all([
+          publicClient.getBalance({ address }),
+          publicClient.estimateFeesPerGas(),
+        ]);
+        // 21000 gas is the base cost of a native transfer to an EOA.
+        return { balance, feeReserve: 21000n * fees.maxFeePerGas };
+      },
+      async send(to, valueWei, onSigned) {
+        const transactionClient = createTransactionClient(
+          account,
+          chain,
+          rpcUrl,
+        );
+        const request = await transactionClient.prepareTransactionRequest({
+          to: getAddress(to),
+          value: valueWei,
+        });
+        const serializedTransaction =
+          await transactionClient.signTransaction(request);
+        onSigned(serializedTransaction);
+        return publicClient.sendRawTransaction({ serializedTransaction });
+      },
+      explorerTxUrl: (hash) => explorerTxUrl(chain, hash),
     };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      window.clearInterval(interval);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, [refreshBalance]);
-
-  async function send() {
-    setBusy(true);
-    setError(null);
-    setSigned(null);
-    setTxHash(null);
-    try {
-      const transactionClient = createTransactionClient(account, chain, rpcUrl);
-      const request = await transactionClient.prepareTransactionRequest({
-        to: getAddress(to),
-        value: parseEther(amount),
-      });
-      const serializedTransaction =
-        await transactionClient.signTransaction(request);
-      setSigned(serializedTransaction);
-      const hash = await publicClient.sendRawTransaction({
-        serializedTransaction,
-      });
-      setTxHash(hash);
-      void refreshBalance();
-    } catch (caught) {
-      setError(describeError(caught));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function sendMax(): void {
-    if (balanceWei === null || busy) return;
-    setError(null);
-    if (balanceWei <= gasReserve) {
-      setError("Balance is too low to cover gas");
-      return;
-    }
-    setAmount(formatEther(balanceWei - gasReserve));
-  }
-
-  const explorer = txHash ? explorerTxUrl(chain, txHash) : undefined;
+  }, [session, address, ethereum]);
 
   return (
-    <section className="card">
-      <div className="card-head">
-        <span className="badge">Ethereum · {mode}</span>
-        <button type="button" className="link" onClick={onLock}>
-          Lock
-        </button>
-      </div>
-
-      <button
-        type="button"
-        className="address"
-        onClick={() => void copy(address)}
-        title={address}
-      >
-        <span className="mono">{shorten(address)}</span>
-        <span className="copy">{copied ? "Copied" : "Copy"}</span>
-      </button>
-
-      <div className="balance">
-        <span className="amount">
-          {balanceWei === null ? "…" : trimAmount(formatEther(balanceWei))}
-        </span>
-        <span className="symbol">{chain.nativeCurrency.symbol}</span>
-        {needsFunds && (
-          <a
-            className="faucet"
-            href={MONAD_FAUCET_URL}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Get testnet {chain.nativeCurrency.symbol} ↗
-          </a>
-        )}
-      </div>
-
-      <div className="qr-frame">
-        <QrCode value={address} />
-      </div>
-      <p className="hint center">Scan to receive on {chain.name}</p>
-
-      <form
-        className="send"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (canSend) void send();
-        }}
-      >
-        <div className="field">
-          <span className="field-head">
-            Recipient
-            {suggestedRecipient && (
-              <button
-                type="button"
-                className="link small"
-                onClick={showChip ? switchToManual : restoreSuggestion}
-                disabled={busy}
-              >
-                {showChip ? "Change" : `${suggestedLabel}`}
-              </button>
-            )}
-          </span>
-          {showChip ? (
-            <div className="recipient-chip">
-              <span className="recipient-name">Your {suggestedLabel}</span>
-              <span className="recipient-addr mono">{shorten(to)}</span>
-            </div>
-          ) : (
-            <input
-              aria-label="Recipient"
-              value={to}
-              placeholder="0x…"
-              spellCheck={false}
-              onChange={(event) => setTo(event.target.value)}
-              disabled={busy}
-            />
-          )}
-        </div>
-
-        <div className="send-row">
-          <label className="field grow">
-            <span className="field-head">
-              Amount ({chain.nativeCurrency.symbol})
-              <button
-                type="button"
-                className="link small"
-                onClick={sendMax}
-                disabled={busy || balanceWei === null}
-              >
-                Max
-              </button>
-            </span>
-            <input
-              value={amount}
-              placeholder="0.001"
-              inputMode="decimal"
-              spellCheck={false}
-              onChange={(event) => setAmount(event.target.value)}
-              disabled={busy}
-            />
-          </label>
-          <button
-            type="submit"
-            className="btn primary send-btn"
-            disabled={!canSend}
-          >
-            {busy ? "Signing…" : "Send"}
-          </button>
-        </div>
-
-        {signed && (
-          <details className="reveal" open>
-            <summary>Signed locally with your passkey-derived key</summary>
-            <code className="mono break">{signed}</code>
-          </details>
-        )}
-
-        {txHash && (
-          <p className="status ok">
-            Broadcast:{" "}
-            {explorer ? (
-              <a href={explorer} target="_blank" rel="noreferrer">
-                {shorten(txHash)}
-              </a>
-            ) : (
-              <span className="mono">{shorten(txHash)}</span>
-            )}
-          </p>
-        )}
-
-        {txHash && showChip && onRevealRecipient && (
-          <button
-            type="button"
-            className="link reveal-recipient"
-            onClick={onRevealRecipient}
-          >
-            View your {suggestedLabel} →
-          </button>
-        )}
-
-        {error && <p className="status error">{error}</p>}
-      </form>
-    </section>
+    <ChainAccountCard
+      adapter={adapter}
+      address={address}
+      mode={mode}
+      isTestnet={isTestnet}
+      suggestedRecipient={suggestedRecipient}
+      suggestedLabel={suggestedLabel}
+      onRevealRecipient={onRevealRecipient}
+      onLock={onLock}
+    />
   );
 }
 

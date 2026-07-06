@@ -50,7 +50,7 @@ type AccountSlot = {
  */
 type ConnectedWallet = {
   mode: AccountMode;
-  /** Credential to pin on the next sign-in (derived mode); absent otherwise. */
+  /** Credential to pin when re-running a ceremony for this wallet; derived mode only, absent otherwise. */
   credentialId?: string;
   /** Returns the account at `index`, deriving and caching it on first use. */
   deriveAccount(index: number): AccountSlot;

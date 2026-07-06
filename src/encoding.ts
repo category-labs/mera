@@ -9,7 +9,7 @@ import { MeraError } from "./errors.js";
  * @param value - Bytes to copy.
  * @returns A new `Uint8Array` with the same bytes as `value`.
  */
-function copyBytes(value: Uint8Array): Uint8Array {
+function copyBytes(value: Uint8Array): Uint8Array<ArrayBuffer> {
   return new Uint8Array(value);
 }
 

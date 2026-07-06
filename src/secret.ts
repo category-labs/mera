@@ -44,7 +44,7 @@ function uint32Be(value: number): Uint8Array {
  * @param parts - Byte arrays to encode in order.
  * @returns A new byte array containing each part with a four-byte length prefix.
  */
-function canonicalEncode(parts: Uint8Array[]): Uint8Array {
+function canonicalEncode(parts: readonly Uint8Array[]): Uint8Array {
   return concatBytes(...parts.flatMap((part) => [uint32Be(part.length), part]));
 }
 
@@ -118,7 +118,7 @@ async function aesGcmDecrypt({
   encrypted: EncryptedBytes;
   wrappingKey: CryptoKey;
   aad: Uint8Array;
-}): Promise<Uint8Array> {
+}): Promise<Uint8Array<ArrayBuffer>> {
   try {
     const plaintext = await getCrypto().subtle.decrypt(
       {
@@ -192,7 +192,7 @@ type CreateSecretVaultInput = {
     /** Passkey credential ID as canonical unpadded base64url. */
     credentialId: string;
     /** Authenticator transports reported by the browser, when available. */
-    transports?: PasskeyCredentialTransport[];
+    transports?: readonly PasskeyCredentialTransport[];
     /** PRF salt for this secret. Must be exactly 32 bytes. */
     prfSalt: Uint8Array;
     /** First WebAuthn PRF output for `prfSalt`. Must be exactly 32 bytes. */
@@ -292,7 +292,7 @@ type UnwrapSecretVaultInput = {
 async function unwrapSecretVault({
   vault,
   prfOutput,
-}: UnwrapSecretVaultInput): Promise<Uint8Array> {
+}: UnwrapSecretVaultInput): Promise<Uint8Array<ArrayBuffer>> {
   const wrappingKey = await deriveWrappingKey(prfOutput);
 
   return aesGcmDecrypt({
@@ -341,7 +341,7 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
     { min: 1 },
   );
 
-  const credential: PasskeySecretVault["credential"] = { credentialId };
+  let transports: PasskeyCredentialTransport[] | undefined;
 
   if (vault.credential.transports !== undefined) {
     if (
@@ -355,8 +355,13 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
         "credential.transports must be an array of strings or omitted",
       );
     }
-    credential.transports = [...vault.credential.transports];
+    transports = [...vault.credential.transports];
   }
+
+  const credential: PasskeySecretVault["credential"] = {
+    credentialId,
+    ...(transports !== undefined ? { transports } : {}),
+  };
 
   const prfSalt = readBase64Url(
     vault.prfSalt,
@@ -419,7 +424,7 @@ async function getSecretVaultPrfOutput({
     rpId,
     credential: vault.credential,
     prfSalt: base64UrlDecode(vault.prfSalt),
-    timeout,
+    ...(timeout !== undefined ? { timeout } : {}),
   });
 }
 

@@ -25,7 +25,7 @@ function getSolanaAddress(publicKey: Uint8Array): SolanaAddress {
  * Returns true when a string is a valid base58-encoded Solana address.
  *
  * @param value - String to check.
- * @returns `true` when `value` decodes to 32 base58 bytes.
+ * @returns `true` when `value` is valid base58 and decodes to 32 bytes.
  */
 function isSolanaAddress(value: string): value is SolanaAddress {
   try {

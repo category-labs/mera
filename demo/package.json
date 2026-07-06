@@ -5,8 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:mainnet": "vite --mode mainnet",
-    "dev:testnet": "vite --mode testnet",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "typecheck": "tsc"

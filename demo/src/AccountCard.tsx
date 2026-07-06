@@ -77,7 +77,7 @@ function AccountCard({
 
   // On testnet, suggest sending to another of the user's own HD accounts — a
   // self-owned recipient that needs no second address. Deriving it here is free
-  // (cached) and invisible: no pill or registry bump until the user reveals it.
+  // (cached) and invisible: no pill or stored-account bump until the user reveals it.
   const isTestnet = networkMode === "testnet";
   const suggestion = useMemo(() => {
     if (!isTestnet || wallet.mode !== "derived") return null;

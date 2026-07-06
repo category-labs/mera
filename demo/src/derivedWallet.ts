@@ -16,11 +16,11 @@ type DerivedWalletRecord = {
   accountCount: number;
 };
 
-const REGISTRY_KEY = "mera.demo.derivedWallets";
+const STORAGE_KEY = "mera.demo.derivedWallet";
 
 function currentDerivedWallet(): DerivedWalletRecord | undefined {
   try {
-    const raw = localStorage.getItem(REGISTRY_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return undefined;
     const parsed: unknown = JSON.parse(raw);
     return isDerivedWalletRecord(parsed) ? parsed : undefined;
@@ -30,7 +30,7 @@ function currentDerivedWallet(): DerivedWalletRecord | undefined {
 }
 
 function rememberDerivedWallet(record: DerivedWalletRecord): void {
-  localStorage.setItem(REGISTRY_KEY, JSON.stringify(record));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
 }
 
 /** Persists a new account count so a later sign-in restores every account. */

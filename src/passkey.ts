@@ -353,8 +353,7 @@ async function getPasskeyPrfOutput({
  *
  * If the fallback ceremony fails, the passkey from the completed creation
  * ceremony still exists on the authenticator, but the thrown error does not
- * carry its metadata; composing `createPasskey` and `getPasskeyPrfOutput`
- * directly keeps the credential ID across that failure.
+ * carry its metadata.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or does not return PRF output on the fallback ceremony.
  * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.

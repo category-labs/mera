@@ -3,9 +3,6 @@ import { MeraError } from "./errors.js";
 
 /**
  * Copies bytes into a standalone `Uint8Array`.
- *
- * The returned array never aliases the input.
- *
  * @param value - Bytes to copy.
  * @returns A new `Uint8Array` with the same bytes as `value`.
  */

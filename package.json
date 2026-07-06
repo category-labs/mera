@@ -51,7 +51,7 @@
     "format": "biome format --write .",
     "lint": "biome lint .",
     "test": "npm run build && tsc -p tsconfig.test.json && playwright test",
-    "test:e2e": "npm test -- passkey.e2e.ts"
+    "test:e2e": "npm test -- --project chromium-e2e"
   },
   "dependencies": {
     "@noble/ed25519": "^3.1.0",

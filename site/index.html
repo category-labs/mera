@@ -1232,28 +1232,27 @@ const address = getEvmAddress(session.publicKey)</code></pre>
     // from its own origin (see embed.ts); we trust only that origin, and resize
     // only the frame that sent the message. The CSS clamp() is the fallback
     // height until the first message arrives (or if the demo isn't redeployed).
-    (function () {
-      var DEMO_ORIGIN = "https://various-cake.surge.sh";
-      window.addEventListener("message", function (e) {
+    (() => {
+      const DEMO_ORIGIN = "https://various-cake.surge.sh";
+      window.addEventListener("message", (e) => {
         if (e.origin !== DEMO_ORIGIN) return;
-        var data = e.data;
+        const data = e.data;
         if (
-          !data ||
-          data.type !== "mera:resize" ||
+          data?.type !== "mera:resize" ||
           !Number.isFinite(data.height) ||
           data.height <= 0
         )
           return;
-        var frames = document.querySelectorAll(".demo iframe");
-        for (var i = 0; i < frames.length; i++) {
-          if (frames[i].contentWindow === e.source) {
+        const frames = document.querySelectorAll(".demo iframe");
+        for (const frame of frames) {
+          if (frame.contentWindow === e.source) {
             // The demo reports its content height; the iframe is border-box
             // with a 1px frame, so add the vertical border or the content
             // scrolls under it (a thin scrollbar with a near-full thumb).
-            var cs = getComputedStyle(frames[i]);
-            var borderY =
+            const cs = getComputedStyle(frame);
+            const borderY =
               parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
-            frames[i].style.height = Math.ceil(data.height) + borderY + "px";
+            frame.style.height = `${Math.ceil(data.height) + borderY}px`;
           }
         }
       });

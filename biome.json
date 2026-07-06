@@ -25,11 +25,5 @@
     "rules": {
       "preset": "recommended"
     }
-  },
-  "overrides": [
-    {
-      "includes": ["**/*.html"],
-      "linter": { "enabled": false }
-    }
-  ]
+  }
 }

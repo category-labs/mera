@@ -28,13 +28,6 @@ function getSolanaAddress(publicKey: Uint8Array): SolanaAddress {
  * @returns `true` when `value` decodes to 32 base58 bytes.
  */
 function isSolanaAddress(value: string): value is SolanaAddress {
-  // 32 bytes always encode to 32-44 base58 characters, so anything outside
-  // that range cannot be an address; checking first caps the cost of the
-  // big-integer base58 decode on arbitrarily long untrusted input.
-  if (value.length < 32 || value.length > 44) {
-    return false;
-  }
-
   try {
     return base58.decode(value).length === ED25519_PUBLIC_KEY_LENGTH;
   } catch {

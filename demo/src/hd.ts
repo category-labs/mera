@@ -68,10 +68,9 @@ function deriveSolanaSeed(seed: Uint8Array, index: number): Uint8Array {
 }
 
 // ----- SLIP-0010 for Ed25519 ------------------------------------------------
-// Ed25519 supports only hardened derivation. This implementation is validated
-// against the official SLIP-0010 ed25519 test vectors and against the canonical
-// BIP-39 test mnemonic's Phantom address; Phantom and Solflare derive Solana
-// keys this exact way.
+// Ed25519 supports only hardened derivation. Phantom and Solflare derive Solana
+// keys this exact way, so importing the same mnemonic there reproduces these
+// addresses.
 
 const ED25519_DOMAIN = utf8ToBytes("ed25519 seed");
 const HARDENED_OFFSET = 0x80000000;

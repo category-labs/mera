@@ -15,6 +15,7 @@ import {
   type Secp256k1SigningSession,
   unwrapSecretVault,
 } from "@category-labs/mera";
+import { currentDerivedWallet, rememberDerivedWallet } from "./derivedWallet";
 import {
   deriveEthereumPrivateKey,
   deriveSolanaSeed,
@@ -22,7 +23,6 @@ import {
   mnemonicToSeed,
   prfOutputToMnemonic,
 } from "./hd";
-import { currentDerivedWallet, rememberDerivedWallet } from "./registry";
 
 /** The two account modes the demo offers (mera itself is mode-agnostic). */
 type AccountMode = "wrapped" | "derived";

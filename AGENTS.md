@@ -51,6 +51,13 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 - Do not add runtime checks for typed internal invariants that TypeScript already proves, such as required callbacks or disallowed fields within SDK-only control flow.
 - Avoid unnecessary assertions and wrappers; use them only when narrowing external input or bridging third-party type limitations.
 
+### Pull Requests
+
+- Write PR descriptions for reviewers who need to understand the reason for the change, not just the diff.
+- Start with the problem or risk that motivated the change. If the PR replaces one path with another, explain why the replacement is equivalent or better, including what behavior still runs and what coverage is added or preserved.
+- Keep the implementation summary short and concrete after the rationale.
+- List the validation that was run and any follow-up outside the diff, such as branch-protection changes or rollout notes.
+
 ## File Scope Guidelines
 
 This file should stay stable and process-oriented.

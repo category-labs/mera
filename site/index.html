@@ -807,7 +807,6 @@ const node = HDKey.fromMasterSeed(seed).derive("m/44'/60'/0'/0/0")
 if (node.privateKey === null) throw new Error("derivation produced no key")
 
 const session = createSecp256k1SigningSession({
-  // Copy out of the HDKey so the signing session can own and later zero it.
   consumePrivateKey: new Uint8Array(node.privateKey),
 })
 const address = getEvmAddress(session.publicKey)</code></pre>

@@ -125,6 +125,17 @@ const { title = data.title, tagline, actions = [] } = data.hero || {};
       padding-block: clamp(2.5rem, calc(1rem + 6vmin), 5rem);
     }
 
+    .demo {
+      /* Reserve the demo's signed-in height (~869px measured) so its growth
+         lands in space the hero already owns and the page never reflows.
+         Retune if the demo's signed-in layout grows taller. */
+      --mera-demo-reserve: 900px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: var(--mera-demo-reserve);
+    }
+
     .stack {
       text-align: start;
     }

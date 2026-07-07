@@ -4,6 +4,8 @@ import { defineConfig } from "astro/config";
 
 // https://astro.build/config
 export default defineConfig({
+  // The demo used to live on its own page; it is embedded on the landing page now.
+  redirects: { "/demo": "/" },
   integrations: [
     starlight({
       title: "mera",
@@ -21,10 +23,7 @@ export default defineConfig({
         "@fontsource-variable/fraunces/opsz-italic.css",
         "./src/styles/mera.css",
       ],
-      sidebar: [
-        { label: "Getting started", slug: "getting-started" },
-        { label: "Live demo", slug: "demo" },
-      ],
+      sidebar: [{ label: "Getting started", slug: "getting-started" }],
     }),
   ],
 });

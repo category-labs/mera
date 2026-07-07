@@ -1,10 +1,7 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { utf8ToBytes } from "@noble/hashes/utils.js";
 
-const DETERMINISTIC_PRF_DOMAIN = utf8ToBytes("mera.v1.deterministic.prf");
-// The domain is a compile-time constant, so the salt is constant too: compute
-// the hash once at module load and hand out a fresh copy per call.
-const DETERMINISTIC_PRF_SALT = sha256(DETERMINISTIC_PRF_DOMAIN);
+const DETERMINISTIC_PRF_SALT = sha256(utf8ToBytes("mera.v1.deterministic.prf"));
 
 /**
  * Returns Mera's fixed v1 deterministic PRF salt: `sha256("mera.v1.deterministic.prf")`.

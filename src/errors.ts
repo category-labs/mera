@@ -1,5 +1,5 @@
 /**
- * Stable coarse-grained error codes thrown by this package.
+ * Stable error codes thrown by this package.
  *
  * - `PASSKEY_OPERATION_FAILED`: WebAuthn failed, was cancelled, returned an unexpected credential, or the credential API is unavailable.
  * - `CRYPTO_UNAVAILABLE`: Web Crypto is unavailable.

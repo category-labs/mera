@@ -11,24 +11,24 @@ const { title = data.title, tagline, actions = [] } = data.hero || {};
 
 const features = [
   {
-    title: "Deterministic",
-    link: "/concepts/passkeys-and-prf/",
-    text: "The same passkey, relying party, and salt always produce the same 32 bytes, wherever the passkey syncs.",
-  },
-  {
-    title: "Two modes",
-    link: "/concepts/derived-and-wrapped/",
-    text: "Derive accounts from the passkey with no secret to store, or wrap an existing one into a vault it opens.",
-  },
-  {
-    title: "Signing sessions",
-    link: "/reference/create-secp256k1-signing-session/",
-    text: "One user-verification prompt covers a session of secp256k1 and Ed25519 signatures, until the session locks.",
-  },
-  {
-    title: "App-owned keys",
+    title: "Onboarding without a seed phrase",
     link: "/getting-started/",
-    text: "Derivation stays in the app: any scheme, any chain. mera hands it entropy and signs with the keys it gets back.",
+    text: "Creating an account is a passkey prompt. There is no recovery phrase to transcribe before first use.",
+  },
+  {
+    title: "Cross-device, cross-platform",
+    link: "/concepts/passkeys-and-prf/",
+    text: "Sign-in on a new phone or laptop finds the same accounts, and web and native apps on one domain share them.",
+  },
+  {
+    title: "Works with existing accounts",
+    link: "/concepts/derived-and-wrapped/",
+    text: "An account that predates the passkey comes along too: wrap its recovery phrase or private key once, and the passkey opens it from then on.",
+  },
+  {
+    title: "The authenticator is the key store",
+    link: "/concepts/security-model/",
+    text: "The passkey provider already stores, syncs, and guards the credential, so the app ships no custody backend, no MPC setup, and no smart-account contracts.",
   },
 ];
 ---

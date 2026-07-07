@@ -28,6 +28,7 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 
 ### Documentation and Examples
 
+- Documentation prose is technical writing held to a hard bar: simple, concise, and detailed at once. Every sentence must add information; cut sentences that only set up, restate, or editorialize on what adjacent sentences already show.
 - Public SDK functions should have complete, accurate JSDoc.
 - Use appropriate JSDoc tags to describe the API contract, return behavior, input constraints, observable side effects, and failure modes.
 - Document security-sensitive behavior explicitly, especially for key material, randomness, WebAuthn prompts, encryption nonces, storage formats, and mutation/zeroing behavior.

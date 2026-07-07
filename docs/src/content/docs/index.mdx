@@ -15,11 +15,11 @@ hero:
 
 import DemoEmbed from "../../components/DemoEmbed.astro";
 
-mera gets stable entropy from a WebAuthn passkey. The browser's PRF extension hands the library 32 bytes per ceremony, and the same passkey, relying party, and salt produce the same 32 bytes every time.
+mera gets stable entropy from a WebAuthn passkey: the PRF extension returns 32 bytes per ceremony, and the same passkey, relying party, and salt always produce the same 32 bytes.
 
-An app can point those bytes at two different jobs. Fed into the app's own key derivation, they make the passkey the root of a set of accounts. Or they become the key that wraps an app-held secret (a recovery phrase, a private key) into a vault the passkey can open later.
+Apps use those bytes one of two ways: as input to their own key derivation, making the passkey the root of a set of accounts, or as the key material that wraps an app-held secret (a recovery phrase, a private key) into a vault the passkey can open later.
 
-Either way, what comes out is ordinary signing material. mera wraps it in lockable signing sessions for secp256k1 and Ed25519, with address helpers for EVM and Solana. There is no smart-account deployment and no on-chain verifier. Key derivation itself stays in the app: mera hands it entropy and signs with the keys it gets back.
+The result is ordinary signing material: lockable signing sessions for secp256k1 and Ed25519, with address helpers for EVM and Solana. No smart-account deployment, no on-chain verifier. Key derivation stays in the app; mera hands it entropy and signs with the keys it gets back.
 
 ## Try it
 

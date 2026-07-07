@@ -125,6 +125,8 @@ npm run check       # Biome lint + format
 npm run check:pack  # verify the publishable tarball
 ```
 
+Tests import the built `dist/` output, so they exercise the shipped artifact. Run them through `npm test`, which rebuilds first; a bare `playwright test` can run against stale `dist/`.
+
 ## License
 
 Licensed under either of [Apache License](./LICENSE-APACHE), Version

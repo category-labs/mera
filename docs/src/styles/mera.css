@@ -43,8 +43,8 @@
 :root {
   --sl-font: "Satoshi", -apple-system, system-ui, sans-serif;
   --sl-font-headings: "Satoshi", -apple-system, system-ui, sans-serif;
-  --sl-font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular,
-    Menlo, monospace;
+  --sl-font-mono:
+    "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
   --sl-content-width: 46rem;
   --sl-text-body: 1.125rem;
   --sl-line-height: 1.7;

@@ -17,9 +17,9 @@ The result is ordinary signing material for the app to use. No smart-account dep
 
 Cross-device use requires the passkey to be available on the new device. This mode fits stateless account access across devices.
 
-**Wrapped.** An AES-256-GCM blob holds one secret: a recovery phrase, a private key, or any bytes. The passkey ceremony produces the key material needed to decrypt it. The blob can live in `localStorage`, a backend, or a sync service. This mode fits existing-account imports and sessions that sign many transactions.
-
 Derived mode stores no app-owned secret to recover. The account may be unrecoverable if the passkey is deleted, not synced, tied to a lost provider account, or unavailable under the app's `rpId` after a domain migration. Recovery then depends on an app-provided export, import, or backup path.
+
+**Wrapped.** An AES-256-GCM blob holds one secret: a recovery phrase, a private key, or any bytes. The passkey ceremony produces the key material needed to decrypt it. The blob can live in `localStorage`, a backend, or a sync service. This mode fits existing-account imports and sessions that sign many transactions.
 
 ## Install
 

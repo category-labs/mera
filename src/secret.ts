@@ -382,12 +382,9 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
     "VAULT_FORMAT_INVALID",
     { byteLength: PRF_SALT_LENGTH },
   );
-  const nonce = readBase64Url(
-    vault.nonce,
-    "nonce",
-    "VAULT_FORMAT_INVALID",
-    { byteLength: NONCE_LENGTH },
-  );
+  const nonce = readBase64Url(vault.nonce, "nonce", "VAULT_FORMAT_INVALID", {
+    byteLength: NONCE_LENGTH,
+  });
   const ciphertext = readBase64Url(
     vault.ciphertext,
     "ciphertext",

@@ -65,7 +65,7 @@ WebAuthn timeout in milliseconds, applied to each ceremony.
 
 `Promise<CreatePasskeyWithPrfOutputResult>`. Credential metadata (`credentialId`, `transports` when reported) plus the 32-byte `prfSalt` that was evaluated and the 32-byte `prfOutput`. The returned salt never aliases the caller's input.
 
-The shape is deliberate: the result can be passed straight through as the `credential` argument of [createSecretVault](/reference/create-secret-vault/).
+The result can be passed straight through as the `credential` argument of [createSecretVault](/reference/create-secret-vault/).
 
 ## Errors
 

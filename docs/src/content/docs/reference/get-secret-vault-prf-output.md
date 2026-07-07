@@ -5,7 +5,7 @@ description: Performs the WebAuthn assertion needed to unlock a secret vault.
 
 Performs the WebAuthn assertion needed to unlock a secret vault. Runs one `navigator.credentials.get()` ceremony, which may show browser or authenticator UI.
 
-Under the hood this reads the credential metadata and PRF salt out of a parsed vault and delegates to [getPasskeyPrfOutput](/reference/get-passkey-prf-output/), so the assertion is automatically pinned to the credential that wrapped the secret.
+Reads the credential metadata and PRF salt out of a parsed vault and delegates to [getPasskeyPrfOutput](/reference/get-passkey-prf-output/), so the assertion is automatically pinned to the credential that wrapped the secret.
 
 ## Import
 

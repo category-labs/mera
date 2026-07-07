@@ -38,7 +38,7 @@ session.lock();
 - Type: `Uint8Array`
 - Required
 
-secp256k1 private key. Must be exactly 32 bytes and a valid scalar. Copied into one session-owned snapshot; the input buffer is zeroed before the call returns or throws, which the `consume` prefix is there to signal. Callers holding the key inside another structure (an `HDKey`, for example) should pass a copy.
+secp256k1 private key. Must be exactly 32 bytes and a valid scalar. Copied into one session-owned snapshot; the input buffer is zeroed before the call returns or throws. Callers holding the key inside another structure (an `HDKey`, for example) should pass a copy.
 
 ## Returns
 
@@ -75,7 +75,7 @@ Sessions bound with `const` or `let` are unaffected; disposal runs only where a 
 
 ## Notes
 
-Signing needs no passkey ceremony and shows no prompt. One user-verification prompt produces the entropy; the session then signs as often as the app asks until it is locked.
+Signing needs no passkey ceremony and shows no prompt; the session signs as often as the app asks until it is locked.
 
 The recovery ID is declared `0 | 1`. Values 2 and 3 exist in ECDSA but require the signature's `r` to reach the curve order, which happens with probability around 2^-127; if it ever did, the call would fail loudly with `INPUT_INVALID` rather than return a signature that cannot be address-recovered.
 

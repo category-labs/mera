@@ -40,9 +40,9 @@ A validated `PasskeySecretVault`. Only version 1 vaults are accepted. The creden
 
 ## Notes
 
-Validation here means later steps fail cleanly. A vault that came through this function cannot trigger the `INPUT_INVALID` re-checks in [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/) or [unwrapSecretVault](/reference/unwrap-secret-vault/); what remains is honest cryptographic failure (`DECRYPT_FAILED`) or ceremony failure.
+A vault that came through this function cannot trigger the `INPUT_INVALID` re-checks in [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/) or [unwrapSecretVault](/reference/unwrap-secret-vault/); what remains is cryptographic failure (`DECRYPT_FAILED`) or ceremony failure.
 
-Rejecting unknown versions is deliberate. A future vault format bumps the version number, and an old library refusing it beats an old library misreading it.
+A future vault format bumps the version number; an old library refusing it beats an old library misreading it.
 
 ## See also
 

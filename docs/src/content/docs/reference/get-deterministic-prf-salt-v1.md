@@ -5,7 +5,7 @@ description: Returns mera's fixed v1 deterministic PRF salt.
 
 Returns mera's fixed v1 deterministic PRF salt: `sha256("mera.v1.deterministic.prf")`. No ceremony, no prompt; this is a pure function over a constant.
 
-The salt will not change across library versions, so one passkey assertion against it produces one stable 32-byte PRF output per credential and relying party. That stability is the foundation of [derived mode](/concepts/derived-and-wrapped/).
+The salt will not change across library versions, so one passkey assertion against it produces one stable 32-byte PRF output per credential and relying party: the foundation of [derived mode](/concepts/derived-and-wrapped/).
 
 ## Import
 

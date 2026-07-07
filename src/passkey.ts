@@ -115,6 +115,10 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * evaluates the credential's user-verified PRF and overrides a weaker
  * `userVerification` setting, so exposing the setting could neither change
  * the PRF output nor remove the check.
+ *
+ * A `PRF_UNAVAILABLE` failure happens after the creation ceremony has
+ * completed: the passkey exists on the authenticator, but the thrown error
+ * does not carry its metadata.
  * @see {@link https://www.w3.org/TR/webauthn-3/#user-verification | WebAuthn: user verification}
  * @see {@link https://www.w3.org/TR/webauthn-3/#prf-extension | WebAuthn: the PRF extension}
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or returns a malformed create-time PRF output.

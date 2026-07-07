@@ -1,0 +1,9 @@
+---
+// Replaces Starlight's theme-detection script: the docs are light-only, like
+// the demo app they embed, so the theme is pinned instead of computed from
+// system preference or a stored choice.
+---
+
+<script is:inline>
+  document.documentElement.dataset.theme = "light";
+</script>

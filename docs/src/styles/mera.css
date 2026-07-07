@@ -1,43 +1,30 @@
-/* mera editorial skin — palette and type from site/index.html */
+/* mera docs skin — palette from the demo app (demo/src/styles.css), type
+   from site/index.html. Light-only, like the demo; ThemeProvider.astro pins
+   the theme. */
 
-/* Light mode: the article's paper/ink palette. */
-:root[data-theme="light"] {
-  --sl-color-white: #1a1a1a;
-  --sl-color-gray-1: #2e2e2c;
-  --sl-color-gray-2: #4a4a4a;
-  --sl-color-gray-3: #6e6e6a;
-  --sl-color-gray-4: #9a9a94;
-  --sl-color-gray-5: #d2d2cc;
-  --sl-color-gray-6: #e4e4e0;
-  --sl-color-gray-7: #f4f4f1;
-  --sl-color-black: #fcfcfa;
-
-  --sl-color-accent-low: #eceae2;
-  --sl-color-accent: #4a4a4a;
-  --sl-color-accent-high: #1a1a1a;
-
-  --sl-color-bg-inline-code: #f4f4f1;
-  --sl-color-hairline: #e4e4e0;
-
-  --mera-underline: #bdbdb6;
-}
-
-/* Dark mode: the same ink/paper relationship, inverted and dimmed. */
 :root {
-  --sl-color-white: #ece9e2;
-  --sl-color-gray-1: #d8d5cd;
-  --sl-color-gray-2: #b5b2aa;
-  --sl-color-gray-3: #8a8880;
-  --sl-color-gray-4: #5c5a54;
-  --sl-color-gray-5: #383733;
-  --sl-color-gray-6: #262521;
-  --sl-color-black: #191813;
+  color-scheme: light;
 
-  --sl-color-accent-low: #33312a;
-  --sl-color-accent: #b5b2aa;
-  --sl-color-accent-high: #ece9e2;
+  /* Cool grays: text #0f1115 on white surfaces, muted #6b7280. */
+  --sl-color-white: #0f1115;
+  --sl-color-gray-1: #2a303a;
+  --sl-color-gray-2: #4b5563;
+  --sl-color-gray-3: #6b7280;
+  --sl-color-gray-4: #9ca3af;
+  --sl-color-gray-5: #d9dce1;
+  --sl-color-gray-6: #e6e8ec;
+  --sl-color-gray-7: #f1f2f5;
+  --sl-color-black: #ffffff;
 
-  --mera-underline: #5c5a54;
+  /* The demo's orange. Text uses the darkened step for contrast on white;
+     buttons use the raw accent. */
+  --sl-color-accent-low: #ffe2d1;
+  --sl-color-accent: #f50;
+  --sl-color-accent-high: #cc4400;
+  --sl-color-text-accent: var(--sl-color-accent-high);
+
+  --sl-color-bg-inline-code: #f1f2f5;
+  --sl-color-hairline: #e6e8ec;
 }
 
 :root {
@@ -48,7 +35,7 @@
   --sl-content-width: 46rem;
   --sl-text-body: 1.125rem;
   --sl-line-height: 1.7;
-  /* Body text at full ink, like the article. */
+  /* Body text at full strength, like the demo's card text. */
   --sl-color-text: var(--sl-color-white);
 }
 
@@ -63,16 +50,30 @@ h4,
   letter-spacing: -0.015em;
 }
 
+/* Dark wordmark, like the demo's own header. */
+.site-title {
+  color: var(--sl-color-white);
+}
+
 ::selection {
   background: var(--sl-color-white);
   color: var(--sl-color-black);
 }
 
-/* Content links: underlined ink, like the article. */
+/* Sidebar current page: a soft accent tint, like the demo's chips, instead
+   of Starlight's solid block. */
+.sidebar-content a[aria-current="page"],
+.sidebar-content a[aria-current="page"]:hover,
+.sidebar-content a[aria-current="page"]:focus {
+  background: color-mix(in srgb, var(--sl-color-accent) 14%, transparent);
+  color: var(--sl-color-accent-high);
+}
+
+/* Content links: the demo's orange, underlined softly for affordance. */
 .sl-markdown-content a:not(.sl-link-button) {
-  color: inherit;
+  color: var(--sl-color-text-accent);
   text-decoration: underline;
-  text-decoration-color: var(--mera-underline);
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.16em;
   transition: text-decoration-color 0.15s ease;
@@ -82,29 +83,33 @@ h4,
   text-decoration-color: currentColor;
 }
 
-/* CTA buttons: ink on paper, squared like the article's code frames. */
+/* CTA buttons: the demo's button language. */
 .sl-link-button.primary {
-  background: var(--sl-color-white);
-  border-color: var(--sl-color-white);
-  color: var(--sl-color-black);
-  border-radius: 4px;
+  background: var(--sl-color-accent);
+  border-color: transparent;
+  color: #ffffff;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+
+.sl-link-button.primary:hover {
+  background: color-mix(in srgb, var(--sl-color-accent) 88%, #000);
 }
 
 .sl-link-button.secondary {
-  border-color: var(--sl-color-gray-5);
+  border-color: var(--sl-color-hairline);
   color: var(--sl-color-white);
-  border-radius: 4px;
+  border-radius: 10px;
 }
 
 .sl-link-button.minimal {
-  color: var(--sl-color-white);
-  text-decoration: underline;
-  text-decoration-color: var(--mera-underline);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.16em;
-  transition: text-decoration-color 0.15s ease;
+  color: var(--sl-color-text-accent);
+  font-weight: 500;
+  text-decoration: none;
 }
 
 .sl-link-button.minimal:hover {
-  text-decoration-color: currentColor;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
 }

@@ -300,6 +300,8 @@ async function unwrapSecretVault({
   vault,
   prfOutput,
 }: UnwrapSecretVaultInput): Promise<Uint8Array<ArrayBuffer>> {
+  // The copy guarantee documented above is provided by hkdfSha256AesGcmKey,
+  // which snapshots prfOutput synchronously before its first await.
   const wrappingKey = await deriveWrappingKey(prfOutput);
 
   return aesGcmDecrypt({

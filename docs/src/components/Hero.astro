@@ -90,7 +90,6 @@ const { prfOutput } = await getPasskeyPrfOutput({
   </div>
 
   <figure class="demo">
-    <figcaption>Demo</figcaption>
     <DemoEmbed />
   </figure>
 </div>
@@ -233,14 +232,6 @@ const { prfOutput } = await getPasskeyPrfOutput({
     /* Fixed height: the demo scrolls inside when its signed-in state is
        taller, so the page itself never reflows. */
     height: clamp(30rem, calc(100dvh - var(--sl-nav-height) - 8rem), 34rem);
-  }
-
-  .demo figcaption {
-    padding: 0.7rem 1rem 0;
-    font-style: italic;
-    font-size: 0.9rem;
-    letter-spacing: 0.04em;
-    color: var(--sl-color-gray-3);
   }
 
   .demo :global(iframe) {

@@ -92,12 +92,14 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
 /**
  * Creates a discoverable, user-verified passkey and requires WebAuthn PRF support.
  *
- * When the authenticator evaluates PRF at create time, the result includes the
- * first PRF output for `prfSalt`, so no second ceremony is needed to obtain the
- * PRF output.
+ * When `prfSalt` is provided and the authenticator evaluates PRF at create
+ * time, the result includes the first PRF output, so no second ceremony is
+ * needed. Without `prfSalt`, no PRF evaluation happens during creation and
+ * the result carries credential metadata only; a later `getPasskeyPrfOutput`
+ * call with a salt produces PRF output for this passkey.
  *
  * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyOptions}.
- * @returns Credential metadata, plus the first PRF output when it was evaluated during creation.
+ * @returns Credential metadata, plus the first PRF output when `prfSalt` was provided and evaluated during creation.
  * @remarks
  * Invokes `navigator.credentials.create()`, which may show browser or
  * authenticator UI.
@@ -116,47 +118,10 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * @see {@link https://www.w3.org/TR/webauthn-3/#user-verification | WebAuthn: user verification}
  * @see {@link https://www.w3.org/TR/webauthn-3/#prf-extension | WebAuthn: the PRF extension}
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or returns a malformed create-time PRF output.
- * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
+ * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is provided but not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
-function createPasskey(
-  options: CreatePasskeyInput & { prfSalt: Uint8Array },
-): Promise<CreatePasskeyResult>;
-/**
- * Creates a discoverable, user-verified passkey and requires WebAuthn PRF support.
- *
- * Without `prfSalt`, no PRF evaluation happens during creation, so the result
- * carries credential metadata only; a later `getPasskeyPrfOutput` call with a
- * salt produces PRF output for this passkey.
- *
- * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyOptions}.
- * @returns Credential metadata for the created passkey.
- * @remarks
- * The ceremony is the one documented on the `prfSalt` overload: the same
- * browser or authenticator UI, internally generated challenge, and fixed
- * WebAuthn parameters, minus the PRF salt evaluation.
- * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF.
- * @throws MeraError with code `INPUT_INVALID` when `user.id` is provided but not 1 to 64 bytes.
- * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
- * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
- */
-function createPasskey(
-  options: Omit<CreatePasskeyInput, "prfSalt"> & { prfSalt?: never },
-): Promise<PasskeyCredentialMetadata>;
-/**
- * Creates a discoverable, user-verified passkey and requires WebAuthn PRF support.
- *
- * Fallback overload for options where `prfSalt` presence is not statically
- * known. The ceremony and failure modes are the ones documented on the
- * `prfSalt` overload, with the salt evaluated only when present.
- *
- * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyOptions}.
- * @returns Credential metadata, plus the first PRF output when `prfSalt` was provided and evaluated during creation.
- */
-function createPasskey(
-  options: CreatePasskeyInput,
-): Promise<CreatePasskeyResult>;
 async function createPasskey({
   rp,
   user,
@@ -507,13 +472,8 @@ function copyPrfOutput(
   return output;
 }
 
-/**
- * Options accepted by `createPasskey`.
- *
- * Aliased directly rather than via `Parameters<typeof createPasskey>[0]`
- * because `Parameters` sees only the last overload.
- */
-type CreatePasskeyOptions = CreatePasskeyInput;
+/** Options accepted by `createPasskey`. */
+type CreatePasskeyOptions = Parameters<typeof createPasskey>[0];
 /** Options accepted by `createPasskeyWithPrfOutput`. */
 type CreatePasskeyWithPrfOutputOptions = Parameters<
   typeof createPasskeyWithPrfOutput

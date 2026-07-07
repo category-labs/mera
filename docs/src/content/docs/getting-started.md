@@ -3,7 +3,10 @@ title: Getting started
 description: Install the library, derive an account, and make a first signature.
 ---
 
-mera runs in the browser. It needs a secure context (HTTPS, or `localhost` during development) and a passkey authenticator that supports the WebAuthn PRF extension. [Authenticator support](/concepts/authenticator-support/) lists the combinations known to work; 1Password and iCloud Keychain are safe first picks.
+Prerequisites:
+
+- A browser with WebAuthn, in a secure context: HTTPS, or `localhost` during development.
+- A passkey authenticator that supports the WebAuthn PRF extension. [Authenticator support](/concepts/authenticator-support/) lists the combinations known to work; 1Password and iCloud Keychain are safe first picks.
 
 ## Install
 

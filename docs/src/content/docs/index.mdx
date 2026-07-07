@@ -12,26 +12,3 @@ hero:
       link: https://github.com/category-labs/mera
       variant: minimal
 ---
-
-mera gets stable entropy from a WebAuthn passkey: the PRF extension returns 32 bytes per ceremony, and the same passkey, relying party, and salt always produce the same 32 bytes.
-
-Apps use those bytes one of two ways: as input to their own key derivation, making the passkey the root of a set of accounts, or as the key material that wraps an app-held secret (a recovery phrase, a private key) into a vault the passkey can open later.
-
-The result is ordinary signing material: lockable signing sessions for secp256k1 and Ed25519, with address helpers for EVM and Solana. No smart-account deployment, no on-chain verifier. Key derivation stays in the app; mera hands it entropy and signs with the keys it gets back.
-
-## The pieces
-
-**Ceremonies.** [createPasskey](/reference/create-passkey/), [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/), and [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) run the WebAuthn ceremonies: create a passkey, evaluate its PRF, or both in one call. Every ceremony requires user verification. [Passkeys and the PRF extension](/concepts/passkeys-and-prf/) explains where the 32 bytes come from.
-
-**Two modes.** A fixed deterministic salt reproduces the same output on every device the passkey syncs to; the app derives accounts from it, with no secret to store. A fresh random salt instead produces the key that encrypts one secret into a portable vault. [Derived and wrapped modes](/concepts/derived-and-wrapped/) compares the trade-offs.
-
-**Signing sessions.** A session consumes a private key, zeroes the buffer it came in, and signs without further prompts until it is locked. One user-verification prompt can cover a session of signatures. See [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) and [createEd25519SigningSession](/reference/create-ed25519-signing-session/).
-
-**The vault.** One secret per vault, AES-256-GCM, stored as versioned JSON that can sit in `localStorage`, on a backend, or in a sync service. [createSecretVault](/reference/create-secret-vault/) builds it; the [secret vault format](/reference/secret-vault-format/) page spells out the contract.
-
-## Where next
-
-- [Getting started](/getting-started/): install, one ceremony, one signature.
-- [Recipes](/recipes/derive-accounts/): derive accounts, wrap a recovery phrase, sign with viem.
-- [API reference](/reference/): every exported function, one page per function.
-- [GitHub](https://github.com/category-labs/mera): source, tests, and the demo app.

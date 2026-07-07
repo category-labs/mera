@@ -11,8 +11,18 @@ const DEMO_ORIGIN = "https://various-cake.surge.sh";
   title="mera demo"
   data-origin={DEMO_ORIGIN}
   class="not-content"
-  style="width: 100%; height: 480px; border: none; border-radius: 8px;"
+  style="height: 480px;"
   allow="publickey-credentials-create *; publickey-credentials-get *"></iframe>
+
+<style>
+  iframe {
+    display: block;
+    width: 100%;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 6px;
+    background: #f5f6f8;
+  }
+</style>
 
 <script>
   const frame = document.getElementById("mera-demo") as HTMLIFrameElement;

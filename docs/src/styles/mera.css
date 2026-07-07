@@ -18,6 +18,8 @@
 
   --sl-color-bg-inline-code: #f4f4f1;
   --sl-color-hairline: #e4e4e0;
+
+  --mera-underline: #bdbdb6;
 }
 
 /* Dark mode: the same ink/paper relationship, inverted and dimmed. */
@@ -34,17 +36,23 @@
   --sl-color-accent-low: #33312a;
   --sl-color-accent: #b5b2aa;
   --sl-color-accent-high: #ece9e2;
+
+  --mera-underline: #5c5a54;
 }
 
 :root {
-  --sl-font: "Newsreader Variable", Georgia, serif;
-  --sl-font-headings: "Fraunces Variable", Georgia, serif;
+  --sl-font: "Satoshi", -apple-system, system-ui, sans-serif;
+  --sl-font-headings: "Satoshi", -apple-system, system-ui, sans-serif;
+  --sl-font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular,
+    Menlo, monospace;
   --sl-content-width: 46rem;
   --sl-text-body: 1.125rem;
   --sl-line-height: 1.7;
+  /* Body text at full ink, like the article. */
+  --sl-color-text: var(--sl-color-white);
 }
 
-/* Headings in Fraunces, tight and calm like the article. */
+/* Headings tight and calm like the article. */
 h1,
 h2,
 h3,
@@ -58,4 +66,45 @@ h4,
 ::selection {
   background: var(--sl-color-white);
   color: var(--sl-color-black);
+}
+
+/* Content links: underlined ink, like the article. */
+.sl-markdown-content a:not(.sl-link-button) {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--mera-underline);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.sl-markdown-content a:not(.sl-link-button):hover {
+  text-decoration-color: currentColor;
+}
+
+/* CTA buttons: ink on paper, squared like the article's code frames. */
+.sl-link-button.primary {
+  background: var(--sl-color-white);
+  border-color: var(--sl-color-white);
+  color: var(--sl-color-black);
+  border-radius: 4px;
+}
+
+.sl-link-button.secondary {
+  border-color: var(--sl-color-gray-5);
+  color: var(--sl-color-white);
+  border-radius: 4px;
+}
+
+.sl-link-button.minimal {
+  color: var(--sl-color-white);
+  text-decoration: underline;
+  text-decoration-color: var(--mera-underline);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.sl-link-button.minimal:hover {
+  text-decoration-color: currentColor;
 }

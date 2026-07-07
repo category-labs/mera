@@ -111,10 +111,10 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * attestation `"none"`, a required resident key, and required user
  * verification. User verification is the authenticator's local check; the
  * gesture depends on the platform (a biometric, a device PIN, or a password).
- * The requirement is not configurable because the PRF extension always
- * evaluates the credential's user-verified PRF and overrides a weaker
- * `userVerification` setting, so exposing the setting could neither change
- * the PRF output nor remove the check.
+ * The requirement is not configurable: the PRF extension evaluates only the
+ * credential's user-verified PRF, so a `userVerification` setting could
+ * neither change the PRF output nor remove the check ({@link
+ * getPasskeyPrfOutput} documents the authenticator mechanism).
  *
  * A `PRF_UNAVAILABLE` failure happens after the creation ceremony has
  * completed: the passkey exists on the authenticator, but the thrown error
@@ -231,9 +231,8 @@ async function createPasskey({
  * configurable. Authenticators built on CTAP's `hmac-secret` keep two PRFs
  * per credential, one for user-verified requests and one for the rest;
  * WebAuthn exposes only the user-verified PRF and overrides a weaker
- * `userVerification` setting when evaluating it. A configurable setting could
- * therefore neither change the PRF output nor skip the user-verification
- * check.
+ * `userVerification` setting when evaluating it, so a configurable setting
+ * could neither change the PRF output nor skip the check.
  * @see {@link https://www.w3.org/TR/webauthn-3/#prf-extension | WebAuthn: the PRF extension}
  * @see {@link https://www.w3.org/TR/webauthn-3/#enumdef-userverificationrequirement | WebAuthn: UserVerificationRequirement}
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.

@@ -9,7 +9,7 @@ Prerequisites: `viem` installed and an unlocked session ([Derive accounts from o
 
 ## The adapter
 
-This is the demo's adapter, unchanged in shape:
+The demo's adapter:
 
 ```ts
 import {

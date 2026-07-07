@@ -33,15 +33,15 @@ function describeError(error: unknown): string {
 }
 ```
 
-Two properties worth keeping. Non-mera errors pass through untouched, so chain-library and network failures keep their own messages. And the `switch` covers the whole `MeraErrorCode` union, so a future library version that adds a code turns into a TypeScript error here instead of a silent fall-through.
+Non-mera errors pass through untouched, so chain-library and network failures keep their own messages. The `switch` covers the whole `MeraErrorCode` union, so a future library version that adds a code becomes a TypeScript error here instead of a silent fall-through.
 
 ## What each code should trigger
 
 **PASSKEY_OPERATION_FAILED** is the everyday one: the person dismissed the prompt, or WebAuthn itself failed. Offer a plain retry and move on. The underlying failure rides along as `error.cause` for logging.
 
-**PRF_UNAVAILABLE** means the authenticator stack cannot do PRF. Point people at a combination that works ([authenticator support](/concepts/authenticator-support/) is linkable). On a create flow, remember the caveat: the passkey may already exist by the time this throws, so a retry with a different authenticator leaves an orphan credential in the first one's passkey list. Saying so beats letting people discover it.
+**PRF_UNAVAILABLE** means the authenticator stack cannot do PRF. Point people at a combination that works ([authenticator support](/concepts/authenticator-support/) is linkable). On a create flow the passkey may already exist by the time this throws, so a retry with a different authenticator leaves an orphan credential in the first one's passkey list; say so in the UI.
 
-**CRYPTO_UNAVAILABLE** almost always means the page is not in a secure context. A developer problem, not a user one; fail loudly during development and this never ships.
+**CRYPTO_UNAVAILABLE** almost always means the page is not in a secure context. Fail loudly during development and this never ships; no user action fixes it.
 
 **SESSION_LOCKED** is expected behavior after `lock()`, so route it to the reconnect flow rather than an error banner. One fresh ceremony builds a new session.
 

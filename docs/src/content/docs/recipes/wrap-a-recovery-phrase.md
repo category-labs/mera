@@ -52,7 +52,7 @@ try {
 }
 ```
 
-The `finally` matters: the encoded phrase and the PRF output get zeroed whether or not wrapping succeeded. The vault stores the salt and credential metadata itself ([format](/reference/secret-vault-format/)), so nothing else needs saving.
+The `finally` zeroes the encoded phrase and the PRF output whether or not wrapping succeeded. The vault stores the salt and credential metadata itself ([format](/reference/secret-vault-format/)), so nothing else needs saving.
 
 ## Unlock
 
@@ -84,7 +84,7 @@ async function unlockPhrase(): Promise<string> {
 }
 ```
 
-`parseSecretVault` is the boundary for the untrusted stored JSON; everything after it works with validated data. The decrypted buffer is a fresh allocation the library never zeroes, so the inner `finally` is the app holding up its end.
+`parseSecretVault` is the boundary for the untrusted stored JSON; everything after it works with validated data. The decrypted buffer is a fresh allocation the library never zeroes; the inner `finally` does.
 
 ## Derive signing sessions
 

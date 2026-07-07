@@ -3,7 +3,7 @@ title: Reveal a recovery phrase
 description: Export the phrase behind a fresh passkey ceremony, in both modes.
 ---
 
-Recovery export is its own flow, run at reveal time behind a fresh ceremony. The app holds no phrase and no entropy between reveals; the user-verification prompt is what gates the export, every time. That framing comes from the library's security guidance and it is worth keeping even when caching would be convenient.
+Recovery export is its own flow, run at reveal time behind a fresh ceremony. The app holds no phrase and no entropy between reveals; the user-verification prompt gates the export, every time.
 
 Prerequisites: a working derived setup ([Derive accounts from one passkey](/recipes/derive-accounts/)) or a stored vault ([Wrap a recovery phrase](/recipes/wrap-a-recovery-phrase/)).
 
@@ -46,7 +46,7 @@ Both paths return a JavaScript string, and a string cannot be zeroed in place. W
 - Never log it, never put it in state that outlives the reveal screen, never send it anywhere.
 - Treat the reveal screen itself as the sensitive asset: the biometric gate in front of it is the real protection.
 
-The [security model](/concepts/security-model/#strings-cannot-be-zeroed) covers why this is the best available position.
+The [security model](/concepts/security-model/#strings-cannot-be-zeroed) covers the limits.
 
 ## See also
 

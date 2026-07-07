@@ -40,7 +40,7 @@ localStorage.setItem(
 );
 ```
 
-A fresh device has no record and that is fine: sign-in falls back to a discoverable ceremony, and the synced passkey still produces the same accounts.
+A fresh device has no record; sign-in falls back to a discoverable ceremony, and the synced passkey still produces the same accounts.
 
 ## Sign in
 
@@ -68,7 +68,7 @@ localStorage.setItem("app.derivedCredential", JSON.stringify(record));
 
 ## Hold a master seed, not the PRF output
 
-One ceremony per session is the whole point. Turn the PRF output into a BIP-39 master seed once, zero the output, and keep the seed in memory for the session. Deriving account 3 later is pure HD math with no further prompt.
+Turn the PRF output into a BIP-39 master seed once, zero the output, and keep the seed in memory for the session; deriving account 3 later is pure HD math with no further prompt.
 
 ```ts
 import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
@@ -130,7 +130,7 @@ function deriveSolanaAccount(seed: Uint8Array, index: number) {
 }
 ```
 
-Both derivations are the demo's choice, and the choice is deliberate: the same phrase imported into a wallet app that speaks these standards (MetaMask and Phantom are two) reproduces the same addresses, so accounts keep an exit path that does not depend on mera.
+Both derivations are the demo's choice: the same phrase imported into a wallet app that speaks these standards (MetaMask and Phantom are two) reproduces the same addresses, so accounts keep an exit path that does not depend on mera.
 
 ## Lock everything
 
@@ -146,5 +146,5 @@ Sessions zero their own key copies on `lock()`. The master seed is the app's buf
 ## Pitfalls
 
 - **The mapping is consensus-critical.** PRF output to mnemonic, and the two derivation paths: change any of it after launch and every address changes. Ship it once.
-- **Zero the PRF output as soon as the seed exists**, and the seed on lock. Between those two moments, a compromised runtime can read them; the [security model](/concepts/security-model/) draws that boundary precisely.
+- **Zero the PRF output as soon as the seed exists**, and the seed on lock. Between those two moments a compromised runtime can read them ([security model](/concepts/security-model/)).
 - **Accounts reproduce only under the same rpId.** A domain migration silently orphans them; give accounts an export path first ([Reveal a recovery phrase](/recipes/reveal-a-recovery-phrase/)).

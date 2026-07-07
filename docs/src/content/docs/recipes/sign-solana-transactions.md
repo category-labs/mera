@@ -67,11 +67,11 @@ const serialized = await signSolTransfer({
 const signature = await connection.sendRawTransaction(serialized);
 ```
 
-Signing and broadcasting stay separate on purpose: the app can show or persist the signed transaction even when the broadcast then fails, and retries re-send the same bytes instead of prompting for anything.
+Signing and broadcasting stay separate: the app can show or persist the signed transaction even when the broadcast then fails, and retries re-send the same bytes instead of prompting for anything.
 
 ## Notes
 
-- No passkey prompt happens here. The ceremony ran when the session was created; signing is silent until `session.lock()`.
+- No passkey prompt happens here; the ceremony ran when the session was created, and signing is silent until `session.lock()`.
 - `serialize()` verifies signatures against the message, so a wrong fee payer or a stale blockhash surfaces at signing time rather than on-chain.
 
 ## See also

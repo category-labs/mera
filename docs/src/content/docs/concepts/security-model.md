@@ -3,7 +3,7 @@ title: Security model
 description: What mera protects, what it cannot, and the sharp edges to design around.
 ---
 
-mera's job is narrow: run passkey ceremonies, hand the app entropy, hold signing keys behind a lock. This page states what the library takes care of inside that job and what remains the app's problem. The same facts appear on the reference pages of the functions they concern; this is the connected version.
+mera's job is narrow: run passkey ceremonies, hand the app entropy, hold signing keys behind a lock. This page states what the library handles inside that job and what remains the app's problem; each fact also appears on the reference page of the function it concerns.
 
 ## What the library handles
 
@@ -17,7 +17,7 @@ WebAuthn challenges are generated internally. So are AES-GCM nonces, 12 fresh by
 
 A compromised JavaScript runtime, whether an injected script, a malicious dependency, or an extension with page access, can observe key material during app-owned derivation or import. It can also sign with an active session until `session.lock()` is called.
 
-No library choice changes that. The mitigations are app-level: lock sessions when idle, keep derivation windows short, and treat everything that can run script on the page as inside the trust boundary.
+The mitigations are app-level: lock sessions when idle, keep derivation windows short, and treat everything that can run script on the page as inside the trust boundary.
 
 ## rpId binding
 
@@ -29,7 +29,7 @@ Treat the rpId as a long-lived choice. If a migration is ever on the table, acco
 
 Reusing one PRF output for unrelated purposes (key derivation and app-data encryption, say) links those secrets: anyone who learns the output learns them all. Use a different salt per purpose, or split one output with a purpose-labeled KDF.
 
-The vault has a specific corollary. A vault is bound to its PRF output only, never to the credential ID or salt. Secrets wrapped under one reused output share a wrapping key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored vault JSON. Give each secret a fresh random 32-byte salt; the [createSecretVault](/reference/create-secret-vault/) page carries the same warning.
+A vault is bound to its PRF output only, never to the credential ID or salt. Secrets wrapped under one reused output share a wrapping key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored vault JSON. Give each secret a fresh random 32-byte salt; the [createSecretVault](/reference/create-secret-vault/) page carries the same warning.
 
 ## Strings cannot be zeroed
 

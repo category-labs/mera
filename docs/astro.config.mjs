@@ -45,7 +45,18 @@ export default defineConfig({
         ThemeProvider: "./src/components/ThemeProvider.astro",
         ThemeSelect: "./src/components/ThemeSelect.astro",
       },
-      sidebar: [{ label: "Getting started", slug: "getting-started" }],
+      sidebar: [
+        { label: "Getting started", slug: "getting-started" },
+        {
+          label: "Concepts",
+          items: [
+            "concepts/passkeys-and-prf",
+            "concepts/derived-and-wrapped",
+            "concepts/security-model",
+            "concepts/authenticator-support",
+          ],
+        },
+      ],
     }),
   ],
 });

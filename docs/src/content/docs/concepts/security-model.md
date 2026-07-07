@@ -1,0 +1,45 @@
+---
+title: Security model
+description: What mera protects, what it cannot, and the sharp edges to design around.
+---
+
+mera's job is narrow: run passkey ceremonies, hand the app entropy, hold signing keys behind a lock. This page states what the library takes care of inside that job and what remains the app's problem. The same facts appear on the reference pages of the functions they concern; this is the connected version.
+
+## What the library handles
+
+Input buffers are copied before any async work starts, so mutating a buffer after a call cannot change what gets signed, wrapped, or derived.
+
+Owned copies are zeroed where possible. A signing session zeroes the caller's private-key buffer when it consumes it, even when construction throws, and zeroes its own copy on `lock()`. [createSecretVault](/reference/create-secret-vault/) zeroes its internal copies of the PRF output and the secret before returning.
+
+WebAuthn challenges are generated internally. So are AES-GCM nonces, 12 fresh bytes per encryption, which means a caller cannot reuse one. Every ceremony requires user verification, and the requirement is [not configurable](/concepts/passkeys-and-prf/#user-verification).
+
+## What a compromised runtime sees
+
+A compromised JavaScript runtime, whether an injected script, a malicious dependency, or an extension with page access, can observe key material during app-owned derivation or import. It can also sign with an active session until `session.lock()` is called.
+
+No library choice changes that. The mitigations are app-level: lock sessions when idle, keep derivation windows short, and treat everything that can run script on the page as inside the trust boundary.
+
+## rpId binding
+
+PRF output is a function of the credential, the relying party ID, and the salt. A passkey answers only the rpId it was created under, so after a domain migration the app cannot run assertions under the old one. That breaks derived-mode reproduction and blocks the ceremony that opens wrapped vaults alike.
+
+Treat the rpId as a long-lived choice. If a migration is ever on the table, accounts need an export path before it happens; [Reveal a recovery phrase](/recipes/reveal-a-recovery-phrase/) is one.
+
+## One output, one purpose
+
+Reusing one PRF output for unrelated purposes (key derivation and app-data encryption, say) links those secrets: anyone who learns the output learns them all. Use a different salt per purpose, or split one output with a purpose-labeled KDF.
+
+The vault has a specific corollary. A vault is bound to its PRF output only, never to the credential ID or salt. Secrets wrapped under one reused output share a wrapping key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored vault JSON. Give each secret a fresh random 32-byte salt; the [createSecretVault](/reference/create-secret-vault/) page carries the same warning.
+
+## Strings cannot be zeroed
+
+A revealed recovery phrase is a JavaScript string, and strings cannot be zeroed in place. The app can only drop references and keep the lifetime short. Treat a revealed phrase as high-risk UI state: render it late, discard it early, never log it.
+
+## Dependency scope
+
+Runtime dependencies are `@noble/*` and `@scure/*` only. Build and test tooling, and the unpublished demo app, never ship to library consumers.
+
+## See also
+
+- [Passkeys and the PRF extension](/concepts/passkeys-and-prf/)
+- [Errors](/reference/errors/): every failure the library signals, by code.

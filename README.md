@@ -17,9 +17,9 @@ The result is ordinary signing material for the app to use. No smart-account dep
 
 Cross-device use requires the passkey to be available on the new device. This mode fits stateless account access across devices.
 
-**Wrapped.** An AES-256-GCM blob holds one secret: a recovery phrase, a private key, or any bytes. The passkey ceremony produces the key material needed to decrypt it. The blob can live in `localStorage`, a backend, or a sync service. This mode fits existing-account imports and sessions that sign many transactions.
-
 Derived mode stores no app-owned secret to recover. The account may be unrecoverable if the passkey is deleted, not synced, tied to a lost provider account, or unavailable under the app's `rpId` after a domain migration. Recovery then depends on an app-provided export, import, or backup path.
+
+**Wrapped.** An AES-256-GCM blob holds one secret: a recovery phrase, a private key, or any bytes. The passkey ceremony produces the key material needed to decrypt it. The blob can live in `localStorage`, a backend, or a sync service. This mode fits existing-account imports and sessions that sign many transactions.
 
 ## Install
 
@@ -29,7 +29,7 @@ npm install @category-labs/mera
 
 ## Quick example
 
-A derived-mode skeleton: one passkey ceremony, then app-owned key derivation.
+A derived-mode example: one passkey ceremony, then app-owned key derivation — here BIP-39/BIP-32 with `@scure/bip32` and `@scure/bip39`, as in the demo.
 
 ```ts
 import {
@@ -38,19 +38,26 @@ import {
   getEvmAddress,
   getPasskeyPrfOutput,
 } from "@category-labs/mera"
-import { deriveAccountPrivateKey } from "./account-derivation"
+import { HDKey } from "@scure/bip32"
+import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39"
+import { wordlist } from "@scure/bip39/wordlists/english.js"
 
 const rpId = "account.example.com"
 
 const prfSalt = getDeterministicPrfSaltV1()
 const { prfOutput } = await getPasskeyPrfOutput({ rpId, prfSalt })
 
-const privateKey = deriveAccountPrivateKey({
-  entropy: prfOutput,
-  path: "m/44'/60'/0'/0/0",
-})
+// App-owned derivation: the PRF output is BIP-39 entropy, so the same phrase
+// imported into a standard wallet reproduces the same account.
+const mnemonic = entropyToMnemonic(prfOutput, wordlist)
+const seed = mnemonicToSeedSync(mnemonic)
+const node = HDKey.fromMasterSeed(seed).derive("m/44'/60'/0'/0/0")
+if (node.privateKey === null) throw new Error("derivation produced no key")
 
-const session = createSecp256k1SigningSession({ consumePrivateKey: privateKey })
+const session = createSecp256k1SigningSession({
+  // Copy out of the HDKey so the signing session can own and later zero it.
+  consumePrivateKey: new Uint8Array(node.privateKey),
+})
 const address = getEvmAddress(session.publicKey)
 ```
 

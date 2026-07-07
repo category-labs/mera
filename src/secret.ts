@@ -152,7 +152,7 @@ function readBase64Url(
   value: unknown,
   name: string,
   errorCode: MeraErrorCode,
-  byteLength?: number | { min: number },
+  options: { byteLength?: number; minByteLength?: number } = {},
 ): string {
   if (typeof value !== "string") {
     throw new MeraError(errorCode, `${name} must be base64url`);
@@ -165,14 +165,20 @@ function readBase64Url(
     throw new MeraError(errorCode, `${name} must be base64url`, { cause });
   }
 
-  if (typeof byteLength === "number" && bytes.length !== byteLength) {
-    throw new MeraError(errorCode, `${name} must be ${byteLength} bytes`);
-  }
-
-  if (typeof byteLength === "object" && bytes.length < byteLength.min) {
+  if (options.byteLength !== undefined && bytes.length !== options.byteLength) {
     throw new MeraError(
       errorCode,
-      `${name} must be at least ${byteLength.min} bytes`,
+      `${name} must be ${options.byteLength} bytes`,
+    );
+  }
+
+  if (
+    options.minByteLength !== undefined &&
+    bytes.length < options.minByteLength
+  ) {
+    throw new MeraError(
+      errorCode,
+      `${name} must be at least ${options.minByteLength} bytes`,
     );
   }
 
@@ -235,7 +241,7 @@ async function createSecretVault({
     credential.credentialId,
     "credential.credentialId",
     "INPUT_INVALID",
-    { min: 1 },
+    { minByteLength: 1 },
   );
 
   if (prfSalt.length !== PRF_SALT_LENGTH) {
@@ -300,6 +306,8 @@ async function unwrapSecretVault({
   vault,
   prfOutput,
 }: UnwrapSecretVaultInput): Promise<Uint8Array<ArrayBuffer>> {
+  // The copy guarantee documented above is provided by hkdfSha256AesGcmKey,
+  // which snapshots prfOutput synchronously before its first await.
   const wrappingKey = await deriveWrappingKey(prfOutput);
 
   return aesGcmDecrypt({
@@ -345,7 +353,7 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
     vault.credential.credentialId,
     "credential.credentialId",
     "VAULT_FORMAT_INVALID",
-    { min: 1 },
+    { minByteLength: 1 },
   );
 
   let transports: PasskeyCredentialTransport[] | undefined;
@@ -374,19 +382,16 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
     vault.prfSalt,
     "prfSalt",
     "VAULT_FORMAT_INVALID",
-    PRF_SALT_LENGTH,
+    { byteLength: PRF_SALT_LENGTH },
   );
-  const nonce = readBase64Url(
-    vault.nonce,
-    "nonce",
-    "VAULT_FORMAT_INVALID",
-    NONCE_LENGTH,
-  );
+  const nonce = readBase64Url(vault.nonce, "nonce", "VAULT_FORMAT_INVALID", {
+    byteLength: NONCE_LENGTH,
+  });
   const ciphertext = readBase64Url(
     vault.ciphertext,
     "ciphertext",
     "VAULT_FORMAT_INVALID",
-    { min: GCM_TAG_LENGTH },
+    { minByteLength: GCM_TAG_LENGTH },
   );
 
   // Allowlist: only v1 schema fields are copied, so unknown input keys are dropped.

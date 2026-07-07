@@ -27,7 +27,13 @@ type Brand<T, Name extends string> = T & { readonly [brand]: Name };
  */
 type SolanaAddress = Brand<string, "SolanaAddress">;
 
-/** WebAuthn authenticator transport metadata, including future browser transport values. */
+/**
+ * WebAuthn authenticator transport metadata, including future browser transport values.
+ *
+ * The `string & {}` arm accepts any string without collapsing the union to
+ * plain `string`, so editors keep offering the known `AuthenticatorTransport`
+ * literals in autocomplete.
+ */
 type PasskeyCredentialTransport = AuthenticatorTransport | (string & {});
 
 /** Metadata needed to ask WebAuthn for a previously created passkey. */

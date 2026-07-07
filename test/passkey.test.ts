@@ -5,21 +5,7 @@ import {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
 } from "../dist/passkey.js";
-import { expectError } from "./helpers.js";
-
-const ORIGINAL_NAVIGATOR = Object.getOwnPropertyDescriptor(
-  globalThis,
-  "navigator",
-);
-const ORIGINAL_CRYPTO = Object.getOwnPropertyDescriptor(globalThis, "crypto");
-
-function restoreGlobalCrypto(): void {
-  if (ORIGINAL_CRYPTO) {
-    Object.defineProperty(globalThis, "crypto", ORIGINAL_CRYPTO);
-  } else {
-    Reflect.deleteProperty(globalThis, "crypto");
-  }
-}
+import { expectError, withStubbedGlobal } from "./helpers.js";
 
 test("copyPrfOutput copies a plain ArrayBuffer without aliasing", () => {
   const source = Uint8Array.from({ length: 32 }, (_, index) => index + 1);
@@ -85,12 +71,7 @@ test("copyPrfOutput rejects PRF output that is not 32 bytes", () => {
 });
 
 test("passkey helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavailable", async () => {
-  Object.defineProperty(globalThis, "crypto", {
-    configurable: true,
-    value: undefined,
-  });
-
-  try {
+  await withStubbedGlobal("crypto", undefined, async () => {
     const user = { name: "nad", displayName: "nad" };
     const prfSalt = new Uint8Array(32);
 
@@ -116,50 +97,45 @@ test("passkey helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavailable",
         prfSalt,
       }),
     ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
-  } finally {
-    restoreGlobalCrypto();
-  }
+  });
 });
 
 test("passkey helpers generate internal challenges and request no attestation", async () => {
   let createOptions: PublicKeyCredentialCreationOptions | undefined;
   let getOptions: PublicKeyCredentialRequestOptions | undefined;
 
-  Object.defineProperty(globalThis, "navigator", {
-    configurable: true,
-    value: {
-      credentials: {
-        async create({ publicKey }: CredentialCreationOptions) {
-          createOptions = publicKey;
-          return {
-            type: "public-key",
-            rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-            response: {
-              getTransports: () => ["internal"],
+  const navigator = {
+    credentials: {
+      async create({ publicKey }: CredentialCreationOptions) {
+        createOptions = publicKey;
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          response: {
+            getTransports: () => ["internal"],
+          },
+          getClientExtensionResults: () => ({
+            prf: {
+              enabled: true,
+              results: { first: new Uint8Array(32).buffer },
             },
-            getClientExtensionResults: () => ({
-              prf: {
-                enabled: true,
-                results: { first: new Uint8Array(32).buffer },
-              },
-            }),
-          };
-        },
-        async get({ publicKey }: CredentialRequestOptions) {
-          getOptions = publicKey;
-          return {
-            type: "public-key",
-            rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-            getClientExtensionResults: () => ({
-              prf: { results: { first: new Uint8Array(32).buffer } },
-            }),
-          };
-        },
+          }),
+        };
+      },
+      async get({ publicKey }: CredentialRequestOptions) {
+        getOptions = publicKey;
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          getClientExtensionResults: () => ({
+            prf: { results: { first: new Uint8Array(32).buffer } },
+          }),
+        };
       },
     },
-  });
+  };
 
-  try {
+  await withStubbedGlobal("navigator", navigator, async () => {
     await createPasskey({
       rp: { id: "example.com", name: "Mera Test" },
       user: {
@@ -173,27 +149,19 @@ test("passkey helpers generate internal challenges and request no attestation", 
       rpId: "example.com",
       prfSalt: new Uint8Array(32),
     });
+  });
 
-    if (createOptions === undefined || getOptions === undefined) {
-      throw new Error("expected WebAuthn options to be captured");
-    }
-
-    expect(createOptions.challenge).toBeInstanceOf(ArrayBuffer);
-    expect(new Uint8Array(createOptions.challenge as ArrayBuffer)).toHaveLength(
-      32,
-    );
-    expect(createOptions.attestation).toBe("none");
-    expect(getOptions.challenge).toBeInstanceOf(ArrayBuffer);
-    expect(new Uint8Array(getOptions.challenge as ArrayBuffer)).toHaveLength(
-      32,
-    );
-  } finally {
-    if (ORIGINAL_NAVIGATOR) {
-      Object.defineProperty(globalThis, "navigator", ORIGINAL_NAVIGATOR);
-    } else {
-      Reflect.deleteProperty(globalThis, "navigator");
-    }
+  if (createOptions === undefined || getOptions === undefined) {
+    throw new Error("expected WebAuthn options to be captured");
   }
+
+  expect(createOptions.challenge).toBeInstanceOf(ArrayBuffer);
+  expect(new Uint8Array(createOptions.challenge as ArrayBuffer)).toHaveLength(
+    32,
+  );
+  expect(createOptions.attestation).toBe("none");
+  expect(getOptions.challenge).toBeInstanceOf(ArrayBuffer);
+  expect(new Uint8Array(getOptions.challenge as ArrayBuffer)).toHaveLength(32);
 });
 
 test("getPasskeyPrfOutput rejects an empty credentialId without prompting", async () => {
@@ -201,19 +169,16 @@ test("getPasskeyPrfOutput rejects an empty credentialId without prompting", asyn
   // assertion to any discoverable credential for the relying party.
   let asserted = false;
 
-  Object.defineProperty(globalThis, "navigator", {
-    configurable: true,
-    value: {
-      credentials: {
-        async get() {
-          asserted = true;
-          throw new Error("assertion must not start");
-        },
+  const navigator = {
+    credentials: {
+      async get() {
+        asserted = true;
+        throw new Error("assertion must not start");
       },
     },
-  });
+  };
 
-  try {
+  await withStubbedGlobal("navigator", navigator, async () => {
     await expect(
       getPasskeyPrfOutput({
         rpId: "example.com",
@@ -222,13 +187,7 @@ test("getPasskeyPrfOutput rejects an empty credentialId without prompting", asyn
       }),
     ).rejects.toMatchObject({ code: "INPUT_INVALID" });
     expect(asserted).toBe(false);
-  } finally {
-    if (ORIGINAL_NAVIGATOR) {
-      Object.defineProperty(globalThis, "navigator", ORIGINAL_NAVIGATOR);
-    } else {
-      Reflect.deleteProperty(globalThis, "navigator");
-    }
-  }
+  });
 });
 
 test("createPasskeyWithPrfOutput snapshots prfSalt for fallback and result", async () => {
@@ -236,41 +195,38 @@ test("createPasskeyWithPrfOutput snapshots prfSalt for fallback and result", asy
   const prfSalt = new Uint8Array(originalSalt);
   let fallbackSalt: Uint8Array | undefined;
 
-  Object.defineProperty(globalThis, "navigator", {
-    configurable: true,
-    value: {
-      credentials: {
-        async create() {
-          await Promise.resolve();
-          return {
-            type: "public-key",
-            rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-            response: {
-              getTransports: () => ["internal"],
-            },
-            getClientExtensionResults: () => ({ prf: { enabled: true } }),
-          };
-        },
-        async get({ publicKey }: CredentialRequestOptions) {
-          const first = publicKey?.extensions?.prf?.eval?.first;
-          if (!(first instanceof ArrayBuffer)) {
-            throw new Error("expected fallback PRF salt");
-          }
+  const navigator = {
+    credentials: {
+      async create() {
+        await Promise.resolve();
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          response: {
+            getTransports: () => ["internal"],
+          },
+          getClientExtensionResults: () => ({ prf: { enabled: true } }),
+        };
+      },
+      async get({ publicKey }: CredentialRequestOptions) {
+        const first = publicKey?.extensions?.prf?.eval?.first;
+        if (!(first instanceof ArrayBuffer)) {
+          throw new Error("expected fallback PRF salt");
+        }
 
-          fallbackSalt = new Uint8Array(first);
-          return {
-            type: "public-key",
-            rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-            getClientExtensionResults: () => ({
-              prf: { results: { first } },
-            }),
-          };
-        },
+        fallbackSalt = new Uint8Array(first);
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          getClientExtensionResults: () => ({
+            prf: { results: { first } },
+          }),
+        };
       },
     },
-  });
+  };
 
-  try {
+  await withStubbedGlobal("navigator", navigator, async () => {
     const pending = createPasskeyWithPrfOutput({
       rp: { id: "example.com", name: "Mera Test" },
       user: {
@@ -288,11 +244,5 @@ test("createPasskeyWithPrfOutput snapshots prfSalt for fallback and result", asy
     expect(result.prfSalt).toEqual(originalSalt);
     expect(result.prfOutput).toEqual(originalSalt);
     expect(fallbackSalt).toEqual(originalSalt);
-  } finally {
-    if (ORIGINAL_NAVIGATOR) {
-      Object.defineProperty(globalThis, "navigator", ORIGINAL_NAVIGATOR);
-    } else {
-      Reflect.deleteProperty(globalThis, "navigator");
-    }
-  }
+  });
 });

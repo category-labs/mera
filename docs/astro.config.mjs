@@ -56,6 +56,48 @@ export default defineConfig({
             "concepts/authenticator-support",
           ],
         },
+        {
+          label: "Reference",
+          items: [
+            { label: "Overview", slug: "reference" },
+            {
+              label: "Passkeys",
+              items: [
+                "reference/create-passkey",
+                "reference/create-passkey-with-prf-output",
+                "reference/get-passkey-prf-output",
+                "reference/get-deterministic-prf-salt-v1",
+              ],
+            },
+            {
+              label: "Signing sessions",
+              items: [
+                "reference/create-secp256k1-signing-session",
+                "reference/create-ed25519-signing-session",
+              ],
+            },
+            {
+              label: "Secret vault",
+              items: [
+                "reference/create-secret-vault",
+                "reference/get-secret-vault-prf-output",
+                "reference/unwrap-secret-vault",
+                "reference/parse-secret-vault",
+                "reference/secret-vault-format",
+              ],
+            },
+            {
+              label: "Addresses",
+              items: [
+                "reference/get-evm-address",
+                "reference/is-evm-address",
+                "reference/get-solana-address",
+                "reference/is-solana-address",
+              ],
+            },
+            { label: "Errors", slug: "reference/errors" },
+          ],
+        },
       ],
     }),
   ],

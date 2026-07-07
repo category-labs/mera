@@ -15,13 +15,34 @@ export default defineConfig({
           href: "https://github.com/category-labs/mera",
         },
       ],
+      head: [
+        {
+          tag: "link",
+          attrs: { rel: "preconnect", href: "https://api.fontshare.com" },
+        },
+        {
+          tag: "link",
+          attrs: {
+            rel: "preconnect",
+            href: "https://cdn.fontshare.com",
+            crossorigin: true,
+          },
+        },
+        {
+          tag: "link",
+          attrs: {
+            rel: "stylesheet",
+            href: "https://api.fontshare.com/v2/css?f[]=satoshi@300,301,400,401,500,501,700,701&display=swap",
+          },
+        },
+      ],
       customCss: [
-        "@fontsource-variable/newsreader/opsz.css",
-        "@fontsource-variable/newsreader/opsz-italic.css",
-        "@fontsource-variable/fraunces/opsz.css",
-        "@fontsource-variable/fraunces/opsz-italic.css",
+        "@fontsource-variable/jetbrains-mono",
         "./src/styles/mera.css",
       ],
+      components: {
+        Hero: "./src/components/Hero.astro",
+      },
       sidebar: [{ label: "Getting started", slug: "getting-started" }],
     }),
   ],

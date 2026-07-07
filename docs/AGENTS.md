@@ -29,7 +29,7 @@ Fixed section order:
 8. `## Notes`: copy and zeroing semantics, determinism statements, caveats. Omit the section when there is nothing to say.
 9. `## See also`: related functions, the owning concept page, the recipe that uses it.
 
-Parameters use subheadings and lists, never wide tables. The content column is 46rem of serif text; a five-column table does not survive it. Tables are reserved for the error-code list and the authenticator matrix.
+Parameters use subheadings and lists, never wide tables. The content column is 46rem; a five-column table does not survive it. Tables are reserved for the error-code list and the authenticator matrix.
 
 Source of truth is the JSDoc in `src/`. Write reference prose from it, and check the README when the JSDoc is silent. When the two disagree, the code wins; flag the README in the PR.
 

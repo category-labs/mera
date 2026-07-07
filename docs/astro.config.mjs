@@ -58,6 +58,17 @@ export default defineConfig({
           ],
         },
         {
+          label: "Recipes",
+          items: [
+            "recipes/derive-accounts",
+            "recipes/wrap-a-recovery-phrase",
+            "recipes/reveal-a-recovery-phrase",
+            "recipes/sign-with-viem",
+            "recipes/sign-solana-transactions",
+            "recipes/handle-errors",
+          ],
+        },
+        {
           label: "Reference",
           items: [
             { label: "Overview", slug: "reference" },

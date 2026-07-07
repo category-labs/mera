@@ -1,0 +1,26 @@
+---
+// Renders the demo app in an iframe and follows the `mera:resize` height
+// messages it posts (see demo/src/embed.ts), so the frame fits its content.
+// The demo posts to "*"; this page is the side that validates the origin.
+const DEMO_ORIGIN = "https://various-cake.surge.sh";
+---
+
+<iframe
+  id="mera-demo"
+  src={DEMO_ORIGIN}
+  title="mera demo"
+  data-origin={DEMO_ORIGIN}
+  class="not-content"
+  style="width: 100%; height: 480px; border: none; border-radius: 8px;"
+  allow="publickey-credentials-create *; publickey-credentials-get *"></iframe>
+
+<script>
+  const frame = document.getElementById("mera-demo") as HTMLIFrameElement;
+  window.addEventListener("message", (event) => {
+    if (event.origin !== frame.dataset.origin) return;
+    if (event.source !== frame.contentWindow) return;
+    if (event.data?.type !== "mera:resize") return;
+    if (!Number.isFinite(event.data.height) || event.data.height <= 0) return;
+    frame.style.height = `${event.data.height}px`;
+  });
+</script>

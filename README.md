@@ -132,6 +132,13 @@ npm run check       # Biome lint + format
 npm run check:pack  # verify the publishable tarball
 ```
 
+The docs site is a standalone package in `docs/` (like `demo/`):
+
+```sh
+npm ci --prefix docs && npm run dev --prefix docs  # run the docs site locally
+npm run build --prefix docs                        # build the docs site
+```
+
 ## License
 
 Licensed under either of [Apache License](./LICENSE-APACHE), Version

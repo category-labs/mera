@@ -5,6 +5,7 @@
       "**",
       "!**/dist",
       "!**/node_modules",
+      "!**/.astro",
       "!.claude/worktrees",
       "!playwright-report",
       "!test-results"
@@ -25,5 +26,18 @@
     "rules": {
       "preset": "recommended"
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.astro"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUnusedImports": "off"
+          }
+        }
+      }
+    }
+  ]
 }

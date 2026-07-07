@@ -164,10 +164,9 @@ async function createPasskey({
   prfSalt,
 }: CreatePasskeyInput): Promise<CreatePasskeyResult> {
   try {
-    const challenge = randomBytes(32);
-
     assertCredentialApiAvailable();
 
+    const challenge = randomBytes(32);
     if (prfSalt !== undefined && prfSalt.length !== 32) {
       throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
     }

@@ -71,32 +71,36 @@ test("copyPrfOutput rejects PRF output that is not 32 bytes", () => {
 });
 
 test("passkey helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavailable", async () => {
-  await withStubbedGlobal("crypto", undefined, async () => {
-    const user = { name: "nad", displayName: "nad" };
-    const prfSalt = new Uint8Array(32);
+  // WebAuthn availability is checked before Web Crypto, so a credentials stub
+  // must be present for the crypto failure to be reachable.
+  await withStubbedGlobal("navigator", { credentials: {} }, async () => {
+    await withStubbedGlobal("crypto", undefined, async () => {
+      const user = { name: "nad", displayName: "nad" };
+      const prfSalt = new Uint8Array(32);
 
-    await expect(
-      createPasskey({
-        rp: { id: "example.com", name: "Mera Test" },
-        user,
-        prfSalt,
-      }),
-    ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
+      await expect(
+        createPasskey({
+          rp: { id: "example.com", name: "Mera Test" },
+          user,
+          prfSalt,
+        }),
+      ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
 
-    await expect(
-      getPasskeyPrfOutput({
-        rpId: "example.com",
-        prfSalt,
-      }),
-    ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
+      await expect(
+        getPasskeyPrfOutput({
+          rpId: "example.com",
+          prfSalt,
+        }),
+      ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
 
-    await expect(
-      createPasskeyWithPrfOutput({
-        rp: { id: "example.com", name: "Mera Test" },
-        user,
-        prfSalt,
-      }),
-    ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
+      await expect(
+        createPasskeyWithPrfOutput({
+          rp: { id: "example.com", name: "Mera Test" },
+          user,
+          prfSalt,
+        }),
+      ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
+    });
   });
 });
 

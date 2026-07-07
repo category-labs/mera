@@ -1,0 +1,61 @@
+/* mera editorial skin — palette and type from site/index.html */
+
+/* Light mode: the article's paper/ink palette. */
+:root[data-theme="light"] {
+  --sl-color-white: #1a1a1a;
+  --sl-color-gray-1: #2e2e2c;
+  --sl-color-gray-2: #4a4a4a;
+  --sl-color-gray-3: #6e6e6a;
+  --sl-color-gray-4: #9a9a94;
+  --sl-color-gray-5: #d2d2cc;
+  --sl-color-gray-6: #e4e4e0;
+  --sl-color-gray-7: #f4f4f1;
+  --sl-color-black: #fcfcfa;
+
+  --sl-color-accent-low: #eceae2;
+  --sl-color-accent: #4a4a4a;
+  --sl-color-accent-high: #1a1a1a;
+
+  --sl-color-bg-inline-code: #f4f4f1;
+  --sl-color-hairline: #e4e4e0;
+}
+
+/* Dark mode: the same ink/paper relationship, inverted and dimmed. */
+:root {
+  --sl-color-white: #ece9e2;
+  --sl-color-gray-1: #d8d5cd;
+  --sl-color-gray-2: #b5b2aa;
+  --sl-color-gray-3: #8a8880;
+  --sl-color-gray-4: #5c5a54;
+  --sl-color-gray-5: #383733;
+  --sl-color-gray-6: #262521;
+  --sl-color-black: #191813;
+
+  --sl-color-accent-low: #33312a;
+  --sl-color-accent: #b5b2aa;
+  --sl-color-accent-high: #ece9e2;
+}
+
+:root {
+  --sl-font: "Newsreader Variable", Georgia, serif;
+  --sl-font-headings: "Fraunces Variable", Georgia, serif;
+  --sl-content-width: 46rem;
+  --sl-text-body: 1.125rem;
+  --sl-line-height: 1.7;
+}
+
+/* Headings in Fraunces, tight and calm like the article. */
+h1,
+h2,
+h3,
+h4,
+.site-title {
+  font-family: var(--sl-font-headings);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
+::selection {
+  background: var(--sl-color-white);
+  color: var(--sl-color-black);
+}

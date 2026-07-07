@@ -393,27 +393,26 @@ async function createPasskeyWithPrfOutput({
     prfSalt: prfSaltCopy,
   });
 
+  const credentialMetadata: PasskeyCredentialMetadata = {
+    credentialId: credential.credentialId,
+    ...(credential.transports !== undefined
+      ? { transports: credential.transports }
+      : {}),
+  };
+
   const prfOutput =
     credential.prfOutput ??
     (
       await getPasskeyPrfOutput({
         rpId: rp.id,
-        credential: {
-          credentialId: credential.credentialId,
-          ...(credential.transports !== undefined
-            ? { transports: credential.transports }
-            : {}),
-        },
+        credential: credentialMetadata,
         prfSalt: prfSaltCopy,
         ...(timeout !== undefined ? { timeout } : {}),
       })
     ).prfOutput;
 
   return {
-    credentialId: credential.credentialId,
-    ...(credential.transports !== undefined
-      ? { transports: credential.transports }
-      : {}),
+    ...credentialMetadata,
     prfSalt: prfSaltCopy,
     prfOutput,
   };

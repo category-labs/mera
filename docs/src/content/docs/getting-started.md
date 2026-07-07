@@ -1,6 +1,6 @@
 ---
 title: Getting started
-description: Install the library, create a passkey, and make a first signature.
+description: Install the library, derive an account, and make a first signature.
 ---
 
 mera runs in the browser. It needs a secure context (HTTPS, or `localhost` during development) and a passkey authenticator that supports the WebAuthn PRF extension. [Authenticator support](/concepts/authenticator-support/) lists the combinations known to work; 1Password and iCloud Keychain are safe first picks.
@@ -11,7 +11,7 @@ mera runs in the browser. It needs a secure context (HTTPS, or `localhost` durin
 npm install @category-labs/mera
 ```
 
-This walkthrough also uses `@scure/bip32` and `@scure/bip39`. They are app dependencies: mera hands the app entropy, and the app decides how keys come out of it.
+This walkthrough also uses `@scure/bip32` and `@scure/bip39` to derive accounts; any derivation scheme works.
 
 ```sh
 npm install @scure/bip32 @scure/bip39
@@ -38,11 +38,11 @@ const { prfOutput } = await createPasskeyWithPrfOutput({
 
 Expect one authenticator prompt, sometimes two: authenticators that do not evaluate PRF at create time get a follow-up assertion with the same salt.
 
-The salt here is mera's fixed deterministic one, and that choice is what makes the rest of this page repeatable. The same passkey, relying party, and salt always produce the same 32 bytes, on this device and on any device the passkey syncs to. The result also carries the credential's ID; [Derive accounts from one passkey](/recipes/derive-accounts/) shows how to store it and pin later sign-ins to this exact passkey.
+The salt is mera's fixed deterministic one: the same passkey, relying party, and salt always produce the same 32 bytes, on any device the passkey syncs to. The result also carries the credential ID; [Derive accounts from one passkey](/recipes/derive-accounts/) stores it to pin later sign-ins.
 
 ## Derive an account
 
-The PRF output is entropy. What happens next is the app's decision. This walkthrough uses the same mapping as the demo, BIP-39 and BIP-32, so the account it produces can be imported into wallet apps that speak those standards.
+The PRF output is entropy. This walkthrough maps it through BIP-39 and BIP-32, the demo's scheme, so the account can be imported into wallet apps that speak those standards.
 
 ```ts
 import { HDKey } from "@scure/bip32";
@@ -56,8 +56,6 @@ const seed = mnemonicToSeedSync(mnemonic);
 const node = HDKey.fromMasterSeed(seed).derive("m/44'/60'/0'/0/0");
 if (node.privateKey === null) throw new Error("derivation produced no key");
 ```
-
-Any key-derivation scheme works here. This one is the demo's choice, and it is deliberate: interoperable standards mean the account has an exit path that does not depend on mera.
 
 ## Sign
 
@@ -84,7 +82,7 @@ The session copies the key, zeroes the buffer it was given, and signs without fu
 
 ## Sign back in
 
-The next visit needs no stored secret. Rerun the assertion with the same salt and the same 32 bytes come back, and with them the same account.
+A later visit needs no stored secret: the same assertion with the same salt returns the same 32 bytes, and with them the same account.
 
 ```ts
 import {
@@ -98,10 +96,10 @@ const { prfOutput } = await getPasskeyPrfOutput({
 });
 ```
 
-With no `credential` in the call, the browser offers any discoverable passkey it holds for the relying party. That is fine for a first run; apps with returning users usually pin the stored credential ID instead.
+Without `credential`, the browser offers any discoverable passkey it holds for the relying party; apps with returning users pin the stored credential ID instead.
 
 ## Where next
 
-- [Derive accounts from one passkey](/recipes/derive-accounts/) extends this walkthrough: numbered accounts, credential pinning, Solana keys.
-- [Derived and wrapped modes](/concepts/derived-and-wrapped/) explains when to reach for an encrypted vault instead of derivation.
-- The [API reference](/reference/) covers every function used on this page.
+- [Derive accounts from one passkey](/recipes/derive-accounts/): numbered accounts, credential pinning, Solana keys.
+- [Derived and wrapped modes](/concepts/derived-and-wrapped/): when to reach for an encrypted vault instead of derivation.
+- [API reference](/reference/): every function used on this page.

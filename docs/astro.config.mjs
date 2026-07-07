@@ -4,7 +4,6 @@ import { defineConfig } from "astro/config";
 
 // https://astro.build/config
 export default defineConfig({
-  // The demo used to live on its own page; it is embedded on the landing page now.
   redirects: { "/demo": "/" },
   integrations: [
     starlight({

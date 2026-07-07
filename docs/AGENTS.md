@@ -42,6 +42,8 @@ Source of truth is the JSDoc in `src/`. Write reference prose from it, and check
 
 ## Voice
 
+The bar is simple, concise, and detailed at the same time, and that combination is the hard part: detail survives the cut, filler does not. Every sentence must add information a reader can act on. Delete sentences that only set up, restate, or editorialize on what the surrounding text already shows ("that choice is what makes this repeatable", "what happens next is the app's decision").
+
 `site/WRITING.md` applies in full. The rules that carry the most weight here:
 
 - Say "account". "Wallet" is only for wallet apps: MetaMask, Phantom, the demo.
@@ -87,3 +89,4 @@ Source of truth is the JSDoc in `src/`. Write reference prose from it, and check
 8. Claims trace to the README or JSDoc.
 9. Security caveats sit on the page where the risk is acted on.
 10. Links have descriptive text; no bare "here".
+11. Every sentence adds information; no setup, restatement, or editorial sentences survive.

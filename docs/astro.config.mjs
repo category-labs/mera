@@ -42,6 +42,8 @@ export default defineConfig({
       ],
       components: {
         Hero: "./src/components/Hero.astro",
+        ThemeProvider: "./src/components/ThemeProvider.astro",
+        ThemeSelect: "./src/components/ThemeSelect.astro",
       },
       sidebar: [{ label: "Getting started", slug: "getting-started" }],
     }),

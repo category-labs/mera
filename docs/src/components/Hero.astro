@@ -1,23 +1,69 @@
 ---
-// Hero override (registered in astro.config.mjs): the standard Starlight hero
-// copy on the left, the live demo on the right. Frontmatter still drives the
-// title, tagline, and actions.
+// The landing page, registered as the Hero override in astro.config.mjs:
+// pitch, install, feature notes, and the live demo sized to fit one viewport.
+// The title, tagline, and action buttons come from the page frontmatter; the
+// rest of the landing copy lives here.
 import { LinkButton } from "@astrojs/starlight/components";
 import DemoEmbed from "./DemoEmbed.astro";
 
 const { data } = Astro.locals.starlightRoute.entry;
 const { title = data.title, tagline, actions = [] } = data.hero || {};
+
+const features = [
+  {
+    title: "Deterministic",
+    link: "/concepts/passkeys-and-prf/",
+    text: "The same passkey, relying party, and salt always produce the same 32 bytes, wherever the passkey syncs.",
+  },
+  {
+    title: "Two modes",
+    link: "/concepts/derived-and-wrapped/",
+    text: "Derive accounts from the passkey with no secret to store, or wrap an existing one into a vault it opens.",
+  },
+  {
+    title: "Signing sessions",
+    link: "/reference/create-secp256k1-signing-session/",
+    text: "One user-verification prompt covers a session of secp256k1 and Ed25519 signatures, until the session locks.",
+  },
+  {
+    title: "App-owned keys",
+    link: "/getting-started/",
+    text: "Derivation stays in the app: any scheme, any chain. mera hands it entropy and signs with the keys it gets back.",
+  },
+];
 ---
 
-<div class="hero">
-  <div class="sl-flex stack">
-    <div class="sl-flex copy">
+<div class="hero not-content">
+  <div class="stack">
+    <header>
       <h1 id="_top" data-page-title set:html={title} />
-      {tagline && <div class="tagline" set:html={tagline} />}
-    </div>
+      {tagline && <p class="tagline" set:html={tagline} />}
+    </header>
+
+    <figure class="code-frame">
+      <pre class="install"><code><span class="prompt">&gt;</span> npm install @category-labs/mera</code></pre>
+      <pre class="snippet"><code is:raw>import { getPasskeyPrfOutput } from "@category-labs/mera";
+
+const { prfOutput } = await getPasskeyPrfOutput({
+  rpId,
+  prfSalt,
+});</code></pre>
+    </figure>
+
+    <ul class="features">
+      {
+        features.map((feature) => (
+          <li>
+            <a href={feature.link}>{feature.title}</a>
+            <p>{feature.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+
     {
       actions.length > 0 && (
-        <div class="sl-flex actions">
+        <div class="actions">
           {actions.map(
             ({
               attrs: { class: className, ...attrs } = {},
@@ -42,110 +88,224 @@ const { title = data.title, tagline, actions = [] } = data.hero || {};
       )
     }
   </div>
-  <div class="demo not-content">
-    <p class="demo-label">Demo</p>
+
+  <figure class="demo">
+    <figcaption>Demo</figcaption>
     <DemoEmbed />
-  </div>
+  </figure>
 </div>
 
 <style>
   .hero {
     display: grid;
     grid-template-columns: 100%;
-    gap: 2rem;
-    align-items: center;
-    padding-bottom: 1rem;
+    gap: 2.5rem;
+    max-width: 68rem;
+    margin-inline: auto;
+    padding-block: 1.5rem;
+  }
+
+  /* Only the landing carries a hero; trim the frame so it fits one screen.
+     Starlight's .page is min-height 100vh on top of the fixed header's 64px
+     offset, which alone forces a nav-height scroll; subtract it. */
+  :global([data-has-hero] .page) {
+    min-height: calc(100vh - var(--sl-nav-height));
+  }
+
+  :global([data-has-hero] .content-panel) {
+    padding-block: 0.5rem;
+  }
+
+  :global([data-has-hero] main) {
+    padding-bottom: 0;
+  }
+
+  /* The landing has no markdown body and needs no page footer; both would
+     trail the hero and push it past the viewport. */
+  :global([data-has-hero] .sl-markdown-content:empty),
+  :global([data-has-hero] .sl-container > footer) {
+    display: none;
   }
 
   .stack {
+    display: flex;
     flex-direction: column;
-    gap: clamp(1.5rem, calc(1.5rem + 1vw), 2rem);
-    text-align: center;
+    gap: 1.25rem;
   }
 
-  .copy {
+  header {
+    display: flex;
     flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-  }
-
-  .copy > * {
-    max-width: 50ch;
+    gap: 0.75rem;
   }
 
   h1 {
-    font-size: clamp(2.4rem, 4.5vw + 1rem, 3.2rem);
+    font-size: clamp(2.1rem, 1.4rem + 2vw, 2.5rem);
     line-height: 1.12;
     letter-spacing: -0.02em;
     font-weight: 500;
     color: var(--sl-color-white);
+    margin: 0;
   }
 
   .tagline {
-    font-size: clamp(var(--sl-text-base), calc(0.0625rem + 2vw), var(--sl-text-xl));
+    font-size: 1.25rem;
+    line-height: 1.45;
+    color: var(--sl-color-white);
+    margin: 0;
+  }
+
+  .code-frame {
+    margin: 0;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 6px;
+    background: var(--sl-color-bg-inline-code);
+    font-family: var(--sl-font-mono);
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .code-frame pre {
+    margin: 0;
+    padding: 0.7rem 1rem;
+    overflow-x: auto;
+  }
+
+  .install {
+    border-bottom: 1px solid var(--sl-color-hairline);
+  }
+
+  .prompt {
+    color: var(--sl-color-gray-3);
+  }
+
+  .features {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .features li {
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+  }
+
+  .features a {
+    color: var(--sl-color-white);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+  }
+
+  .features a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--mera-underline);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.16em;
+  }
+
+  .features p {
+    margin: 0.3rem 0 0;
+    font-size: 0.92rem;
+    line-height: 1.55;
     color: var(--sl-color-gray-2);
   }
 
   .actions {
-    gap: 1rem 2rem;
+    display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    align-items: center;
+    gap: 1rem 1.5rem;
   }
 
-  .demo-label {
-    font-family: var(--sl-font-headings);
+  .demo {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 8px;
+    background: #f5f6f8;
+    overflow: hidden;
+    /* Fixed height: the demo scrolls inside when its signed-in state is
+       taller, so the page itself never reflows. */
+    height: clamp(30rem, calc(100dvh - var(--sl-nav-height) - 8rem), 34rem);
+  }
+
+  .demo figcaption {
+    padding: 0.7rem 1rem 0;
     font-style: italic;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     letter-spacing: 0.04em;
     color: var(--sl-color-gray-3);
-    margin: 0 0 0.5rem;
   }
 
-  /* The demo needs ~350px; bleed it to the viewport edges on phones,
-     like the article does. */
+  .demo :global(iframe) {
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* The demo needs ~350px of width; bleed the panel to the viewport edges
+     on phones. */
   @media (max-width: 30rem) {
     .demo {
       margin-inline: calc(-1 * var(--sl-content-pad-x));
-    }
-
-    .demo-label {
-      padding-inline: var(--sl-content-pad-x);
-    }
-
-    .demo :global(iframe) {
       border-inline: none;
       border-radius: 0;
     }
   }
 
+  @media (min-width: 40rem) {
+    .features {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
   @media (min-width: 50rem) {
     .hero {
-      grid-template-columns: 6fr 5fr;
-      gap: clamp(1.5rem, 4vw, 3.5rem);
-      padding-block: clamp(2.5rem, calc(1rem + 6vmin), 5rem);
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: clamp(2rem, 4vw, 3.5rem);
+      align-items: center;
+      padding-block: 1.25rem;
     }
 
     .demo {
-      /* Reserve the demo's signed-in height (~869px measured) so its growth
-         lands in space the hero already owns and the page never reflows.
-         Retune if the demo's signed-in layout grows taller. */
-      --mera-demo-reserve: 900px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      height: var(--mera-demo-reserve);
+      height: clamp(30rem, calc(100dvh - var(--sl-nav-height) - 5.5rem), 48rem);
     }
+  }
 
+  /* Short viewports (a 1280x800 laptop): tighten type and spacing so the
+     page still fits without scrolling. */
+  @media (min-width: 50rem) and (max-height: 53rem) {
     .stack {
-      text-align: start;
+      gap: 1rem;
     }
 
-    .copy {
-      align-items: flex-start;
+    h1 {
+      font-size: 2.1rem;
     }
 
-    .actions {
-      justify-content: flex-start;
+    .tagline {
+      font-size: 1.15rem;
+    }
+
+    .code-frame {
+      font-size: 0.8rem;
+    }
+
+    .code-frame pre {
+      padding: 0.55rem 0.9rem;
+    }
+
+    .features li {
+      padding: 0.7rem 0.85rem;
+    }
+
+    .features p {
+      font-size: 0.85rem;
     }
   }
 </style>

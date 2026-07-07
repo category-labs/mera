@@ -42,7 +42,7 @@ The 32-byte WebAuthn PRF output for the vault's stored salt. Copied before async
 
 ## Returns
 
-`Promise<Uint8Array>`: the decrypted secret bytes, exactly as they were passed to [createSecretVault](/reference/create-secret-vault/). The returned buffer is a fresh allocation; the library keeps no reference to it and never zeroes it. Zeroing it after use is the caller's job, as in the example above.
+`Promise<Uint8Array>`: the decrypted secret bytes, exactly as they were passed to [createSecretVault](/reference/create-secret-vault/). The returned buffer is a fresh allocation; the library keeps no reference to it and never zeroes it. Zeroing it after use is the caller's job.
 
 ## Errors
 

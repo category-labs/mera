@@ -3,7 +3,7 @@ title: API reference
 description: Every exported function, grouped the way the library is built.
 ---
 
-One page per exported function. Every page follows the same shape: import, usage, parameters, return value, errors, and the notes that matter. Types are documented on the pages of the functions that produce or accept them; the one exception is the [secret vault format](/reference/secret-vault-format/), which is a storage contract and gets its own page.
+One page per exported function, each in the same shape: import, usage, parameters, return value, errors, notes. Types are documented on the pages of the functions that produce or accept them; the one exception is the [secret vault format](/reference/secret-vault-format/), a storage contract with its own page.
 
 ## Passkey ceremonies
 

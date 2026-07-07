@@ -66,7 +66,7 @@ Calls `lock`, so a `using` declaration locks the session when its scope exits. S
 
 ## Notes
 
-Signing needs no passkey ceremony and shows no prompt. One user-verification prompt produces the entropy; the session then signs as often as the app asks until it is locked.
+Signing needs no passkey ceremony and shows no prompt; the session signs as often as the app asks until it is locked.
 
 ## See also
 

@@ -32,7 +32,7 @@ The string to check.
 
 `boolean`, and a type predicate for `EvmAddress`.
 
-The case rules match how addresses circulate in the wild. All-lowercase and all-uppercase hex bodies are accepted as-is, since they carry no checksum to verify. Mixed-case input is validated against EIP-55, so an inconsistently cased address (a typo, a tampered string) is rejected.
+All-lowercase and all-uppercase hex bodies are accepted as-is; they carry no checksum to verify. Mixed-case input is validated against EIP-55, so an inconsistently cased address (a typo, a tampered string) is rejected.
 
 ## Errors
 

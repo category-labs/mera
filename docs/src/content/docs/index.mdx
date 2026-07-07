@@ -3,14 +3,43 @@ title: mera
 description: Passkey-derived entropy and signing sessions.
 template: splash
 hero:
-  tagline: Passkey-derived entropy and signing sessions. (Placeholder — the introduction to the library will be written here.)
+  tagline: Stable, authenticator-bound entropy from a WebAuthn passkey, plus signing sessions for secp256k1 and Ed25519.
   actions:
     - text: Getting started
       link: /getting-started/
       icon: right-arrow
-    - text: Live demo
-      link: /demo/
+    - text: GitHub
+      link: https://github.com/category-labs/mera
       variant: minimal
 ---
 
-This page is a placeholder. It will introduce what the library does and how the pieces fit together.
+import DemoEmbed from "../../components/DemoEmbed.astro";
+
+mera gets stable entropy from a WebAuthn passkey. The browser's PRF extension hands the library 32 bytes per ceremony, and the same passkey, relying party, and salt produce the same 32 bytes every time.
+
+An app can point those bytes at two different jobs. Fed into the app's own key derivation, they make the passkey the root of a set of accounts. Or they become the key that wraps an app-held secret (a recovery phrase, a private key) into a vault the passkey can open later.
+
+Either way, what comes out is ordinary signing material. mera wraps it in lockable signing sessions for secp256k1 and Ed25519, with address helpers for EVM and Solana. There is no smart-account deployment and no on-chain verifier. Key derivation itself stays in the app: mera hands it entropy and signs with the keys it gets back.
+
+## Try it
+
+The demo below is a small wallet app built on the published library, served from its own host. Connecting creates a real passkey in the authenticator on this device. PRF support varies by browser and authenticator; [authenticator support](/concepts/authenticator-support/) lists the combinations confirmed to work.
+
+<DemoEmbed />
+
+## The pieces
+
+**Ceremonies.** [createPasskey](/reference/create-passkey/), [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/), and [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) run the WebAuthn ceremonies: create a passkey, evaluate its PRF, or both in one call. Every ceremony requires user verification. [Passkeys and the PRF extension](/concepts/passkeys-and-prf/) explains where the 32 bytes come from.
+
+**Two modes.** A fixed deterministic salt reproduces the same output on every device the passkey syncs to; the app derives accounts from it, with no secret to store. A fresh random salt instead produces the key that encrypts one secret into a portable vault. [Derived and wrapped modes](/concepts/derived-and-wrapped/) compares the trade-offs.
+
+**Signing sessions.** A session consumes a private key, zeroes the buffer it came in, and signs without further prompts until it is locked. One user-verification prompt can cover a session of signatures. See [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) and [createEd25519SigningSession](/reference/create-ed25519-signing-session/).
+
+**The vault.** One secret per vault, AES-256-GCM, stored as versioned JSON that can sit in `localStorage`, on a backend, or in a sync service. [createSecretVault](/reference/create-secret-vault/) builds it; the [secret vault format](/reference/secret-vault-format/) page spells out the contract.
+
+## Where next
+
+- [Getting started](/getting-started/): install, one ceremony, one signature.
+- [Recipes](/recipes/derive-accounts/): derive accounts, wrap a recovery phrase, sign with viem.
+- [API reference](/reference/): every exported function, one page per function.
+- [GitHub](https://github.com/category-labs/mera): source, tests, and the demo app.

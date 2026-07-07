@@ -102,7 +102,8 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * @returns Credential metadata, plus the first PRF output when `prfSalt` was provided and evaluated during creation.
  * @remarks
  * Invokes `navigator.credentials.create()`, which may show browser or
- * authenticator UI.
+ * authenticator UI. WebAuthn availability is checked before Web Crypto, so an
+ * environment missing both throws `PASSKEY_OPERATION_FAILED`.
  *
  * The WebAuthn challenge is generated internally. The raw attestation response
  * is not returned.
@@ -217,7 +218,8 @@ async function createPasskey({
  * @returns The selected credential ID and first WebAuthn PRF output.
  * @remarks
  * Invokes `navigator.credentials.get()`, which may show browser or
- * authenticator UI.
+ * authenticator UI. WebAuthn availability is checked before Web Crypto, so an
+ * environment missing both throws `PASSKEY_OPERATION_FAILED`.
  *
  * The WebAuthn challenge is generated internally. The raw assertion response is
  * not returned.
@@ -246,10 +248,9 @@ async function getPasskeyPrfOutput({
   timeout,
 }: GetPasskeyPrfOutputInput): Promise<PasskeyPrfResult> {
   try {
-    const challenge = randomBytes(32);
-
     assertCredentialApiAvailable();
 
+    const challenge = randomBytes(32);
     if (prfSalt.length !== 32) {
       throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
     }

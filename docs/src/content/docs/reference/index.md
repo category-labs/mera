@@ -8,8 +8,8 @@ One page per exported function, each in the same shape: import, usage, parameter
 ## Passkeys
 
 - [createPasskey](/reference/create-passkey/): creates a discoverable, user-verified passkey and requires WebAuthn PRF support.
-- [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/): creates a passkey and returns its first PRF output in one call.
-- [getPasskeyPrfOutput](/reference/get-passkey-prf-output/): requests a passkey PRF evaluation and returns the first output.
+- [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/): creates a passkey and returns the PRF output for the given salt in one call.
+- [getPasskeyPrfOutput](/reference/get-passkey-prf-output/): requests a passkey PRF evaluation and returns the output.
 - [getDeterministicPrfSaltV1](/reference/get-deterministic-prf-salt-v1/): returns mera's fixed v1 deterministic PRF salt.
 
 ## Signing sessions

@@ -1,9 +1,9 @@
 ---
 title: getPasskeyPrfOutput
-description: Requests a passkey PRF evaluation and returns the first output.
+description: Requests a passkey PRF evaluation and returns the output.
 ---
 
-Requests a passkey PRF evaluation and returns the first output. Runs one `navigator.credentials.get()` ceremony, which may show browser or authenticator UI.
+Requests a passkey PRF evaluation and returns the output. Runs one `navigator.credentials.get()` ceremony, which may show browser or authenticator UI.
 
 ## Import
 

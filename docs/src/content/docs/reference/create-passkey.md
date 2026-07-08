@@ -1,9 +1,9 @@
 ---
 title: createPasskey
-description: Creates a discoverable, user-verified passkey and requires WebAuthn PRF support.
+description: Creates a discoverable, user-verified passkey with the WebAuthn PRF extension enabled.
 ---
 
-Creates a discoverable, user-verified passkey and requires WebAuthn PRF support. Runs one `navigator.credentials.create()` ceremony, which may show browser or authenticator UI.
+Creates a discoverable, user-verified passkey with the WebAuthn PRF extension enabled. Runs one `navigator.credentials.create()` ceremony, which may show browser or authenticator UI.
 
 ## Import
 

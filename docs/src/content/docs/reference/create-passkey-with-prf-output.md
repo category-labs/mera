@@ -31,7 +31,7 @@ const result = await createPasskeyWithPrfOutput({
 
 ## Parameters
 
-`options` is a `CreatePasskeyWithPrfOutputOptions`. It tightens `CreatePasskeyOptions` in two places: `rp.id` is required so the fallback ceremony can target the same relying party, and `prfSalt` is required so the app chooses whether this flow is deterministic or random-key.
+`options` is a `CreatePasskeyWithPrfOutputOptions`. It tightens `CreatePasskeyOptions` in two places: `rp.id` is required so the fallback ceremony can target the same relying party, and `prfSalt` is required so the app explicitly chooses between the derived and wrapped patterns.
 
 ### options.rp
 

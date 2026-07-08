@@ -70,6 +70,6 @@ Input byte buffers are copied before async cryptographic work starts; mutating t
 
 ## See also
 
-- [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/) and [unwrapSecretVault](/reference/unwrap-secret-vault/): the way back in.
+- [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/) and [unwrapSecretVault](/reference/unwrap-secret-vault/): the assertion and decryption that recover the secret.
 - [Wrap a recovery phrase](/recipes/wrap-a-recovery-phrase/): the full flow with zeroing.
-- [Security model](/concepts/security-model/#one-output-one-purpose): why salt reuse is the mistake to design out.
+- [Security model](/concepts/security-model/#one-output-one-purpose): why PRF outputs must not be reused across purposes.

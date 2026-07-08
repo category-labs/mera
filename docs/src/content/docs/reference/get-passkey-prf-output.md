@@ -61,7 +61,7 @@ WebAuthn timeout in milliseconds.
 
 ## Returns
 
-`Promise<PasskeyPrfResult>`: the `credentialId` the browser actually selected (canonical unpadded base64url) and the 32-byte `prfOutput`. Checking the returned ID matters in the discoverable case, where the person may have picked a different passkey than the app expected.
+`Promise<PasskeyPrfResult>`: the `credentialId` the browser actually selected (canonical unpadded base64url) and the 32-byte `prfOutput`. When `credential` was omitted, the person picks the passkey in the browser UI, so the returned ID can name a different credential than the app expected.
 
 ## Errors
 
@@ -72,7 +72,7 @@ WebAuthn timeout in milliseconds.
 
 ## Notes
 
-The assertion requires user verification, and the requirement is not configurable. Authenticators built on CTAP's `hmac-secret` keep two PRFs per credential, one for user-verified requests and one for the rest; WebAuthn exposes only the user-verified PRF and overrides a weaker `userVerification` setting when evaluating it, so a configurable setting could neither change the output nor skip the check.
+The assertion requires user verification, and the requirement is not configurable: the PRF extension evaluates only the credential's user-verified PRF, so a `userVerification` setting could neither change the output nor skip the check. [Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism.
 
 The WebAuthn challenge is generated internally. The raw assertion response is not returned.
 

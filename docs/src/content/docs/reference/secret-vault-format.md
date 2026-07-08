@@ -48,11 +48,11 @@ The AES-GCM ciphertext including its 16-byte authentication tag, base64url. The 
 
 The wrapping key and the PRF output are never stored; both exist only transiently in memory. The rpId is also absent: the vault does not record which relying party it belongs to, and the unlock assertion supplies it.
 
-The credential ID and salt are stored but not authenticated: the AES-GCM additional authenticated data is a fixed constant (`mera.v1.secret.aad` plus the version), so a vault is cryptographically bound to its PRF output only. This is why each secret needs a fresh salt; [createSecretVault](/reference/create-secret-vault/) spells out the consequence of sharing one.
+The credential ID and salt are stored but not authenticated: the AES-GCM additional authenticated data is a fixed constant (`mera.v1.secret.aad` plus the version), so a vault is cryptographically bound to its PRF output only. This is why each secret needs a fresh salt: vaults that share a PRF output share a wrapping key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored JSON. [createSecretVault](/reference/create-secret-vault/) carries the same warning.
 
 ## Portability
 
-The vault is plain JSON. `localStorage`, a database row, a file, a sync service: anywhere JSON survives, a vault survives. Whoever holds it holds ciphertext; turning it back into the secret requires the passkey ceremony and its user verification.
+The vault is plain JSON and can be stored anywhere JSON can: `localStorage`, a database row, a file, a sync service. The holder has only ciphertext; turning it back into the secret requires the passkey ceremony and its user verification.
 
 ## See also
 

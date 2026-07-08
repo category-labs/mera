@@ -3,7 +3,7 @@ title: Security model
 description: What mera protects, what it cannot, and the risks left to the app.
 ---
 
-mera has a narrow scope: it runs passkey ceremonies, returns entropy to the app, and holds signing keys in lockable sessions. This page states what the library handles inside that scope and what the app must handle itself; each fact also appears on the reference page of the function it concerns.
+mera has a narrow scope: it runs passkey ceremonies, returns entropy to the app, and holds signing keys in [lockable sessions](/concepts/signing-sessions/). This page states what the library handles inside that scope and what the app must handle itself; each fact also appears on the reference page of the function it concerns.
 
 ## What the library handles
 

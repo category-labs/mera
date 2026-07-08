@@ -122,6 +122,30 @@ real `v*`-tag publish.
 3. **(Optional) Configure the `npm-publish` environment.** The release job
    targets a GitHub Actions `environment: npm-publish` — create it (and add
    required reviewers if you want a manual approval gate before publishing).
+4. **The GitHub repo must be PUBLIC.** npm provenance is not supported for
+   private repositories — `npm publish --provenance` will *fail*, not silently
+   skip, if `category-labs/mera` is private. Make the repo public before pushing
+   the first `v*` tag. (The workflow includes a preflight step that fails early
+   with a clear message if the repo is still private.)
+
+### First publish (bootstrapping a brand-new package)
+
+The scope/package don't exist on npm until the first successful publish. Once
+prerequisites 1–4 are met, the normal tag flow (`npm version` + `git push
+--follow-tags`) creates the package and its first provenance attestation in one
+go. If the first tagged run has trouble, publishing `0.1.0` once from a
+maintainer's machine (`npm publish`) creates the package; subsequent releases go
+through CI as usual.
+
+### Later: migrate off the long-lived token (trusted publishing)
+
+npm supports OIDC **trusted publishing**, which removes the `NPM_TOKEN` secret
+entirely and generates provenance automatically. To adopt it later: on npmjs.com,
+under the package's **Trusted Publisher** settings, register org `category-labs`,
+repo `mera`, workflow filename `release.yml`, and environment `npm-publish`; then
+drop the `NODE_AUTH_TOKEN`/`NPM_TOKEN` wiring from `release.yml` (the
+`id-token: write` permission is already present). Requires npm ≥ 11.5.1 (the
+runner already has this). Recommended once the token-based flow is proven.
 
 ## Local checklist before tagging a release
 

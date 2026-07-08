@@ -46,6 +46,14 @@ jobs:
       contents: read
       id-token: write # OIDC token used to sign the provenance attestation
     steps:
+      # Provenance is unsupported for private repos: npm publish --provenance
+      # would fail deep in the run. Fail fast with a clear message instead.
+      - name: Require a public repository (provenance prerequisite)
+        if: github.event.repository.private
+        run: |
+          echo "::error::Repository is private. npm provenance requires a public repo; make it public before releasing."
+          exit 1
+
       - name: Checkout
         uses: actions/checkout@v6
 

@@ -69,6 +69,7 @@ The bar is simple, concise, and detailed at once: detail survives the cut, fille
 - Every claim must be checkable against the README or the JSDoc in `src/`.
 - Implementation details live only on the page that owns them: error codes and library internals on the reference, demo internals (derivation schemes, storage, UI) in the recipes that adapt its code. Every other page links to the owning page instead of restating the detail, so a demo or library change touches one page.
 - Examples import only the public API plus explicitly declared app-side dependencies.
+- Examples define every identifier they use. Values the app supplies enter through a placeholder with realistic shape and provenance: `crypto.getRandomValues(new Uint8Array(32))` for key material, `new TextEncoder().encode(...)` for secret text, a literal for addresses and rpIds. Never use an all-zero buffer where the library validates the value; an all-zero secp256k1 key throws.
 - Security-sensitive behavior is stated plainly on the page where the risk is acted on: key material lifetimes, zeroing, nonce handling, prompt counts, and what the library cannot protect against.
 - Support claims are date-stamped. The authenticator matrix lives in the README; this site mirrors it, and updates land in both places.
 
@@ -86,7 +87,7 @@ The bar is simple, concise, and detailed at once: detail survives the cut, fille
 
 1. `npm run build` passes.
 2. New pages appear in the sidebar; no sidebar entry points at a missing page.
-3. Examples compile against the current public API.
+3. Examples compile against the current public API, with no undefined identifiers.
 4. Every error code mentioned links to the errors page.
 5. No em dash anywhere in the diff.
 6. No banned vocabulary, no "not X, but Y".

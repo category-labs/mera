@@ -19,12 +19,15 @@ import {
   getSolanaAddress,
 } from "@category-labs/mera";
 
+const seed = crypto.getRandomValues(new Uint8Array(32)); // stand-in for an app-derived key
+const message = new TextEncoder().encode("hello mera");
+
 const session = createEd25519SigningSession({
   consumePrivateKey: seed, // zeroed by this call
 });
 
 const address = getSolanaAddress(session.publicKey);
-const signature = await session.signMessage(messageBytes);
+const signature = await session.signMessage(message);
 
 session.lock();
 ```

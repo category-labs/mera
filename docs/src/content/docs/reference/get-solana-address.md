@@ -14,8 +14,17 @@ import { getSolanaAddress } from "@category-labs/mera";
 ## Usage
 
 ```ts
+import {
+  createEd25519SigningSession,
+  getSolanaAddress,
+} from "@category-labs/mera";
+
+const session = createEd25519SigningSession({
+  consumePrivateKey: crypto.getRandomValues(new Uint8Array(32)),
+});
+
 const address = getSolanaAddress(session.publicKey);
-// "7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV"
+// base58, like "7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV"
 ```
 
 ## Parameters

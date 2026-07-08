@@ -14,6 +14,18 @@ import { unwrapSecretVault } from "@category-labs/mera";
 ## Usage
 
 ```ts
+import {
+  getSecretVaultPrfOutput,
+  parseSecretVault,
+  unwrapSecretVault,
+} from "@category-labs/mera";
+
+const vault = parseSecretVault(localStorage.getItem("vault"));
+const { prfOutput } = await getSecretVaultPrfOutput({
+  rpId: "account.example.com",
+  vault,
+});
+
 const secret = await unwrapSecretVault({ vault, prfOutput });
 try {
   // use the secret bytes

@@ -19,6 +19,9 @@ import {
   getEvmAddress,
 } from "@category-labs/mera";
 
+const privateKey = crypto.getRandomValues(new Uint8Array(32)); // stand-in for an app-derived key
+const digest32 = new Uint8Array(32); // stand-in for a 32-byte transaction digest
+
 const session = createSecp256k1SigningSession({
   consumePrivateKey: privateKey, // zeroed by this call
 });
@@ -62,7 +65,7 @@ Calls `lock`, so a `using` declaration locks the session when its scope exits:
 
 ```ts
 {
-  using session = createSecp256k1SigningSession({ consumePrivateKey });
+  using session = createSecp256k1SigningSession({ consumePrivateKey: privateKey });
   await session.signDigest(digest32);
 } // locked here
 ```

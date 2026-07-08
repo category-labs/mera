@@ -14,6 +14,8 @@ import { isSolanaAddress } from "@category-labs/mera";
 ## Usage
 
 ```ts
+const input = "7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV"; // a string from user input or storage
+
 if (isSolanaAddress(input)) {
   // input: SolanaAddress from here on
 }

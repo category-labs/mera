@@ -5,8 +5,6 @@ description: Requests a passkey PRF evaluation and returns the first output.
 
 Requests a passkey PRF evaluation and returns the first output. Runs one `navigator.credentials.get()` ceremony, which may show browser or authenticator UI.
 
-The PRF output is a deterministic function of the credential, `rpId`, and `prfSalt`: the same three inputs reproduce the same 32 bytes, and a different salt yields an unrelated output.
-
 ## Import
 
 ```ts
@@ -71,6 +69,8 @@ WebAuthn timeout in milliseconds.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## Notes
+
+The PRF output is a deterministic function of the credential, `rpId`, and `prfSalt`: the same three inputs reproduce the same 32 bytes, and a different salt yields an unrelated output.
 
 The assertion requires user verification, and the requirement is not configurable: the PRF extension evaluates only the credential's user-verified PRF, so a `userVerification` setting could neither change the output nor skip the check. [Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism.
 

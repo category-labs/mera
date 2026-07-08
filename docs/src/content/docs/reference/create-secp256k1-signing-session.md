@@ -3,7 +3,7 @@ title: createSecp256k1SigningSession
 description: Wraps a secp256k1 private key in an explicitly lockable signing session.
 ---
 
-Wraps a secp256k1 private key in an explicitly lockable signing session. The key is consumed: the input buffer is zeroed before the call returns or throws, and from then on the session's copy is the only one the library knows about.
+Wraps a secp256k1 private key in an explicitly lockable signing session.
 
 ## Import
 

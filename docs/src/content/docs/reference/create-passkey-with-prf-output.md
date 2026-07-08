@@ -3,9 +3,7 @@ title: createPasskeyWithPrfOutput
 description: Creates a passkey and returns its first PRF output in one call.
 ---
 
-Creates a passkey and returns the first WebAuthn PRF output, falling back to a second ceremony only when the authenticator does not evaluate PRF at create time. Equivalent to [createPasskey](/reference/create-passkey/) followed, when `prfOutput` is absent, by [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt.
-
-Runs `navigator.credentials.create()`, and on authenticators without create-time PRF also `navigator.credentials.get()`. The fallback means a possible second browser prompt.
+Creates a passkey and returns the first WebAuthn PRF output, falling back to a second ceremony only when the authenticator does not evaluate PRF at create time. Equivalent to [createPasskey](/reference/create-passkey/) followed, when `prfOutput` is absent, by [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt; the fallback means a possible second browser prompt.
 
 ## Import
 

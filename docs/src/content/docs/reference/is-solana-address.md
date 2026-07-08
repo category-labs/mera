@@ -3,7 +3,7 @@ title: isSolanaAddress
 description: Returns true when a string is a valid base58-encoded Solana address.
 ---
 
-Returns `true` when a string is valid base58 and decodes to exactly 32 bytes, narrowing it to `SolanaAddress` for TypeScript. Never throws.
+Returns `true` when a string is valid base58 and decodes to exactly 32 bytes.
 
 ## Import
 

@@ -5,8 +5,6 @@ description: Creates a discoverable, user-verified passkey and requires WebAuthn
 
 Creates a discoverable, user-verified passkey and requires WebAuthn PRF support. Runs one `navigator.credentials.create()` ceremony, which may show browser or authenticator UI.
 
-When `prfSalt` is provided and the authenticator evaluates PRF at create time, the result includes the first PRF output and no second ceremony is needed. Without `prfSalt`, no PRF evaluation happens during creation and the result carries credential metadata only; a later [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) call with a salt produces PRF output for this passkey.
-
 ## Import
 
 ```ts

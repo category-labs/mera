@@ -3,7 +3,7 @@ title: createSecretVault
 description: Encrypts an arbitrary secret into a passkey-protected vault.
 ---
 
-Encrypts an arbitrary secret into a passkey-protected vault. No ceremony runs here; the PRF output from an earlier ceremony does the cryptographic work.
+Encrypts an arbitrary secret into a passkey-protected vault.
 
 An AES-256-GCM wrapping key is derived from the PRF output with fixed HKDF-SHA-256 info (`mera.v1.wrap.secret`), which separates it from any other key derived from the same output. The secret is encrypted under fixed additional authenticated data.
 

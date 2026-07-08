@@ -3,7 +3,7 @@ title: parseSecretVault
 description: Parses and validates untrusted secret-vault JSON or objects.
 ---
 
-Parses and validates untrusted secret-vault JSON or objects. This is the boundary for stored vault data: anything read from `localStorage`, a backend, or a sync service goes through here before other vault functions see it. Synchronous.
+Parses and validates untrusted secret-vault JSON or objects.
 
 ## Import
 

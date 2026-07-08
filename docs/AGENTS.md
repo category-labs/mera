@@ -15,7 +15,7 @@ When content feels misplaced, move it and link to it: a reference page that star
 
 ## Reference pages
 
-One exported function per page. A new public export means a new page and a new sidebar entry in `astro.config.mjs`.
+One exported function per page. A new public export means a new page and a new sidebar entry in `astro.config.mjs`. A small export inseparable from a contract shares the contract's page instead: `MeraError` and `isMeraError` live on the errors page.
 
 Fixed section order:
 

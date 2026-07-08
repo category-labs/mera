@@ -1,6 +1,6 @@
 ---
 title: Errors
-description: MeraError, isMeraError, and every stable error code.
+description: Every error the library throws and its stable code.
 ---
 
 Everything the library throws is a `MeraError`. It carries a stable, machine-readable `code` alongside the usual `message` and optional `cause`. The codes are the contract; the message text is free to change between versions.

@@ -34,4 +34,4 @@ Each exported function has its own page. Types are documented on the pages of th
 
 ## Errors
 
-- [Errors](/reference/errors/): `MeraError`, `isMeraError`, and every stable error code.
+- [Errors](/reference/errors/): every error the library throws and its stable code.

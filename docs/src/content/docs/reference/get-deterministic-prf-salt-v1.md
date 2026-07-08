@@ -3,7 +3,7 @@ title: getDeterministicPrfSaltV1
 description: Returns mera's fixed v1 deterministic PRF salt.
 ---
 
-Returns mera's fixed v1 deterministic PRF salt: `sha256("mera.v1.deterministic.prf")`. No ceremony, no prompt; this is a pure function over a constant.
+Returns mera's fixed v1 deterministic PRF salt: `sha256("mera.v1.deterministic.prf")`. It is a pure function over a constant.
 
 The salt will not change across library versions, so one passkey assertion against it produces one stable 32-byte PRF output per credential and relying party. [Derived mode](/concepts/derived-and-wrapped/) is built on that stability.
 

@@ -3,7 +3,7 @@ title: unwrapSecretVault
 description: Decrypts the secret from a secret vault.
 ---
 
-Decrypts the secret from a secret vault. No ceremony runs here; the caller brings the PRF output from [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/).
+Decrypts the secret from a secret vault.
 
 ## Import
 

@@ -3,7 +3,7 @@ title: isEvmAddress
 description: Returns true when a string is a 20-byte 0x-prefixed EVM address.
 ---
 
-Returns `true` when a string is a 20-byte `0x`-prefixed EVM address, narrowing it to `EvmAddress` for TypeScript. Never throws.
+Returns `true` when a string is a 20-byte `0x`-prefixed EVM address.
 
 ## Import
 

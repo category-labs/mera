@@ -3,7 +3,7 @@ title: createEd25519SigningSession
 description: Wraps an Ed25519 private key in an explicitly lockable signing session.
 ---
 
-Wraps an Ed25519 private key in an explicitly lockable signing session. The key is consumed: the input buffer is zeroed before the call returns or throws, and from then on the session's copy is the only one the library knows about.
+Wraps an Ed25519 private key in an explicitly lockable signing session.
 
 ## Import
 

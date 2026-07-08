@@ -35,7 +35,7 @@ A ceremony is one WebAuthn call and one user-verification prompt. mera runs thre
 - [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) asserts with an existing credential and returns the PRF output.
 - [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) chains the two: one prompt when the authenticator evaluates PRF at create time, two when it needs the follow-up assertion.
 
-Signing itself never prompts: a [signing session](/reference/create-secp256k1-signing-session/) holds key material derived from a ceremony's output and signs until it is locked.
+Signing itself never prompts: a [signing session](/concepts/signing-sessions/) holds key material derived from a ceremony's output and signs until it is locked.
 
 ## See also
 

@@ -52,6 +52,7 @@ export default defineConfig({
           items: [
             "concepts/passkeys-and-prf",
             "concepts/derived-and-wrapped",
+            "concepts/signing-sessions",
             "concepts/security-model",
             "concepts/authenticator-support",
           ],

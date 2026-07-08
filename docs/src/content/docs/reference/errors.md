@@ -18,10 +18,17 @@ class MeraError extends Error {
 ## isMeraError
 
 ```ts
-import { isMeraError } from "@category-labs/mera";
+import {
+  getDeterministicPrfSaltV1,
+  getPasskeyPrfOutput,
+  isMeraError,
+} from "@category-labs/mera";
 
 try {
-  await getPasskeyPrfOutput({ rpId, prfSalt });
+  await getPasskeyPrfOutput({
+    rpId: "account.example.com",
+    prfSalt: getDeterministicPrfSaltV1(),
+  });
 } catch (error) {
   if (isMeraError(error) && error.code === "PRF_UNAVAILABLE") {
     // Point at a PRF-capable authenticator.

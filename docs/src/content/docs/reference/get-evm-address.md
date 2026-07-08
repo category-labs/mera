@@ -14,8 +14,17 @@ import { getEvmAddress } from "@category-labs/mera";
 ## Usage
 
 ```ts
+import {
+  createSecp256k1SigningSession,
+  getEvmAddress,
+} from "@category-labs/mera";
+
+const session = createSecp256k1SigningSession({
+  consumePrivateKey: crypto.getRandomValues(new Uint8Array(32)),
+});
+
 const address = getEvmAddress(session.publicKey);
-// "0x8ba1f109551bD432803012645Ac136ddd64DBA72"
+// EIP-55 checksummed, like "0x8ba1f109551bD432803012645Ac136ddd64DBA72"
 ```
 
 ## Parameters

@@ -45,7 +45,7 @@ The salt is mera's fixed deterministic one: the same passkey, relying party, and
 
 ## Derive an account
 
-The PRF output is entropy. This walkthrough maps it through BIP-39 and BIP-32, the demo's scheme, so the account can be imported into wallet apps that speak those standards.
+The PRF output is entropy. This walkthrough maps it through BIP-39 and BIP-32 so the account can be imported into wallet apps that speak those standards.
 
 ```ts
 import { HDKey } from "@scure/bip32";

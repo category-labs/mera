@@ -1,6 +1,6 @@
 # Writing the mera docs
 
-Guidance for authoring content in this site (`src/content/docs/`). It builds on [site/WRITING.md](../site/WRITING.md), which governs voice for everything published under the mera name. Read that first; this file adds the structure and mechanics specific to the docs site.
+Guidance for authoring content in this site (`src/content/docs/`). [site/WRITING.md](../site/WRITING.md) governs voice for everything published under the mera name; this file adds the structure and mechanics specific to the docs site.
 
 ## Information architecture
 
@@ -11,7 +11,7 @@ The site follows the Diátaxis split (<https://diataxis.fr/>): each page does on
 - **Recipes** solve one task each. A recipe assumes a competent reader with a goal, states its prerequisites, and gets to the point.
 - **Reference** states facts about the public API, one exported function per page. Keep instructions, opinions, and long explanations out of it; link to them instead.
 
-When content feels misplaced, move it and link to it. A reference page that starts teaching should hand that material to a recipe. A recipe that pauses to explain should link a concept page.
+When content feels misplaced, move it and link to it: a reference page that starts teaching hands that material to a recipe; a recipe that pauses to explain links a concept page.
 
 ## Reference pages
 
@@ -42,7 +42,7 @@ Source of truth is the JSDoc in `src/`. Write reference prose from it, and check
 
 ## Voice
 
-The bar is simple, concise, and detailed at the same time, and that combination is the hard part: detail survives the cut, filler does not. Every sentence must add information a reader can act on. Delete sentences that only set up, restate, or editorialize on what the surrounding text already shows ("that choice is what makes this repeatable", "what happens next is the app's decision").
+The bar is simple, concise, and detailed at once: detail survives the cut, filler does not. Every sentence must add information a reader can act on; delete sentences that only set up, restate, or editorialize ("that choice is what makes this repeatable", "what happens next is the app's decision").
 
 `site/WRITING.md` applies in full. The rules that carry the most weight here:
 
@@ -57,6 +57,9 @@ The bar is simple, concise, and detailed at the same time, and that combination 
 
 - No em dashes. Use a comma, a period, a colon, or parentheses.
 - No "not X, but Y" constructions, including "isn't just X" and "It's not about X". Rewrite the thought.
+- Complete sentences, plainly shaped. Fragments for punch ("Same three, same 32 bytes.") and aphorisms ("whoever holds it holds ciphertext") get rewritten as plain statements.
+- The library takes plain verbs: mera requires, returns, throws. "mera asks", "hands over", "stops there" are narration.
+- A sentence never defers its point to a link. State the consequence in place and link for depth; "the security model explains the consequence" tells the reader nothing.
 - Vary sentence length and openings. Three consecutive sentences with the same shape means one gets rewritten.
 - Short paragraphs, but not a wall of one-liners.
 - Banned vocabulary: seamless, robust, powerful, effortless, simply, leverage, unlock (as praise; unlocking a vault is fine), delve, game-changer.
@@ -64,7 +67,7 @@ The bar is simple, concise, and detailed at the same time, and that combination 
 ## Accuracy
 
 - Every claim must be checkable against the README or the JSDoc in `src/`.
-- Implementation details stay on the pages that own them. Error codes and library internals belong to the reference; the demo's internals (derivation schemes, storage, UI) appear only in the recipes that adapt its code. Every other page links to the owning page instead of restating the detail, so a demo or library change touches one page. The demo changes freely; never let a concepts or landing page depend on it.
+- Implementation details live only on the page that owns them: error codes and library internals on the reference, demo internals (derivation schemes, storage, UI) in the recipes that adapt its code. Every other page links to the owning page instead of restating the detail, so a demo or library change touches one page.
 - Examples import only the public API plus explicitly declared app-side dependencies.
 - Security-sensitive behavior is stated plainly on the page where the risk is acted on: key material lifetimes, zeroing, nonce handling, prompt counts, and what the library cannot protect against.
 - Support claims are date-stamped. The authenticator matrix lives in the README; this site mirrors it, and updates land in both places.
@@ -75,7 +78,7 @@ The bar is simple, concise, and detailed at the same time, and that combination 
 - Files are kebab-case; the file path is the slug.
 - The sidebar in `astro.config.mjs` is hand-maintained. A sidebar slug without a page fails the build.
 - Plain `.md` unless the page imports a component; then `.mdx`.
-- Internal links are root-relative with a trailing slash: `/reference/errors/`.
+- Internal links are root-relative with a trailing slash: `/reference/errors/`. Link text is descriptive; no bare "here".
 - Never reference sections by number; name the thing and link it.
 - `npm run build` must pass before a PR.
 
@@ -88,8 +91,3 @@ The bar is simple, concise, and detailed at the same time, and that combination 
 5. No em dash anywhere in the diff.
 6. No banned vocabulary, no "not X, but Y".
 7. "Wallet" appears only next to wallet apps.
-8. Claims trace to the README or JSDoc.
-9. Security caveats sit on the page where the risk is acted on.
-10. Links have descriptive text; no bare "here".
-11. Every sentence adds information; no setup, restatement, or editorial sentences survive.
-12. Implementation details sit only on their owning pages; demo internals appear only in recipes.

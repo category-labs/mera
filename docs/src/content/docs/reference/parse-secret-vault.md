@@ -14,11 +14,8 @@ import { parseSecretVault } from "@category-labs/mera";
 ## Usage
 
 ```ts
-const stored = localStorage.getItem("vault");
-if (stored !== null) {
-  const vault = parseSecretVault(stored);
-  // vault is a validated PasskeySecretVault
-}
+const vault = parseSecretVault(localStorage.getItem("vault"));
+// vault is a validated PasskeySecretVault
 ```
 
 ## Parameters
@@ -28,7 +25,7 @@ if (stored !== null) {
 - Type: `unknown`
 - Required
 
-The secret vault as JSON text or an untrusted object. Strings are JSON-parsed first; objects are validated directly.
+The secret vault as JSON text or an untrusted object. Strings are JSON-parsed first; objects are validated directly. Anything else fails validation, including the `null` a storage read returns when nothing is stored.
 
 ## Returns
 

@@ -14,7 +14,7 @@ import { isEvmAddress } from "@category-labs/mera";
 ## Usage
 
 ```ts
-const input = "0x8ba1f109551bD432803012645Ac136ddd64DBA72"; // a string from user input or storage
+const input = "0x8ba1f109551bD432803012645Ac136ddd64DBA72";
 
 if (isEvmAddress(input)) {
   // input: EvmAddress from here on

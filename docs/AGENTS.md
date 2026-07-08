@@ -20,7 +20,7 @@ One exported function per page. A new public export means a new page and a new s
 Fixed section order:
 
 1. Frontmatter: `title` is the exact exported name, `description` is one sentence.
-2. A short lead with no heading: what the function does and the one fact a caller must know. Functions that run WebAuthn ceremonies say so here, because a browser prompt is a visible side effect.
+2. A short lead with no heading: what the function does, plus only facts no later section carries. Visible side effects belong here; functions that run WebAuthn ceremonies say so, because a browser prompt is one. Anything stated in or inferable from Parameters, Returns, or Errors is not repeated in the lead.
 3. `## Import`: a single import statement.
 4. `## Usage`: one focused, compilable example.
 5. `## Parameters`: an intro line naming the options type, then one `### options.field` subheading per field (dotted for nested fields). Under each: a `- Type:` line, a `- Required` or `- Optional` line (with the default or omission behavior), then prose.

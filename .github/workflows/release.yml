@@ -1,15 +1,30 @@
 name: Mera - Release
 
-# Publishes @category-labs/mera to npm when a version tag is pushed.
+# Publishes @category-labs/mera to npm with provenance.
 #
-# The artifact is built inside the repo Dockerfile (the single source of truth
-# for the build environment, identical to a local `docker build`). The tarball
-# is then published from the runner so npm provenance can attest to it using the
-# runner's OIDC token (provenance cannot be generated inside the container).
+# The package is built AND published on a GitHub-hosted runner in the same job.
+# This is a requirement for meaningful npm provenance: the attestation is signed
+# with the runner's OIDC token and certifies that the published artifact was
+# built from this repository at this commit by this workflow. Building elsewhere
+# (e.g. inside a Docker container) and only uploading the tarball would weaken
+# that guarantee to "a runner uploaded a file", so the Dockerfile is used for
+# local verification only, not for the publish path.
 #
-# Cut a release:
+# Triggers:
+#   - push of a v* tag   -> real publish with provenance
+#   - workflow_dispatch  -> dry-run only (no registry write, no secrets needed)
+#
+# Cut a release (once the prerequisites below exist):
 #   npm version <patch|minor|major>   # bumps package.json + creates the tag
 #   git push --follow-tags
+#
+# One-time prerequisites before the first real publish:
+#   1. Create the `category-labs` npm org/scope (unscoped `mera` is taken).
+#   2. Add an `NPM_TOKEN` secret (automation/granular token that can publish
+#      to @category-labs/*).
+#   3. Create the `npm-publish` GitHub Actions environment (optionally gated
+#      with required reviewers).
+# The dry-run path works without any of these.
 
 on:
   push:
@@ -19,34 +34,34 @@ on:
 
 permissions:
   contents: read
-  id-token: write # required for npm provenance
 
 jobs:
-  release:
-    name: Build (Docker) and publish
-    runs-on: ubuntu-latest
+  # Real publish: only on a v* tag. Builds on the runner so provenance is honest.
+  publish:
+    name: Publish to npm (provenance)
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest # must be GitHub-hosted for provenance
     environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write # OIDC token used to sign the provenance attestation
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      # Build the tarball in the pinned container and extract it to ./out.
-      - name: Build tarball in Docker
-        run: docker build -o type=local,dest=./out .
-
-      - name: Locate tarball
-        id: tarball
-        run: echo "path=$(ls out/*.tgz)" >> "$GITHUB_OUTPUT"
-
-      # Node is only needed on the runner to invoke `npm publish` (with
-      # provenance). The build itself already happened in the container.
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           registry-url: https://registry.npmjs.org
 
-      - name: Guard against publishing an already-published version
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Refuse to republish an existing version
         run: |
           name=$(node -p "require('./package.json').name")
           version=$(node -p "require('./package.json').version")
@@ -56,7 +71,32 @@ jobs:
           fi
 
       # publishConfig in package.json sets access:public + provenance:true.
-      - name: Publish to npm
-        run: npm publish "${{ steps.tarball.outputs.path }}"
+      - name: Publish
+        run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # Dry-run: manual trigger only. Exercises checkout -> build -> pack/publish
+  # resolution without contacting the registry. Needs no secrets and no OIDC,
+  # and deliberately omits --provenance (only meaningful on a real publish).
+  dry-run:
+    name: Dry-run publish (no registry write)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish (dry-run)
+        run: npm publish --dry-run

@@ -1,14 +1,27 @@
 # Building & publishing `@category-labs/mera`
 
-How the npm package is built reproducibly (in Docker) and published (via GitHub
-Actions on a version tag). The Docker image is the single source of truth for the
-build environment — the same `docker build` runs locally and in CI.
+How the npm package is built and published. There are two distinct build paths,
+on purpose:
 
-This is the JS-ecosystem analog of monad-bft's `.deb` pipeline: instead of
-staging a filesystem and running `dpkg-deb`, we compile TypeScript and run
-`npm pack`. The shared idea is a **pinned builder image** (cf. monad-bft's
-`docker/builder` image) so the artifact is identical everywhere. See
-`debian.build.md` for the .deb that loosely inspired this.
+- **Release (CI):** the package is built **and** published on a GitHub-hosted
+  runner (`.github/workflows/release.yml`) so npm **provenance** is honest — the
+  signed attestation certifies the published artifact was built from this repo at
+  this commit by this workflow.
+- **Local verification (Docker):** the `Dockerfile` reproduces the build in a
+  pinned toolchain so you can inspect the exact tarball before tagging. It is
+  **not** in the publish path.
+
+This is loosely the JS-ecosystem analog of monad-bft's `.deb` pipeline: instead
+of staging a filesystem and running `dpkg-deb`, we compile TypeScript and
+`npm publish`. See `debian.build.md` for the `.deb` that inspired this.
+
+> Why not build in Docker and publish that tarball? npm provenance is signed with
+> the runner's OIDC token and attests to *what the runner observed*. If the build
+> happens inside an opaque `docker build` and the runner only uploads the
+> resulting `.tgz`, the attestation degrades to "a runner uploaded a file" —
+> it can't link the bytes to the source. So the runner builds what it publishes,
+> and Docker stays a local tool. `.nvmrc` pins the runner's Node to match the
+> Dockerfile so the two builds stay close.
 
 ## What ships
 
@@ -39,11 +52,12 @@ npm pack --dry-run          # on the host
 docker build --target build -t mera-build . && docker run --rm mera-build npm pack --dry-run
 ```
 
-## Reproducible build (Docker)
+## Local verification build (Docker)
 
 `Dockerfile` builds in a pinned Node image, runs `lint` + `build`, and packs the
 tarball. A final `scratch` stage holds only the `.tgz` so `docker build -o`
-extracts just the artifact.
+extracts just the artifact. Use this to inspect exactly what a release would ship
+before you tag; it does not publish.
 
 ```bash
 # Build and extract the tarball to ./out/
@@ -65,35 +79,38 @@ Pipeline inside the image:
 The tarball is byte-for-content identical to a host `npm pack` (verified: 30
 files, ~24 kB).
 
-### Why the container does not publish
+## Release (GitHub Actions)
 
-`npm publish --provenance` must run on the GitHub Actions runner, not inside the
-container: provenance attestation is signed with the runner's OIDC token, which
-the container doesn't have. So the container's job ends at producing the `.tgz`;
-the runner publishes that exact file.
+`.github/workflows/release.yml` has two paths:
 
-## Release (GitHub Actions on tag)
-
-`.github/workflows/release.yml` triggers on tags matching `v*`.
+**Real publish — on a `v*` tag:**
 
 ```bash
 npm version <patch|minor|major>   # bumps package.json + creates the vX.Y.Z tag
 git push --follow-tags            # pushing the tag triggers the release
 ```
 
-Workflow steps:
+The `publish` job runs on `ubuntu-latest` (GitHub-hosted, required for
+provenance) with `id-token: write`, and:
 
-1. `docker build -o type=local,dest=./out .` — build the tarball in the pinned
-   image (same command as local).
-2. `actions/setup-node` with `registry-url` (runner-side, only to run
-   `npm publish`).
-3. Guard: fail if `name@version` is already on npm (prevents duplicate publish).
-4. `npm publish out/*.tgz` — `publishConfig` in `package.json` sets
+1. `actions/setup-node` with `.nvmrc` + `registry-url`.
+2. `npm ci` then `npm run build` — the build the attestation covers.
+3. Guard: fail if `name@version` is already on npm (versions are immutable).
+4. `npm publish --provenance` — `publishConfig` in `package.json` sets
    `access: public` + `provenance: true`. Auth via `secrets.NPM_TOKEN`.
 
-`id-token: write` permission is granted for provenance.
+**Dry-run — on `workflow_dispatch`:**
+
+Run the workflow manually from the Actions tab. The `dry-run` job does
+`npm ci` → `npm run build` → `npm publish --dry-run`. It contacts no registry,
+needs no secrets and no OIDC, and omits `--provenance` (only meaningful on a real
+publish). Safe to run before any of the prerequisites below exist — use it to
+validate checkout/build/pack resolution end-to-end.
 
 ## One-time setup required before the first publish
+
+None of these are needed for the `workflow_dispatch` dry-run; they gate only the
+real `v*`-tag publish.
 
 1. **Create the npm org/scope.** Unscoped `mera` is already taken on npm
    (an unrelated package), so this publishes as the scoped `@category-labs/mera`.

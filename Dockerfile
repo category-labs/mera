@@ -1,9 +1,15 @@
-# Repeatable build environment for the @category-labs/mera npm package.
+# Local repeatable-build / verification environment for @category-labs/mera.
 #
-# Mirrors the role of monad-bft's docker/builder image: pin the toolchain so the
-# artifact is identical locally and in CI. This image BUILDS and PACKS the
-# library; it deliberately does NOT publish (npm provenance must be generated on
-# the GitHub runner, which holds the OIDC token).
+# This image pins the toolchain so you can build and inspect the exact npm
+# tarball locally before cutting a release. It is deliberately NOT part of the
+# publish path: the release workflow (.github/workflows/release.yml) builds and
+# publishes on a GitHub-hosted runner so npm provenance can attest that the
+# published artifact was built from this source at this commit. Building here and
+# uploading the tarball would weaken provenance to "a runner uploaded a file",
+# so publishing is left to the runner and this Dockerfile stays a local tool.
+#
+# The pinned Node version here should track .nvmrc (which the runner uses) so the
+# local build matches CI closely.
 #
 # Build + extract the tarball locally:
 #   docker build -o type=local,dest=./out .

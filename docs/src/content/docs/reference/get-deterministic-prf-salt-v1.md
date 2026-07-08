@@ -5,7 +5,7 @@ description: Returns mera's fixed v1 deterministic PRF salt.
 
 Returns mera's fixed v1 deterministic PRF salt: `sha256("mera.v1.deterministic.prf")`. No ceremony, no prompt; this is a pure function over a constant.
 
-The salt will not change across library versions, so one passkey assertion against it produces one stable 32-byte PRF output per credential and relying party: the foundation of [derived mode](/concepts/derived-and-wrapped/).
+The salt will not change across library versions, so one passkey assertion against it produces one stable 32-byte PRF output per credential and relying party. [Derived mode](/concepts/derived-and-wrapped/) is built on that stability.
 
 ## Import
 
@@ -36,7 +36,7 @@ None.
 
 The salt encodes no account selection. Selecting account 0 versus account 7 happens in the derivation scheme the app applies to the PRF output, never in the salt.
 
-Wrapped flows should not use this salt. Each secret vault stores 32 fresh random bytes instead; [createSecretVault](/reference/create-secret-vault/) explains what goes wrong when a PRF output is shared.
+Wrapped flows should not use this salt. Each secret vault stores 32 fresh random bytes instead: vaults sharing one PRF output would share a wrapping key ([createSecretVault](/reference/create-secret-vault/)).
 
 ## See also
 

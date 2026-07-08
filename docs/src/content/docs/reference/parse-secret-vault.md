@@ -36,13 +36,13 @@ A validated `PasskeySecretVault`. Only version 1 vaults are accepted. The creden
 
 ## Errors
 
-- [`VAULT_FORMAT_INVALID`](/reference/errors/#vault_format_invalid): the required structure, version, or encoded data is invalid. The underlying parse failure, when there is one, rides along as `cause`.
+- [`VAULT_FORMAT_INVALID`](/reference/errors/#vault_format_invalid): the required structure, version, or encoded data is invalid. The underlying parse failure, when there is one, is attached as `cause`.
 
 ## Notes
 
 A vault that came through this function cannot trigger the `INPUT_INVALID` re-checks in [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/) or [unwrapSecretVault](/reference/unwrap-secret-vault/); what remains is cryptographic failure (`DECRYPT_FAILED`) or ceremony failure.
 
-A future vault format bumps the version number; an old library refusing it beats an old library misreading it.
+A future vault format will use a higher version number. Rejecting an unknown version keeps an old library from misreading newer data.
 
 ## See also
 

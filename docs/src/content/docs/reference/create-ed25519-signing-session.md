@@ -72,4 +72,4 @@ Signing needs no passkey ceremony and shows no prompt; the session signs as ofte
 
 - [getSolanaAddress](/reference/get-solana-address/): the address for `session.publicKey`.
 - [Sign Solana transactions](/recipes/sign-solana-transactions/): where `signMessage` plugs into a transaction flow.
-- [Security model](/concepts/security-model/): what an active session exposes.
+- [Signing sessions](/concepts/signing-sessions/): the custody model, the lifecycle, and what an active session exposes.

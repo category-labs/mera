@@ -1,13 +1,13 @@
 ---
 title: Derived and wrapped modes
-description: Two ways to use PRF output, with different storage and recovery stories.
+description: Two ways to use PRF output, with different storage and recovery trade-offs.
 ---
 
 Both modes start from the same ceremony and its 32 bytes of PRF output. Derived mode turns the bytes into accounts; wrapped mode turns them into the key that guards one stored secret.
 
 ## Derived
 
-With mera's [fixed deterministic salt](/reference/get-deterministic-prf-salt-v1/), the same passkey and relying party produce the same PRF output on every ceremony. The app feeds that output into a derivation scheme of its choosing; the demo uses BIP-39/BIP-32 for secp256k1 keys and SLIP-0010 for Ed25519.
+With mera's [fixed deterministic salt](/reference/get-deterministic-prf-salt-v1/), the same passkey and relying party produce the same PRF output on every ceremony. The app feeds that output into a derivation scheme of its choosing; [Derive accounts from one passkey](/recipes/derive-accounts/) shows one built on common HD standards.
 
 There is no stored secret. Sign-in on a new device is the same ceremony as on the old one and produces the same accounts, provided the passkey is there: state lives in the passkey and nowhere else.
 

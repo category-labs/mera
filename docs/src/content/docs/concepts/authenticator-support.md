@@ -1,9 +1,9 @@
 ---
 title: Authenticator support
-description: Which browser and authenticator combinations deliver WebAuthn PRF.
+description: Which authenticators deliver WebAuthn PRF, and since when.
 ---
 
-mera asks three things of the authenticator stack: the WebAuthn PRF extension, discoverable credentials, and user verification. When the browser, OS, and authenticator combination cannot deliver PRF, the library throws [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable).
+mera asks three things of the authenticator stack: the WebAuthn PRF extension, discoverable credentials, and user verification.
 
 In the table, `✓` means a live PRF create + get cycle has been confirmed end-to-end; `Not supported` means a live test did not return PRF.
 
@@ -27,14 +27,14 @@ In the table, `✓` means a live PRF create + get cycle has been confirmed end-t
 | Dashlane                 | Chrome                            | Desktop                     | Not supported (2026-06-01) |                                              |
 | Proton Pass              | Chrome                            | Desktop                     | ✓                          | Latest public version (2026-06)              |
 
-## The desktop Chrome trap
+## The desktop Chrome complication
 
-On desktop Chrome, only passkeys saved to Google Password Manager carry PRF. The local Chrome profile authenticator does not implement the CTAP2 `hmac-secret` extension, so a passkey created there comes back with `prf.enabled: false` and mera throws.
+On desktop Chrome, only passkeys saved to Google Password Manager carry PRF. The local Chrome profile authenticator does not implement the CTAP2 `hmac-secret` extension, so a passkey created there comes back without PRF.
 
-Chrome may create the passkey in the local profile instead of Google Password Manager when its "Offer to save passwords and passkeys" setting is off, or when a third-party password-manager extension intercepts WebAuthn and relays the browser fallback ceremony. The passkey exists either way; [createPasskey](/reference/create-passkey/) documents that ordering caveat.
+Chrome may create the passkey in the local profile instead of Google Password Manager when its "Offer to save passwords and passkeys" setting is off, or when a third-party password-manager extension intercepts WebAuthn and relays the browser fallback ceremony. Either way the passkey exists but cannot back an account; [createPasskey](/reference/create-passkey/) documents the ordering caveat.
 
 ## See also
 
 - [Passkeys and the PRF extension](/concepts/passkeys-and-prf/): what PRF is and why user verification is required.
-- [Handle errors](/recipes/handle-errors/): turning `PRF_UNAVAILABLE` into useful guidance for people.
+- [Handle errors](/recipes/handle-errors/): turning unsupported-authenticator failures into useful guidance for people.
 - Corbado's [Passkeys & WebAuthn PRF for End-to-End Encryption](https://www.corbado.com/blog/passkeys-prf-webauthn): the broader PRF compatibility picture beyond the combinations tested here.

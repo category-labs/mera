@@ -3,7 +3,7 @@ title: Passkeys and the PRF extension
 description: What a passkey is, what the PRF extension adds, and why its output is stable.
 ---
 
-A passkey is a WebAuthn credential: a key pair created at a website's request by an authenticator (a phone, a password manager, a hardware key). The private half never leaves the authenticator. "Discoverable" means the authenticator finds the credential for a domain on its own, so signing in needs no username and no stored identifier.
+A passkey is a WebAuthn credential: a key pair created at a website's request by an authenticator (a phone, a password manager, a hardware key). The private half never leaves the authenticator. mera creates passkeys as discoverable credentials: the authenticator finds the credential for a domain on its own, so signing in needs no username and no stored identifier.
 
 **Passkeys are bound to a relying party ID.** The `rpId` is a domain, and a credential created under one rpId cannot be used under another. The [security model](/concepts/security-model/) covers what this means for domain migrations.
 

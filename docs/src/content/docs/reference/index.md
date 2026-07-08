@@ -1,9 +1,9 @@
 ---
 title: API reference
-description: Every exported function, grouped the way the library is built.
+description: Every exported function, one page each.
 ---
 
-One page per exported function, each in the same shape: import, usage, parameters, return value, errors, notes. Types are documented on the pages of the functions that produce or accept them. The exceptions are two contract pages: the [secret vault format](/reference/secret-vault-format/), a storage contract, and [errors](/reference/errors/), which documents `MeraError` and the `isMeraError` guard together.
+Each exported function has its own page. Types are documented on the pages of the functions that produce or accept them.
 
 ## Passkeys
 

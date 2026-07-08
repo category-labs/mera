@@ -3,9 +3,7 @@ title: Derive accounts from one passkey
 description: Numbered EVM and Solana accounts from a single ceremony, with credential pinning.
 ---
 
-This recipe extends [Getting started](/getting-started/) to a real multi-account setup: one passkey ceremony per session, numbered accounts on two curves, a stored credential record so sign-in pins the right passkey, and a clean lock at the end. The pattern is adapted from the demo app and is app-side code throughout; mera contributes the ceremonies and the signing sessions.
-
-Prerequisites: `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a PRF-capable authenticator ([authenticator support](/concepts/authenticator-support/)).
+This recipe extends [Getting started](/getting-started/) to a real multi-account setup: one passkey ceremony per session, numbered accounts on two curves, a stored credential record so sign-in pins the right passkey, and a clean lock at the end. The pattern is adapted from the demo app and is app-side code throughout; mera contributes the ceremonies and the signing sessions. Prerequisites: `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a PRF-capable authenticator ([authenticator support](/concepts/authenticator-support/)).
 
 ## Create the passkey
 
@@ -22,6 +20,10 @@ const created = await createPasskeyWithPrfOutput({
   user: { name: "account@example.com", displayName: "Example account" },
   prfSalt: getDeterministicPrfSaltV1(),
 });
+
+// The seed comes from the sign-in assertion below, so this flow never uses
+// the create-time PRF output; zero it right away.
+created.prfOutput.fill(0);
 ```
 
 `user.id` is left to its default, a fresh 32-byte random handle, so every create call makes a distinct, parallel passkey rather than silently overwriting an existing one.
@@ -131,6 +133,12 @@ function deriveSolanaAccount(seed: Uint8Array, index: number) {
 ```
 
 Both derivations are the demo's choice: the same phrase imported into a wallet app that speaks these standards (MetaMask and Phantom are two) reproduces the same addresses, so accounts keep an exit path that does not depend on mera.
+
+Build the account list from these helpers:
+
+```ts
+const accounts = [deriveEvmAccount(seed, 0), deriveSolanaAccount(seed, 0)];
+```
 
 ## Lock everything
 

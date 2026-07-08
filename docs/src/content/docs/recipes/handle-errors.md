@@ -3,7 +3,7 @@ title: Handle errors
 description: Narrow MeraError, map codes to user-facing text, and know which codes mean retry.
 ---
 
-Every failure the library signals is a `MeraError` with a stable `code`; the [errors reference](/reference/errors/) lists all seven. The app-side work is narrowing unknown errors, choosing words people can act on, and knowing which codes deserve a retry button. The mapping below is adapted from the demo.
+Every failure the library signals is a `MeraError` with a stable `code`; the [errors reference](/reference/errors/) lists every code. The app-side work is narrowing unknown errors, choosing words people can act on, and knowing which codes deserve a retry button. The mapping below is adapted from the demo.
 
 ## Narrow first
 
@@ -37,19 +37,19 @@ Non-mera errors pass through untouched, so chain-library and network failures ke
 
 ## What each code should trigger
 
-**PASSKEY_OPERATION_FAILED** is the everyday one: the person dismissed the prompt, or WebAuthn itself failed. Offer a plain retry and move on. The underlying failure rides along as `error.cause` for logging.
+**[PASSKEY_OPERATION_FAILED](/reference/errors/#passkey_operation_failed)** is the everyday one: the person dismissed the prompt, or WebAuthn itself failed. Offer a plain retry and move on. The underlying failure is attached as `error.cause` for logging.
 
-**PRF_UNAVAILABLE** means the authenticator stack cannot do PRF. Point people at a combination that works ([authenticator support](/concepts/authenticator-support/) is linkable). On a create flow the passkey may already exist by the time this throws, so a retry with a different authenticator leaves an orphan credential in the first one's passkey list; say so in the UI.
+**[PRF_UNAVAILABLE](/reference/errors/#prf_unavailable)** means the authenticator stack cannot do PRF. Point people at a combination that works, for example by linking [authenticator support](/concepts/authenticator-support/) from the error state. On a create flow the passkey may already exist by the time this throws, so a retry with a different authenticator leaves an orphan credential in the first one's passkey list; say so in the UI.
 
-**CRYPTO_UNAVAILABLE** almost always means the page is not in a secure context. Fail loudly during development and this never ships; no user action fixes it.
+**[CRYPTO_UNAVAILABLE](/reference/errors/#crypto_unavailable)** almost always means the page is not in a secure context. Fail loudly during development and this never ships; no user action fixes it.
 
-**SESSION_LOCKED** is expected behavior after `lock()`, so route it to the reconnect flow rather than an error banner. One fresh ceremony builds a new session.
+**[SESSION_LOCKED](/reference/errors/#session_locked)** is expected behavior after `lock()`, so route it to the reconnect flow rather than an error banner. One fresh ceremony builds a new session.
 
-**DECRYPT_FAILED** on a vault means wrong key material or a tampered blob, and the two are indistinguishable by design. Since [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/) pins the assertion to the vault's own credential, honest mismatches are rare; do not loop retries, surface the import-or-restore path instead.
+**[DECRYPT_FAILED](/reference/errors/#decrypt_failed)** on a vault means wrong key material or a tampered blob, and the two are indistinguishable by design. Since [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/) pins the assertion to the vault's own credential, honest mismatches are rare; do not loop retries, surface the import-or-restore path instead.
 
-**INPUT_INVALID** is a bug in calling code, a length or encoding constraint missed at a public boundary. Log it with the message; no user action fixes it.
+**[INPUT_INVALID](/reference/errors/#input_invalid)** is a bug in calling code, a length or encoding constraint missed at a public boundary. Log it with the message; no user action fixes it.
 
-**VAULT_FORMAT_INVALID** means the stored vault JSON is corrupt or from an unsupported version. Rerunning ceremonies cannot help, because the failure happens before any ceremony; offer recovery through a fresh import ([Wrap a recovery phrase](/recipes/wrap-a-recovery-phrase/)).
+**[VAULT_FORMAT_INVALID](/reference/errors/#vault_format_invalid)** means the stored vault JSON is corrupt or from an unsupported version. Rerunning ceremonies cannot help, because the failure happens before any ceremony; offer recovery through a fresh import ([Wrap a recovery phrase](/recipes/wrap-a-recovery-phrase/)).
 
 ## See also
 

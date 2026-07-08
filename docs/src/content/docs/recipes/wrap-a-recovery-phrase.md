@@ -3,9 +3,7 @@ title: Wrap a recovery phrase
 description: Encrypt an existing recovery phrase into a passkey-protected vault and unlock it later.
 ---
 
-Wrapped mode imports an account that already exists: the recovery phrase becomes the secret inside a passkey-encrypted vault, and later ceremonies open it again. This recipe validates a phrase, wraps it, persists the vault, and unlocks it with careful zeroing throughout. The code is the app-side pattern from the demo.
-
-Prerequisites: `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
+Wrapped mode imports an account that already exists: the recovery phrase becomes the secret inside a passkey-encrypted vault, and later ceremonies open it again. This recipe validates a phrase, wraps it, persists the vault, and unlocks it with careful zeroing throughout. The code is the app-side pattern from the demo. Prerequisites: `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
 
 ## Validate the phrase
 
@@ -15,7 +13,9 @@ The library never interprets the secret, so phrase validation is app code:
 import { validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 
-const phrase = input.trim();
+// Stand-in: a real app reads the phrase from a form field.
+const phrase =
+  "legal winner thank year wave sausage worth useful legal winner thank yellow";
 if (!validateMnemonic(phrase, wordlist)) {
   throw new Error("Not a valid recovery phrase.");
 }
@@ -92,6 +92,6 @@ The phrase is a standard BIP-39 mnemonic, so key derivation from here is exactly
 
 ## Pitfalls
 
-- **One secret, one vault, one salt.** A second secret behind the same passkey needs its own fresh salt and a new [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) ceremony against it, then its own vault.
-- **The phrase is a string** while it transits the wrap and unlock code, and strings cannot be zeroed. Keep the lifetime short and never log it; the [security model](/concepts/security-model/#strings-cannot-be-zeroed) explains the limits.
-- **Vault gone means secret gone.** The vault JSON is the only ciphertext copy. Losing the storage loses the account unless the person still holds the phrase elsewhere.
+- **A second secret needs its own salt, ceremony, and vault.** Generate 32 fresh random bytes, run [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) against them, and wrap the new secret into a separate vault.
+- **The phrase is a string** while it transits the wrap and unlock code, and strings cannot be zeroed ([security model](/concepts/security-model/#strings-cannot-be-zeroed)). Keep the lifetime short and never log it.
+- **The vault JSON is the only ciphertext copy.** Losing the storage loses the account unless the person still holds the phrase elsewhere.

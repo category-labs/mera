@@ -3,9 +3,7 @@ title: Sign Solana transactions
 description: Plug an Ed25519 signing session into a web3.js transaction flow.
 ---
 
-A Solana transaction is signed by Ed25519 over its serialized message, which is exactly the shape [signMessage](/reference/create-ed25519-signing-session/#signmessagemessage) offers: pass the raw bytes, get the 64-byte signature back. The session's public key doubles as the fee-payer address.
-
-Prerequisites: `@solana/web3.js` installed and an unlocked Ed25519 session ([Derive accounts from one passkey](/recipes/derive-accounts/) produces one). In the browser, web3.js also needs a `Buffer` polyfill; the demo wires one through its bundler.
+A Solana transaction is signed by Ed25519 over its serialized message, which is exactly the shape [signMessage](/reference/create-ed25519-signing-session/#signmessagemessage) offers: pass the raw bytes, get the 64-byte signature back. The session's public key doubles as the fee-payer address. Prerequisites: `@solana/web3.js` installed and an unlocked Ed25519 session ([Derive accounts from one passkey](/recipes/derive-accounts/) produces one). In the browser, web3.js also needs a `Buffer` polyfill; the demo wires one through its bundler.
 
 ## Build, sign, serialize
 
@@ -56,15 +54,23 @@ async function signSolTransfer(options: {
 ## Broadcast
 
 ```ts
-const serialized = await signSolTransfer({
-  connection,
-  session,
-  fromAddress: address,
-  toAddress: recipient,
-  lamports: 1_000_000n,
-});
+import { getSolanaAddress } from "@category-labs/mera";
+import { clusterApiUrl } from "@solana/web3.js";
 
-const signature = await connection.sendRawTransaction(serialized);
+async function sendSolTransfer(
+  session: Ed25519SigningSession,
+  recipient: string,
+): Promise<string> {
+  const connection = new Connection(clusterApiUrl("devnet"));
+  const serialized = await signSolTransfer({
+    connection,
+    session,
+    fromAddress: getSolanaAddress(session.publicKey),
+    toAddress: recipient,
+    lamports: 1_000_000n,
+  });
+  return connection.sendRawTransaction(serialized);
+}
 ```
 
 Signing and broadcasting stay separate: the app can show or persist the signed transaction even when the broadcast then fails, and retries re-send the same bytes instead of prompting for anything.

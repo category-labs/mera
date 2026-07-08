@@ -1,9 +1,9 @@
 ---
 title: Security model
-description: What mera protects, what it cannot, and the sharp edges to design around.
+description: What mera protects, what it cannot, and the risks left to the app.
 ---
 
-mera's job is narrow: run passkey ceremonies, hand the app entropy, hold signing keys behind a lock. This page states what the library handles inside that job and what remains the app's problem; each fact also appears on the reference page of the function it concerns.
+mera has a narrow scope: it runs passkey ceremonies, returns entropy to the app, and holds signing keys in lockable sessions. This page states what the library handles inside that scope and what the app must handle itself; each fact also appears on the reference page of the function it concerns.
 
 ## What the library handles
 
@@ -21,13 +21,13 @@ The mitigations are app-level: lock sessions when idle, keep derivation windows 
 
 ## rpId binding
 
-PRF output is a function of the credential, the relying party ID, and the salt. A passkey answers only the rpId it was created under, so after a domain migration the app cannot run assertions under the old one. That breaks derived-mode reproduction and blocks the ceremony that opens wrapped vaults alike.
+PRF output is a function of the credential, the relying party ID, and the salt. A passkey can be used only under the rpId it was created for, so after a domain migration the app cannot run assertions under the old one. That breaks both modes: derived accounts can no longer be reproduced, and wrapped vaults can no longer be decrypted.
 
-Treat the rpId as a long-lived choice. If a migration is ever on the table, accounts need an export path before it happens; [Reveal a recovery phrase](/recipes/reveal-a-recovery-phrase/) is one.
+Treat the rpId as a long-lived choice. Before any planned migration, accounts need an export path; [Reveal a recovery phrase](/recipes/reveal-a-recovery-phrase/) is one.
 
 ## One output, one purpose
 
-Reusing one PRF output for unrelated purposes (key derivation and app-data encryption, say) links those secrets: anyone who learns the output learns them all. Use a different salt per purpose, or split one output with a purpose-labeled KDF.
+Reusing one PRF output for unrelated purposes (for example, key derivation and app-data encryption) links those secrets: exposure of the output exposes all of them. Use a different salt per purpose, or split one output with a purpose-labeled KDF.
 
 A vault is bound to its PRF output only, never to the credential ID or salt. Secrets wrapped under one reused output share a wrapping key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored vault JSON. Give each secret a fresh random 32-byte salt; the [createSecretVault](/reference/create-secret-vault/) page carries the same warning.
 

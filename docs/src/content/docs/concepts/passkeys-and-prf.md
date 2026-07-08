@@ -1,6 +1,6 @@
 ---
 title: Passkeys and the PRF extension
-description: Where mera's 32 bytes come from and why they are stable.
+description: What a passkey is, what the PRF extension adds, and why its output is stable.
 ---
 
 A passkey is a WebAuthn credential: a key pair created at a website's request by an authenticator (a phone, a password manager, a hardware key). The private half never leaves the authenticator. "Discoverable" means the authenticator finds the credential for a domain on its own, so signing in needs no username and no stored identifier.
@@ -19,13 +19,13 @@ The requirement is not configurable. Authenticators built on CTAP's `hmac-secret
 
 The [PRF extension](https://www.w3.org/TR/webauthn-3/#prf-extension) gives each credential a pseudorandom function. The caller passes a 32-byte salt with the ceremony and the authenticator returns 32 bytes.
 
-The output is deterministic in exactly three inputs: the credential, the relying party ID, and the salt. Same three, same 32 bytes, on any device the passkey syncs to. Change the salt and the output is unrelated. Salts act as namespaces, which is why derived accounts share one [fixed salt](/reference/get-deterministic-prf-salt-v1/) while each wrapped secret gets a fresh random one.
+The output is deterministic in exactly three inputs: the credential, the relying party ID, and the salt. The same three inputs produce the same 32 bytes on any device the passkey syncs to; a different salt produces an unrelated output. Salts act as namespaces, which is why derived accounts share one [fixed salt](/reference/get-deterministic-prf-salt-v1/) while each wrapped secret gets a fresh random one.
 
-## Account-grade entropy
+## Using the output
 
-32 stable bytes that appear only after user verification, exist outside the authenticator only as this evaluated output, and follow the passkey wherever it syncs: enough to root an account on.
+The output is suitable as the root secret for accounts. It is stable wherever the passkey syncs, it appears only after user verification, and it never needs to be stored: the authenticator re-evaluates it on each ceremony.
 
-Fed to a key-derivation scheme, the bytes root a hierarchy of accounts; used as key material, they open an encrypted vault. mera hands them over and stops there; [derived and wrapped modes](/concepts/derived-and-wrapped/) compares the two patterns.
+Fed to a key-derivation scheme, the output produces a hierarchy of accounts; used as key material, it decrypts a vault. mera returns the output and does nothing else with it. [Derived and wrapped modes](/concepts/derived-and-wrapped/) compares the two patterns.
 
 ## Ceremonies and prompts
 
@@ -35,7 +35,7 @@ A ceremony is one WebAuthn call and one user-verification prompt. mera runs thre
 - [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) asserts with an existing credential and returns the PRF output.
 - [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) chains the two: one prompt when the authenticator evaluates PRF at create time, two when it needs the follow-up assertion.
 
-Signing itself never prompts: a ceremony's output backs key material in a [signing session](/reference/create-secp256k1-signing-session/), and the session signs until it is locked.
+Signing itself never prompts: a [signing session](/reference/create-secp256k1-signing-session/) holds key material derived from a ceremony's output and signs until it is locked.
 
 ## See also
 

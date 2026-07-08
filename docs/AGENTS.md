@@ -47,6 +47,7 @@ The bar is simple, concise, and detailed at the same time, and that combination 
 `site/WRITING.md` applies in full. The rules that carry the most weight here:
 
 - Say "account". "Wallet" is only for wallet apps: MetaMask, Phantom, the demo.
+- Word choice fits technical documentation. Plain nouns over narrative or dramatic ones: "trade-offs", never "stories"; "complication", never "trap". A word that belongs in a blog headline gets replaced.
 - Calm explanation, no marketing. If a sentence would fit in a product brochure, rewrite it.
 - Named wallet apps are examples, never an exhaustive list.
 - Prefer a concrete statement over an abstract one. "The salt is 32 bytes" beats "the salt has a fixed size".
@@ -63,6 +64,7 @@ The bar is simple, concise, and detailed at the same time, and that combination 
 ## Accuracy
 
 - Every claim must be checkable against the README or the JSDoc in `src/`.
+- Implementation details stay on the pages that own them. Error codes and library internals belong to the reference; the demo's internals (derivation schemes, storage, UI) appear only in the recipes that adapt its code. Every other page links to the owning page instead of restating the detail, so a demo or library change touches one page. The demo changes freely; never let a concepts or landing page depend on it.
 - Examples import only the public API plus explicitly declared app-side dependencies.
 - Security-sensitive behavior is stated plainly on the page where the risk is acted on: key material lifetimes, zeroing, nonce handling, prompt counts, and what the library cannot protect against.
 - Support claims are date-stamped. The authenticator matrix lives in the README; this site mirrors it, and updates land in both places.
@@ -90,3 +92,4 @@ The bar is simple, concise, and detailed at the same time, and that combination 
 9. Security caveats sit on the page where the risk is acted on.
 10. Links have descriptive text; no bare "here".
 11. Every sentence adds information; no setup, restatement, or editorial sentences survive.
+12. Implementation details sit only on their owning pages; demo internals appear only in recipes.

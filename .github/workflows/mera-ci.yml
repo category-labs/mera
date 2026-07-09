@@ -17,6 +17,40 @@ permissions:
   contents: read
 
 jobs:
+  # Classifies a PR's changed files so later jobs can skip work the change
+  # cannot affect: `library` covers everything the root package build/tests
+  # depend on, `demo` adds demo/ on top of that (the demo compiles against the
+  # library's dist/), and `docs` is independent of library code. Runs only on
+  # pull_request; on push and manual dispatch the gated jobs run unconditionally.
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: read
+    outputs:
+      library: ${{ steps.filter.outputs.library }}
+      demo: ${{ steps.filter.outputs.demo }}
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - name: Filter changed paths
+        id: filter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.url }}
+        run: |
+          gh api --paginate "$PR_URL/files" --jq '.[].filename' > changed-files.txt
+
+          matches() { grep -qE "$1" changed-files.txt && echo true || echo false; }
+          library='^(src/|test/|scripts/|package\.json$|package-lock\.json$|tsconfig\.json$|tsconfig\.test\.json$|playwright\.config\.ts$|\.nvmrc$|\.github/workflows/)'
+          shared='^(\.nvmrc$|\.github/workflows/)'
+
+          {
+            echo "library=$(matches "$library")"
+            echo "demo=$(matches "$library|^demo/")"
+            echo "docs=$(matches "$shared|^docs/")"
+          } >> "$GITHUB_OUTPUT"
+
   check:
     name: Check
     runs-on: ubuntu-latest
@@ -41,6 +75,10 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    # On non-PR events `changes` is skipped, which would skip dependents too;
+    # `!cancelled()` keeps them eligible so the event check can run everything.
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.library == 'true') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -65,6 +103,8 @@ jobs:
   demo:
     name: Demo
     runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.demo == 'true') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -96,6 +136,8 @@ jobs:
   docs:
     name: Docs
     runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.docs == 'true') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -119,6 +161,8 @@ jobs:
   package:
     name: Publish check
     runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.library == 'true') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7

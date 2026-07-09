@@ -16,6 +16,7 @@ Each exported function has its own page. Types are documented on the pages of th
 
 - [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/): wraps a secp256k1 private key in an explicitly lockable signing session.
 - [createEd25519SigningSession](/reference/create-ed25519-signing-session/): wraps an Ed25519 private key in an explicitly lockable signing session.
+- [toViemAccount](/reference/to-viem-account/): adapts a secp256k1 signing session into a viem local account.
 
 ## Secret vault
 

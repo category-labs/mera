@@ -85,5 +85,6 @@ The recovery ID is declared `0 | 1`. Values 2 and 3 exist in ECDSA but require t
 ## See also
 
 - [getEvmAddress](/reference/get-evm-address/): the address for `session.publicKey`.
+- [toViemAccount](/reference/to-viem-account/): a viem account backed by the session.
 - [Sign with viem](/recipes/sign-with-viem/): adapting `signDigest` to a viem account.
 - [Signing sessions](/concepts/signing-sessions/): the custody model, the lifecycle, and what an active session exposes.

@@ -100,5 +100,5 @@ Signatures are low-S, which EVM chains require since EIP-2; `signDigest` enforce
 ## See also
 
 - [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/): produces the session this adapter consumes.
-- [Sign with viem](/recipes/sign-with-viem/): sending a transaction with the account.
 - [Signing sessions](/concepts/signing-sessions/): the custody model and lifecycle.
+

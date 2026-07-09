@@ -27,6 +27,8 @@ Derived mode stores no app-owned secret to recover. The account may be unrecover
 npm install @category-labs/mera
 ```
 
+The `@category-labs/mera/viem` entry point requires `viem` (^2.28.0) as an optional peer dependency; the root entry point does not use it.
+
 ## Quick example
 
 A derived-mode example: one passkey ceremony, then app-owned key derivation — here BIP-39/BIP-32 with `@scure/bip32` and `@scure/bip39`, as in the demo.
@@ -106,6 +108,7 @@ Names only; editor hover shows the full JSDoc.
 - **Signing sessions**: `createSecp256k1SigningSession`, `createEd25519SigningSession`
 - **Secret vault**: `createSecretVault`, `unwrapSecretVault`, `parseSecretVault`, `getSecretVaultPrfOutput`
 - **Chain addresses**: `getEvmAddress`, `isEvmAddress`, `getSolanaAddress`, `isSolanaAddress`
+- **viem adapter** (`@category-labs/mera/viem`): `toViemAccount`
 - **Errors**: `MeraError`, `isMeraError`, `MeraErrorCode`
 
 ## Detailed docs

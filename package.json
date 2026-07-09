@@ -29,6 +29,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./viem": {
+      "types": "./dist/viem.d.ts",
+      "import": "./dist/viem.js"
     }
   },
   "sideEffects": false,
@@ -59,12 +63,21 @@
     "@noble/secp256k1": "^3.1.0",
     "@scure/base": "^2.2.0"
   },
+  "peerDependencies": {
+    "viem": "^2.28.0"
+  },
+  "peerDependenciesMeta": {
+    "viem": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@biomejs/biome": "2.5.3",
     "@playwright/test": "^1.61.1",
     "@types/node": "^25.9.3",
     "publint": "^0.3.21",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "viem": "^2.52.2"
   },
   "engines": {
     "node": ">=24"

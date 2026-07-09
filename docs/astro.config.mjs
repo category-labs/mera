@@ -83,6 +83,7 @@ export default defineConfig({
               items: [
                 "reference/create-secp256k1-signing-session",
                 "reference/create-ed25519-signing-session",
+                "reference/to-viem-account",
               ],
             },
             {

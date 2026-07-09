@@ -62,7 +62,6 @@ export default defineConfig({
           items: [
             "recipes/derive-accounts",
             "recipes/use-an-existing-secret",
-            "recipes/sign-with-viem",
           ],
         },
         {

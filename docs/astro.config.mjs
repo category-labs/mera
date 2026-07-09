@@ -59,10 +59,7 @@ export default defineConfig({
         },
         {
           label: "Recipes",
-          items: [
-            "recipes/derive-accounts",
-            "recipes/use-an-existing-secret",
-          ],
+          items: ["recipes/derive-accounts", "recipes/use-an-existing-secret"],
         },
         {
           label: "Reference",

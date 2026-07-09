@@ -1,0 +1,14 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "RAILPACK",
+    "buildCommand": "npm ci && npm run build && npm --prefix demo ci && npm --prefix demo run build",
+    "watchPatterns": [
+      "/demo/**",
+      "/src/**",
+      "/package.json",
+      "/package-lock.json",
+      "/tsconfig.json"
+    ]
+  }
+}

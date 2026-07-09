@@ -3,7 +3,7 @@ title: Derive accounts from one passkey
 description: Numbered EVM and Solana accounts from a single ceremony, with credential pinning.
 ---
 
-This recipe extends [Getting started](/getting-started/) to a real multi-account setup: one passkey ceremony per session, numbered accounts on two curves, a stored credential record so sign-in pins the right passkey, and a clean lock at the end. The pattern is adapted from the demo app and is app-side code throughout; mera contributes the ceremonies and the signing sessions. Prerequisites: `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a PRF-capable authenticator ([authenticator support](/concepts/authenticator-support/)).
+This recipe extends [Getting started](/getting-started/) to a real multi-account setup: one passkey ceremony per session, numbered accounts on two curves, a stored credential record so sign-in pins the right passkey, and a clean lock at the end. The code is app-side throughout; mera provides the ceremonies and the signing sessions. Prerequisites: `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a PRF-capable authenticator ([authenticator support](/concepts/authenticator-support/)).
 
 ## Create the passkey
 
@@ -42,6 +42,8 @@ localStorage.setItem(
 );
 ```
 
+`transports` is optional and only a hint: the browser uses it to reach the authenticator directly (a platform prompt for a platform passkey, a QR flow for a phone) instead of offering every option. Sign-in works the same without it.
+
 A fresh device has no record; sign-in falls back to a discoverable ceremony, and the synced passkey still produces the same accounts.
 
 ## Sign in
@@ -68,7 +70,7 @@ const record =
 localStorage.setItem("app.derivedCredential", JSON.stringify(record));
 ```
 
-## Hold a master seed, not the PRF output
+## Hold a master seed for the session
 
 Turn the PRF output into a BIP-39 master seed once, zero the output, and keep the seed in memory for the session; deriving account 3 later is pure HD math with no further prompt.
 
@@ -79,6 +81,8 @@ import { wordlist } from "@scure/bip39/wordlists/english.js";
 const seed = mnemonicToSeedSync(entropyToMnemonic(prfOutput, wordlist));
 prfOutput.fill(0);
 ```
+
+`entropyToMnemonic` creates a phrase string on the way to the seed, and strings cannot be zeroed ([security model](/concepts/security-model/#strings-cannot-be-zeroed)); the phrase stays in memory until garbage collection.
 
 ## Derive numbered accounts
 
@@ -132,7 +136,7 @@ function deriveSolanaAccount(seed: Uint8Array, index: number) {
 }
 ```
 
-Both derivations are the demo's choice: the same phrase imported into a wallet app that speaks these standards (MetaMask and Phantom are two) reproduces the same addresses, so accounts keep an exit path that does not depend on mera.
+The derivation paths are an app choice; these two are the shared wallet conventions. A phrase imported into a wallet app that speaks them (MetaMask and Phantom are two) reproduces the same addresses, so accounts keep an exit path that does not depend on mera.
 
 Build the account list from these helpers:
 
@@ -153,6 +157,6 @@ Sessions zero their own key copies on `lock()`. The master seed is the app's buf
 
 ## Pitfalls
 
-- **The mapping is consensus-critical.** PRF output to mnemonic, and the two derivation paths: change any of it after launch and every address changes. Ship it once.
+- **The derivation must never change after launch.** Every step between the PRF output and an address (the mnemonic mapping and the two derivation paths) is permanent: change any step and every account gets a different address.
 - **Zero the PRF output as soon as the seed exists**, and the seed on lock. Between those two moments a compromised runtime can read them ([security model](/concepts/security-model/)).
 - **Accounts reproduce only under the same rpId.** A domain migration silently orphans them; give accounts an export path first ([Reveal a recovery phrase](/recipes/reveal-a-recovery-phrase/)).

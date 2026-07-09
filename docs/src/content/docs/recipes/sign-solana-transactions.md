@@ -3,7 +3,7 @@ title: Sign Solana transactions
 description: Plug an Ed25519 signing session into a web3.js transaction flow.
 ---
 
-A Solana transaction is signed by Ed25519 over its serialized message, which is exactly the shape [signMessage](/reference/create-ed25519-signing-session/#signmessagemessage) offers: pass the raw bytes, get the 64-byte signature back. The session's public key doubles as the fee-payer address. Prerequisites: `@solana/web3.js` installed and an unlocked Ed25519 session ([Derive accounts from one passkey](/recipes/derive-accounts/) produces one). In the browser, web3.js also needs a `Buffer` polyfill; the demo wires one through its bundler.
+A Solana transaction is signed by Ed25519 over its serialized message, which is exactly what [signMessage](/reference/create-ed25519-signing-session/#signmessagemessage) signs: it takes the raw message bytes and returns the 64-byte signature. The session's public key doubles as the fee-payer address. Prerequisites: `@solana/web3.js` and `buffer` installed and an unlocked Ed25519 session ([Derive accounts from one passkey](/recipes/derive-accounts/) produces one). In the browser, web3.js needs a `Buffer` polyfill; the example imports it from the `buffer` package.
 
 ## Build, sign, serialize
 

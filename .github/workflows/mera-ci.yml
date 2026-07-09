@@ -7,6 +7,12 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Cancel superseded runs when a PR branch gets a new push. Runs on main are
+# queued instead of cancelled so post-merge validation always completes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 

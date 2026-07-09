@@ -8,7 +8,10 @@ import { execFileSync } from "node:child_process";
 const REQUIRED_FILES = [
   "dist/index.js",
   "dist/index.d.ts",
+  "dist/viem.js",
+  "dist/viem.d.ts",
   "src/index.ts",
+  "src/viem.ts",
   "README.md",
   "LICENSE-MIT",
   "LICENSE-APACHE",
@@ -23,9 +26,11 @@ const packOutput = execFileSync(
   ["pack", "--dry-run", "--json", "--ignore-scripts"],
   { encoding: "utf8" },
 );
-const shipped = new Set(
-  JSON.parse(packOutput)[0].files.map((entry) => entry.path),
-);
+// npm <= 11 prints an array of pack reports; npm 12 prints an object keyed
+// by package name. Both hold a single report for this package.
+const parsed = JSON.parse(packOutput);
+const report = Array.isArray(parsed) ? parsed[0] : Object.values(parsed)[0];
+const shipped = new Set(report.files.map((entry) => entry.path));
 
 const missing = REQUIRED_FILES.filter((path) => !shipped.has(path));
 if (missing.length > 0) {

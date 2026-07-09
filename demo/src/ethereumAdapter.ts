@@ -1,6 +1,6 @@
 import type { EvmAddress, Secp256k1SigningSession } from "@category-labs/mera";
+import { toViemAccount } from "@category-labs/mera/viem";
 import { getAddress, isAddress } from "viem";
-import { toPasskeyAccount } from "./account";
 import { formatDecimalAmount, parseDecimalAmount } from "./amount";
 import type { ChainAdapter } from "./ChainAccountCard";
 import {
@@ -23,7 +23,7 @@ function createEthereumAdapter(
   ethereum: EthereumContext,
 ): ChainAdapter {
   const { chain, publicClient, rpcUrl } = ethereum;
-  const account = toPasskeyAccount(session);
+  const account = toViemAccount(session);
   const symbol = chain.nativeCurrency.symbol;
   return {
     chainName: "Ethereum",

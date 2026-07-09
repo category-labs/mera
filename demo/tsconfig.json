@@ -14,7 +14,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "@category-labs/mera": ["../dist/index.d.ts"]
+      "@category-labs/mera": ["../dist/index.d.ts"],
+      "@category-labs/mera/viem": ["../dist/viem.d.ts"]
     }
   },
   "include": ["src"]

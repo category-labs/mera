@@ -23,7 +23,7 @@ The mitigations are app-level: lock sessions when idle, keep derivation windows 
 
 PRF output is a function of the credential, the relying party ID, and the salt. A passkey can be used only under the rpId it was created for, so after a domain migration the app cannot run assertions under the old one. That breaks both modes: derived accounts can no longer be reproduced, and wrapped vaults can no longer be decrypted.
 
-Treat the rpId as a long-lived choice. Before any planned migration, accounts need an export path; [Reveal a recovery phrase](/recipes/reveal-a-recovery-phrase/) is one.
+Treat the rpId as a long-lived choice. Before any planned migration, accounts need an export path.
 
 ## One output, one purpose
 

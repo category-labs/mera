@@ -88,7 +88,7 @@ Signing happens locally in the session with no passkey prompt; the ceremony alre
 
 - **Low-S is already enforced.** `signDigest` returns low-S signatures, which EVM chains require since EIP-2; the adapter adds nothing.
 - **`signTypedData` is left unimplemented** in the demo. Implementing it is the same shape: hash with viem's `hashTypedData`, then `signHash`.
-- **Locking propagates.** After `session.lock()`, any viem call that signs rejects with a [`SESSION_LOCKED`](/reference/errors/#session_locked) MeraError. Build the reconnect flow around that; [Handle errors](/recipes/handle-errors/) shows the mapping.
+- **Locking propagates.** After `session.lock()`, any viem call that signs rejects with a [`SESSION_LOCKED`](/reference/errors/#session_locked) MeraError. Build the reconnect flow around that.
 
 ## See also
 

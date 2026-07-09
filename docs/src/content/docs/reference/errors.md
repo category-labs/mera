@@ -37,7 +37,7 @@ try {
 }
 ```
 
-A type guard: returns `true` when the value is a `MeraError` instance. Narrow with it first, then branch on `code`. [Handle errors](/recipes/handle-errors/) builds a complete code-to-message mapping.
+A type guard: returns `true` when the value is a `MeraError` instance. Narrow with it first, then branch on `code`.
 
 ## Codes
 
@@ -68,7 +68,3 @@ A caller-supplied value at a public boundary did not satisfy a length, range, en
 ### VAULT_FORMAT_INVALID
 
 Untrusted vault data (JSON text or an object) was malformed, missing required fields, used a non-canonical encoding, or declared an unsupported version. Thrown only by [parseSecretVault](/reference/parse-secret-vault/), the boundary for stored vault data.
-
-## See also
-
-- [Handle errors](/recipes/handle-errors/): per-code handling guidance and user-facing messages.

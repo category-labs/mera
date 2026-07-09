@@ -64,5 +64,5 @@ The 32-byte WebAuthn PRF output for the vault's stored salt. Copied before async
 
 ## See also
 
-- [Wrap a recovery phrase](/recipes/wrap-a-recovery-phrase/): create, store, and unwrap with the zeroing pattern.
+- [Use an existing secret](/recipes/use-an-existing-secret/): create, store, and unwrap with the zeroing pattern.
 - [Secret vault format](/reference/secret-vault-format/): what the ciphertext actually contains.

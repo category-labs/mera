@@ -1,9 +1,9 @@
 ---
-title: Wrap a recovery phrase
-description: Encrypt an existing recovery phrase into a passkey-protected vault and unlock it later.
+title: Use an existing secret (recovery phrase or private key) in wrapped mode
+description: Encrypt an existing secret into a passkey-protected vault and unlock it later.
 ---
 
-Wrapped mode imports an account that already exists: the recovery phrase becomes the secret inside a passkey-encrypted vault, and later ceremonies open it again. This recipe validates a phrase, wraps it, persists the vault, and unlocks it with careful zeroing throughout. The code is the app-side pattern from the demo. Prerequisites: `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
+Wrapped mode encrypts one app-supplied secret behind a passkey, and the library never interprets the secret bytes: a recovery phrase, a private key, or any other secret works. Importing an account that already exists is one use, and it is the one this recipe works end to end: validate a phrase, wrap it, persist the vault, and unlock it later with careful zeroing. The code is app-side throughout; mera provides the ceremonies and the vault. Prerequisites: `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
 
 ## Validate the phrase
 
@@ -52,7 +52,7 @@ try {
 }
 ```
 
-The `finally` zeroes the encoded phrase and the PRF output whether or not wrapping succeeded. The vault stores the salt and credential metadata itself ([format](/reference/secret-vault-format/)), so nothing else needs saving.
+The `finally` zeroes the encoded phrase and the PRF output whether or not wrapping succeeded. A private key wraps the same way: pass its raw bytes as `secret` instead of encoded text. The vault stores the salt and credential metadata itself ([format](/reference/secret-vault-format/)), so nothing else needs saving.
 
 ## Unlock
 

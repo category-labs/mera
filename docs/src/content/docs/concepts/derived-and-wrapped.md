@@ -11,7 +11,7 @@ With mera's [fixed deterministic salt](/reference/get-deterministic-prf-salt-v1/
 
 There is no stored secret; all state lives in the passkey. Once the passkey has synced to a new device, sign-in there is the same ceremony and produces the same accounts.
 
-The account may be unrecoverable if the passkey is deleted, not synced, tied to a lost provider account, or unavailable under the app's rpId after a domain migration. Recovery then depends on an app-provided export, import, or backup path, taken while the passkey still works. [Reveal a recovery phrase](/recipes/reveal-a-recovery-phrase/) shows one such path.
+The account may be unrecoverable if the passkey is deleted, not synced, tied to a lost provider account, or unavailable under the app's rpId after a domain migration. Recovery then depends on an app-provided export, import, or backup path, taken while the passkey still works.
 
 ## Wrapped
 
@@ -29,5 +29,5 @@ The secret exists independently of the passkey: an account that predates it can 
 ## See also
 
 - [Derive accounts from one passkey](/recipes/derive-accounts/)
-- [Wrap a recovery phrase](/recipes/wrap-a-recovery-phrase/)
+- [Use an existing secret](/recipes/use-an-existing-secret/)
 - [Secret vault format](/reference/secret-vault-format/)

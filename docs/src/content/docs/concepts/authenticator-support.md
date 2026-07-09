@@ -36,5 +36,4 @@ Chrome may create the passkey in the local profile instead of Google Password Ma
 ## See also
 
 - [Passkeys and the PRF extension](/concepts/passkeys-and-prf/): what PRF is and why user verification is required.
-- [Handle errors](/recipes/handle-errors/): turning unsupported-authenticator failures into clear guidance.
 - Corbado's [Passkeys & WebAuthn PRF for End-to-End Encryption](https://www.corbado.com/blog/passkeys-prf-webauthn): the broader PRF compatibility picture beyond the combinations tested here.

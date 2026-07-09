@@ -44,4 +44,4 @@ A future vault format will use a higher version number. Rejecting an unknown ver
 ## See also
 
 - [Secret vault format](/reference/secret-vault-format/): the v1 schema this function enforces.
-- [Wrap a recovery phrase](/recipes/wrap-a-recovery-phrase/): parse-then-unlock in context.
+- [Use an existing secret](/recipes/use-an-existing-secret/): parse-then-unlock in context.

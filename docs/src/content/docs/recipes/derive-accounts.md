@@ -99,8 +99,7 @@ function deriveEvmAccount(seed: Uint8Array, index: number) {
   const node = HDKey.fromMasterSeed(seed).derive(`m/44'/60'/0'/0/${index}`);
   if (node.privateKey === null) throw new Error("derivation produced no key");
   const session = createSecp256k1SigningSession({
-    // Copy out of the HDKey so the session can own and later zero it.
-    consumePrivateKey: new Uint8Array(node.privateKey),
+    consumePrivateKey: node.privateKey,
   });
   return { session, address: getEvmAddress(session.publicKey) };
 }
@@ -159,4 +158,4 @@ Sessions zero their own key copies on `lock()`. The master seed is the app's buf
 
 - **The derivation must never change after launch.** Every step between the PRF output and an address (the mnemonic mapping and the two derivation paths) is permanent: change any step and every account gets a different address.
 - **Zero the PRF output as soon as the seed exists**, and the seed on lock. Between those two moments a compromised runtime can read them ([security model](/concepts/security-model/)).
-- **Accounts reproduce only under the same rpId.** A domain migration silently orphans them; give accounts an export path first ([Reveal a recovery phrase](/recipes/reveal-a-recovery-phrase/)).
+- **Accounts reproduce only under the same rpId.** A domain migration silently orphans them; give accounts an export path first. The phrase to show is `entropyToMnemonic` over the PRF output from a fresh assertion, the same mapping the seed step uses ([Derived and wrapped modes](/concepts/derived-and-wrapped/)).

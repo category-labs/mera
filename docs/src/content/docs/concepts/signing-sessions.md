@@ -38,5 +38,6 @@ A signing function that took the key as an argument on every call would spread c
 ## See also
 
 - [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) and [createEd25519SigningSession](/reference/create-ed25519-signing-session/): the exact copy, zeroing, and locking semantics.
+- [toViemAccount](/reference/to-viem-account/): a viem account backed by a secp256k1 session.
 - [Sign with viem](/recipes/sign-with-viem/) and [Sign Solana transactions](/recipes/sign-solana-transactions/): sessions in transaction flows.
 - [Getting started](/getting-started/): the ceremony-to-signature path in code.

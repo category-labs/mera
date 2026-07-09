@@ -63,8 +63,8 @@ const { prfOutput, credentialId } = await getPasskeyPrfOutput({
   prfSalt: getDeterministicPrfSaltV1(),
 });
 
-// The ceremony reports which credential was actually used. Keep the record
-// honest: the person may have picked a different passkey than the stored one.
+// The ceremony reports which credential was actually used; the person may
+// have picked a different passkey than the stored one.
 const record =
   known?.credentialId === credentialId ? known : { credentialId };
 localStorage.setItem("app.derivedCredential", JSON.stringify(record));

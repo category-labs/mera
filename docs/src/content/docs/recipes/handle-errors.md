@@ -45,7 +45,7 @@ Non-mera errors pass through untouched, so chain-library and network failures ke
 
 **[SESSION_LOCKED](/reference/errors/#session_locked)** is expected behavior after `lock()`, so route it to the reconnect flow rather than an error banner. One fresh ceremony builds a new session.
 
-**[DECRYPT_FAILED](/reference/errors/#decrypt_failed)** on a vault means wrong key material or a tampered blob, and the two are indistinguishable by design. Since [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/) pins the assertion to the vault's own credential, honest mismatches are rare; do not loop retries, surface the import-or-restore path instead.
+**[DECRYPT_FAILED](/reference/errors/#decrypt_failed)** on a vault means wrong key material or a tampered blob, and the two are indistinguishable by design. Since [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/) pins the assertion to the vault's own credential, honest mismatches are rare. Avoid looping retries; surface the import-or-restore path instead.
 
 **[INPUT_INVALID](/reference/errors/#input_invalid)** is a bug in calling code, a length or encoding constraint missed at a public boundary. Log it with the message; no user action fixes it.
 

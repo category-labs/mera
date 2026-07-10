@@ -1,0 +1,128 @@
+---
+import config from "virtual:starlight/user-config";
+
+import LanguageSelect from "virtual:starlight/components/LanguageSelect";
+import Search from "virtual:starlight/components/Search";
+import SiteTitle from "virtual:starlight/components/SiteTitle";
+import SocialIcons from "virtual:starlight/components/SocialIcons";
+import ThemeSelect from "virtual:starlight/components/ThemeSelect";
+
+// Match Starlight's default search behavior so an explicit Search override
+// can still opt in when Pagefind is disabled.
+const shouldRenderSearch =
+  config.pagefind ||
+  config.components.Search !== "@astrojs/starlight/components/Search.astro";
+---
+
+<div class="header">
+  <div class="title-wrapper sl-flex">
+    <SiteTitle />
+  </div>
+
+  <div class="search-wrapper sl-flex print:hidden">
+    {shouldRenderSearch && <Search />}
+  </div>
+
+  <div class="right-group sl-flex print:hidden">
+    <div class="social-icons sl-flex">
+      <SocialIcons />
+    </div>
+    <ThemeSelect />
+    <LanguageSelect />
+    <a class="header-cta" href="/getting-started/">
+      <span class="mobile-label">Get started</span>
+      <span class="desktop-label">Getting started&nbsp;→</span>
+    </a>
+  </div>
+</div>
+
+<style>
+  @layer starlight.core {
+    .header {
+      display: grid;
+      grid-template-columns: minmax(min-content, 1fr) auto auto;
+      gap: 0.5rem;
+      align-items: center;
+      height: 100%;
+    }
+
+    .title-wrapper {
+      min-width: 0;
+      margin: -0.25rem;
+      padding: 0.25rem;
+      overflow: clip;
+    }
+
+    .search-wrapper,
+    .right-group,
+    .social-icons {
+      align-items: center;
+    }
+
+    .right-group {
+      gap: 0.65rem;
+    }
+
+    .social-icons {
+      gap: 0.5rem;
+    }
+
+    .header-cta {
+      display: inline-flex;
+      min-height: 2.25rem;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      padding: 0.45rem 0.65rem;
+      background: var(--sl-color-accent);
+      color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 500;
+      line-height: 1;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+
+    .header-cta:hover {
+      background: color-mix(in srgb, var(--sl-color-accent) 88%, #000);
+    }
+
+    .desktop-label {
+      display: none;
+    }
+
+    @media (min-width: 50rem) {
+      .header {
+        grid-template-columns:
+          minmax(min-content, 1fr)
+          minmax(12rem, 32rem)
+          minmax(min-content, 1fr);
+        gap: var(--sl-nav-gap);
+      }
+
+      .search-wrapper {
+        width: 100%;
+      }
+
+      .right-group {
+        justify-self: end;
+        gap: 1rem;
+      }
+
+      .header-cta {
+        min-height: 2.5rem;
+        padding: 0.65rem 1rem;
+        font-size: 0.9rem;
+      }
+
+      .mobile-label {
+        display: none;
+      }
+
+      .desktop-label {
+        display: inline;
+      }
+    }
+  }
+</style>

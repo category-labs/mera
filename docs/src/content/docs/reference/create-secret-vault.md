@@ -3,9 +3,9 @@ title: createSecretVault
 description: Encrypts an arbitrary secret into a passkey-protected vault.
 ---
 
-Encrypts an arbitrary secret into a passkey-protected vault from explicit credential, salt, and PRF material. This is the low-level encryption primitive; wrapped-mode workflow functions own the ceremony and random salt.
+Encrypts an arbitrary secret into a passkey-protected vault from explicit credential, salt, and PRF material. This is the low-level encryption primitive; secret-vault workflow functions own the ceremony and random salt.
 
-An AES-256-GCM wrapping key is derived from the PRF output with fixed HKDF-SHA-256 info (`mera.v1.wrap.secret`), which separates it from any other key derived from the same output. The secret is encrypted under fixed additional authenticated data.
+An AES-256-GCM encryption key is derived from the PRF output with fixed HKDF-SHA-256 info (`mera.v1.encrypt.secret`), which separates it from any other key derived from the same output. The secret is encrypted under fixed additional authenticated data.
 
 ## Import
 
@@ -64,7 +64,7 @@ Secret bytes to encrypt. Any non-empty length; the library does not interpret th
 
 ## Notes
 
-**Use a fresh random salt per secret.** A vault is bound to its `prfOutput` only, never to the credential ID or salt. Secrets wrapped under one reused PRF output share a wrapping key, so their nonce/ciphertext pairs are interchangeable by anyone who can rewrite stored vault JSON.
+**Use a fresh random salt per secret.** A vault is bound to its `prfOutput` only, never to the credential ID or salt. Secrets encrypted using one reused PRF output share an encryption key, so their nonce/ciphertext pairs are interchangeable by anyone who can rewrite stored vault JSON.
 
 The GCM nonce (12 bytes) is generated internally for each encryption, so a caller cannot accidentally reuse one.
 
@@ -74,6 +74,6 @@ Input byte buffers are copied before async cryptographic work starts; mutating t
 
 - [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/): create a passkey and vault in one workflow.
 - [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/): create a vault with an existing passkey.
-- [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/) and [unwrapSecretVault](/reference/unwrap-secret-vault/): the assertion and decryption that recover the secret.
+- [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/) and [decryptSecretVault](/reference/decrypt-secret-vault/): the assertion and decryption that recover the secret.
 - [Use an existing secret](/recipes/use-an-existing-secret/): the full flow with zeroing.
 - [Security model](/concepts/security-model/#one-output-one-purpose): why PRF outputs must not be reused across purposes.

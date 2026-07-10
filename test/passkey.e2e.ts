@@ -127,7 +127,7 @@ test("PRF output helpers use the deterministic v1 salt by default", async ({
   });
 });
 
-test("wrapped-mode orchestrators create independent vaults and decrypt them", async ({
+test("secret-vault orchestrators create independent vaults and decrypt them", async ({
   page,
 }) => {
   await withVirtualAuthenticator(page, async () => {
@@ -156,11 +156,11 @@ test("wrapped-mode orchestrators create independent vaults and decrypt them", as
 
       const parsedFirst = mera.parseSecretVault(JSON.stringify(firstVault));
       const parsedSecond = mera.parseSecretVault(JSON.stringify(secondVault));
-      const firstSecret = await mera.unwrapSecretVaultWithPasskey({
+      const firstSecret = await mera.decryptSecretVaultWithPasskey({
         rpId: "localhost",
         vault: parsedFirst,
       });
-      const secondSecret = await mera.unwrapSecretVaultWithPasskey({
+      const secondSecret = await mera.decryptSecretVaultWithPasskey({
         rpId: "localhost",
         vault: parsedSecond,
       });
@@ -171,7 +171,7 @@ test("wrapped-mode orchestrators create independent vaults and decrypt them", as
       };
       let tamperCode: string | undefined;
       try {
-        await mera.unwrapSecretVaultWithPasskey({
+        await mera.decryptSecretVaultWithPasskey({
           rpId: "localhost",
           vault: tampered,
         });

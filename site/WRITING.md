@@ -25,8 +25,8 @@ Editorial guidance for the content in `index.html` (the "A passkey is enough" ar
 - Audience: crypto/wallet developers. ERC-4337, EOAs, bundlers need no introduction; WebAuthn internals do.
 - The library is an experimental reference implementation: no network-support claims ("EVM and Solana today"). The entropy is chain-agnostic — any KDF, any chain. Chains appear only as examples.
 - Keep the library/app boundary honest: mera produces entropy and signing sessions; derivation belongs to the app. Don't credit mera with what the demo does.
-- Wrapped mode stays conceptual — what it enables, not how it's implemented.
-- Derived and wrapped are parallel options with different trade-offs; don't frame one as fixing a constraint of the other.
+- The secret-vault pattern stays conceptual: what it enables, not how it's implemented.
+- Derived accounts and secret vaults are parallel options with different trade-offs; don't frame one as fixing a constraint of the other.
 - Every technical claim should be checkable against the README or the code.
 - Don't reference sections by number ("as section 2 showed"); name the thing in place — headings will move.
 - The post is about the idea, not the repository: no code-location or housekeeping sections.

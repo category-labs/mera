@@ -45,9 +45,9 @@ The AES-GCM ciphertext including its 16-byte authentication tag, base64url. The 
 
 ## What is deliberately absent
 
-The wrapping key and the PRF output are never stored; both exist only transiently in memory. The rpId is also absent: the vault does not record which relying party it belongs to, and the unlock assertion supplies it.
+The encryption key and the PRF output are never stored; both exist only transiently in memory. The rpId is also absent: the vault does not record which relying party it belongs to, and the unlock assertion supplies it.
 
-The credential ID and salt are stored but not authenticated: the AES-GCM additional authenticated data is a fixed constant (`mera.v1.secret.aad` plus the version), so a vault is cryptographically bound to its PRF output only. This is why each secret needs a fresh salt: vaults that share a PRF output share a wrapping key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored JSON. [createSecretVault](/reference/create-secret-vault/) carries the same warning.
+The credential ID and salt are stored but not authenticated: the AES-GCM additional authenticated data is a fixed constant (`mera.v1.secret.aad` plus the version), so a vault is cryptographically bound to its PRF output only. This is why each secret needs a fresh salt: vaults that share a PRF output share an encryption key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored JSON. [createSecretVault](/reference/create-secret-vault/) carries the same warning.
 
 ## Portability
 
@@ -56,7 +56,7 @@ The vault is plain JSON suitable for `localStorage`, a database, a file, or a sy
 ## See also
 
 - [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/) and [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/): workflow functions that produce this format.
-- [unwrapSecretVaultWithPasskey](/reference/unwrap-secret-vault-with-passkey/): the workflow function that performs the assertion and decryption.
-- [createSecretVault](/reference/create-secret-vault/), [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/), and [unwrapSecretVault](/reference/unwrap-secret-vault/): low-level primitives for the same format.
+- [decryptSecretVaultWithPasskey](/reference/decrypt-secret-vault-with-passkey/): the workflow function that performs the assertion and decryption.
+- [createSecretVault](/reference/create-secret-vault/), [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/), and [decryptSecretVault](/reference/decrypt-secret-vault/): low-level primitives for the same format.
 - [parseSecretVault](/reference/parse-secret-vault/): the validation boundary for stored JSON.
-- [Derived and wrapped modes](/concepts/derived-and-wrapped/): where the vault fits.
+- [Derived accounts and secret vaults](/concepts/derived-accounts-and-secret-vaults/): where the vault fits.

@@ -57,7 +57,7 @@ A signing call was made after the session's `lock()`. Locking is permanent; reco
 
 ### DECRYPT_FAILED
 
-AES-GCM authentication failed while unwrapping a vault: wrong key material, or tampered ciphertext or additional authenticated data. The two cases are indistinguishable by design; GCM authenticates before it decrypts.
+AES-GCM authentication failed while decrypting a vault: wrong key material, or tampered ciphertext or additional authenticated data. The two cases are indistinguishable by design; GCM authenticates before it decrypts.
 
 ### INPUT_INVALID
 

@@ -456,7 +456,7 @@
           only, the Keystore's curve support depends on the Android version and
           the device, and neither signs
           <a href="https://www.secg.org/sec2-v2.pdf">secp256k1</a>, so the chain
-          key sits wrapped at rest and hot in app memory while signing. A team
+          key sits encrypted at rest and hot in app memory while signing. A team
           shipping web, iOS, and Android designs storage three times and
           onboarding three times, for the same account.
         </p>
@@ -592,7 +592,7 @@ clientDataJSON
             href="https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html#sctn-hmac-secret-extension"
             ><code>hmac-secret</code></a
           >
-          extension; WebAuthn PRF is the browser-facing wrapper.)
+          extension; WebAuthn PRF is the browser-facing API.)
         </p>
 
         <p>Three properties make the output usable as key material:</p>
@@ -824,26 +824,26 @@ const address = getEvmAddress(session.publicKey)</code></pre>
           wallet app, like MetaMask or Phantom.
         </p>
 
-        <h3 id="wrapped-mode">Wrapped mode</h3>
+        <h3 id="secret-vault">Secret vault</h3>
 
         <p>
-          Wrapped mode starts with an independent secret, generated client-side
-          or imported. The PRF output derives the key that encrypts it. The
-          result is a small vault blob, useless without a passkey ceremony, that
-          the application can store anywhere: localStorage, a backend, a sync
-          service. mera defines the vault format and the unwrap step; storage
-          and lifecycle belong to the application.
+          A secret vault starts with an independent secret, generated
+          client-side or imported. The PRF output derives the key that encrypts
+          it. The result is a small vault blob, useless without a passkey
+          ceremony, that the application can store anywhere: localStorage, a
+          backend, a sync service. mera defines the vault format and the decrypt
+          step; storage and lifecycle belong to the application.
         </p>
 
         <figure class="diagram">
           <svg
             viewBox="0 0 660 200"
             role="img"
-            aria-label="Flow diagram: a secret, generated client-side or imported, is wrapped using PRF output from a passkey into a vault blob stored anywhere; the same PRF output later unwraps the vault back into the recovered secret."
+            aria-label="Flow diagram: a secret, generated client-side or imported, is encrypted using PRF output from a passkey into a vault blob stored anywhere; the same PRF output later decrypts the vault back into the recovered secret."
             xmlns="http://www.w3.org/2000/svg"
           >
             <title>
-              Wrapped mode: a passkey-derived key wraps and unwraps an
+              Secret vault: a passkey-derived key encrypts and decrypts an
               independent secret
             </title>
             <defs>
@@ -868,11 +868,9 @@ const address = getEvmAddress(session.publicKey)</code></pre>
             <text x="137" y="96">PRF output</text>
             <text x="137" y="112">32 bytes</text>
             <rect x="300" y="23" width="90" height="44" rx="3" />
-            <text x="345" y="41">wrap</text>
-            <text x="345" y="57">encrypt</text>
+            <text x="345" y="49">encrypt</text>
             <rect x="300" y="133" width="90" height="44" rx="3" />
-            <text x="345" y="151">unwrap</text>
-            <text x="345" y="167">decrypt</text>
+            <text x="345" y="159">decrypt</text>
             <rect x="520" y="78" width="120" height="44" rx="3" />
             <text x="580" y="96">vault blob</text>
             <text x="580" y="112">stored anywhere</text>
@@ -954,7 +952,7 @@ const address = getEvmAddress(session.publicKey)</code></pre>
               <tr>
                 <td></td>
                 <th scope="col">Derived</th>
-                <th scope="col">Wrapped</th>
+                <th scope="col">Secret vault</th>
               </tr>
             </thead>
             <tbody>
@@ -983,16 +981,16 @@ const address = getEvmAddress(session.publicKey)</code></pre>
         </div>
 
         <p>
-          An application can mix the modes: derived for new accounts, wrapped
-          for existing recovery phrases or keys.
+          An application can mix the patterns: derive new accounts or use secret
+          vaults for existing recovery phrases or keys.
         </p>
 
         <h2 id="try-it">Try it</h2>
 
         <p>
-          The demo below runs both modes. Create a passkey or sign in with an
-          existing one, switch between derived and wrapped, see Ethereum and
-          Solana addresses, and reveal the recovery phrase in either mode.
+          The demo below runs both patterns. Create a passkey or sign in with an
+          existing one, switch between Derived and Vault, see Ethereum and
+          Solana addresses, and reveal the recovery phrase in either pattern.
         </p>
 
         <figure class="demo">
@@ -1050,8 +1048,9 @@ const address = getEvmAddress(session.publicKey)</code></pre>
         <ul>
           <li>
             <strong>The app stores less key material.</strong>
-            Derived mode stores no app-owned secret, wrapped mode stores a vault
-            blob that still needs the passkey ceremony, and locking is one call.
+            The derived pattern stores no app-owned secret. The secret-vault
+            pattern stores a vault blob that still needs the passkey ceremony,
+            and locking is one call.
           </li>
           <li>
             <strong>Derived mode has no chain infrastructure.</strong>

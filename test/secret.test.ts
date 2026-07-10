@@ -4,12 +4,12 @@ import {
   createSecretVault,
   createSecretVaultWithExistingPasskey,
   createSecretVaultWithNewPasskey,
+  decryptSecretVault,
+  decryptSecretVaultWithPasskey,
   getDeterministicPrfSaltV1,
   type PasskeyCredentialTransport,
   type PasskeySecretVault,
   parseSecretVault,
-  unwrapSecretVault,
-  unwrapSecretVaultWithPasskey,
 } from "../dist/index.js";
 import { expectError, withStubbedGlobal } from "./helpers.js";
 
@@ -48,7 +48,7 @@ function readPrfSalt(
   return new Uint8Array(first);
 }
 
-test("creates a secret vault and unwraps the exact bytes", async () => {
+test("creates a secret vault and decrypts the exact bytes", async () => {
   const vault = await createTestVault();
 
   expect(Object.keys(vault).sort()).toEqual([
@@ -59,7 +59,7 @@ test("creates a secret vault and unwraps the exact bytes", async () => {
     "version",
   ]);
   await expect(
-    unwrapSecretVault({ vault, prfOutput: PRF_OUTPUT }),
+    decryptSecretVault({ vault, prfOutput: PRF_OUTPUT }),
   ).resolves.toEqual(SECRET);
 });
 
@@ -85,11 +85,11 @@ test("createSecretVault snapshots caller-owned byte inputs before async work", a
 
   expect(vault.prfSalt).toBe("CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk");
   await expect(
-    unwrapSecretVault({ vault, prfOutput: PRF_OUTPUT }),
+    decryptSecretVault({ vault, prfOutput: PRF_OUTPUT }),
   ).resolves.toEqual(SECRET);
 });
 
-test("wrapped-mode creation rejects an empty secret before prompting", async () => {
+test("secret-vault creation rejects an empty secret before prompting", async () => {
   let ceremonyCount = 0;
   const navigator = {
     credentials: {
@@ -124,7 +124,7 @@ test("wrapped-mode creation rejects an empty secret before prompting", async () 
   expect(ceremonyCount).toBe(0);
 });
 
-test("wrapped-mode ceremony helpers check WebAuthn before Web Crypto", async () => {
+test("secret-vault ceremony helpers check WebAuthn before Web Crypto", async () => {
   const vault = await createTestVault();
 
   await withStubbedGlobal("navigator", undefined, async () => {
@@ -145,13 +145,13 @@ test("wrapped-mode ceremony helpers check WebAuthn before Web Crypto", async () 
       ).rejects.toMatchObject({ code: "PASSKEY_OPERATION_FAILED" });
 
       await expect(
-        unwrapSecretVaultWithPasskey({ rpId: "example.com", vault }),
+        decryptSecretVaultWithPasskey({ rpId: "example.com", vault }),
       ).rejects.toMatchObject({ code: "PASSKEY_OPERATION_FAILED" });
     });
   });
 });
 
-test("wrapped-mode creation preserves PRF failures and caller-owned secrets", async () => {
+test("secret-vault creation preserves PRF failures and caller-owned secrets", async () => {
   const newPasskeySecret = new Uint8Array(SECRET);
   const existingPasskeySecret = new Uint8Array(SECRET);
   const navigator = {
@@ -270,7 +270,7 @@ test("createSecretVaultWithNewPasskey owns a random salt and snapshots the secre
       Buffer.from(getDeterministicPrfSaltV1()).toString("base64url"),
     );
     await expect(
-      unwrapSecretVault({ vault, prfOutput: evaluatedSalt }),
+      decryptSecretVault({ vault, prfOutput: evaluatedSalt }),
     ).resolves.toEqual(SECRET);
   });
 });
@@ -323,12 +323,12 @@ test("createSecretVaultWithExistingPasskey snapshots inputs and preserves transp
       transports: ["usb"],
     });
     await expect(
-      unwrapSecretVault({ vault, prfOutput: evaluatedSalt }),
+      decryptSecretVault({ vault, prfOutput: evaluatedSalt }),
     ).resolves.toEqual(SECRET);
   });
 });
 
-test("unwrapSecretVaultWithPasskey snapshots the vault before prompting", async () => {
+test("decryptSecretVaultWithPasskey snapshots the vault before prompting", async () => {
   const stored = await createTestVault();
   const vault = {
     ...stored,
@@ -358,7 +358,7 @@ test("unwrapSecretVaultWithPasskey snapshots the vault before prompting", async 
   };
 
   await withStubbedGlobal("navigator", navigator, async () => {
-    const pending = unwrapSecretVaultWithPasskey({
+    const pending = decryptSecretVaultWithPasskey({
       rpId: "example.com",
       vault,
     });
@@ -373,11 +373,11 @@ test("unwrapSecretVaultWithPasskey snapshots the vault before prompting", async 
   });
 });
 
-test("unwrapSecretVault fails with the wrong PRF output", async () => {
+test("decryptSecretVault fails with the wrong PRF output", async () => {
   const vault = await createTestVault();
 
   await expect(
-    unwrapSecretVault({ vault, prfOutput: new Uint8Array(32).fill(1) }),
+    decryptSecretVault({ vault, prfOutput: new Uint8Array(32).fill(1) }),
   ).rejects.toMatchObject({ code: "DECRYPT_FAILED" });
 });
 
@@ -389,7 +389,7 @@ test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavaila
       code: "CRYPTO_UNAVAILABLE",
     });
     await expect(
-      unwrapSecretVault({ vault, prfOutput: PRF_OUTPUT }),
+      decryptSecretVault({ vault, prfOutput: PRF_OUTPUT }),
     ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
   });
 });
@@ -403,7 +403,7 @@ test("secret vault AAD is independent of credential metadata and PRF salt", asyn
   });
 
   await expect(
-    unwrapSecretVault({ vault: edited, prfOutput: PRF_OUTPUT }),
+    decryptSecretVault({ vault: edited, prfOutput: PRF_OUTPUT }),
   ).resolves.toEqual(SECRET);
 });
 
@@ -566,11 +566,11 @@ test("createSecretVault rejects a wrong-length PRF salt", async () => {
   ).rejects.toMatchObject({ code: "INPUT_INVALID" });
 });
 
-test("unwrapSecretVault rejects a wrong-length PRF output", async () => {
+test("decryptSecretVault rejects a wrong-length PRF output", async () => {
   const vault = await createTestVault();
 
   await expect(
-    unwrapSecretVault({ vault, prfOutput: new Uint8Array(31) }),
+    decryptSecretVault({ vault, prfOutput: new Uint8Array(31) }),
   ).rejects.toMatchObject({ code: "INPUT_INVALID" });
 });
 

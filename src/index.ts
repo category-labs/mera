@@ -19,18 +19,18 @@ export type {
   CreateSecretVaultOptions,
   CreateSecretVaultWithExistingPasskeyOptions,
   CreateSecretVaultWithNewPasskeyOptions,
+  DecryptSecretVaultOptions,
+  DecryptSecretVaultWithPasskeyOptions,
   GetSecretVaultPrfOutputOptions,
-  UnwrapSecretVaultOptions,
-  UnwrapSecretVaultWithPasskeyOptions,
 } from "./secret.js";
 export {
   createSecretVault,
   createSecretVaultWithExistingPasskey,
   createSecretVaultWithNewPasskey,
+  decryptSecretVault,
+  decryptSecretVaultWithPasskey,
   getSecretVaultPrfOutput,
   parseSecretVault,
-  unwrapSecretVault,
-  unwrapSecretVaultWithPasskey,
 } from "./secret.js";
 export type {
   CreatePasskeyResult,

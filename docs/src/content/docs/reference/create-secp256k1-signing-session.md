@@ -1,9 +1,9 @@
 ---
 title: createSecp256k1SigningSession
-description: Wraps a secp256k1 private key in an explicitly lockable signing session.
+description: Creates an explicitly lockable signing session from a secp256k1 private key.
 ---
 
-Wraps a secp256k1 private key in an explicitly lockable signing session.
+Creates an explicitly lockable signing session from a secp256k1 private key.
 
 ## Import
 

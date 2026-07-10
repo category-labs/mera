@@ -1,5 +1,5 @@
 ---
-title: unwrapSecretVaultWithPasskey
+title: decryptSecretVaultWithPasskey
 description: Performs a passkey assertion and decrypts one secret vault.
 ---
 
@@ -8,19 +8,19 @@ Performs the passkey assertion for a parsed vault and decrypts its secret. Runs 
 ## Import
 
 ```ts
-import { unwrapSecretVaultWithPasskey } from "@category-labs/mera";
+import { decryptSecretVaultWithPasskey } from "@category-labs/mera";
 ```
 
 ## Usage
 
 ```ts
 import {
+  decryptSecretVaultWithPasskey,
   parseSecretVault,
-  unwrapSecretVaultWithPasskey,
 } from "@category-labs/mera";
 
 const vault = parseSecretVault(localStorage.getItem("vault"));
-const secret = await unwrapSecretVaultWithPasskey({
+const secret = await decryptSecretVaultWithPasskey({
   rpId: "account.example.com",
   vault,
 });
@@ -33,7 +33,7 @@ try {
 
 ## Parameters
 
-`options` is an `UnwrapSecretVaultWithPasskeyOptions`.
+`options` is a `DecryptSecretVaultWithPasskeyOptions`.
 
 ### options.rpId
 
@@ -77,5 +77,5 @@ The WebAuthn challenge is generated internally, and the raw assertion response i
 ## See also
 
 - [parseSecretVault](/reference/parse-secret-vault/): validate stored JSON before this call.
-- [unwrapSecretVault](/reference/unwrap-secret-vault/): decrypt with an explicitly supplied PRF output.
+- [decryptSecretVault](/reference/decrypt-secret-vault/): decrypt with an explicitly supplied PRF output.
 - [Use an existing secret](/recipes/use-an-existing-secret/): the complete storage and secret-lifetime pattern.

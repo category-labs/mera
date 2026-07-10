@@ -5,7 +5,7 @@ description: Performs the WebAuthn assertion needed to unlock a secret vault.
 
 Performs the WebAuthn assertion needed to unlock a secret vault. Runs one `navigator.credentials.get()` ceremony, which may show browser or authenticator UI.
 
-Reads the credential metadata and PRF salt out of a parsed vault and delegates to [getPasskeyPrfOutput](/reference/get-passkey-prf-output/), so the assertion is automatically pinned to the credential that wrapped the secret.
+Reads the credential metadata and PRF salt out of a parsed vault and delegates to [getPasskeyPrfOutput](/reference/get-passkey-prf-output/), so the assertion is automatically pinned to the credential that encrypted the secret.
 
 ## Import
 
@@ -17,9 +17,9 @@ import { getSecretVaultPrfOutput } from "@category-labs/mera";
 
 ```ts
 import {
+  decryptSecretVault,
   getSecretVaultPrfOutput,
   parseSecretVault,
-  unwrapSecretVault,
 } from "@category-labs/mera";
 
 const vault = parseSecretVault(localStorage.getItem("vault"));
@@ -27,7 +27,7 @@ const { prfOutput } = await getSecretVaultPrfOutput({
   rpId: "account.example.com",
   vault,
 });
-const secret = await unwrapSecretVault({ vault, prfOutput });
+const secret = await decryptSecretVault({ vault, prfOutput });
 ```
 
 ## Parameters
@@ -72,6 +72,6 @@ The WebAuthn challenge is generated internally, and the raw assertion response i
 
 ## See also
 
-- [unwrapSecretVaultWithPasskey](/reference/unwrap-secret-vault-with-passkey/): perform the assertion and decryption in one call.
-- [unwrapSecretVault](/reference/unwrap-secret-vault/): the decryption step that follows.
+- [decryptSecretVaultWithPasskey](/reference/decrypt-secret-vault-with-passkey/): perform the assertion and decryption in one call.
+- [decryptSecretVault](/reference/decrypt-secret-vault/): the decryption step that follows.
 - [Use an existing secret](/recipes/use-an-existing-secret/): the full unlock flow.

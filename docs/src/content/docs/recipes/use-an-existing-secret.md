@@ -1,9 +1,9 @@
 ---
-title: Use an existing secret (recovery phrase or private key) in wrapped mode
+title: Encrypt an existing secret with a passkey
 description: Encrypt an existing secret into a passkey-protected vault and unlock it later.
 ---
 
-Wrapped mode encrypts one recovery phrase, private key, or other byte string behind a passkey; mera never interprets it. This recipe validates a phrase, stores its vault, and unlocks it with explicit zeroing.
+A secret vault encrypts one recovery phrase, private key, or other byte string behind a passkey; mera never interprets it. This recipe validates a phrase, stores its vault, and decrypts it with explicit zeroing.
 
 The surrounding code is app-owned; mera provides the passkey ceremonies and vault functions.
 
@@ -27,7 +27,7 @@ if (!validateMnemonic(phrase, wordlist)) {
 
 ## Create and persist the vault
 
-`createSecretVaultWithNewPasskey` generates a fresh 32-byte salt, creates the passkey, and encrypts the secret. The salt and credential metadata are stored in the returned vault. A separate salt for each vault avoids shared wrapping keys and interchangeable nonce/ciphertext pairs.
+`createSecretVaultWithNewPasskey` generates a fresh 32-byte salt, creates the passkey, and encrypts the secret. The salt and credential metadata are stored in the returned vault. A separate salt for each vault avoids shared encryption keys and interchangeable nonce/ciphertext pairs.
 
 ```ts
 import { createSecretVaultWithNewPasskey } from "@category-labs/mera";
@@ -47,7 +47,7 @@ try {
 }
 ```
 
-The function copies the secret before the passkey prompt and zeroes its internal secret and PRF output before settling. The `finally` zeroes the caller-owned encoded phrase. A private key wraps the same way: pass its raw bytes as `secret` instead of encoded text. The [vault format](/reference/secret-vault-format/) stores everything needed for the later ceremony.
+The function copies the secret before the passkey prompt and zeroes its internal secret and PRF output before settling. The `finally` zeroes the caller-owned encoded phrase. A private key is encrypted the same way: pass its raw bytes as `secret` instead of encoded text. The [vault format](/reference/secret-vault-format/) stores everything needed for the later ceremony.
 
 ## Unlock
 
@@ -55,8 +55,8 @@ One ceremony, pinned automatically to the credential stored in the vault:
 
 ```ts
 import {
+  decryptSecretVaultWithPasskey,
   parseSecretVault,
-  unwrapSecretVaultWithPasskey,
 } from "@category-labs/mera";
 
 async function unlockPhrase(): Promise<string> {
@@ -64,7 +64,7 @@ async function unlockPhrase(): Promise<string> {
   if (raw === null) throw new Error("No vault on this device yet.");
 
   const vault = parseSecretVault(raw);
-  const secret = await unwrapSecretVaultWithPasskey({ rpId, vault });
+  const secret = await decryptSecretVaultWithPasskey({ rpId, vault });
   try {
     return new TextDecoder().decode(secret);
   } finally {
@@ -73,7 +73,7 @@ async function unlockPhrase(): Promise<string> {
 }
 ```
 
-`parseSecretVault` is the boundary for the untrusted stored JSON. The unwrap function owns and zeroes the transient PRF output. The decrypted buffer is a fresh allocation, so the `finally` zeroes it after decoding.
+`parseSecretVault` is the boundary for the untrusted stored JSON. The decrypt function owns and zeroes the transient PRF output. The decrypted buffer is a fresh allocation, so the `finally` zeroes it after decoding.
 
 ## Derive signing sessions
 
@@ -82,5 +82,5 @@ The phrase is a standard BIP-39 mnemonic, so key derivation from here is exactly
 ## Pitfalls
 
 - **A second secret needs its own ceremony and vault.** [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/) generates the fresh salt and stores it in the new vault.
-- **The phrase is a string** while it transits the wrap and unlock code, and strings cannot be zeroed ([security model](/concepts/security-model/#strings-cannot-be-zeroed)). Keep the lifetime short and never log it.
+- **The phrase is a string** while it transits the encryption and unlock code, and strings cannot be zeroed ([security model](/concepts/security-model/#strings-cannot-be-zeroed)). Keep the lifetime short and never log it.
 - **The vault JSON is the only ciphertext copy.** Losing the storage loses the account unless the person still holds the phrase elsewhere.

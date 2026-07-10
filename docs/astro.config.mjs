@@ -51,7 +51,7 @@ export default defineConfig({
           label: "Concepts",
           items: [
             "concepts/passkeys-and-prf",
-            "concepts/derived-and-wrapped",
+            "concepts/derived-accounts-and-secret-vaults",
             "concepts/signing-sessions",
             "concepts/security-model",
             "concepts/authenticator-support",
@@ -87,10 +87,10 @@ export default defineConfig({
               items: [
                 "reference/create-secret-vault-with-new-passkey",
                 "reference/create-secret-vault-with-existing-passkey",
-                "reference/unwrap-secret-vault-with-passkey",
+                "reference/decrypt-secret-vault-with-passkey",
                 "reference/create-secret-vault",
                 "reference/get-secret-vault-prf-output",
-                "reference/unwrap-secret-vault",
+                "reference/decrypt-secret-vault",
                 "reference/parse-secret-vault",
                 "reference/secret-vault-format",
               ],

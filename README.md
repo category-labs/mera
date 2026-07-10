@@ -2,7 +2,7 @@
 
 Passkey-backed signing sessions for accounts across chains.
 
-mera gets stable, authenticator-bound entropy from a WebAuthn passkey. The browser's WebAuthn PRF extension gives the library 32 bytes per ceremony. Apps can feed those bytes into their own account derivation, or wrap an app-held secret such as a recovery phrase or private key into a passkey-encrypted vault.
+mera gets stable, authenticator-bound entropy from a WebAuthn passkey. The browser's WebAuthn PRF extension gives the library 32 bytes per ceremony. Apps can feed those bytes into their own account derivation, or encrypt an app-held secret such as a recovery phrase or private key into a passkey-protected vault.
 
 The result is ordinary signing material for the app to use. No smart-account deployment or custom on-chain verifier is required.
 
@@ -11,7 +11,7 @@ The result is ordinary signing material for the app to use. No smart-account dep
 - Key derivation stays app-owned; mera hands the app entropy.
 - Cross-platform: a native iOS or Android app tied to the same domain can use the same passkey and derive the same accounts.
 
-## Modes
+## Account patterns
 
 **Derived.** mera uses its fixed deterministic salt to reproduce the same PRF output for the same PRF-capable passkey and `rpId`. The app derives account keys from that output with its chosen scheme. The demo uses BIP-39/BIP-32 for secp256k1 and SLIP-0010 for Ed25519.
 
@@ -19,7 +19,7 @@ Cross-device use requires the passkey to be available on the new device. This mo
 
 Derived mode stores no app-owned secret to recover. The account may be unrecoverable if the passkey is deleted, not synced, tied to a lost provider account, or unavailable under the app's `rpId` after a domain migration. Recovery then depends on an app-provided export, import, or backup path.
 
-**Wrapped.** An AES-256-GCM blob holds one secret: a recovery phrase, a private key, or any bytes. The passkey ceremony produces the key material needed to decrypt it. The blob can live in `localStorage`, a backend, or a sync service. This mode fits existing-account imports.
+**Secret vault.** An AES-256-GCM blob holds one secret: a recovery phrase, a private key, or any bytes. The passkey ceremony produces the key material needed to decrypt it. The blob can live in `localStorage`, a backend, or a sync service. This pattern fits existing-account imports.
 
 ## Install
 
@@ -63,7 +63,7 @@ const address = getEvmAddress(session.publicKey)
 
 Reusing one PRF output unchanged for unrelated purposes (key derivation and app-data encryption, say) links those secrets. Use a different PRF salt per purpose, or split one output with a purpose-labeled KDF.
 
-Derived flows use mera's fixed v1 salt internally. Wrapped-mode vault functions generate and store a fresh random salt for each secret.
+Derived flows use mera's fixed v1 salt internally. Secret-vault functions generate and store a fresh random salt for each secret.
 
 ## Supported authenticators
 
@@ -104,8 +104,8 @@ Names only; editor hover shows the full JSDoc.
 - **Passkey ceremonies**: `createPasskey`, `createPasskeyWithPrfOutput`, `getPasskeyPrfOutput`
 - **Deterministic PRF salt**: `getDeterministicPrfSaltV1`
 - **Signing sessions**: `createSecp256k1SigningSession`, `createEd25519SigningSession`
-- **Secret vault workflows**: `createSecretVaultWithNewPasskey`, `createSecretVaultWithExistingPasskey`, `unwrapSecretVaultWithPasskey`
-- **Secret vault primitives**: `createSecretVault`, `unwrapSecretVault`, `parseSecretVault`, `getSecretVaultPrfOutput`
+- **Secret vault workflows**: `createSecretVaultWithNewPasskey`, `createSecretVaultWithExistingPasskey`, `decryptSecretVaultWithPasskey`
+- **Secret vault primitives**: `createSecretVault`, `decryptSecretVault`, `parseSecretVault`, `getSecretVaultPrfOutput`
 - **Chain addresses**: `getEvmAddress`, `isEvmAddress`, `getSolanaAddress`, `isSolanaAddress`
 - **viem adapter** (`@category-labs/mera/viem`): `toViemAccount`
 - **Errors**: `MeraError`, `isMeraError`, `MeraErrorCode`
@@ -116,7 +116,7 @@ Secret-vault flows, demo HD derivation recipes (BIP-39/BIP-32, SLIP-0010), the s
 
 ## Security
 
-A compromised JavaScript runtime can observe key material during app-owned derivation or import, and can sign with an active session until `session.lock()`. Recovery export should be handled as a separate app-owned flow that reruns WebAuthn PRF or unwraps a vault with fresh user verification.
+A compromised JavaScript runtime can observe key material during app-owned derivation or import, and can sign with an active session until `session.lock()`. Recovery export should be handled as a separate app-owned flow that reruns WebAuthn PRF or decrypts a vault with fresh user verification.
 
 Recovery phrases become JavaScript strings when displayed or exported. Unlike `Uint8Array` buffers, strings cannot be zeroed in place; apps can only drop references and keep their lifetime short.
 

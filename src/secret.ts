@@ -33,7 +33,7 @@ const GCM_TAG_LENGTH = 16;
  * @param value - Integer to encode.
  * @returns Four big-endian bytes.
  * @remarks `value` is not range-checked; `DataView.setUint32` applies the
- * uint32 conversion, so out-of-range input wraps.
+ * uint32 conversion, so out-of-range input is reduced modulo 2^32.
  */
 function uint32Be(value: number): Uint8Array {
   const output = new Uint8Array(4);
@@ -53,12 +53,12 @@ function canonicalEncode(parts: readonly Uint8Array[]): Uint8Array {
   return concatBytes(...parts.flatMap((part) => [uint32Be(part.length), part]));
 }
 
-// HKDF info and AAD for the secret vault. The HKDF info keeps the wrapping key
+// HKDF info and AAD for the secret vault. The HKDF info keeps the encryption key
 // distinct from any other key derived from the same PRF output. The AAD is a
 // precomputed constant (domain ‖ version): vault fields such as the credential
 // ID and PRF salt are deliberately not bound; see the Security remark on
 // createSecretVault.
-const SECRET_WRAP_INFO = utf8ToBytes("mera.v1.wrap.secret");
+const SECRET_ENCRYPTION_INFO = utf8ToBytes("mera.v1.encrypt.secret");
 const SECRET_AAD_DOMAIN = utf8ToBytes("mera.v1.secret.aad");
 const SECRET_AAD_VERSION = 1;
 const SECRET_AAD = canonicalEncode([
@@ -74,14 +74,14 @@ type EncryptedBytes = {
   ciphertext: Uint8Array;
 };
 
-// Derives the vault wrapping key. The 32-byte check validates caller-supplied
+// Derives the vault encryption key. The 32-byte check validates caller-supplied
 // PRF output at the public boundary before it becomes key material.
-async function deriveWrappingKey(prfOutput: Uint8Array): Promise<CryptoKey> {
+async function deriveEncryptionKey(prfOutput: Uint8Array): Promise<CryptoKey> {
   if (prfOutput.length !== PRF_OUTPUT_LENGTH) {
     throw new MeraError("INPUT_INVALID", "PRF output must be 32 bytes");
   }
 
-  return hkdfSha256AesGcmKey(prfOutput, SECRET_WRAP_INFO);
+  return hkdfSha256AesGcmKey(prfOutput, SECRET_ENCRYPTION_INFO);
 }
 
 // AES-256-GCM encrypt. subtle.encrypt copies its inputs synchronously and the
@@ -89,11 +89,11 @@ async function deriveWrappingKey(prfOutput: Uint8Array): Promise<CryptoKey> {
 // GCM nonces are generated internally so callers cannot accidentally reuse one.
 async function aesGcmEncrypt({
   plaintext,
-  wrappingKey,
+  encryptionKey,
   aad,
 }: {
   plaintext: Uint8Array;
-  wrappingKey: CryptoKey;
+  encryptionKey: CryptoKey;
   aad: Uint8Array;
 }): Promise<EncryptedBytes> {
   const iv = randomBytes(NONCE_LENGTH);
@@ -104,7 +104,7 @@ async function aesGcmEncrypt({
       iv: asArrayBuffer(iv),
       additionalData: asArrayBuffer(aad),
     },
-    wrappingKey,
+    encryptionKey,
     asArrayBuffer(plaintext),
   );
 
@@ -118,11 +118,11 @@ async function aesGcmEncrypt({
 // or AAD) surface as DECRYPT_FAILED. The returned bytes are not interpreted.
 async function aesGcmDecrypt({
   encrypted,
-  wrappingKey,
+  encryptionKey,
   aad,
 }: {
   encrypted: EncryptedBytes;
-  wrappingKey: CryptoKey;
+  encryptionKey: CryptoKey;
   aad: Uint8Array;
 }): Promise<Uint8Array<ArrayBuffer>> {
   try {
@@ -132,7 +132,7 @@ async function aesGcmDecrypt({
         iv: asArrayBuffer(encrypted.nonce),
         additionalData: asArrayBuffer(aad),
       },
-      wrappingKey,
+      encryptionKey,
       asArrayBuffer(encrypted.ciphertext),
     );
     return new Uint8Array(plaintext);
@@ -197,7 +197,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /** Inputs for encrypting one arbitrary secret into a vault. */
 type CreateSecretVaultInput = {
   /**
-   * Passkey credential plus the PRF salt and PRF output it produced. Wrapped
+   * Passkey credential plus the PRF salt and PRF output it produced. Secret-vault
    * flows use a fresh salt for each secret.
    */
   credential: {
@@ -217,8 +217,8 @@ type CreateSecretVaultInput = {
 /**
  * Encrypts an arbitrary secret into a passkey-protected vault.
  *
- * An AES-256-GCM wrapping key is derived from the PRF output with fixed
- * HKDF info (`mera.v1.wrap.secret`), which separates it from other keys
+ * An AES-256-GCM encryption key is derived from the PRF output with fixed
+ * HKDF info (`mera.v1.encrypt.secret`), which separates it from other keys
  * derived from the same PRF output. The secret is encrypted under fixed
  * additional authenticated data (AAD).
  *
@@ -228,10 +228,10 @@ type CreateSecretVaultInput = {
  * input buffers are not modified or zeroed.
  *
  * Security: a vault is bound to its `prfOutput` only, not to the credential
- * ID or salt. Secrets wrapped under one reused PRF output share a wrapping key,
- * so their nonce/ciphertext pairs are interchangeable by anyone who can rewrite
- * stored vault JSON; a fresh `prfSalt` per secret avoids the shared key.
- * @param options - Credential material and the secret to wrap; fields are documented on {@link CreateSecretVaultOptions}.
+ * ID or salt. Secrets encrypted using one reused PRF output share an encryption
+ * key, so their nonce/ciphertext pairs are interchangeable by anyone who can
+ * rewrite stored vault JSON; a fresh `prfSalt` per secret avoids the shared key.
+ * @param options - Credential material and the secret to encrypt; fields are documented on {@link CreateSecretVaultOptions}.
  * @returns A JSON-safe secret vault.
  * @throws MeraError with code `INPUT_INVALID` when the credential ID is empty or not canonical base64url, the PRF salt or output is not 32 bytes, or `secret` is empty.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
@@ -262,10 +262,10 @@ async function createSecretVault({
   const secretCopy = copyBytes(secret);
 
   try {
-    const wrappingKey = await deriveWrappingKey(prfOutputCopy);
+    const encryptionKey = await deriveEncryptionKey(prfOutputCopy);
     const encrypted = await aesGcmEncrypt({
       plaintext: secretCopy,
-      wrappingKey,
+      encryptionKey,
       aad: SECRET_AAD,
     });
 
@@ -464,7 +464,7 @@ async function createSecretVaultWithExistingPasskey({
 }
 
 /** Inputs for decrypting a secret vault. */
-type UnwrapSecretVaultInput = {
+type DecryptSecretVaultInput = {
   /** Parsed secret vault. */
   vault: PasskeySecretVault;
   /** WebAuthn PRF output for the vault's PRF salt. Must be exactly 32 bytes. */
@@ -479,26 +479,26 @@ type UnwrapSecretVaultInput = {
  * mutation does not change the decryption result; the caller-owned buffer is
  * not modified or zeroed.
  *
- * @param options - Vault and PRF output; fields are documented on {@link UnwrapSecretVaultOptions}.
+ * @param options - Vault and PRF output; fields are documented on {@link DecryptSecretVaultOptions}.
  * @returns The decrypted secret bytes, exactly as passed to `createSecretVault`. The returned buffer is a fresh allocation; the library keeps no reference to it and never zeroes it.
  * @throws MeraError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url (already validated for vaults from `parseSecretVault`).
  * @throws MeraError with code `DECRYPT_FAILED` when authentication fails.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  */
-async function unwrapSecretVault({
+async function decryptSecretVault({
   vault,
   prfOutput,
-}: UnwrapSecretVaultInput): Promise<Uint8Array<ArrayBuffer>> {
+}: DecryptSecretVaultInput): Promise<Uint8Array<ArrayBuffer>> {
   // The copy guarantee documented above is provided by hkdfSha256AesGcmKey,
   // which snapshots prfOutput synchronously before its first await.
-  const wrappingKey = await deriveWrappingKey(prfOutput);
+  const encryptionKey = await deriveEncryptionKey(prfOutput);
 
   return aesGcmDecrypt({
     encrypted: {
       nonce: base64UrlDecode(vault.nonce),
       ciphertext: base64UrlDecode(vault.ciphertext),
     },
-    wrappingKey,
+    encryptionKey,
     aad: SECRET_AAD,
   });
 }
@@ -640,7 +640,7 @@ async function getSecretVaultPrfOutput({
 }
 
 /** Inputs for performing the passkey ceremony and decrypting a secret vault. */
-type UnwrapSecretVaultWithPasskeyInput = {
+type DecryptSecretVaultWithPasskeyInput = {
   /** Relying party ID for the WebAuthn assertion. */
   rpId: string;
   /** Parsed secret vault. Copied before use. */
@@ -652,7 +652,7 @@ type UnwrapSecretVaultWithPasskeyInput = {
 /**
  * Performs the passkey assertion for a vault and decrypts its secret.
  *
- * @param options - Relying party and parsed vault; fields are documented on {@link UnwrapSecretVaultWithPasskeyOptions}.
+ * @param options - Relying party and parsed vault; fields are documented on {@link DecryptSecretVaultWithPasskeyOptions}.
  * @returns The decrypted secret bytes. The returned buffer is a fresh allocation owned by the caller.
  * @remarks
  * Invokes `navigator.credentials.get()`, which may show browser or
@@ -670,11 +670,11 @@ type UnwrapSecretVaultWithPasskeyInput = {
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
-async function unwrapSecretVaultWithPasskey({
+async function decryptSecretVaultWithPasskey({
   rpId,
   vault,
   timeout,
-}: UnwrapSecretVaultWithPasskeyInput): Promise<Uint8Array<ArrayBuffer>> {
+}: DecryptSecretVaultWithPasskeyInput): Promise<Uint8Array<ArrayBuffer>> {
   const vaultCopy = copySecretVault(vault);
   const { prfOutput } = await getSecretVaultPrfOutput({
     rpId,
@@ -683,7 +683,7 @@ async function unwrapSecretVaultWithPasskey({
   });
 
   try {
-    return await unwrapSecretVault({ vault: vaultCopy, prfOutput });
+    return await decryptSecretVault({ vault: vaultCopy, prfOutput });
   } finally {
     prfOutput.fill(0);
   }
@@ -699,11 +699,11 @@ type CreateSecretVaultWithExistingPasskeyOptions = Parameters<
 type CreateSecretVaultWithNewPasskeyOptions = Parameters<
   typeof createSecretVaultWithNewPasskey
 >[0];
-/** Options accepted by `unwrapSecretVault`. */
-type UnwrapSecretVaultOptions = Parameters<typeof unwrapSecretVault>[0];
-/** Options accepted by `unwrapSecretVaultWithPasskey`. */
-type UnwrapSecretVaultWithPasskeyOptions = Parameters<
-  typeof unwrapSecretVaultWithPasskey
+/** Options accepted by `decryptSecretVault`. */
+type DecryptSecretVaultOptions = Parameters<typeof decryptSecretVault>[0];
+/** Options accepted by `decryptSecretVaultWithPasskey`. */
+type DecryptSecretVaultWithPasskeyOptions = Parameters<
+  typeof decryptSecretVaultWithPasskey
 >[0];
 /** Options accepted by `getSecretVaultPrfOutput`. */
 type GetSecretVaultPrfOutputOptions = Parameters<
@@ -714,16 +714,16 @@ export type {
   CreateSecretVaultOptions,
   CreateSecretVaultWithExistingPasskeyOptions,
   CreateSecretVaultWithNewPasskeyOptions,
+  DecryptSecretVaultOptions,
+  DecryptSecretVaultWithPasskeyOptions,
   GetSecretVaultPrfOutputOptions,
-  UnwrapSecretVaultOptions,
-  UnwrapSecretVaultWithPasskeyOptions,
 };
 export {
   createSecretVault,
   createSecretVaultWithExistingPasskey,
   createSecretVaultWithNewPasskey,
+  decryptSecretVault,
+  decryptSecretVaultWithPasskey,
   getSecretVaultPrfOutput,
   parseSecretVault,
-  unwrapSecretVault,
-  unwrapSecretVaultWithPasskey,
 };

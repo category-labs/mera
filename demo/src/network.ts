@@ -1,7 +1,7 @@
 type NetworkMode = "mainnet" | "testnet";
 
 /**
- * Wraps a per-network async resolver in a cache: each network mode resolves at
+ * Caches a per-network async resolver: each network mode resolves at
  * most once, and a rejected attempt is evicted so the next call retries.
  */
 function cachePerNetwork<T>(

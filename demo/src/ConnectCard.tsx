@@ -15,8 +15,8 @@ const MODES: { id: AccountMode; label: string; hint: string }[] = [
     hint: "Accounts are derived from the passkey. A synced passkey can reproduce the same addresses on another device.",
   },
   {
-    id: "wrapped",
-    label: "Wrapped",
+    id: "vault",
+    label: "Vault",
     hint: "The demo encrypts a generated or imported recovery phrase in a vault that opens with the passkey.",
   },
 ];
@@ -81,7 +81,7 @@ function ConnectCard({
       </div>
       <p className="hint">{activeMode.hint}</p>
 
-      {mode === "wrapped" && (
+      {mode === "vault" && (
         <div className="secret">
           <label className="field">
             <span className="field-head">
@@ -135,7 +135,7 @@ function ConnectCard({
           type="button"
           className="btn primary"
           onClick={() => run("create")}
-          disabled={busy !== null || (mode === "wrapped" && !secretValid)}
+          disabled={busy !== null || (mode === "vault" && !secretValid)}
         >
           {busy === "create" ? "Waiting for passkey…" : "Create account"}
         </button>

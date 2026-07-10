@@ -27,7 +27,7 @@ import {
 /** The two account modes the demo offers (mera itself is mode-agnostic). */
 type AccountMode = "wrapped" | "derived";
 
-/** One numbered account: a passkey-derived signing session per chain. */
+/** One numbered account with a signing session per chain. */
 type AccountSlot = {
   index: number;
   ethereum: {
@@ -41,7 +41,7 @@ type AccountSlot = {
 };
 
 /**
- * A connected wallet — one passkey ceremony's worth of authority.
+ * A connected wallet with one passkey ceremony's worth of authority.
  *
  * Derived mode holds the BIP-39 master seed for the session and can mint more
  * numbered HD accounts with no further passkey prompt. Wrapped mode exposes the
@@ -96,9 +96,9 @@ function deriveSlotFromSeed(seed: Uint8Array, index: number): AccountSlot {
  * Builds a derived-mode wallet from a single PRF output.
  *
  * The PRF output becomes a BIP-39 master seed held in memory for the session,
- * exactly like the signing keys are — and zeroed alongside them on `lock()`.
- * Holding it is what lets "Add account" derive a new HD account instantly with
- * no extra biometric: one ceremony per session, not per account.
+ * exactly like the signing keys are, and is zeroed alongside them on `lock()`.
+ * Holding it lets "Add account" derive a new HD account without another
+ * ceremony. The demo runs one ceremony per session rather than per account.
  */
 function buildDerivedWallet(
   prfOutput: Uint8Array,
@@ -120,7 +120,7 @@ function buildDerivedWallet(
     deriveAccount(index): AccountSlot {
       const cached = cache.get(index);
       if (cached) return cached;
-      if (!seed) throw new Error("Wallet is locked — connect again.");
+      if (!seed) throw new Error("The wallet is locked. Connect again.");
       const slot = deriveSlotFromSeed(seed, index);
       cache.set(index, slot);
       return slot;
@@ -209,17 +209,17 @@ async function createWrapped(
     prfSalt: crypto.getRandomValues(new Uint8Array(32)),
   });
 
-  // The phrase itself is the secret the passkey encrypts. Storing the phrase —
-  // not the derived keys — is what lets wrapped mode reveal it again later;
-  // signing keys are re-derived from it on unlock, the standard HD way, so it
-  // stays portable to MetaMask / Phantom.
+  // The phrase itself is the secret the passkey encrypts. Storing it lets
+  // wrapped mode reveal it again later. Signing keys are re-derived from the
+  // phrase on unlock, the standard HD way, so it stays portable to wallet apps
+  // such as MetaMask and Phantom.
   const secret = new TextEncoder().encode(phrase);
   try {
     const vault = await createSecretVault({ credential, secret });
     localStorage.setItem(VAULT_KEY, JSON.stringify(vault));
   } finally {
-    // Zero the transient secret and PRF output whether or not wrapping
-    // succeeded; the wallet is rebuilt from `phrase`, not from these.
+    // Zero the transient secret and PRF output regardless of whether wrapping
+    // succeeded. The wallet is rebuilt from `phrase` rather than these buffers.
     secret.fill(0);
     credential.prfOutput.fill(0);
   }
@@ -240,14 +240,14 @@ async function unlockWrapped(): Promise<ConnectResult> {
 
 /**
  * Reads the stored wrapped vault and decrypts its seed phrase behind a fresh
- * passkey ceremony. Shared by unlock and reveal; the PRF output and decrypted
- * bytes are zeroed before returning, even when the decrypt itself throws.
+ * passkey ceremony. Unlock and reveal share this function. The PRF output and
+ * decrypted bytes are zeroed before returning, even when decryption throws.
  */
 async function decryptStoredWrappedPhrase(): Promise<string> {
   const raw = localStorage.getItem(VAULT_KEY);
   if (!raw) {
     throw new Error(
-      "No wrapped account on this device yet — create one first.",
+      "No wrapped account exists on this device. Create one first.",
     );
   }
 
@@ -319,8 +319,8 @@ function connect(
  * Reveals a wallet's BIP-39 recovery phrase behind a fresh passkey ceremony.
  *
  * Derived wallets re-derive the phrase from the passkey PRF output; wrapped
- * wallets decrypt the phrase the user generated or imported out of the secret
- * vault. Either way the mnemonic is fetched on demand behind a fresh biometric.
+ * wallets decrypt the generated or imported phrase from the secret vault.
+ * Either way, the mnemonic is fetched on demand after fresh user verification.
  * PRF output and decrypted secret bytes are zeroed where possible before the
  * function returns. The phrase is returned as a JavaScript string, which cannot
  * be zeroed in place.
@@ -362,7 +362,7 @@ function describeError(error: unknown): string {
       case "DECRYPT_FAILED":
         return "Couldn't unlock the account with that passkey.";
       case "SESSION_LOCKED":
-        return "Your session is locked — connect again.";
+        return "The session is locked. Connect again.";
       case "CRYPTO_UNAVAILABLE":
         return "This browser doesn't provide the Web Crypto APIs this demo needs.";
       case "PASSKEY_OPERATION_FAILED":

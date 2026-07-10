@@ -1,11 +1,12 @@
 /**
  * When the demo runs inside the post's iframe, report its content height to the
- * embedding page so the frame can size to fit — no dead whitespace on the short
- * sign-in screen, no inner scrollbar on the tall signed-in screen.
+ * embedding page so the frame can fit the content without dead whitespace on
+ * the short sign-in screen or an inner scrollbar on the tall signed-in screen.
  *
- * Standalone (opened in its own tab) this is a no-op: the app keeps its centered,
- * viewport-filling layout. Setting `data-embedded` before render lets the CSS
- * drop `min-height: 100vh` so the measured height is the content, not the viewport.
+ * Standalone (opened in its own tab), this is a no-op: the app keeps its
+ * centered, viewport-filling layout. Setting `data-embedded` before render lets
+ * the CSS drop `min-height: 100vh` so the measured height is the content instead
+ * of the viewport.
  *
  * The height is non-sensitive, so it's posted to "*"; the embedding page is the
  * side that validates the message origin before resizing anything.

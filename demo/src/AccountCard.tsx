@@ -38,7 +38,7 @@ type AccountCardProps = {
  * Account view: an account selector (derived mode only), then a chain toggle,
  * then the chain-specific card for the active account.
  *
- * Switching accounts or chains never triggers a passkey ceremony — every
+ * Switching accounts or chains never triggers a passkey ceremony because every
  * account was derived from the one master seed the wallet already holds.
  */
 function AccountCard({
@@ -76,9 +76,9 @@ function AccountCard({
     }
   }
 
-  // On testnet, suggest sending to another of the user's own HD accounts — a
-  // self-owned recipient that needs no second address. Deriving it here is free
-  // (cached) and invisible: no pill or stored-account bump until the user reveals it.
+  // On testnet, suggest sending to another HD account controlled by the same
+  // passkey. Deriving it here is cached and invisible: no pill or stored-account
+  // bump appears until the account is revealed.
   const isTestnet = networkMode === "testnet";
   const suggestion = useMemo(() => {
     if (!isTestnet || wallet.mode !== "derived") return null;
@@ -131,7 +131,7 @@ function AccountCard({
   );
 
   // The recovery phrase takes over the card slot rather than stacking a second
-  // card below it — keeps the embedded demo compact.
+  // card below it, which keeps the embedded demo compact.
   if (phrase !== null) {
     return (
       <div className="account-shell">
@@ -199,9 +199,11 @@ function AccountCard({
             onLock={onLock}
           />
         ) : ethereumError ? (
-          <p className="status error">Ethereum unavailable — {ethereumError}</p>
+          <p className="status error">
+            Ethereum is unavailable: {ethereumError}
+          </p>
         ) : (
-          <p className="status">Connecting to Ethereum…</p>
+          <p className="status">The demo is connecting to Ethereum…</p>
         )
       ) : solanaAdapter ? (
         <ChainAccountCard
@@ -214,9 +216,9 @@ function AccountCard({
           onLock={onLock}
         />
       ) : solanaError ? (
-        <p className="status error">Solana unavailable — {solanaError}</p>
+        <p className="status error">Solana is unavailable: {solanaError}</p>
       ) : (
-        <p className="status">Connecting to Solana…</p>
+        <p className="status">The demo is connecting to Solana…</p>
       )}
 
       <div className="backup-trigger">
@@ -226,7 +228,7 @@ function AccountCard({
           onClick={() => void revealBackup()}
           disabled={revealing}
         >
-          {revealing ? "Waiting for passkey…" : "Reveal backup phrase"}
+          {revealing ? "Waiting for passkey…" : "Reveal recovery phrase"}
         </button>
         {backupError && <p className="status error">{backupError}</p>}
       </div>

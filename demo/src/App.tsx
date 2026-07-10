@@ -67,9 +67,9 @@ function App(): ReactElement {
 
   function handleConnected(result: ConnectResult) {
     setWallet(result.wallet);
-    // Derived wallets start with two accounts so "send to your other account"
-    // works out of the box: the second pill is visible and the recipient chip
-    // points at a real account. Wrapped mode has a single account.
+    // Derived wallets start with two accounts so transfers between demo accounts
+    // work immediately: the second pill is visible and the recipient chip points
+    // at a real account. Wrapped mode has a single account.
     const count =
       result.wallet.mode === "derived"
         ? Math.max(result.accountCount, 2)
@@ -109,8 +109,7 @@ function App(): ReactElement {
             ◈
           </div>
           <div>
-            <h1>Mera</h1>
-            <p className="tagline">One passkey for all accounts</p>
+            <h1>Mera Demo</h1>
           </div>
         </div>
 

@@ -1,5 +1,4 @@
-import * as ed25519 from "@noble/ed25519";
-import { sha512 } from "@noble/hashes/sha2.js";
+import { ed25519 } from "@noble/curves/ed25519.js";
 import { copyBytes } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import { createSigningKey } from "./session.js";
@@ -24,9 +23,6 @@ function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array<ArrayBuffer> {
     );
   }
 
-  // noble's sync API ships without SHA-512; wire it on first sync use rather
-  // than at module load, so this module has no import-time side effect.
-  ed25519.hashes.sha512 ??= sha512;
   return new Uint8Array(ed25519.getPublicKey(privateKey));
 }
 
@@ -53,9 +49,10 @@ function createEd25519SigningSession({
   return {
     publicKey,
     async signMessage(message: Uint8Array): Promise<Uint8Array<ArrayBuffer>> {
-      // Signing reads the buffer after an await; copy it now so a later mutation can't change the signed bytes.
+      // Give the signer a standalone message snapshot even if a future backend
+      // reads its input asynchronously.
       const messageCopy = copyBytes(message);
-      return new Uint8Array(await ed25519.signAsync(messageCopy, key.use()));
+      return new Uint8Array(ed25519.sign(messageCopy, key.use()));
     },
     lock,
     [Symbol.dispose]: lock,

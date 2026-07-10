@@ -53,11 +53,11 @@ An `Ed25519SigningSession`, unlocked.
 
 ### signMessage(message)
 
-Signs an arbitrary-length message and resolves to the 64-byte Ed25519 signature (`R || s`). Hashing happens inside Ed25519 itself; the caller passes the raw message, never a digest. The message is copied before use because signing reads the buffer after an await; the original is not modified. Throws [`SESSION_LOCKED`](/reference/errors/#session_locked) after `lock`.
+Signs an arbitrary-length message and resolves to the 64-byte Ed25519 signature (`R || s`). Hashing happens inside Ed25519 itself; the caller passes the raw message, never a digest.
 
 ### lock()
 
-Zeroes the session-owned private-key copy and permanently locks the session; later signing throws `SESSION_LOCKED`. If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
+Zeroes the session-owned private-key copy and permanently locks the session; later signing throws `SESSION_LOCKED`.
 
 ### [Symbol.dispose]()
 
@@ -66,10 +66,13 @@ Calls `lock`, so a `using` declaration locks the session when its scope exits. S
 ## Errors
 
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `consumePrivateKey` is not 32 bytes. The input buffer is zeroed even on this path.
+- [`SESSION_LOCKED`](/reference/errors/#session_locked): `signMessage` was called after `lock`.
 
 ## Notes
 
 Signing needs no passkey ceremony and shows no prompt; the session signs as often as the app asks until it is locked.
+
+The message is copied before signing; the original is not modified.
 
 ## See also
 

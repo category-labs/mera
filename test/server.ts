@@ -12,11 +12,12 @@ const contentTypes: Record<string, string> = {
 const importMap = JSON.stringify({
   imports: {
     "@category-labs/mera": "/dist/index.js",
-    "@noble/ed25519": "/node_modules/@noble/ed25519/index.js",
+    "@noble/curves/ed25519.js": "/node_modules/@noble/curves/ed25519.js",
+    "@noble/curves/secp256k1.js": "/node_modules/@noble/curves/secp256k1.js",
+    "@noble/hashes/hmac.js": "/node_modules/@noble/hashes/hmac.js",
     "@noble/hashes/sha2.js": "/node_modules/@noble/hashes/sha2.js",
     "@noble/hashes/sha3.js": "/node_modules/@noble/hashes/sha3.js",
     "@noble/hashes/utils.js": "/node_modules/@noble/hashes/utils.js",
-    "@noble/secp256k1": "/node_modules/@noble/secp256k1/index.js",
     "@scure/base": "/node_modules/@scure/base/index.js",
   },
 });

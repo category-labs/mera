@@ -58,9 +58,8 @@
     "test:e2e": "npm test -- --project chromium-e2e"
   },
   "dependencies": {
-    "@noble/ed25519": "^3.1.0",
+    "@noble/curves": "2.2.0",
     "@noble/hashes": "^2.2.0",
-    "@noble/secp256k1": "^3.1.0",
     "@scure/base": "^2.2.0"
   },
   "peerDependencies": {

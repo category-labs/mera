@@ -1,4 +1,4 @@
-import * as ed25519 from "@noble/ed25519";
+import { ed25519 } from "@noble/curves/ed25519.js";
 import { hexToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
 import { createEd25519SigningSession } from "../dist/index.js";
@@ -22,9 +22,7 @@ test("signs messages and locks the session", async () => {
 
   expect(session.publicKey).toEqual(RFC_PUBLIC_KEY);
   expect(signature).toHaveLength(64);
-  expect(await ed25519.verifyAsync(signature, message, session.publicKey)).toBe(
-    true,
-  );
+  expect(ed25519.verify(signature, message, session.publicKey)).toBe(true);
 
   session.lock();
 
@@ -72,10 +70,6 @@ test("signs the message snapshot taken at call time, not later mutations", async
   const signature = await pending;
 
   // The signature is over the bytes at call time, not the later mutation.
-  expect(
-    await ed25519.verifyAsync(signature, original, session.publicKey),
-  ).toBe(true);
-  expect(await ed25519.verifyAsync(signature, message, session.publicKey)).toBe(
-    false,
-  );
+  expect(ed25519.verify(signature, original, session.publicKey)).toBe(true);
+  expect(ed25519.verify(signature, message, session.publicKey)).toBe(false);
 });

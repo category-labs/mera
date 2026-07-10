@@ -53,11 +53,11 @@ A `Secp256k1SigningSession`, unlocked.
 
 ### signDigest(digest32)
 
-Signs a 32-byte digest without prehashing it and resolves to a `Secp256k1Signature`: `compact` (64 bytes, `r || s`, low-S) plus `recovery` (0 or 1). The digest is copied before use because signing reads the buffer after an await; the original is not modified. Throws [`INPUT_INVALID`](/reference/errors/#input_invalid) when the digest is not 32 bytes and [`SESSION_LOCKED`](/reference/errors/#session_locked) after `lock`.
+Signs a 32-byte digest without prehashing it and resolves to a `Secp256k1Signature`: `compact` (64 bytes, `r || s`, low-S) plus `recovery` (0 or 1).
 
 ### lock()
 
-Zeroes the session-owned private-key copy and permanently locks the session; later signing throws `SESSION_LOCKED`. If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
+Zeroes the session-owned private-key copy and permanently locks the session; later signing throws `SESSION_LOCKED`.
 
 ### [Symbol.dispose]()
 
@@ -74,11 +74,14 @@ Sessions bound with `const` or `let` are unaffected; disposal runs only where a 
 
 ## Errors
 
-- [`INPUT_INVALID`](/reference/errors/#input_invalid): `consumePrivateKey` is not a valid secp256k1 scalar. The input buffer is zeroed even on this path.
+- [`INPUT_INVALID`](/reference/errors/#input_invalid): `consumePrivateKey` is not a valid secp256k1 scalar, or `digest32` is not 32 bytes. The private-key input buffer is zeroed even when session construction fails.
+- [`SESSION_LOCKED`](/reference/errors/#session_locked): `signDigest` was called after `lock`.
 
 ## Notes
 
 Signing needs no passkey ceremony and shows no prompt; the session signs as often as the app asks until it is locked.
+
+The digest is copied before signing; the original is not modified.
 
 The recovery ID is declared `0 | 1`. Values 2 and 3 exist in ECDSA but require the signature's `r` to reach the curve order, which happens with probability around 2^-127; if it ever did, the call would fail loudly with `INPUT_INVALID` rather than return a signature that cannot be address-recovered.
 

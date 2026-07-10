@@ -13,22 +13,22 @@ const features = [
   {
     title: "Onboarding without a seed phrase",
     link: "/getting-started/",
-    text: "Creating an account is a passkey prompt. There is no recovery phrase to transcribe before first use.",
+    text: "Creating an account is a passkey prompt.",
   },
   {
     title: "Cross-device, cross-platform",
     link: "/concepts/passkeys-and-prf/",
-    text: "Sign-in on a new phone or laptop finds the same accounts, and web and native apps on one domain share them.",
+    text: "The same accounts follow the passkey across devices and apps.",
   },
   {
     title: "Works with existing accounts",
     link: "/concepts/derived-and-wrapped/",
-    text: "An account that predates the passkey comes along too: wrap its recovery phrase or private key once, and the passkey opens it from then on.",
+    text: "Encrypt a recovery phrase or private key once, then decrypt it with the passkey.",
   },
   {
     title: "The authenticator is the key store",
     link: "/concepts/security-model/",
-    text: "The passkey provider already stores, syncs, and guards the credential, so the app ships no custody backend, no MPC setup, and no smart-account contracts.",
+    text: "Passkey providers store, sync, and guard credentials, so the app needs no custody backend, MPC setup, or smart-account contracts.",
   },
 ];
 ---

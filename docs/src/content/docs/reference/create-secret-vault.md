@@ -64,7 +64,7 @@ Secret bytes to encrypt. Any non-empty length; the library does not interpret th
 
 ## Notes
 
-**Use a fresh random salt per secret.** A vault is bound to its `prfOutput` only, never to the credential ID or salt. Secrets wrapped under one reused PRF output share a wrapping key, so their nonce/ciphertext pairs are interchangeable by anyone who can rewrite stored vault JSON. A fresh 32-byte `prfSalt` per secret gives each vault an unrelated PRF output and its own key.
+**Use a fresh random salt per secret.** A vault is bound to its `prfOutput` only, never to the credential ID or salt. Secrets wrapped under one reused PRF output share a wrapping key, so their nonce/ciphertext pairs are interchangeable by anyone who can rewrite stored vault JSON.
 
 The GCM nonce (12 bytes) is generated internally for each encryption, so a caller cannot accidentally reuse one.
 

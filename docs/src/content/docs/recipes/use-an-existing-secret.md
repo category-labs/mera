@@ -3,7 +3,11 @@ title: Use an existing secret (recovery phrase or private key) in wrapped mode
 description: Encrypt an existing secret into a passkey-protected vault and unlock it later.
 ---
 
-Wrapped mode encrypts one app-supplied secret behind a passkey, and the library never interprets the secret bytes: a recovery phrase, a private key, or any other secret works. Importing an account that already exists is one use, and it is the one this recipe works end to end: validate a phrase, wrap it, persist the vault, and unlock it later with careful zeroing. The code is app-side throughout; mera provides the ceremonies and the vault. Prerequisites: `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
+Wrapped mode encrypts one recovery phrase, private key, or other byte string behind a passkey; mera never interprets it. This recipe validates a phrase, stores its vault, and unlocks it with explicit zeroing.
+
+The surrounding code is app-owned; mera provides the passkey ceremonies and vault functions.
+
+Prerequisites: `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
 
 ## Validate the phrase
 
@@ -23,7 +27,7 @@ if (!validateMnemonic(phrase, wordlist)) {
 
 ## Create the passkey with a fresh random salt
 
-Wrapped flows never use the deterministic salt. Each secret gets 32 fresh random bytes, because a vault is bound to its PRF output only: secrets wrapped under one reused output would share a wrapping key, and their nonce/ciphertext pairs would become interchangeable to anyone who can rewrite the stored JSON. [createSecretVault](/reference/create-secret-vault/) documents the details.
+Use a fresh 32-byte random salt per secret. Reusing a PRF output shares the wrapping key and lets anyone who can rewrite stored JSON swap nonce/ciphertext pairs between vaults.
 
 ```ts
 import { createPasskeyWithPrfOutput } from "@category-labs/mera";

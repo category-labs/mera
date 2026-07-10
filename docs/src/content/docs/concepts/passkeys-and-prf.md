@@ -19,7 +19,7 @@ The requirement is not configurable. Authenticators built on CTAP's `hmac-secret
 
 The [PRF extension](https://www.w3.org/TR/webauthn-3/#prf-extension) gives each credential a pseudorandom function. The caller passes a 32-byte salt with the ceremony and the authenticator returns 32 bytes.
 
-The output is deterministic in exactly three inputs: the credential, the relying party ID, and the salt. The same three inputs produce the same 32 bytes on any device the passkey syncs to; a different salt produces an unrelated output. Salts act as namespaces, which is why derived accounts share one [fixed salt](/reference/get-deterministic-prf-salt-v1/) while each wrapped secret gets a fresh random one.
+PRF output is determined by the credential, relying party ID, and salt. Those inputs produce the same 32 bytes on every synced device; a different salt produces unrelated output. Salts act as namespaces, which is why derived accounts share one [fixed salt](/reference/get-deterministic-prf-salt-v1/) while each wrapped secret gets a fresh random one.
 
 ## Using the output
 

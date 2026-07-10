@@ -3,7 +3,7 @@ title: Secret vault format
 description: The v1 PasskeySecretVault JSON contract, field by field.
 ---
 
-A secret vault is a versioned, JSON-safe object holding one secret encrypted behind a passkey. It is a storage contract: apps persist it as-is, ship it between devices, and hand it back to the library later. This page documents version 1, the only version that exists.
+A secret vault is a versioned JSON object containing one passkey-encrypted secret. Apps can store or transfer it unchanged. Only version 1 exists.
 
 ```json
 {
@@ -51,7 +51,7 @@ The credential ID and salt are stored but not authenticated: the AES-GCM additio
 
 ## Portability
 
-The vault is plain JSON and can be stored anywhere JSON can: `localStorage`, a database row, a file, a sync service. The holder has only ciphertext; turning it back into the secret requires the passkey ceremony and its user verification.
+The vault is plain JSON suitable for `localStorage`, a database, a file, or a sync service. Decryption requires the passkey ceremony and user verification.
 
 ## See also
 

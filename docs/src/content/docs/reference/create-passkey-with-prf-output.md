@@ -3,7 +3,7 @@ title: createPasskeyWithPrfOutput
 description: Creates a passkey and returns the PRF output for the given salt in one call.
 ---
 
-Creates a passkey and returns the WebAuthn PRF output for the given salt, falling back to a second ceremony only when the authenticator does not evaluate PRF at create time. Equivalent to [createPasskey](/reference/create-passkey/) followed, when `prfOutput` is absent, by [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt; the fallback means a possible second browser prompt.
+Creates a passkey and returns the WebAuthn PRF output for the given salt. If the [createPasskey](/reference/create-passkey/) result has no `prfOutput`, the function runs [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt, which may show a second browser prompt.
 
 ## Import
 

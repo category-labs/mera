@@ -3,7 +3,11 @@ title: Derive accounts from one passkey
 description: Numbered EVM and Solana accounts from a single ceremony, with credential pinning.
 ---
 
-This recipe extends [Getting started](/getting-started/) to a real multi-account setup: one passkey ceremony per session, numbered accounts on two curves, a stored credential record so sign-in pins the right passkey, and a clean lock at the end. The code is app-side throughout; mera provides the ceremonies and the signing sessions. Prerequisites: `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a PRF-capable authenticator ([authenticator support](/concepts/authenticator-support/)).
+This recipe extends [Getting started](/getting-started/) with numbered EVM and Solana accounts, credential pinning, one passkey ceremony per session, and locking.
+
+Derivation and storage are app-owned; mera provides the ceremonies and signing sessions.
+
+Prerequisites: `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a PRF-capable authenticator ([authenticator support](/concepts/authenticator-support/)).
 
 ## Create the passkey
 
@@ -156,6 +160,6 @@ Sessions zero their own key copies on `lock()`. The master seed is the app's buf
 
 ## Pitfalls
 
-- **The derivation must never change after launch.** Every step between the PRF output and an address (the mnemonic mapping and the two derivation paths) is permanent: change any step and every account gets a different address.
+- **Do not change the derivation after launch.** Changing the mnemonic mapping or either path changes every account address.
 - **Zero the PRF output as soon as the seed exists**, and the seed on lock. Between those two moments a compromised runtime can read them ([security model](/concepts/security-model/)).
 - **Accounts reproduce only under the same rpId.** A domain migration silently orphans them; give accounts an export path first. The phrase to show is `entropyToMnemonic` over the PRF output from a fresh assertion, the same mapping the seed step uses ([Derived and wrapped modes](/concepts/derived-and-wrapped/)).

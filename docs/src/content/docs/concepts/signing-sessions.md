@@ -21,11 +21,11 @@ Sessions also support `using` declarations: disposal calls `lock()` when the sco
 
 ## The open window
 
-Between construction and lock, anything that can run script on the page can request signatures. The session exposes no way to read the key back, but a compromised runtime does not need the key if it can sign. The [security model](/concepts/security-model/#what-a-compromised-runtime-sees) covers the runtime trust boundary in full.
+Between construction and lock, a compromised runtime can request signatures without reading the key. The [security model](/concepts/security-model/#what-a-compromised-runtime-sees) covers the runtime trust boundary in full.
 
 ## How long to keep a session
 
-Locking is not free. Unless the app kept the key somewhere else, fresh key material means another passkey ceremony: reproducing a derived key and unwrapping a vault both start with one, so after `lock()` the next signature costs one more user-verification prompt. Session lifetime is a trade-off between that prompt and the open window.
+Unless the app kept the key somewhere else, fresh key material means another passkey ceremony: reproducing a derived key and unwrapping a vault both start with one, so after `lock()` the next signature costs one more user-verification prompt. Session lifetime is a trade-off between that prompt and the open window.
 
 Frequent signing justifies a held session. A high-frequency trading app that ran a fresh ceremony per order would prompt constantly, so it keeps one session for the active burst of work and locks it when the burst ends.
 

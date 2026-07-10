@@ -14,7 +14,7 @@ Prerequisites:
 npm install @category-labs/mera
 ```
 
-This walkthrough also uses `@scure/bip32` and `@scure/bip39` to derive accounts; any derivation scheme works.
+This walkthrough derives accounts with `@scure/bip32` and `@scure/bip39`; any derivation scheme works.
 
 ```sh
 npm install @scure/bip32 @scure/bip39
@@ -39,7 +39,7 @@ const { prfOutput } = await createPasskeyWithPrfOutput({
 });
 ```
 
-Expect one authenticator prompt, sometimes two: authenticators that do not evaluate PRF at create time get a follow-up assertion with the same salt.
+The call prompts once or twice when the authenticator needs a follow-up assertion to evaluate PRF.
 
 The salt is mera's fixed deterministic one: the same passkey, relying party, and salt always produce the same 32 bytes, on any device the passkey syncs to. The result also carries the credential ID; [Derive accounts from one passkey](/recipes/derive-accounts/) stores it to pin later sign-ins.
 

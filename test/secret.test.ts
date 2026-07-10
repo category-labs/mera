@@ -2,9 +2,14 @@ import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
 import {
   createSecretVault,
+  createSecretVaultWithExistingPasskey,
+  createSecretVaultWithNewPasskey,
+  getDeterministicPrfSaltV1,
+  type PasskeyCredentialTransport,
   type PasskeySecretVault,
   parseSecretVault,
   unwrapSecretVault,
+  unwrapSecretVaultWithPasskey,
 } from "../dist/index.js";
 import { expectError, withStubbedGlobal } from "./helpers.js";
 
@@ -28,6 +33,19 @@ async function createTestVault(
     },
     secret,
   });
+}
+
+function readPrfSalt(
+  publicKey:
+    | PublicKeyCredentialRequestOptions
+    | PublicKeyCredentialCreationOptions
+    | undefined,
+): Uint8Array {
+  const first = publicKey?.extensions?.prf?.eval?.first;
+  if (!(first instanceof ArrayBuffer)) {
+    throw new Error("expected PRF salt as an ArrayBuffer");
+  }
+  return new Uint8Array(first);
 }
 
 test("creates a secret vault and unwraps the exact bytes", async () => {
@@ -69,6 +87,290 @@ test("createSecretVault snapshots caller-owned byte inputs before async work", a
   await expect(
     unwrapSecretVault({ vault, prfOutput: PRF_OUTPUT }),
   ).resolves.toEqual(SECRET);
+});
+
+test("wrapped-mode creation rejects an empty secret before prompting", async () => {
+  let ceremonyCount = 0;
+  const navigator = {
+    credentials: {
+      async create() {
+        ceremonyCount += 1;
+        throw new Error("creation must not start");
+      },
+      async get() {
+        ceremonyCount += 1;
+        throw new Error("assertion must not start");
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    await expect(
+      createSecretVaultWithNewPasskey({
+        rp: { id: "example.com", name: "Mera Test" },
+        user: { name: "nad", displayName: "nad" },
+        secret: new Uint8Array(0),
+      }),
+    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+
+    await expect(
+      createSecretVaultWithExistingPasskey({
+        rpId: "example.com",
+        secret: new Uint8Array(0),
+      }),
+    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+  });
+
+  expect(ceremonyCount).toBe(0);
+});
+
+test("wrapped-mode ceremony helpers check WebAuthn before Web Crypto", async () => {
+  const vault = await createTestVault();
+
+  await withStubbedGlobal("navigator", undefined, async () => {
+    await withStubbedGlobal("crypto", undefined, async () => {
+      await expect(
+        createSecretVaultWithNewPasskey({
+          rp: { id: "example.com", name: "Mera Test" },
+          user: { name: "nad", displayName: "nad" },
+          secret: SECRET,
+        }),
+      ).rejects.toMatchObject({ code: "PASSKEY_OPERATION_FAILED" });
+
+      await expect(
+        createSecretVaultWithExistingPasskey({
+          rpId: "example.com",
+          secret: SECRET,
+        }),
+      ).rejects.toMatchObject({ code: "PASSKEY_OPERATION_FAILED" });
+
+      await expect(
+        unwrapSecretVaultWithPasskey({ rpId: "example.com", vault }),
+      ).rejects.toMatchObject({ code: "PASSKEY_OPERATION_FAILED" });
+    });
+  });
+});
+
+test("wrapped-mode creation preserves PRF failures and caller-owned secrets", async () => {
+  const newPasskeySecret = new Uint8Array(SECRET);
+  const existingPasskeySecret = new Uint8Array(SECRET);
+  const navigator = {
+    credentials: {
+      async create() {
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          response: {},
+          getClientExtensionResults: () => ({ prf: { enabled: false } }),
+        };
+      },
+      async get() {
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          getClientExtensionResults: () => ({ prf: {} }),
+        };
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    await expect(
+      createSecretVaultWithNewPasskey({
+        rp: { id: "example.com", name: "Mera Test" },
+        user: { name: "nad", displayName: "nad" },
+        secret: newPasskeySecret,
+      }),
+    ).rejects.toMatchObject({ code: "PRF_UNAVAILABLE" });
+
+    await expect(
+      createSecretVaultWithExistingPasskey({
+        rpId: "example.com",
+        secret: existingPasskeySecret,
+      }),
+    ).rejects.toMatchObject({ code: "PRF_UNAVAILABLE" });
+  });
+
+  expect(newPasskeySecret).toEqual(SECRET);
+  expect(existingPasskeySecret).toEqual(SECRET);
+});
+
+test("createSecretVaultWithExistingPasskey rejects an empty credential ID without prompting", async () => {
+  let asserted = false;
+  const navigator = {
+    credentials: {
+      async get() {
+        asserted = true;
+        throw new Error("assertion must not start");
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    await expect(
+      createSecretVaultWithExistingPasskey({
+        rpId: "example.com",
+        credential: { credentialId: "" },
+        secret: SECRET,
+      }),
+    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+  });
+
+  expect(asserted).toBe(false);
+});
+
+test("createSecretVaultWithNewPasskey owns a random salt and snapshots the secret", async () => {
+  let releaseCreation: (() => void) | undefined;
+  const creationGate = new Promise<void>((resolve) => {
+    releaseCreation = resolve;
+  });
+  let evaluatedSalt: Uint8Array | undefined;
+
+  const navigator = {
+    credentials: {
+      async create({ publicKey }: CredentialCreationOptions) {
+        evaluatedSalt = readPrfSalt(publicKey);
+        await creationGate;
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          response: { getTransports: () => ["internal"] },
+          getClientExtensionResults: () => ({
+            prf: {
+              enabled: true,
+              results: { first: evaluatedSalt?.buffer },
+            },
+          }),
+        };
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    const secret = new Uint8Array(SECRET);
+    const pending = createSecretVaultWithNewPasskey({
+      rp: { id: "example.com", name: "Mera Test" },
+      user: { name: "nad", displayName: "nad" },
+      secret,
+    });
+
+    secret.fill(0);
+    releaseCreation?.();
+
+    const vault = await pending;
+    if (evaluatedSalt === undefined) {
+      throw new Error("expected a PRF salt");
+    }
+
+    expect(vault.credential).toEqual({
+      credentialId: "AQIDBA",
+      transports: ["internal"],
+    });
+    expect(vault.prfSalt).not.toBe(
+      Buffer.from(getDeterministicPrfSaltV1()).toString("base64url"),
+    );
+    await expect(
+      unwrapSecretVault({ vault, prfOutput: evaluatedSalt }),
+    ).resolves.toEqual(SECRET);
+  });
+});
+
+test("createSecretVaultWithExistingPasskey snapshots inputs and preserves transports", async () => {
+  let releaseAssertion: (() => void) | undefined;
+  const assertionGate = new Promise<void>((resolve) => {
+    releaseAssertion = resolve;
+  });
+  let evaluatedSalt: Uint8Array | undefined;
+
+  const navigator = {
+    credentials: {
+      async get({ publicKey }: CredentialRequestOptions) {
+        evaluatedSalt = readPrfSalt(publicKey);
+        await assertionGate;
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          getClientExtensionResults: () => ({
+            prf: { results: { first: evaluatedSalt?.buffer } },
+          }),
+        };
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    const transports: PasskeyCredentialTransport[] = ["usb"];
+    const credential = { credentialId: "AQIDBA", transports };
+    const secret = new Uint8Array(SECRET);
+    const pending = createSecretVaultWithExistingPasskey({
+      rpId: "example.com",
+      credential,
+      secret,
+    });
+
+    credential.credentialId = "BQYHCA";
+    transports[0] = "nfc";
+    secret.fill(0);
+    releaseAssertion?.();
+
+    const vault = await pending;
+    if (evaluatedSalt === undefined) {
+      throw new Error("expected a PRF salt");
+    }
+
+    expect(vault.credential).toEqual({
+      credentialId: "AQIDBA",
+      transports: ["usb"],
+    });
+    await expect(
+      unwrapSecretVault({ vault, prfOutput: evaluatedSalt }),
+    ).resolves.toEqual(SECRET);
+  });
+});
+
+test("unwrapSecretVaultWithPasskey snapshots the vault before prompting", async () => {
+  const stored = await createTestVault();
+  const vault = {
+    ...stored,
+    credential: {
+      ...stored.credential,
+      transports: [...(stored.credential.transports ?? [])],
+    },
+  };
+  let releaseAssertion: (() => void) | undefined;
+  const assertionGate = new Promise<void>((resolve) => {
+    releaseAssertion = resolve;
+  });
+
+  const navigator = {
+    credentials: {
+      async get() {
+        await assertionGate;
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          getClientExtensionResults: () => ({
+            prf: { results: { first: PRF_OUTPUT.buffer } },
+          }),
+        };
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    const pending = unwrapSecretVaultWithPasskey({
+      rpId: "example.com",
+      vault,
+    });
+
+    vault.credential.credentialId = "BQYHCA";
+    vault.prfSalt = "invalid";
+    vault.nonce = "invalid";
+    vault.ciphertext = "invalid";
+    releaseAssertion?.();
+
+    await expect(pending).resolves.toEqual(SECRET);
+  });
 });
 
 test("unwrapSecretVault fails with the wrong PRF output", async () => {

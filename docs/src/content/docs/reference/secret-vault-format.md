@@ -55,5 +55,8 @@ The vault is plain JSON and can be stored anywhere JSON can: `localStorage`, a d
 
 ## See also
 
-- [createSecretVault](/reference/create-secret-vault/), [parseSecretVault](/reference/parse-secret-vault/), [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/), [unwrapSecretVault](/reference/unwrap-secret-vault/): the four functions that produce and consume this format.
+- [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/) and [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/): workflow functions that produce this format.
+- [unwrapSecretVaultWithPasskey](/reference/unwrap-secret-vault-with-passkey/): the workflow function that performs the assertion and decryption.
+- [createSecretVault](/reference/create-secret-vault/), [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/), and [unwrapSecretVault](/reference/unwrap-secret-vault/): low-level primitives for the same format.
+- [parseSecretVault](/reference/parse-secret-vault/): the validation boundary for stored JSON.
 - [Derived and wrapped modes](/concepts/derived-and-wrapped/): where the vault fits.

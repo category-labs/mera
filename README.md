@@ -31,12 +31,11 @@ The `@category-labs/mera/viem` entry point requires `viem` (^2.28.0) as an optio
 
 ## Quick example
 
-A derived-mode example: one passkey ceremony, then app-owned key derivation — here BIP-39/BIP-32 with `@scure/bip32` and `@scure/bip39`, as in the demo.
+A derived-mode example: one passkey ceremony, then app-owned BIP-39/BIP-32 key derivation with `@scure/bip32` and `@scure/bip39`, as in the demo.
 
 ```ts
 import {
   createSecp256k1SigningSession,
-  getDeterministicPrfSaltV1,
   getEvmAddress,
   getPasskeyPrfOutput,
 } from "@category-labs/mera"
@@ -46,8 +45,7 @@ import { wordlist } from "@scure/bip39/wordlists/english.js"
 
 const rpId = "account.example.com"
 
-const prfSalt = getDeterministicPrfSaltV1()
-const { prfOutput } = await getPasskeyPrfOutput({ rpId, prfSalt })
+const { prfOutput } = await getPasskeyPrfOutput({ rpId })
 
 // App-owned derivation: the PRF output is BIP-39 entropy, so the same phrase
 // imported into a standard wallet reproduces the same account.
@@ -65,7 +63,7 @@ const address = getEvmAddress(session.publicKey)
 
 Reusing one PRF output unchanged for unrelated purposes (key derivation and app-data encryption, say) links those secrets. Use a different PRF salt per purpose, or split one output with a purpose-labeled KDF.
 
-Derived, reproducible-account flows pass a stable PRF salt such as `getDeterministicPrfSaltV1()`. Wrapped flows pass 32 fresh random salt bytes.
+Derived flows use mera's fixed v1 salt internally. Wrapped-mode vault functions generate and store a fresh random salt for each secret.
 
 ## Supported authenticators
 
@@ -106,7 +104,8 @@ Names only; editor hover shows the full JSDoc.
 - **Passkey ceremonies**: `createPasskey`, `createPasskeyWithPrfOutput`, `getPasskeyPrfOutput`
 - **Deterministic PRF salt**: `getDeterministicPrfSaltV1`
 - **Signing sessions**: `createSecp256k1SigningSession`, `createEd25519SigningSession`
-- **Secret vault**: `createSecretVault`, `unwrapSecretVault`, `parseSecretVault`, `getSecretVaultPrfOutput`
+- **Secret vault workflows**: `createSecretVaultWithNewPasskey`, `createSecretVaultWithExistingPasskey`, `unwrapSecretVaultWithPasskey`
+- **Secret vault primitives**: `createSecretVault`, `unwrapSecretVault`, `parseSecretVault`, `getSecretVaultPrfOutput`
 - **Chain addresses**: `getEvmAddress`, `isEvmAddress`, `getSolanaAddress`, `isSolanaAddress`
 - **viem adapter** (`@category-labs/mera/viem`): `toViemAccount`
 - **Errors**: `MeraError`, `isMeraError`, `MeraErrorCode`

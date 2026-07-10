@@ -14,14 +14,10 @@ import { getPasskeyPrfOutput } from "@category-labs/mera";
 ## Usage
 
 ```ts
-import {
-  getDeterministicPrfSaltV1,
-  getPasskeyPrfOutput,
-} from "@category-labs/mera";
+import { getPasskeyPrfOutput } from "@category-labs/mera";
 
 const { credentialId, prfOutput } = await getPasskeyPrfOutput({
   rpId: "account.example.com",
-  prfSalt: getDeterministicPrfSaltV1(),
 });
 ```
 
@@ -46,9 +42,9 @@ Credential metadata that restricts the assertion to one passkey: a `credentialId
 ### options.prfSalt
 
 - Type: `Uint8Array`
-- Required
+- Optional; defaults to mera's fixed v1 deterministic salt
 
-PRF salt as 32 raw bytes. Copied before use; the original buffer is not modified.
+PRF salt as 32 raw bytes. An explicit value supports custom PRF namespaces and low-level composition. It is copied before use; the original buffer is not modified.
 
 ### options.timeout
 
@@ -64,13 +60,13 @@ WebAuthn timeout in milliseconds.
 ## Errors
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not return a usable 32-byte PRF output.
-- [`INPUT_INVALID`](/reference/errors/#input_invalid): `prfSalt` is not 32 bytes, or `credential.credentialId` is empty or not canonical base64url.
+- [`INPUT_INVALID`](/reference/errors/#input_invalid): an explicit `prfSalt` is not 32 bytes, or `credential.credentialId` is empty or not canonical base64url.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): Web Crypto is unavailable.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## Notes
 
-The PRF output is a deterministic function of the credential, `rpId`, and `prfSalt`: the same three inputs reproduce the same 32 bytes, and a different salt yields an unrelated output.
+The PRF output is a deterministic function of the credential, `rpId`, and salt. The same inputs reproduce the same 32 bytes, and a different salt yields an unrelated output. The default salt is permanently the fixed v1 value.
 
 The assertion requires user verification, and the requirement is not configurable: the PRF extension evaluates only the credential's user-verified PRF, so a `userVerification` setting could neither change the output nor skip the check. [Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism.
 
@@ -80,6 +76,6 @@ WebAuthn availability is checked before Web Crypto, so an environment missing bo
 
 ## See also
 
-- [getDeterministicPrfSaltV1](/reference/get-deterministic-prf-salt-v1/): the fixed salt for derived flows.
+- [getDeterministicPrfSaltV1](/reference/get-deterministic-prf-salt-v1/): access the default salt explicitly for protocol interoperability.
 - [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/): the same assertion, driven by a stored vault.
 - [Derive accounts from one passkey](/recipes/derive-accounts/): credential pinning in practice.

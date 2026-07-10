@@ -3,7 +3,7 @@ title: createSecretVault
 description: Encrypts an arbitrary secret into a passkey-protected vault.
 ---
 
-Encrypts an arbitrary secret into a passkey-protected vault.
+Encrypts an arbitrary secret into a passkey-protected vault from explicit credential, salt, and PRF material. This is the low-level encryption primitive; wrapped-mode workflow functions own the ceremony and random salt.
 
 An AES-256-GCM wrapping key is derived from the PRF output with fixed HKDF-SHA-256 info (`mera.v1.wrap.secret`), which separates it from any other key derived from the same output. The secret is encrypted under fixed additional authenticated data.
 
@@ -44,7 +44,7 @@ localStorage.setItem("vault", JSON.stringify(vault));
 - Type: `{ credentialId: string; transports?: readonly PasskeyCredentialTransport[]; prfSalt: Uint8Array; prfOutput: Uint8Array }`
 - Required
 
-The passkey credential plus the PRF salt and the PRF output it produced. The result of [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) can be passed straight through. `credentialId` must be canonical unpadded base64url and non-empty; `prfSalt` and `prfOutput` must each be exactly 32 bytes.
+The passkey credential plus the PRF salt and the PRF output it produced. A [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) result evaluated with an explicit fresh salt can be passed straight through. `credentialId` must be canonical unpadded base64url and non-empty; `prfSalt` and `prfOutput` must each be exactly 32 bytes.
 
 ### options.secret
 
@@ -72,6 +72,8 @@ Input byte buffers are copied before async cryptographic work starts; mutating t
 
 ## See also
 
+- [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/): create a passkey and vault in one workflow.
+- [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/): create a vault with an existing passkey.
 - [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/) and [unwrapSecretVault](/reference/unwrap-secret-vault/): the assertion and decryption that recover the secret.
 - [Use an existing secret](/recipes/use-an-existing-secret/): the full flow with zeroing.
 - [Security model](/concepts/security-model/#one-output-one-purpose): why PRF outputs must not be reused across purposes.

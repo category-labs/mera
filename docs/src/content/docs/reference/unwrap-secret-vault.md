@@ -64,5 +64,6 @@ The 32-byte WebAuthn PRF output for the vault's stored salt. Copied before async
 
 ## See also
 
+- [unwrapSecretVaultWithPasskey](/reference/unwrap-secret-vault-with-passkey/): perform the assertion and decryption in one call.
 - [Use an existing secret](/recipes/use-an-existing-secret/): create, store, and unwrap with the zeroing pattern.
 - [Secret vault format](/reference/secret-vault-format/): what the ciphertext actually contains.

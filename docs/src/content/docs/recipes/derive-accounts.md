@@ -8,17 +8,13 @@ This recipe extends [Getting started](/getting-started/) to a real multi-account
 ## Create the passkey
 
 ```ts
-import {
-  createPasskeyWithPrfOutput,
-  getDeterministicPrfSaltV1,
-} from "@category-labs/mera";
+import { createPasskeyWithPrfOutput } from "@category-labs/mera";
 
 const rpId = location.hostname;
 
 const created = await createPasskeyWithPrfOutput({
   rp: { id: rpId, name: "Example" },
   user: { name: "account@example.com", displayName: "Example account" },
-  prfSalt: getDeterministicPrfSaltV1(),
 });
 
 // The seed comes from the sign-in assertion below, so this flow never uses
@@ -49,10 +45,7 @@ A fresh device has no record; sign-in falls back to a discoverable ceremony, and
 ## Sign in
 
 ```ts
-import {
-  getDeterministicPrfSaltV1,
-  getPasskeyPrfOutput,
-} from "@category-labs/mera";
+import { getPasskeyPrfOutput } from "@category-labs/mera";
 
 const stored = localStorage.getItem("app.derivedCredential");
 const known = stored ? JSON.parse(stored) : undefined;
@@ -60,7 +53,6 @@ const known = stored ? JSON.parse(stored) : undefined;
 const { prfOutput, credentialId } = await getPasskeyPrfOutput({
   rpId,
   credential: known,
-  prfSalt: getDeterministicPrfSaltV1(),
 });
 
 // The ceremony reports which credential was actually used; the person may

@@ -61,8 +61,8 @@ type CreatePasskeyResult = PasskeyCredentialMetadata & {
 /**
  * Result of creating a passkey together with its first PRF output.
  *
- * `prfSalt` is the salt WebAuthn evaluated, so downstream helpers (in
- * particular `createSecretVault`) can be invoked with this result alone.
+ * `prfSalt` is the salt WebAuthn evaluated. It is returned for explicit
+ * low-level composition and protocol interoperability.
  */
 type CreatePasskeyWithPrfOutputResult = PasskeyCredentialMetadata & {
   /** PRF salt that was evaluated. Always 32 bytes and never aliases the caller input. */

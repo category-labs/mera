@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { getDeterministicPrfSaltV1 } from "../dist/derived.js";
 import {
   copyPrfOutput,
   createPasskey,
@@ -68,6 +69,136 @@ test("copyPrfOutput rejects PRF output that is not 32 bytes", () => {
   expectError(() => copyPrfOutput(new ArrayBuffer(33)), "PRF_UNAVAILABLE");
   // Valid byte values, so a plain array fails on length, not element checks.
   expectError(() => copyPrfOutput([1, 2, 3]), "PRF_UNAVAILABLE");
+});
+
+test("createPasskey without prfSalt does not evaluate or return PRF output", async () => {
+  let createOptions: PublicKeyCredentialCreationOptions | undefined;
+  const navigator = {
+    credentials: {
+      async create({ publicKey }: CredentialCreationOptions) {
+        createOptions = publicKey;
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          response: {},
+          getClientExtensionResults: () => ({
+            prf: {
+              enabled: true,
+              results: { first: new Uint8Array(32).fill(7).buffer },
+            },
+          }),
+        };
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    const result = await createPasskey({
+      rp: { id: "example.com", name: "Mera Test" },
+      user: { name: "nad", displayName: "nad" },
+    });
+
+    expect(result.prfOutput).toBeUndefined();
+  });
+
+  expect(createOptions?.extensions?.prf).toEqual({});
+});
+
+test("PRF output helpers default to Mera's fixed v1 salt", async () => {
+  const evaluatedSalts: Uint8Array[] = [];
+
+  function readSalt(value: BufferSource | undefined): ArrayBuffer {
+    if (!(value instanceof ArrayBuffer)) {
+      throw new Error("expected PRF salt as an ArrayBuffer");
+    }
+    evaluatedSalts.push(new Uint8Array(value));
+    return value;
+  }
+
+  const navigator = {
+    credentials: {
+      async create({ publicKey }: CredentialCreationOptions) {
+        readSalt(publicKey?.extensions?.prf?.eval?.first);
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          response: {},
+          getClientExtensionResults: () => ({ prf: { enabled: true } }),
+        };
+      },
+      async get({ publicKey }: CredentialRequestOptions) {
+        const salt = readSalt(publicKey?.extensions?.prf?.eval?.first);
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          getClientExtensionResults: () => ({
+            prf: { results: { first: salt } },
+          }),
+        };
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    const expected = getDeterministicPrfSaltV1();
+    const created = await createPasskeyWithPrfOutput({
+      rp: { id: "example.com", name: "Mera Test" },
+      user: { name: "nad", displayName: "nad" },
+    });
+    expect(created.prfSalt).toEqual(expected);
+    expect(created.prfOutput).toEqual(expected);
+
+    created.prfSalt.fill(255);
+
+    const recreated = await createPasskeyWithPrfOutput({
+      rp: { id: "example.com", name: "Mera Test" },
+      user: { name: "nad", displayName: "nad" },
+    });
+    expect(recreated.prfSalt).toEqual(expected);
+
+    const asserted = await getPasskeyPrfOutput({ rpId: "example.com" });
+    expect(asserted.prfOutput).toEqual(expected);
+  });
+
+  expect(evaluatedSalts).toHaveLength(5);
+  for (const salt of evaluatedSalts) {
+    expect(salt).toEqual(getDeterministicPrfSaltV1());
+  }
+});
+
+test("PRF output helpers reject an explicit salt of the wrong length", async () => {
+  let prompted = false;
+  const navigator = {
+    credentials: {
+      async create() {
+        prompted = true;
+        throw new Error("creation must not start");
+      },
+      async get() {
+        prompted = true;
+        throw new Error("assertion must not start");
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    await expect(
+      createPasskeyWithPrfOutput({
+        rp: { id: "example.com", name: "Mera Test" },
+        user: { name: "nad", displayName: "nad" },
+        prfSalt: new Uint8Array(31),
+      }),
+    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+
+    await expect(
+      getPasskeyPrfOutput({
+        rpId: "example.com",
+        prfSalt: new Uint8Array(31),
+      }),
+    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+  });
+
+  expect(prompted).toBe(false);
 });
 
 test("passkey helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavailable", async () => {

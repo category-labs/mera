@@ -9,7 +9,7 @@ mera has a narrow scope: it runs passkey ceremonies, returns entropy to the app,
 
 Input buffers are copied before any async work starts, so mutating a buffer after a call cannot change what gets signed, wrapped, or derived.
 
-Owned copies are zeroed where possible. A signing session zeroes the caller's private-key buffer when it consumes it, even when construction throws, and zeroes its own copy on `lock()`. [createSecretVault](/reference/create-secret-vault/) zeroes its internal copies of the PRF output and the secret before returning.
+Owned copies are zeroed where possible. A signing session zeroes the caller's private-key buffer when it consumes it, even when construction throws, and zeroes its own copy on `lock()`. [createSecretVault](/reference/create-secret-vault/) zeroes its internal secret and PRF-output copies. Wrapped-mode workflow functions also zero the transient secret and PRF-output copies they own before settling.
 
 WebAuthn challenges are generated internally. So are AES-GCM nonces, 12 fresh bytes per encryption, which means a caller cannot reuse one. Every ceremony requires user verification, and the requirement is [not configurable](/concepts/passkeys-and-prf/#user-verification).
 
@@ -29,7 +29,7 @@ Treat the rpId as a long-lived choice. Before any planned migration, accounts ne
 
 Reusing one PRF output for unrelated purposes (for example, key derivation and app-data encryption) links those secrets: exposure of the output exposes all of them. Use a different salt per purpose, or split one output with a purpose-labeled KDF.
 
-A vault is bound to its PRF output only, never to the credential ID or salt. Secrets wrapped under one reused output share a wrapping key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored vault JSON. Give each secret a fresh random 32-byte salt; the [createSecretVault](/reference/create-secret-vault/) page carries the same warning.
+A vault is bound to its PRF output only, never to the credential ID or salt. Secrets wrapped under one reused output share a wrapping key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored vault JSON. The wrapped-mode creation functions generate a fresh random 32-byte salt for each secret; the [createSecretVault](/reference/create-secret-vault/) page documents the low-level requirement.
 
 ## Strings cannot be zeroed
 

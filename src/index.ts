@@ -17,14 +17,20 @@ export {
 export { createSecp256k1SigningSession } from "./secp256k1.js";
 export type {
   CreateSecretVaultOptions,
+  CreateSecretVaultWithExistingPasskeyOptions,
+  CreateSecretVaultWithNewPasskeyOptions,
   GetSecretVaultPrfOutputOptions,
   UnwrapSecretVaultOptions,
+  UnwrapSecretVaultWithPasskeyOptions,
 } from "./secret.js";
 export {
   createSecretVault,
+  createSecretVaultWithExistingPasskey,
+  createSecretVaultWithNewPasskey,
   getSecretVaultPrfOutput,
   parseSecretVault,
   unwrapSecretVault,
+  unwrapSecretVaultWithPasskey,
 } from "./secret.js";
 export type {
   CreatePasskeyResult,

@@ -19,7 +19,6 @@ class MeraError extends Error {
 
 ```ts
 import {
-  getDeterministicPrfSaltV1,
   getPasskeyPrfOutput,
   isMeraError,
 } from "@category-labs/mera";
@@ -27,7 +26,6 @@ import {
 try {
   await getPasskeyPrfOutput({
     rpId: "account.example.com",
-    prfSalt: getDeterministicPrfSaltV1(),
   });
 } catch (error) {
   if (isMeraError(error) && error.code === "PRF_UNAVAILABLE") {

@@ -72,5 +72,6 @@ The WebAuthn challenge is generated internally, and the raw assertion response i
 
 ## See also
 
+- [unwrapSecretVaultWithPasskey](/reference/unwrap-secret-vault-with-passkey/): perform the assertion and decryption in one call.
 - [unwrapSecretVault](/reference/unwrap-secret-vault/): the decryption step that follows.
 - [Use an existing secret](/recipes/use-an-existing-secret/): the full unlock flow.

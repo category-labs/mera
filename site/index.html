@@ -660,11 +660,11 @@ clientDataJSON
         <h3 id="derived-mode">Derived mode</h3>
 
         <p>
-          In derived mode the account is computed from the passkey. mera pins a
-          fixed salt (<code>getDeterministicPrfSaltV1()</code>), so the same
-          passkey yields the same account. The application runs the
-          passkey-derived bytes through its derivation scheme of choice; mera's
-          demo wallet app feeds them into BIP-39 and derives keys with
+          In derived mode the account is computed from the passkey. mera's PRF
+          output methods use a fixed v1 salt by default, so the same passkey
+          yields the same account. The application runs the passkey-derived
+          bytes through its derivation scheme of choice; mera's demo wallet app
+          feeds them into BIP-39 and derives keys with
           <a
             href="https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki"
             >BIP-32</a
@@ -791,7 +791,6 @@ clientDataJSON
 
         <pre><code class="language-typescript">import {
   createSecp256k1SigningSession,
-  getDeterministicPrfSaltV1,
   getEvmAddress,
   getPasskeyPrfOutput,
 } from "@category-labs/mera"
@@ -801,8 +800,7 @@ import { wordlist } from "@scure/bip39/wordlists/english.js"
 
 const rpId = "account.example.com"
 
-const prfSalt = getDeterministicPrfSaltV1()
-const { prfOutput } = await getPasskeyPrfOutput({ rpId, prfSalt })
+const { prfOutput } = await getPasskeyPrfOutput({ rpId })
 
 // App-owned derivation: the PRF output is BIP-39 entropy, so the same phrase
 // imported into a standard wallet reproduces the same account.

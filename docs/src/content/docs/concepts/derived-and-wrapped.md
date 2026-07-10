@@ -7,7 +7,7 @@ Both modes start from the same ceremony and its 32 bytes of PRF output. Derived 
 
 ## Derived
 
-With mera's [fixed deterministic salt](/reference/get-deterministic-prf-salt-v1/), the same passkey and relying party produce the same PRF output on every ceremony. The app feeds that output into a derivation scheme of its choosing; [Derive accounts from one passkey](/recipes/derive-accounts/) shows one built on common HD standards.
+When the PRF salt is omitted, mera uses its [fixed v1 salt](/reference/get-deterministic-prf-salt-v1/). The same passkey and relying party produce the same PRF output on every ceremony. The app feeds that output into a derivation scheme of its choosing; [Derive accounts from one passkey](/recipes/derive-accounts/) shows one built on common HD standards.
 
 There is no stored secret; all state lives in the passkey. Once the passkey has synced to a new device, sign-in there is the same ceremony and produces the same accounts.
 
@@ -15,7 +15,7 @@ The account may be unrecoverable if the passkey is deleted, not synced, tied to 
 
 ## Wrapped
 
-An AES-256-GCM vault holds one secret: a recovery phrase, a private key, any bytes. The ceremony's PRF output, evaluated against a fresh random salt stored alongside the vault, produces the key material that decrypts it. The vault itself is ordinary JSON and can live in `localStorage`, on a backend, or in a sync service.
+An AES-256-GCM vault holds one secret: a recovery phrase, a private key, any bytes. Wrapped-mode functions evaluate the passkey against a fresh random salt for each secret and store that salt in the vault. The resulting PRF output produces the key material that decrypts it. The vault itself is ordinary JSON and can live in `localStorage`, on a backend, or in a sync service.
 
 The secret exists independently of the passkey: an account that predates it can be imported by wrapping its recovery phrase or private key, and a copy of that secret may live somewhere else entirely. Custody of the vault is an app design question. The holder has only ciphertext; decrypting it requires the passkey ceremony.
 
@@ -24,7 +24,7 @@ The secret exists independently of the passkey: an account that predates it can 
 - **Where state lives.** Derived keeps it in the passkey. Wrapped keeps it in a blob the app has to store somewhere.
 - **Existing accounts.** Wrapped can hold a secret that predates the passkey. Derived only produces accounts rooted in the passkey itself.
 - **Losing the passkey.** Both modes lose access through mera. A derived account is recoverable only through an export taken beforehand; a wrapped secret is recoverable from any other copy of it.
-- **Salts.** Derived uses the one fixed deterministic salt. Wrapped stores a fresh random salt per vault; secrets wrapped under a reused salt share one wrapping key, so exposing that key exposes all of them ([one output, one purpose](/concepts/security-model/#one-output-one-purpose)).
+- **Salts.** Derived calls omit the salt and use mera's fixed v1 value. Wrapped-mode functions generate and store a fresh random salt per vault; secrets wrapped under a reused salt share one wrapping key, so exposing that key exposes all of them ([one output, one purpose](/concepts/security-model/#one-output-one-purpose)).
 
 ## See also
 

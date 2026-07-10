@@ -21,38 +21,29 @@ if (!validateMnemonic(phrase, wordlist)) {
 }
 ```
 
-## Create the passkey with a fresh random salt
+## Create and persist the vault
 
-Wrapped flows never use the deterministic salt. Each secret gets 32 fresh random bytes, because a vault is bound to its PRF output only: secrets wrapped under one reused output would share a wrapping key, and their nonce/ciphertext pairs would become interchangeable to anyone who can rewrite the stored JSON. [createSecretVault](/reference/create-secret-vault/) documents the details.
+`createSecretVaultWithNewPasskey` generates a fresh random salt, creates the passkey, and encrypts the secret. The salt and credential metadata are stored in the returned vault.
 
 ```ts
-import { createPasskeyWithPrfOutput } from "@category-labs/mera";
+import { createSecretVaultWithNewPasskey } from "@category-labs/mera";
 
 const rpId = location.hostname;
 
-const credential = await createPasskeyWithPrfOutput({
-  rp: { id: rpId, name: "Example" },
-  user: { name: "account@example.com", displayName: "Example account" },
-  prfSalt: crypto.getRandomValues(new Uint8Array(32)),
-});
-```
-
-## Wrap and persist
-
-```ts
-import { createSecretVault } from "@category-labs/mera";
-
 const secret = new TextEncoder().encode(phrase);
 try {
-  const vault = await createSecretVault({ credential, secret });
+  const vault = await createSecretVaultWithNewPasskey({
+    rp: { id: rpId, name: "Example" },
+    user: { name: "account@example.com", displayName: "Example account" },
+    secret,
+  });
   localStorage.setItem("app.vault", JSON.stringify(vault));
 } finally {
   secret.fill(0);
-  credential.prfOutput.fill(0);
 }
 ```
 
-The `finally` zeroes the encoded phrase and the PRF output whether or not wrapping succeeded. A private key wraps the same way: pass its raw bytes as `secret` instead of encoded text. The vault stores the salt and credential metadata itself ([format](/reference/secret-vault-format/)), so nothing else needs saving.
+The function copies the secret before the passkey prompt and zeroes its internal secret and PRF output before settling. The `finally` zeroes the caller-owned encoded phrase. A private key wraps the same way: pass its raw bytes as `secret` instead of encoded text. The [vault format](/reference/secret-vault-format/) stores everything needed for the later ceremony.
 
 ## Unlock
 
@@ -60,9 +51,8 @@ One ceremony, pinned automatically to the credential stored in the vault:
 
 ```ts
 import {
-  getSecretVaultPrfOutput,
   parseSecretVault,
-  unwrapSecretVault,
+  unwrapSecretVaultWithPasskey,
 } from "@category-labs/mera";
 
 async function unlockPhrase(): Promise<string> {
@@ -70,21 +60,16 @@ async function unlockPhrase(): Promise<string> {
   if (raw === null) throw new Error("No vault on this device yet.");
 
   const vault = parseSecretVault(raw);
-  const { prfOutput } = await getSecretVaultPrfOutput({ rpId, vault });
+  const secret = await unwrapSecretVaultWithPasskey({ rpId, vault });
   try {
-    const secret = await unwrapSecretVault({ vault, prfOutput });
-    try {
-      return new TextDecoder().decode(secret);
-    } finally {
-      secret.fill(0);
-    }
+    return new TextDecoder().decode(secret);
   } finally {
-    prfOutput.fill(0);
+    secret.fill(0);
   }
 }
 ```
 
-`parseSecretVault` is the boundary for the untrusted stored JSON; everything after it works with validated data. The decrypted buffer is a fresh allocation the library never zeroes; the inner `finally` does.
+`parseSecretVault` is the boundary for the untrusted stored JSON. The unwrap function owns and zeroes the transient PRF output. The decrypted buffer is a fresh allocation, so the `finally` zeroes it after decoding.
 
 ## Derive signing sessions
 
@@ -92,6 +77,6 @@ The phrase is a standard BIP-39 mnemonic, so key derivation from here is exactly
 
 ## Pitfalls
 
-- **A second secret needs its own salt, ceremony, and vault.** Generate 32 fresh random bytes, run [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) against them, and wrap the new secret into a separate vault.
+- **A second secret needs its own ceremony and vault.** [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/) generates the fresh salt and stores it in the new vault.
 - **The phrase is a string** while it transits the wrap and unlock code, and strings cannot be zeroed ([security model](/concepts/security-model/#strings-cannot-be-zeroed)). Keep the lifetime short and never log it.
 - **The vault JSON is the only ciphertext copy.** Losing the storage loses the account unless the person still holds the phrase elsewhere.

@@ -85,6 +85,9 @@ export default defineConfig({
             {
               label: "Secret vault",
               items: [
+                "reference/create-secret-vault-with-new-passkey",
+                "reference/create-secret-vault-with-existing-passkey",
+                "reference/unwrap-secret-vault-with-passkey",
                 "reference/create-secret-vault",
                 "reference/get-secret-vault-prf-output",
                 "reference/unwrap-secret-vault",

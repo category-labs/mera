@@ -3,7 +3,7 @@ title: getDeterministicPrfSaltV1
 description: Returns mera's fixed v1 deterministic PRF salt.
 ---
 
-Returns mera's fixed v1 deterministic PRF salt: `sha256("mera.v1.deterministic.prf")`. It is a pure function over a constant.
+Returns mera's fixed v1 deterministic PRF salt: `sha256("mera.v1.deterministic.prf")`. The PRF output functions use this value internally when `prfSalt` is omitted; this helper supports explicit protocol interoperability and custom composition.
 
 The salt will not change across library versions, so one passkey assertion against it produces one stable 32-byte PRF output per credential and relying party. [Derived mode](/concepts/derived-and-wrapped/) is built on that stability.
 
@@ -36,9 +36,10 @@ None.
 
 The salt encodes no account selection. Selecting account 0 versus account 7 happens in the derivation scheme the app applies to the PRF output, never in the salt.
 
-Wrapped flows should not use this salt. Each secret vault stores 32 fresh random bytes instead: vaults sharing one PRF output would share a wrapping key ([createSecretVault](/reference/create-secret-vault/)).
+This salt belongs to derived flows. The wrapped-mode creation functions generate and store 32 fresh random bytes for each vault because vaults sharing one PRF output would share a wrapping key.
 
 ## See also
 
-- [getPasskeyPrfOutput](/reference/get-passkey-prf-output/): where this salt gets used.
+- [getPasskeyPrfOutput](/reference/get-passkey-prf-output/): evaluate a passkey with this default or an explicit salt.
+- [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/): create a wrapped vault with an internally generated salt.
 - [Passkeys and the PRF extension](/concepts/passkeys-and-prf/): salts as namespaces.

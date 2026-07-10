@@ -25,23 +25,19 @@ npm install @scure/bip32 @scure/bip39
 `createPasskeyWithPrfOutput` creates a discoverable passkey and evaluates its PRF in one call.
 
 ```ts
-import {
-  createPasskeyWithPrfOutput,
-  getDeterministicPrfSaltV1,
-} from "@category-labs/mera";
+import { createPasskeyWithPrfOutput } from "@category-labs/mera";
 
 const rpId = "account.example.com";
 
 const { prfOutput } = await createPasskeyWithPrfOutput({
   rp: { id: rpId, name: "Example" },
   user: { name: "account@example.com", displayName: "Example account" },
-  prfSalt: getDeterministicPrfSaltV1(),
 });
 ```
 
 Expect one authenticator prompt, sometimes two: authenticators that do not evaluate PRF at create time get a follow-up assertion with the same salt.
 
-The salt is mera's fixed deterministic one: the same passkey, relying party, and salt always produce the same 32 bytes, on any device the passkey syncs to. The result also carries the credential ID; [Derive accounts from one passkey](/recipes/derive-accounts/) stores it to pin later sign-ins.
+mera uses its fixed v1 salt for this call. The same passkey and relying party produce the same 32 bytes on any device the passkey syncs to. The result also carries the credential ID; [Derive accounts from one passkey](/recipes/derive-accounts/) stores it to pin later sign-ins.
 
 ## Derive an account
 
@@ -88,14 +84,10 @@ The session copies the key, zeroes the buffer it was given, and signs without fu
 A later visit needs no stored secret: the same assertion with the same salt returns the same 32 bytes, and with them the same account.
 
 ```ts
-import {
-  getDeterministicPrfSaltV1,
-  getPasskeyPrfOutput,
-} from "@category-labs/mera";
+import { getPasskeyPrfOutput } from "@category-labs/mera";
 
 const { prfOutput } = await getPasskeyPrfOutput({
   rpId,
-  prfSalt: getDeterministicPrfSaltV1(),
 });
 ```
 

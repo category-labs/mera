@@ -2,18 +2,16 @@ import {
   createEd25519SigningSession,
   createPasskeyWithPrfOutput,
   createSecp256k1SigningSession,
-  createSecretVault,
+  createSecretVaultWithNewPasskey,
   type Ed25519SigningSession,
   type EvmAddress,
-  getDeterministicPrfSaltV1,
   getEvmAddress,
   getPasskeyPrfOutput,
-  getSecretVaultPrfOutput,
   getSolanaAddress,
   isMeraError,
   parseSecretVault,
   type Secp256k1SigningSession,
-  unwrapSecretVault,
+  unwrapSecretVaultWithPasskey,
 } from "@category-labs/mera";
 import { currentDerivedWallet, rememberDerivedWallet } from "./derivedWallet";
 import {
@@ -24,7 +22,7 @@ import {
   prfOutputToMnemonic,
 } from "./hd";
 
-/** The two account modes the demo offers (mera itself is mode-agnostic). */
+/** The two account modes the demo offers. */
 type AccountMode = "wrapped" | "derived";
 
 /** One numbered account with a signing session per chain. */
@@ -142,11 +140,9 @@ function buildDerivedWallet(
 async function createDerived(label: string): Promise<ConnectResult> {
   // `user.id` is left to default (32 random bytes), so every "Create" is a
   // distinct, parallel passkey rather than silently overwriting an existing one.
-  const prfSalt = getDeterministicPrfSaltV1();
   const credential = await createPasskeyWithPrfOutput({
     rp: { id: rpId, name: RP_NAME },
     user: { name: label, displayName: label },
-    prfSalt,
   });
 
   rememberDerivedWallet({
@@ -167,13 +163,11 @@ async function openDerived(): Promise<ConnectResult> {
   // Pin to the passkey created on this device when we know it; otherwise fall
   // back to a discoverable credential so a freshly synced device still works.
   const known = currentDerivedWallet();
-  const prfSalt = getDeterministicPrfSaltV1();
   const { prfOutput, credentialId } = await getPasskeyPrfOutput({
     rpId,
     credential: known?.credentialId
       ? { credentialId: known.credentialId, transports: known.transports }
       : undefined,
-    prfSalt,
   });
 
   // The ceremony reports which credential was actually used; if it matches the
@@ -203,25 +197,22 @@ async function createWrapped(
     throw new Error("Enter a valid recovery phrase, or generate a fresh one.");
   }
 
-  const credential = await createPasskeyWithPrfOutput({
-    rp: { id: rpId, name: RP_NAME },
-    user: { name: label, displayName: label },
-    prfSalt: crypto.getRandomValues(new Uint8Array(32)),
-  });
-
   // The phrase itself is the secret the passkey encrypts. Storing it lets
   // wrapped mode reveal it again later. Signing keys are re-derived from the
   // phrase on unlock, the standard HD way, so it stays portable to wallet apps
   // such as MetaMask and Phantom.
   const secret = new TextEncoder().encode(phrase);
   try {
-    const vault = await createSecretVault({ credential, secret });
+    const vault = await createSecretVaultWithNewPasskey({
+      rp: { id: rpId, name: RP_NAME },
+      user: { name: label, displayName: label },
+      secret,
+    });
     localStorage.setItem(VAULT_KEY, JSON.stringify(vault));
   } finally {
-    // Zero the transient secret and PRF output regardless of whether wrapping
-    // succeeded. The wallet is rebuilt from `phrase` rather than these buffers.
+    // The library owns and zeroes transient PRF output. This caller-owned copy
+    // of the phrase remains the demo's responsibility.
     secret.fill(0);
-    credential.prfOutput.fill(0);
   }
 
   return {
@@ -252,16 +243,11 @@ async function decryptStoredWrappedPhrase(): Promise<string> {
   }
 
   const vault = parseSecretVault(raw);
-  const { prfOutput } = await getSecretVaultPrfOutput({ rpId, vault });
+  const secret = await unwrapSecretVaultWithPasskey({ rpId, vault });
   try {
-    const secret = await unwrapSecretVault({ vault, prfOutput });
-    try {
-      return new TextDecoder().decode(secret);
-    } finally {
-      secret.fill(0);
-    }
+    return new TextDecoder().decode(secret);
   } finally {
-    prfOutput.fill(0);
+    secret.fill(0);
   }
 }
 
@@ -331,7 +317,6 @@ async function revealMnemonic(wallet: ConnectedWallet): Promise<string> {
   }
 
   const record = currentDerivedWallet();
-  const prfSalt = getDeterministicPrfSaltV1();
   const { prfOutput } = await getPasskeyPrfOutput({
     rpId,
     credential: wallet.credentialId
@@ -343,7 +328,6 @@ async function revealMnemonic(wallet: ConnectedWallet): Promise<string> {
               : undefined,
         }
       : undefined,
-    prfSalt,
   });
 
   try {

@@ -6,8 +6,13 @@ import {
   copyBytes,
 } from "./encoding.js";
 import { MeraError, type MeraErrorCode } from "./errors.js";
-import { getPasskeyPrfOutput } from "./passkey.js";
+import {
+  assertCredentialApiAvailable,
+  createPasskeyWithPrfOutput,
+  getPasskeyPrfOutput,
+} from "./passkey.js";
 import type {
+  PasskeyCredentialMetadata,
   PasskeyCredentialTransport,
   PasskeyPrfResult,
   PasskeySecretVault,
@@ -192,8 +197,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /** Inputs for encrypting one arbitrary secret into a vault. */
 type CreateSecretVaultInput = {
   /**
-   * Passkey credential plus the PRF salt and PRF output it produced. The result
-   * of `createPasskeyWithPrfOutput` can be passed straight through.
+   * Passkey credential plus the PRF salt and PRF output it produced. Wrapped
+   * flows use a fresh salt for each secret.
    */
   credential: {
     /** Passkey credential ID as canonical unpadded base64url. */
@@ -277,6 +282,184 @@ async function createSecretVault({
   } finally {
     prfOutputCopy.fill(0);
     secretCopy.fill(0);
+  }
+}
+
+/** Inputs for creating a secret vault together with a new passkey. */
+type CreateSecretVaultWithNewPasskeyInput = {
+  /** Relying party identity passed directly to WebAuthn. `id` is required. */
+  rp: PublicKeyCredentialRpEntity & { id: string };
+  /** User identity passed to WebAuthn. `id` is copied before use. */
+  user: {
+    /** User handle. Must be 1 to 64 bytes when provided. */
+    id?: Uint8Array;
+    /** User name displayed or stored by the authenticator. */
+    name: string;
+    /** Human-readable display name for the authenticator UI. */
+    displayName: string;
+  };
+  /** Secret bytes to encrypt. Any non-empty length. */
+  secret: Uint8Array;
+  /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
+  timeout?: number;
+};
+
+/** Inputs for creating a secret vault with an existing passkey. */
+type CreateSecretVaultWithExistingPasskeyInput = {
+  /** Relying party ID for the WebAuthn assertion. */
+  rpId: string;
+  /** Credential metadata to restrict the assertion to one passkey. */
+  credential?: PasskeyCredentialMetadata;
+  /** Secret bytes to encrypt. Any non-empty length. */
+  secret: Uint8Array;
+  /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
+  timeout?: number;
+};
+
+/** Copies and validates a secret before a WebAuthn ceremony can start. */
+function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
+  if (secret.length === 0) {
+    throw new MeraError("INPUT_INVALID", "secret must not be empty");
+  }
+
+  return copyBytes(secret);
+}
+
+/** Copies credential metadata before async WebAuthn work starts. */
+function copyCredentialMetadata(
+  credential: PasskeyCredentialMetadata | undefined,
+): PasskeyCredentialMetadata | undefined {
+  if (credential === undefined) {
+    return undefined;
+  }
+
+  return {
+    credentialId: credential.credentialId,
+    ...(credential.transports !== undefined
+      ? { transports: [...credential.transports] }
+      : {}),
+  };
+}
+
+/**
+ * Checks WebAuthn before generating a random vault salt so ceremony helpers
+ * keep their existing error precedence when WebAuthn and Web Crypto are both
+ * unavailable.
+ */
+function getRandomVaultPrfSalt(): Uint8Array<ArrayBuffer> {
+  assertCredentialApiAvailable();
+  return randomBytes(PRF_SALT_LENGTH);
+}
+
+/**
+ * Creates a passkey and encrypts one secret into a vault.
+ *
+ * A fresh random PRF salt is generated internally and stored in the returned
+ * vault. The passkey creation may require a fallback assertion when the
+ * authenticator does not evaluate PRF during creation.
+ *
+ * @param options - Passkey creation inputs and secret bytes; fields are documented on {@link CreateSecretVaultWithNewPasskeyOptions}.
+ * @returns A JSON-safe secret vault containing the new credential metadata.
+ * @remarks
+ * Invokes `navigator.credentials.create()`, which may show browser or
+ * authenticator UI. On authenticators that do not evaluate PRF during
+ * creation, also invokes `navigator.credentials.get()`, which means a second
+ * browser prompt.
+ *
+ * `secret` is copied and validated before either ceremony starts. Post-call
+ * mutation does not change the encrypted secret, and the caller-owned buffer
+ * is not modified or zeroed. The internal secret and PRF output are zeroed
+ * before the function settles, including on failure.
+ *
+ * If the fallback ceremony or vault encryption fails, the passkey from the
+ * completed creation ceremony still exists on the authenticator, but the
+ * thrown error does not carry its metadata.
+ * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF or return a usable 32-byte PRF output.
+ * @throws MeraError with code `INPUT_INVALID` when `secret` is empty, or `user.id` is provided but not 1 to 64 bytes.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
+ */
+async function createSecretVaultWithNewPasskey({
+  rp,
+  user,
+  secret,
+  timeout,
+}: CreateSecretVaultWithNewPasskeyInput): Promise<PasskeySecretVault> {
+  const secretCopy = copyNonEmptySecret(secret);
+  let prfOutput: Uint8Array | undefined;
+
+  try {
+    const credential = await createPasskeyWithPrfOutput({
+      rp,
+      user,
+      ...(timeout !== undefined ? { timeout } : {}),
+      prfSalt: getRandomVaultPrfSalt(),
+    });
+    prfOutput = credential.prfOutput;
+
+    return await createSecretVault({ credential, secret: secretCopy });
+  } finally {
+    secretCopy.fill(0);
+    prfOutput?.fill(0);
+  }
+}
+
+/**
+ * Evaluates an existing passkey against a fresh random salt and encrypts one
+ * secret into a vault.
+ *
+ * @param options - Passkey assertion inputs and secret bytes; fields are documented on {@link CreateSecretVaultWithExistingPasskeyOptions}.
+ * @returns A JSON-safe secret vault containing the selected credential metadata.
+ * @remarks
+ * Invokes `navigator.credentials.get()`, which may show browser or
+ * authenticator UI. When `credential` is omitted, WebAuthn may choose any
+ * discoverable credential for the relying party.
+ *
+ * A fresh random PRF salt is generated internally and stored in the returned
+ * vault. `secret` and `credential` are copied before the ceremony starts, so
+ * post-call mutation does not change the operation. Caller-owned inputs are
+ * not modified or zeroed. The internal secret and PRF output are zeroed before
+ * the function settles, including on failure.
+ * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
+ * @throws MeraError with code `INPUT_INVALID` when `secret` is empty, or `credential.credentialId` is empty or not canonical base64url.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
+ */
+async function createSecretVaultWithExistingPasskey({
+  rpId,
+  credential,
+  secret,
+  timeout,
+}: CreateSecretVaultWithExistingPasskeyInput): Promise<PasskeySecretVault> {
+  const secretCopy = copyNonEmptySecret(secret);
+  const credentialCopy = copyCredentialMetadata(credential);
+  let prfOutput: Uint8Array | undefined;
+
+  try {
+    const prfSalt = getRandomVaultPrfSalt();
+    const evaluated = await getPasskeyPrfOutput({
+      rpId,
+      ...(credentialCopy !== undefined ? { credential: credentialCopy } : {}),
+      prfSalt,
+      ...(timeout !== undefined ? { timeout } : {}),
+    });
+    prfOutput = evaluated.prfOutput;
+
+    return await createSecretVault({
+      credential: {
+        credentialId: evaluated.credentialId,
+        ...(credentialCopy?.credentialId === evaluated.credentialId &&
+        credentialCopy.transports !== undefined
+          ? { transports: credentialCopy.transports }
+          : {}),
+        prfSalt,
+        prfOutput,
+      },
+      secret: secretCopy,
+    });
+  } finally {
+    secretCopy.fill(0);
+    prfOutput?.fill(0);
   }
 }
 
@@ -398,6 +581,22 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
   return { version: 1, credential, prfSalt, nonce, ciphertext };
 }
 
+/** Copies a parsed vault before a WebAuthn ceremony can yield control. */
+function copySecretVault(vault: PasskeySecretVault): PasskeySecretVault {
+  return {
+    version: vault.version,
+    credential: {
+      credentialId: vault.credential.credentialId,
+      ...(vault.credential.transports !== undefined
+        ? { transports: [...vault.credential.transports] }
+        : {}),
+    },
+    prfSalt: vault.prfSalt,
+    nonce: vault.nonce,
+    ciphertext: vault.ciphertext,
+  };
+}
+
 /** Inputs for the WebAuthn assertion that unlocks a secret vault. */
 type GetSecretVaultPrfOutputInput = {
   /** Relying party ID for the WebAuthn assertion. */
@@ -440,10 +639,72 @@ async function getSecretVaultPrfOutput({
   });
 }
 
+/** Inputs for performing the passkey ceremony and decrypting a secret vault. */
+type UnwrapSecretVaultWithPasskeyInput = {
+  /** Relying party ID for the WebAuthn assertion. */
+  rpId: string;
+  /** Parsed secret vault. Copied before use. */
+  vault: PasskeySecretVault;
+  /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
+  timeout?: number;
+};
+
+/**
+ * Performs the passkey assertion for a vault and decrypts its secret.
+ *
+ * @param options - Relying party and parsed vault; fields are documented on {@link UnwrapSecretVaultWithPasskeyOptions}.
+ * @returns The decrypted secret bytes. The returned buffer is a fresh allocation owned by the caller.
+ * @remarks
+ * Invokes `navigator.credentials.get()`, which may show browser or
+ * authenticator UI. The assertion is restricted to the credential stored in
+ * the vault.
+ *
+ * The vault is copied before the ceremony starts, so post-call mutation does
+ * not change the assertion or ciphertext being decrypted. The internal PRF
+ * output is zeroed before the function settles, including when decryption
+ * fails. The returned secret is not zeroed; its lifetime belongs to the
+ * caller.
+ * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
+ * @throws MeraError with code `INPUT_INVALID` when the vault contains an invalid credential ID, PRF salt, nonce, or ciphertext.
+ * @throws MeraError with code `DECRYPT_FAILED` when authentication fails.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
+ */
+async function unwrapSecretVaultWithPasskey({
+  rpId,
+  vault,
+  timeout,
+}: UnwrapSecretVaultWithPasskeyInput): Promise<Uint8Array<ArrayBuffer>> {
+  const vaultCopy = copySecretVault(vault);
+  const { prfOutput } = await getSecretVaultPrfOutput({
+    rpId,
+    vault: vaultCopy,
+    ...(timeout !== undefined ? { timeout } : {}),
+  });
+
+  try {
+    return await unwrapSecretVault({ vault: vaultCopy, prfOutput });
+  } finally {
+    prfOutput.fill(0);
+  }
+}
+
 /** Options accepted by `createSecretVault`. */
 type CreateSecretVaultOptions = Parameters<typeof createSecretVault>[0];
+/** Options accepted by `createSecretVaultWithExistingPasskey`. */
+type CreateSecretVaultWithExistingPasskeyOptions = Parameters<
+  typeof createSecretVaultWithExistingPasskey
+>[0];
+/** Options accepted by `createSecretVaultWithNewPasskey`. */
+type CreateSecretVaultWithNewPasskeyOptions = Parameters<
+  typeof createSecretVaultWithNewPasskey
+>[0];
 /** Options accepted by `unwrapSecretVault`. */
 type UnwrapSecretVaultOptions = Parameters<typeof unwrapSecretVault>[0];
+/** Options accepted by `unwrapSecretVaultWithPasskey`. */
+type UnwrapSecretVaultWithPasskeyOptions = Parameters<
+  typeof unwrapSecretVaultWithPasskey
+>[0];
 /** Options accepted by `getSecretVaultPrfOutput`. */
 type GetSecretVaultPrfOutputOptions = Parameters<
   typeof getSecretVaultPrfOutput
@@ -451,12 +712,18 @@ type GetSecretVaultPrfOutputOptions = Parameters<
 
 export type {
   CreateSecretVaultOptions,
+  CreateSecretVaultWithExistingPasskeyOptions,
+  CreateSecretVaultWithNewPasskeyOptions,
   GetSecretVaultPrfOutputOptions,
   UnwrapSecretVaultOptions,
+  UnwrapSecretVaultWithPasskeyOptions,
 };
 export {
   createSecretVault,
+  createSecretVaultWithExistingPasskey,
+  createSecretVaultWithNewPasskey,
   getSecretVaultPrfOutput,
   parseSecretVault,
   unwrapSecretVault,
+  unwrapSecretVaultWithPasskey,
 };

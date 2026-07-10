@@ -1,9 +1,9 @@
 ---
 title: createPasskeyWithPrfOutput
-description: Creates a passkey and returns the PRF output for the given salt in one call.
+description: Creates a passkey and returns its deterministic PRF output in one call.
 ---
 
-Creates a passkey and returns the WebAuthn PRF output for the given salt, falling back to a second ceremony only when the authenticator does not evaluate PRF at create time. Equivalent to [createPasskey](/reference/create-passkey/) followed, when `prfOutput` is absent, by [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt; the fallback means a possible second browser prompt.
+Creates a passkey and returns a WebAuthn PRF output, falling back to a second ceremony when the authenticator does not evaluate PRF during creation. The fallback means a possible second browser prompt.
 
 ## Import
 
@@ -14,22 +14,18 @@ import { createPasskeyWithPrfOutput } from "@category-labs/mera";
 ## Usage
 
 ```ts
-import {
-  createPasskeyWithPrfOutput,
-  getDeterministicPrfSaltV1,
-} from "@category-labs/mera";
+import { createPasskeyWithPrfOutput } from "@category-labs/mera";
 
 const result = await createPasskeyWithPrfOutput({
   rp: { id: "account.example.com", name: "Example" },
   user: { name: "account@example.com", displayName: "Example account" },
-  prfSalt: getDeterministicPrfSaltV1(),
 });
 // result.credentialId, result.prfSalt, result.prfOutput
 ```
 
 ## Parameters
 
-`options` is a `CreatePasskeyWithPrfOutputOptions`. It tightens `CreatePasskeyOptions` in two places: `rp.id` is required so the fallback ceremony can target the same relying party, and `prfSalt` is required so the app explicitly chooses between the derived and wrapped patterns.
+`options` is a `CreatePasskeyWithPrfOutputOptions`. It requires `rp.id` so the fallback ceremony can target the same relying party.
 
 ### options.rp
 
@@ -48,9 +44,9 @@ Same fields and constraints as on [createPasskey](/reference/create-passkey/#opt
 ### options.prfSalt
 
 - Type: `Uint8Array`
-- Required
+- Optional; defaults to mera's fixed v1 deterministic salt
 
-32-byte PRF salt, evaluated during creation or by the fallback assertion. Derived flows pass [getDeterministicPrfSaltV1()](/reference/get-deterministic-prf-salt-v1/); wrapped flows pass 32 fresh random bytes. Copied before async WebAuthn work starts, so post-call mutation of the input changes neither the fallback ceremony nor the returned salt.
+32-byte PRF salt evaluated during creation or by the fallback assertion. An explicit value supports custom PRF namespaces and low-level composition. It is copied before async WebAuthn work starts, so post-call mutation changes neither the fallback ceremony nor the returned salt.
 
 ### options.timeout
 
@@ -61,14 +57,12 @@ WebAuthn timeout in milliseconds, applied to each ceremony.
 
 ## Returns
 
-`Promise<CreatePasskeyWithPrfOutputResult>`. Credential metadata (`credentialId`, `transports` when reported) plus the 32-byte `prfSalt` that was evaluated and the 32-byte `prfOutput`. The returned salt never aliases the caller's input.
-
-The result can be passed straight through as the `credential` argument of [createSecretVault](/reference/create-secret-vault/).
+`Promise<CreatePasskeyWithPrfOutputResult>`. Credential metadata (`credentialId`, `transports` when reported) plus the 32-byte `prfSalt` that was evaluated and the 32-byte `prfOutput`. The returned salt is a fresh copy.
 
 ## Errors
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not enable PRF, or did not return PRF output on the fallback ceremony.
-- [`INPUT_INVALID`](/reference/errors/#input_invalid): `prfSalt` is not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
+- [`INPUT_INVALID`](/reference/errors/#input_invalid): an explicit `prfSalt` is not 32 bytes, or the provided `user.id` length is outside 1 to 64 bytes.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): Web Crypto is unavailable.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
@@ -80,5 +74,6 @@ If the fallback ceremony fails, the passkey from the completed creation ceremony
 
 ## See also
 
-- [createSecretVault](/reference/create-secret-vault/): wrap a secret with this function's result.
+- [createSecretVault](/reference/create-secret-vault/): low-level vault encryption with explicit PRF material.
+- [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/): create a passkey and vault with a fresh random salt.
 - [Getting started](/getting-started/): the derived-mode flow built on this call.

@@ -12,7 +12,7 @@ const MODES: { id: AccountMode; label: string; hint: string }[] = [
   {
     id: "derived",
     label: "Derived",
-    hint: "Accounts are derived from the passkey. The demo keeps non-secret metadata in local storage for quicker sign-in. A synced passkey can reproduce the same addresses on another device.",
+    hint: "Accounts are derived from the passkey. A synced passkey can reproduce the same addresses on another device.",
   },
   {
     id: "wrapped",

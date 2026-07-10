@@ -52,8 +52,8 @@ type CreatePasskeyInput = {
  * Inputs for creating a passkey and obtaining its first WebAuthn PRF output in one call.
  *
  * Tightens `CreatePasskeyOptions`: `rp.id` is required so the fallback ceremony
- * can target the same relying party. `prfSalt` defaults to Mera's fixed v1
- * deterministic salt.
+ * can target the same relying party. `prfSalt` defaults to the fixed v1 value
+ * returned by {@link getDeterministicPrfSaltV1}.
  */
 type CreatePasskeyWithPrfOutputInput = Omit<
   CreatePasskeyInput,
@@ -63,7 +63,7 @@ type CreatePasskeyWithPrfOutputInput = Omit<
   rp: PublicKeyCredentialRpEntity & { id: string };
   /**
    * 32-byte PRF salt evaluated during creation, or by the fallback assertion.
-   * Defaults to Mera's fixed v1 deterministic salt.
+   * Defaults to the value returned by {@link getDeterministicPrfSaltV1}.
    */
   prfSalt?: Uint8Array;
 };
@@ -75,8 +75,9 @@ type GetPasskeyPrfOutputInput = {
   /** Credential metadata to restrict the assertion to one passkey. */
   credential?: PasskeyCredentialMetadata;
   /**
-   * PRF salt as 32 raw bytes. Defaults to Mera's fixed v1 deterministic salt.
-   * Copied before use; the original buffer is not modified.
+   * PRF salt as 32 raw bytes. Defaults to the value returned by
+   * {@link getDeterministicPrfSaltV1}. Copied before use; the original buffer is
+   * not modified.
    */
   prfSalt?: Uint8Array;
   /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
@@ -231,10 +232,11 @@ async function createPasskey({
  * The WebAuthn challenge is generated internally. The raw assertion response is
  * not returned.
  *
- * When `prfSalt` is omitted, Mera's fixed v1 deterministic salt is used. This
- * default is stable across library versions. The PRF output is a deterministic
- * function of the credential, `rpId`, and salt: the same three inputs reproduce
- * the same output, and a different salt yields an unrelated output.
+ * When `prfSalt` is omitted, the value returned by {@link
+ * getDeterministicPrfSaltV1} is used. This default is stable across library
+ * versions. The PRF output is a deterministic function of the credential,
+ * `rpId`, and salt: the same three inputs reproduce the same output, and a
+ * different salt yields an unrelated output.
  *
  * The assertion requires user verification, and the requirement is not
  * configurable. Authenticators built on CTAP's `hmac-secret` keep two PRFs
@@ -344,8 +346,9 @@ async function getPasskeyPrfOutput({
  * WebAuthn challenges are generated internally. Raw attestation and assertion
  * responses are not returned.
  *
- * When `prfSalt` is omitted, Mera's fixed v1 deterministic salt is used. This
- * default is stable across library versions.
+ * When `prfSalt` is omitted, the value returned by {@link
+ * getDeterministicPrfSaltV1} is used. This default is stable across library
+ * versions.
  *
  * `prfSalt` is copied before async WebAuthn work starts; post-call mutation of
  * an explicit input does not change the fallback ceremony or returned salt.

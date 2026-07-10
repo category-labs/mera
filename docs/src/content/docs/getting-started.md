@@ -96,5 +96,5 @@ Without `credential`, the browser offers any discoverable passkey it holds for t
 ## Where next
 
 - [Derive accounts from one passkey](/recipes/derive-accounts/): numbered accounts, credential pinning, Solana keys.
-- [Derived and wrapped modes](/concepts/derived-and-wrapped/): when to reach for an encrypted vault instead of derivation.
+- [Derived accounts and secret vaults](/concepts/derived-accounts-and-secret-vaults/): when to reach for an encrypted vault instead of derivation.
 - [API reference](/reference/): every function used on this page.

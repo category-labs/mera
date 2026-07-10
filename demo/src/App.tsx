@@ -69,7 +69,7 @@ function App(): ReactElement {
     setWallet(result.wallet);
     // Derived wallets start with two accounts so transfers between demo accounts
     // work immediately: the second pill is visible and the recipient chip points
-    // at a real account. Wrapped mode has a single account.
+    // at a real account. Vault mode has a single account.
     const count =
       result.wallet.mode === "derived"
         ? Math.max(result.accountCount, 2)

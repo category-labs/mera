@@ -37,8 +37,8 @@ body {
 .app {
   /* `margin-inline: auto` instead of body-level grid or flex centering. React mounts
      into a `<div id="root">` between body and `.app`, so any centering applied
-     to body centers that wrapper, which already fills the width. Self-centering
-     `.app` remains centered regardless of the wrapper's layout. */
+     to body centers that container, which already fills the width. Self-centering
+     `.app` remains centered regardless of the container's layout. */
   margin: 48px auto;
   width: min(420px, 100%);
   display: grid;
@@ -339,7 +339,7 @@ input:focus-visible {
   gap: 8px;
 }
 
-/* Wrapped-mode recovery-phrase section on the connect screen. */
+/* Vault-mode recovery-phrase section on the connect screen. */
 .secret {
   display: grid;
   gap: 10px;

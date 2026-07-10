@@ -37,7 +37,7 @@ function getCrypto(): Crypto {
  * @remarks
  * `ikm` and `info` are copied into standalone buffers synchronously, before
  * the first `await`, so mutating either input after the call starts does not
- * affect the derived key. Public copy guarantees (`unwrapSecretVault`'s
+ * affect the derived key. Public copy guarantees (`decryptSecretVault`'s
  * `prfOutput` remark) rest on this ordering; the copies must stay ahead of
  * every `await`.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.

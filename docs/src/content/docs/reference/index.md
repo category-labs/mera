@@ -14,18 +14,18 @@ Each exported function has its own page. Types are documented on the pages of th
 
 ## Signing sessions
 
-- [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/): wraps a secp256k1 private key in an explicitly lockable signing session.
-- [createEd25519SigningSession](/reference/create-ed25519-signing-session/): wraps an Ed25519 private key in an explicitly lockable signing session.
+- [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/): creates an explicitly lockable signing session from a secp256k1 private key.
+- [createEd25519SigningSession](/reference/create-ed25519-signing-session/): creates an explicitly lockable signing session from an Ed25519 private key.
 - [toViemAccount](/reference/to-viem-account/): adapts a secp256k1 signing session into a viem local account.
 
 ## Secret vault
 
 - [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/): creates a passkey and encrypts one secret with a fresh random salt.
 - [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/): encrypts another secret with an existing passkey and a fresh random salt.
-- [unwrapSecretVaultWithPasskey](/reference/unwrap-secret-vault-with-passkey/): performs the passkey assertion and decrypts a vault.
+- [decryptSecretVaultWithPasskey](/reference/decrypt-secret-vault-with-passkey/): performs the passkey assertion and decrypts a vault.
 - [createSecretVault](/reference/create-secret-vault/): encrypts a secret from explicit credential and PRF material.
 - [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/): performs the WebAuthn assertion needed to unlock a vault.
-- [unwrapSecretVault](/reference/unwrap-secret-vault/): decrypts the secret from a vault.
+- [decryptSecretVault](/reference/decrypt-secret-vault/): decrypts the secret from a vault.
 - [parseSecretVault](/reference/parse-secret-vault/): parses and validates untrusted vault JSON or objects.
 - [Secret vault format](/reference/secret-vault-format/): the v1 storage contract, field by field.
 

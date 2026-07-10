@@ -1,9 +1,9 @@
 ---
 title: createEd25519SigningSession
-description: Wraps an Ed25519 private key in an explicitly lockable signing session.
+description: Creates an explicitly lockable signing session from an Ed25519 private key.
 ---
 
-Wraps an Ed25519 private key in an explicitly lockable signing session.
+Creates an explicitly lockable signing session from an Ed25519 private key.
 
 ## Import
 

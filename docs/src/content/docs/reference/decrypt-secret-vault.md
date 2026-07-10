@@ -1,5 +1,5 @@
 ---
-title: unwrapSecretVault
+title: decryptSecretVault
 description: Decrypts the secret from a secret vault.
 ---
 
@@ -8,16 +8,16 @@ Decrypts the secret from a secret vault.
 ## Import
 
 ```ts
-import { unwrapSecretVault } from "@category-labs/mera";
+import { decryptSecretVault } from "@category-labs/mera";
 ```
 
 ## Usage
 
 ```ts
 import {
+  decryptSecretVault,
   getSecretVaultPrfOutput,
   parseSecretVault,
-  unwrapSecretVault,
 } from "@category-labs/mera";
 
 const vault = parseSecretVault(localStorage.getItem("vault"));
@@ -26,7 +26,7 @@ const { prfOutput } = await getSecretVaultPrfOutput({
   vault,
 });
 
-const secret = await unwrapSecretVault({ vault, prfOutput });
+const secret = await decryptSecretVault({ vault, prfOutput });
 try {
   // use the secret bytes
 } finally {
@@ -36,7 +36,7 @@ try {
 
 ## Parameters
 
-`options` is an `UnwrapSecretVaultOptions`.
+`options` is a `DecryptSecretVaultOptions`.
 
 ### options.vault
 
@@ -64,6 +64,6 @@ The 32-byte WebAuthn PRF output for the vault's stored salt. Copied before async
 
 ## See also
 
-- [unwrapSecretVaultWithPasskey](/reference/unwrap-secret-vault-with-passkey/): perform the assertion and decryption in one call.
-- [Use an existing secret](/recipes/use-an-existing-secret/): create, store, and unwrap with the zeroing pattern.
+- [decryptSecretVaultWithPasskey](/reference/decrypt-secret-vault-with-passkey/): perform the assertion and decryption in one call.
+- [Use an existing secret](/recipes/use-an-existing-secret/): create, store, and decrypt with the zeroing pattern.
 - [Secret vault format](/reference/secret-vault-format/): what the ciphertext actually contains.

@@ -52,7 +52,7 @@ function normalizeSecp256k1PublicKey(
 }
 
 /**
- * Wraps a secp256k1 private key in an explicitly lockable signing session.
+ * Creates an explicitly lockable signing session from a secp256k1 private key.
  *
  * @param options - Signing session inputs; fields are documented on {@link CreateSigningSessionOptions}.
  * @returns An unlocked secp256k1 signing session.

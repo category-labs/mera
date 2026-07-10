@@ -27,7 +27,7 @@ function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array<ArrayBuffer> {
 }
 
 /**
- * Wraps an Ed25519 private key in an explicitly lockable signing session.
+ * Creates an explicitly lockable signing session from an Ed25519 private key.
  *
  * @param options - Signing session inputs; fields are documented on {@link CreateSigningSessionOptions}.
  * @returns An unlocked Ed25519 signing session.

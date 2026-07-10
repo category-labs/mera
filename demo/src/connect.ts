@@ -3,6 +3,7 @@ import {
   createPasskeyWithPrfOutput,
   createSecp256k1SigningSession,
   createSecretVaultWithNewPasskey,
+  decryptSecretVaultWithPasskey,
   type Ed25519SigningSession,
   type EvmAddress,
   getEvmAddress,
@@ -11,7 +12,6 @@ import {
   isMeraError,
   parseSecretVault,
   type Secp256k1SigningSession,
-  unwrapSecretVaultWithPasskey,
 } from "@category-labs/mera";
 import { currentDerivedWallet, rememberDerivedWallet } from "./derivedWallet";
 import {
@@ -23,7 +23,7 @@ import {
 } from "./hd";
 
 /** The two account modes the demo offers. */
-type AccountMode = "wrapped" | "derived";
+type AccountMode = "vault" | "derived";
 
 /** One numbered account with a signing session per chain. */
 type AccountSlot = {
@@ -42,7 +42,7 @@ type AccountSlot = {
  * A connected wallet with one passkey ceremony's worth of authority.
  *
  * Derived mode holds the BIP-39 master seed for the session and can mint more
- * numbered HD accounts with no further passkey prompt. Wrapped mode exposes the
+ * numbered HD accounts with no further passkey prompt. Vault mode exposes the
  * single decrypted account from its vault. Either way, `lock()` zeroes every
  * secret the wallet still holds.
  */
@@ -60,7 +60,7 @@ type ConnectedWallet = {
 type ConnectResult = { wallet: ConnectedWallet; accountCount: number };
 
 const RP_NAME = "Mera Demo";
-const VAULT_KEY = "mera.demo.accountVault";
+const VAULT_KEY = "mera.demo.secretVault";
 const DEFAULT_USER = "nad";
 
 const rpId = location.hostname;
@@ -186,9 +186,9 @@ async function openDerived(): Promise<ConnectResult> {
   return { wallet, accountCount };
 }
 
-// ----- Wrapped mode: one passkey encrypts one seed phrase; both chains derive from it
+// ----- Vault mode: one passkey encrypts one seed phrase; both chains derive from it
 
-async function createWrapped(
+async function createVaultAccount(
   label: string,
   mnemonic: string,
 ): Promise<ConnectResult> {
@@ -198,7 +198,7 @@ async function createWrapped(
   }
 
   // The phrase itself is the secret the passkey encrypts. Storing it lets
-  // wrapped mode reveal it again later. Signing keys are re-derived from the
+  // vault mode reveal it again later. Signing keys are re-derived from the
   // phrase on unlock, the standard HD way, so it stays portable to wallet apps
   // such as MetaMask and Phantom.
   const secret = new TextEncoder().encode(phrase);
@@ -216,34 +216,34 @@ async function createWrapped(
   }
 
   return {
-    wallet: buildWrappedWallet(wrappedSlotFromPhrase(phrase)),
+    wallet: buildVaultWallet(vaultSlotFromPhrase(phrase)),
     accountCount: 1,
   };
 }
 
-async function unlockWrapped(): Promise<ConnectResult> {
-  const phrase = await decryptStoredWrappedPhrase();
+async function unlockVaultAccount(): Promise<ConnectResult> {
+  const phrase = await decryptStoredVaultPhrase();
   return {
-    wallet: buildWrappedWallet(wrappedSlotFromPhrase(phrase)),
+    wallet: buildVaultWallet(vaultSlotFromPhrase(phrase)),
     accountCount: 1,
   };
 }
 
 /**
- * Reads the stored wrapped vault and decrypts its seed phrase behind a fresh
+ * Reads the stored secret vault and decrypts its seed phrase behind a fresh
  * passkey ceremony. Unlock and reveal share this function. The PRF output and
  * decrypted bytes are zeroed before returning, even when decryption throws.
  */
-async function decryptStoredWrappedPhrase(): Promise<string> {
+async function decryptStoredVaultPhrase(): Promise<string> {
   const raw = localStorage.getItem(VAULT_KEY);
   if (!raw) {
     throw new Error(
-      "No wrapped account exists on this device. Create one first.",
+      "No vault-backed account exists on this device. Create one first.",
     );
   }
 
   const vault = parseSecretVault(raw);
-  const secret = await unwrapSecretVaultWithPasskey({ rpId, vault });
+  const secret = await decryptSecretVaultWithPasskey({ rpId, vault });
   try {
     return new TextDecoder().decode(secret);
   } finally {
@@ -251,8 +251,8 @@ async function decryptStoredWrappedPhrase(): Promise<string> {
   }
 }
 
-/** Derives the single wrapped-mode account (index 0) from its seed phrase. */
-function wrappedSlotFromPhrase(phrase: string): AccountSlot {
+/** Derives the single vault-mode account (index 0) from its seed phrase. */
+function vaultSlotFromPhrase(phrase: string): AccountSlot {
   const seed = mnemonicToSeed(phrase);
   try {
     return deriveSlotFromSeed(seed, 0);
@@ -261,12 +261,12 @@ function wrappedSlotFromPhrase(phrase: string): AccountSlot {
   }
 }
 
-/** Builds a wrapped-mode wallet around its single decrypted account. */
-function buildWrappedWallet(slot: AccountSlot): ConnectedWallet {
+/** Builds a vault-mode wallet around its single decrypted account. */
+function buildVaultWallet(slot: AccountSlot): ConnectedWallet {
   return {
-    mode: "wrapped",
+    mode: "vault",
     deriveAccount(index): AccountSlot {
-      if (index !== 0) throw new Error("Wrapped mode has a single account.");
+      if (index !== 0) throw new Error("Vault mode has a single account.");
       return slot;
     },
     lock(): void {
@@ -282,9 +282,9 @@ function buildWrappedWallet(slot: AccountSlot): ConnectedWallet {
  * One passkey ceremony unlocks the wallet; in derived mode every numbered
  * account afterwards is pure HD math with no further prompt.
  *
- * `secret` is the recovery phrase a wrapped account is created from; every other
- * path (derived, or signing back into an existing wrapped vault) ignores it, so
- * it is optional.
+ * `secret` is the recovery phrase a vault-backed account is created from; every
+ * other path (derived, or signing back into an existing secret vault) ignores
+ * it, so it is optional.
  */
 function connect(
   mode: AccountMode,
@@ -293,10 +293,10 @@ function connect(
   secret?: string,
 ): Promise<ConnectResult> {
   const label = username.trim() || DEFAULT_USER;
-  if (mode === "wrapped") {
+  if (mode === "vault") {
     return action === "create"
-      ? createWrapped(label, secret ?? "")
-      : unlockWrapped();
+      ? createVaultAccount(label, secret ?? "")
+      : unlockVaultAccount();
   }
   return action === "create" ? createDerived(label) : openDerived();
 }
@@ -304,7 +304,7 @@ function connect(
 /**
  * Reveals a wallet's BIP-39 recovery phrase behind a fresh passkey ceremony.
  *
- * Derived wallets re-derive the phrase from the passkey PRF output; wrapped
+ * Derived wallets re-derive the phrase from the passkey PRF output; vault-backed
  * wallets decrypt the generated or imported phrase from the secret vault.
  * Either way, the mnemonic is fetched on demand after fresh user verification.
  * PRF output and decrypted secret bytes are zeroed where possible before the
@@ -312,8 +312,8 @@ function connect(
  * be zeroed in place.
  */
 async function revealMnemonic(wallet: ConnectedWallet): Promise<string> {
-  if (wallet.mode === "wrapped") {
-    return decryptStoredWrappedPhrase();
+  if (wallet.mode === "vault") {
+    return decryptStoredVaultPhrase();
   }
 
   const record = currentDerivedWallet();

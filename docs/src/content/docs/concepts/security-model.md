@@ -7,9 +7,9 @@ mera has a narrow scope: it runs passkey ceremonies, returns entropy to the app,
 
 ## What the library handles
 
-Input buffers are copied before any async work starts, so mutating a buffer after a call cannot change what gets signed, wrapped, or derived.
+Input buffers are copied before any async work starts, so mutating a buffer after a call cannot change what gets signed, encrypted, or derived.
 
-Owned copies are zeroed where possible. A signing session zeroes the caller's private-key buffer when it consumes it, even when construction throws, and zeroes its own copy on `lock()`. [createSecretVault](/reference/create-secret-vault/) zeroes its internal secret and PRF-output copies. Wrapped-mode workflow functions also zero the transient secret and PRF-output copies they own before settling.
+Owned copies are zeroed where possible. A signing session zeroes the caller's private-key buffer when it consumes it, even when construction throws, and zeroes its own copy on `lock()`. [createSecretVault](/reference/create-secret-vault/) zeroes its internal secret and PRF-output copies. Secret-vault workflow functions also zero the transient secret and PRF-output copies they own before settling.
 
 WebAuthn challenges are generated internally. So are AES-GCM nonces, 12 fresh bytes per encryption, which means a caller cannot reuse one. Every ceremony requires user verification, and the requirement is [not configurable](/concepts/passkeys-and-prf/#user-verification).
 
@@ -21,7 +21,7 @@ The mitigations are app-level: lock sessions when idle, keep derivation windows 
 
 ## rpId binding
 
-PRF output is a function of the credential, the relying party ID, and the salt. A passkey can be used only under the rpId it was created for, so after a domain migration the app cannot run assertions under the old one. That breaks both modes: derived accounts can no longer be reproduced, and wrapped vaults can no longer be decrypted.
+PRF output is a function of the credential, the relying party ID, and the salt. A passkey can be used only under the rpId it was created for, so after a domain migration the app cannot run assertions under the old one. That breaks both patterns: derived accounts can no longer be reproduced, and secret vaults can no longer be decrypted.
 
 Treat the rpId as a long-lived choice. Before any planned migration, accounts need an export path.
 
@@ -29,7 +29,7 @@ Treat the rpId as a long-lived choice. Before any planned migration, accounts ne
 
 If one PRF output is reused for unrelated purposes, exposing it compromises them all. Use a different salt per purpose, or split one output with a purpose-labeled KDF.
 
-A vault is bound to its PRF output only, never to the credential ID or salt. Secrets wrapped under one reused output share a wrapping key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored vault JSON. The wrapped-mode creation functions generate a fresh random 32-byte salt for each secret; the [createSecretVault](/reference/create-secret-vault/) page documents the low-level requirement.
+A vault is bound to its PRF output only, never to the credential ID or salt. Secrets encrypted using one reused output share an encryption key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored vault JSON. The secret-vault creation functions generate a fresh random 32-byte salt for each secret; the [createSecretVault](/reference/create-secret-vault/) page documents the low-level requirement.
 
 ## Strings cannot be zeroed
 

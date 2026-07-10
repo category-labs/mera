@@ -9,7 +9,7 @@ Two constructors exist, one per curve: [createSecp256k1SigningSession](/referenc
 
 ## Independent of passkeys
 
-A session's input is a raw private key, derived from PRF output, unwrapped from a vault, or imported from elsewhere; the session does not record where the key came from. The step in between, turning 32 bytes of entropy into a chain-specific private key, is app-owned by design; [derived and wrapped modes](/concepts/derived-and-wrapped/) compares the two common patterns.
+A session's input is a raw private key, derived from PRF output, decrypted from a vault, or imported from elsewhere; the session does not record where the key came from. The step in between, turning 32 bytes of entropy into a chain-specific private key, is app-owned by design; [derived accounts and secret vaults](/concepts/derived-accounts-and-secret-vaults/) compares the two common patterns.
 
 Because a session never contacts an authenticator, signing never prompts: the one user-verification prompt happened in the ceremony that produced the entropy, and it covers any number of signatures.
 
@@ -25,7 +25,7 @@ Between construction and lock, a compromised runtime can request signatures with
 
 ## How long to keep a session
 
-Unless the app kept the key somewhere else, fresh key material means another passkey ceremony: reproducing a derived key and unwrapping a vault both start with one, so after `lock()` the next signature costs one more user-verification prompt. Session lifetime is a trade-off between that prompt and the open window.
+Unless the app kept the key somewhere else, fresh key material means another passkey ceremony: reproducing a derived key and decrypting a vault both start with one, so after `lock()` the next signature costs one more user-verification prompt. Session lifetime is a trade-off between that prompt and the open window.
 
 Frequent signing justifies a held session. A high-frequency trading app that ran a fresh ceremony per order would prompt constantly, so it keeps one session for the active burst of work and locks it when the burst ends.
 

@@ -33,7 +33,7 @@ function createEthereumAdapter(
     faucetUrl: MONAD_FAUCET_URL,
     faucetText: `Get testnet ${symbol} ↗`,
     recipientPlaceholder: "0x…",
-    balanceTooLowError: "Balance is too low to cover gas",
+    balanceTooLowError: "Balance is too low to cover gas.",
     isValidRecipient: isAddress,
     parseAmount: (text) => parseDecimalAmount(text, ETH_DECIMALS),
     formatAmount: (amount) => formatDecimalAmount(amount, ETH_DECIMALS),

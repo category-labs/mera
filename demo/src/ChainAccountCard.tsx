@@ -101,7 +101,7 @@ function ChainAccountCard({
   const [broadcastId, setBroadcastId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // The suggestion chip stays up until the user switches to manual entry.
+  // The suggestion chip stays visible until manual entry is enabled.
   const shownSuggestion = manual ? undefined : suggestion;
   const sendAmount = adapter.parseAmount(amount);
   // Testnet gates Send on a *known* balance that covers amount + fee reserve,
@@ -117,13 +117,13 @@ function ChainAccountCard({
     !busy &&
     (!isTestnet || covered);
 
-  // Drop the pre-filled recipient and let the user type any address.
+  // Drop the pre-filled recipient and enable manual address entry.
   function switchToManual(): void {
     setManual(true);
     setTo("");
   }
 
-  // Re-apply the suggested self-recipient after the user switched to manual.
+  // Restore the suggested self-recipient after manual entry was enabled.
   function restoreSuggestion(): void {
     if (!suggestion) return;
     setManual(false);
@@ -143,8 +143,8 @@ function ChainAccountCard({
     const interval = window.setInterval(() => {
       void refreshBalance();
     }, BALANCE_REFRESH_MS);
-    // Refresh the moment the tab regains focus — e.g. returning from the
-    // faucet — so the new balance shows without a manual Refresh button.
+    // Refresh when the tab regains focus, such as after returning from the
+    // faucet, so the new balance appears without a manual Refresh button.
     const onVisible = () => {
       if (document.visibilityState === "visible") void refreshBalance();
     };
@@ -254,9 +254,7 @@ function ChainAccountCard({
           </span>
           {shownSuggestion ? (
             <div className="recipient-chip">
-              <span className="recipient-name">
-                Your {shownSuggestion.label}
-              </span>
+              <span className="recipient-name">{shownSuggestion.label}</span>
               <span className="recipient-addr mono">{shorten(to)}</span>
             </div>
           ) : (
@@ -304,7 +302,11 @@ function ChainAccountCard({
 
         {signed && (
           <details className="reveal" open>
-            <summary>Signed locally with your passkey-derived key</summary>
+            <summary>
+              {mode === "derived"
+                ? "The transaction was signed locally with a passkey-derived key."
+                : "The transaction was signed locally with a key derived from the recovery phrase."}
+            </summary>
             <code className="mono break">{signed}</code>
           </details>
         )}
@@ -328,7 +330,7 @@ function ChainAccountCard({
             className="link reveal-recipient"
             onClick={shownSuggestion.onReveal}
           >
-            View your {shownSuggestion.label} →
+            View {shownSuggestion.label} →
           </button>
         )}
 

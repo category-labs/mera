@@ -3,11 +3,11 @@ import type { PasskeyCredentialTransport } from "@category-labs/mera";
 /**
  * Non-secret metadata for a derived wallet created on this device.
  *
- * It holds no key material — only what the app needs to (a) pin the right
- * passkey with `allowCredentials` on the next same-device sign-in, instead of
- * showing every discoverable credential, and (b) remember how many HD accounts
- * the current wallet had derived so sign-in can restore them. A fresh device
- * simply has no record and falls back to a discoverable sign-in.
+ * It holds no key material. The app uses it to pin the right passkey with
+ * `allowCredentials` on the next same-device sign-in instead of showing every
+ * discoverable credential, and to remember how many HD accounts the current
+ * wallet had derived so sign-in can restore them. A fresh device has no record
+ * and falls back to a discoverable sign-in.
  */
 type DerivedWalletRecord = {
   credentialId: string;

@@ -20,7 +20,7 @@ const SOLANA_MAINNET_RPC_URL = "https://solana-rpc.publicnode.com";
 // the chain-id table in `ethereum.ts`.
 //
 // The genesis hash identifies the cluster from the RPC itself rather than
-// guessing from the URL — many providers (Helius, publicnode, …) host every
+// guessing from the URL, because many providers (Helius, publicnode, …) host every
 // cluster under hostnames that don't contain the cluster name.
 const KNOWN_CLUSTERS: Record<string, { cluster: Cluster; mode: NetworkMode }> =
   {

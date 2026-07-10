@@ -35,10 +35,10 @@ body {
 }
 
 .app {
-  /* `margin-inline: auto` (not body-level grid/flex centering) — React mounts
+  /* `margin-inline: auto` instead of body-level grid or flex centering. React mounts
      into a `<div id="root">` between body and `.app`, so any centering applied
      to body centers that wrapper, which already fills the width. Self-centering
-     `.app` is robust to whatever the wrapper does. */
+     `.app` remains centered regardless of the wrapper's layout. */
   margin: 48px auto;
   width: min(420px, 100%);
   display: grid;
@@ -80,15 +80,6 @@ h1 {
   font-size: 20px;
   font-weight: 650;
   letter-spacing: -0.01em;
-}
-
-.tagline {
-  margin: 2px 0 0;
-  overflow: hidden;
-  font-size: 13px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--muted);
 }
 
 input {
@@ -578,7 +569,7 @@ input:focus-visible {
 .break {
   display: block;
   margin-top: 8px;
-  /* `overflow-wrap: anywhere` (not `word-break: break-all`) — the former reduces
+  /* `overflow-wrap: anywhere` instead of `word-break: break-all`. This reduces
      min-content intrinsic size so a long base64 token can't widen the grid
      track and push the centered card off-screen. */
   overflow-wrap: anywhere;

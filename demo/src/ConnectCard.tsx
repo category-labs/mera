@@ -12,12 +12,12 @@ const MODES: { id: AccountMode; label: string; hint: string }[] = [
   {
     id: "derived",
     label: "Derived",
-    hint: "Accounts derived from your passkey — nothing is stored, and a synced passkey can restore them on another device.",
+    hint: "Accounts are derived from the passkey. The demo keeps non-secret metadata in local storage for quicker sign-in. A synced passkey can reproduce the same addresses on another device.",
   },
   {
     id: "wrapped",
     label: "Wrapped",
-    hint: "A seed phrase you generate or import, encrypted into a vault only the passkey can open.",
+    hint: "The demo encrypts a generated or imported recovery phrase in a vault that opens with the passkey.",
   },
 ];
 
@@ -97,7 +97,7 @@ function ConnectCard({
             </span>
             <input
               value={secret}
-              placeholder="Generate one, or paste an existing wallet's phrase"
+              placeholder="Generate a recovery phrase, or paste one from a wallet app"
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
@@ -108,18 +108,18 @@ function ConnectCard({
           </label>
 
           {trimmedSecret.length > 0 && !secretValid && (
-            <p className="status error">That's not a valid recovery phrase.</p>
+            <p className="status error">That is not a valid recovery phrase.</p>
           )}
 
           <p className="hint">
-            Generated on your device, or imported — whoever holds the phrase
+            The phrase is generated on the device or imported. Anyone with it
             controls the account.
           </p>
         </div>
       )}
 
       <label className="field">
-        <span>Account name</span>
+        <span>Passkey name</span>
         <input
           value={username}
           autoComplete="username"
@@ -128,6 +128,7 @@ function ConnectCard({
           disabled={busy !== null}
         />
       </label>
+      <p className="hint">This name is used only when creating a passkey.</p>
 
       <div className="actions">
         <button

@@ -36,7 +36,7 @@ function createSolanaAdapter(
     faucetUrl: SOLANA_FAUCET_URL,
     faucetText: `Get devnet ${solana.symbol} ↗`,
     recipientPlaceholder: "Solana address…",
-    balanceTooLowError: "Balance is too low to cover the fee",
+    balanceTooLowError: "Balance is too low to cover the fee.",
     isValidRecipient: isSolanaAddress,
     parseAmount: (text) => parseDecimalAmount(text, SOL_DECIMALS),
     formatAmount: (amount) => formatDecimalAmount(amount, SOL_DECIMALS),

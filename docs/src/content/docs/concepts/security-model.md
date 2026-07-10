@@ -3,7 +3,7 @@ title: Security model
 description: What mera protects, what it cannot, and the risks left to the app.
 ---
 
-mera has a narrow scope: it runs passkey ceremonies, returns entropy to the app, and holds signing keys in [lockable sessions](/concepts/signing-sessions/). This page states what the library handles inside that scope and what the app must handle itself; each fact also appears on the reference page of the function it concerns.
+mera has a narrow scope: it runs passkey ceremonies, returns entropy to the app, and holds signing keys in [lockable sessions](/concepts/signing-sessions/).
 
 ## What the library handles
 
@@ -27,7 +27,7 @@ Treat the rpId as a long-lived choice. Before any planned migration, accounts ne
 
 ## One output, one purpose
 
-Reusing one PRF output for unrelated purposes (for example, key derivation and app-data encryption) links those secrets: exposure of the output exposes all of them. Use a different salt per purpose, or split one output with a purpose-labeled KDF.
+If one PRF output is reused for unrelated purposes, exposing it compromises them all. Use a different salt per purpose, or split one output with a purpose-labeled KDF.
 
 A vault is bound to its PRF output only, never to the credential ID or salt. Secrets wrapped under one reused output share a wrapping key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored vault JSON. The wrapped-mode creation functions generate a fresh random 32-byte salt for each secret; the [createSecretVault](/reference/create-secret-vault/) page documents the low-level requirement.
 

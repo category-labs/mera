@@ -3,7 +3,11 @@ title: Use an existing secret (recovery phrase or private key) in wrapped mode
 description: Encrypt an existing secret into a passkey-protected vault and unlock it later.
 ---
 
-Wrapped mode encrypts one app-supplied secret behind a passkey, and the library never interprets the secret bytes: a recovery phrase, a private key, or any other secret works. Importing an account that already exists is one use, and it is the one this recipe works end to end: validate a phrase, wrap it, persist the vault, and unlock it later with careful zeroing. The code is app-side throughout; mera provides the ceremonies and the vault. Prerequisites: `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
+Wrapped mode encrypts one recovery phrase, private key, or other byte string behind a passkey; mera never interprets it. This recipe validates a phrase, stores its vault, and unlocks it with explicit zeroing.
+
+The surrounding code is app-owned; mera provides the passkey ceremonies and vault functions.
+
+Prerequisites: `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
 
 ## Validate the phrase
 
@@ -23,7 +27,7 @@ if (!validateMnemonic(phrase, wordlist)) {
 
 ## Create and persist the vault
 
-`createSecretVaultWithNewPasskey` generates a fresh random salt, creates the passkey, and encrypts the secret. The salt and credential metadata are stored in the returned vault.
+`createSecretVaultWithNewPasskey` generates a fresh 32-byte salt, creates the passkey, and encrypts the secret. The salt and credential metadata are stored in the returned vault. A separate salt for each vault avoids shared wrapping keys and interchangeable nonce/ciphertext pairs.
 
 ```ts
 import { createSecretVaultWithNewPasskey } from "@category-labs/mera";

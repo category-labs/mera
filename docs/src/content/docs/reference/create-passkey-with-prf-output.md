@@ -3,7 +3,7 @@ title: createPasskeyWithPrfOutput
 description: Creates a passkey and returns its deterministic PRF output in one call.
 ---
 
-Creates a passkey and returns a WebAuthn PRF output, falling back to a second ceremony when the authenticator does not evaluate PRF during creation. The fallback means a possible second browser prompt.
+Creates a passkey and returns its WebAuthn PRF output, using mera's fixed v1 salt by default. If [createPasskey](/reference/create-passkey/) returns no `prfOutput`, the function runs [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt, which may show a second browser prompt.
 
 ## Import
 

@@ -1,5 +1,5 @@
+import { secp256k1 } from "@noble/curves/secp256k1.js";
 import { hexToBytes } from "@noble/hashes/utils.js";
-import * as secp from "@noble/secp256k1";
 import { expect, test } from "@playwright/test";
 import { createSecp256k1SigningSession, getEvmAddress } from "../dist/index.js";
 import { expectError } from "./helpers.js";
@@ -22,7 +22,7 @@ test("signs 32-byte digests and locks the session", async () => {
   );
   expect(signature.compact).toHaveLength(64);
   expect(
-    secp.verify(signature.compact, digest, session.publicKey, {
+    secp256k1.verify(signature.compact, digest, session.publicKey, {
       prehash: false,
     }),
   ).toBe(true);
@@ -85,12 +85,12 @@ test("signs the digest snapshot taken at call time, not later mutations", async 
 
   // The signature is over the bytes at call time, not the later mutation.
   expect(
-    secp.verify(signature.compact, original, session.publicKey, {
+    secp256k1.verify(signature.compact, original, session.publicKey, {
       prehash: false,
     }),
   ).toBe(true);
   expect(
-    secp.verify(signature.compact, digest, session.publicKey, {
+    secp256k1.verify(signature.compact, digest, session.publicKey, {
       prehash: false,
     }),
   ).toBe(false);

@@ -1,4 +1,4 @@
-import * as secp from "@noble/secp256k1";
+import { secp256k1 } from "@noble/curves/secp256k1.js";
 import { copyBytes } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import { createSigningKey } from "./session.js";
@@ -21,7 +21,7 @@ function getSecp256k1PublicKey(
   privateKey: Uint8Array,
 ): Uint8Array<ArrayBuffer> {
   try {
-    return new Uint8Array(secp.getPublicKey(privateKey, false));
+    return new Uint8Array(secp256k1.getPublicKey(privateKey, false));
   } catch (cause) {
     throw new MeraError(
       "INPUT_INVALID",
@@ -43,7 +43,7 @@ function normalizeSecp256k1PublicKey(
   publicKey: Uint8Array,
 ): Uint8Array<ArrayBuffer> {
   try {
-    return new Uint8Array(secp.Point.fromBytes(publicKey).toBytes(false));
+    return new Uint8Array(secp256k1.Point.fromBytes(publicKey).toBytes(false));
   } catch (cause) {
     throw new MeraError("INPUT_INVALID", "Public key is not valid secp256k1", {
       cause,
@@ -78,10 +78,11 @@ function createSecp256k1SigningSession({
         throw new MeraError("INPUT_INVALID", "Digest must be 32 bytes");
       }
 
-      // Signing reads the buffer after an await; copy it now so a later mutation can't change the signed bytes.
+      // Give the signer a standalone digest snapshot even if a future backend
+      // reads its input asynchronously.
       const digest = copyBytes(digest32);
       const unlockedKey = key.use();
-      const signature = await secp.signAsync(digest, unlockedKey, {
+      const signature = secp256k1.sign(digest, unlockedKey, {
         format: "recovered",
         lowS: true,
         prehash: false,

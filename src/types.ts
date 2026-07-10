@@ -122,8 +122,6 @@ type Secp256k1SigningSession = {
   signDigest(digest32: Uint8Array): Promise<Secp256k1Signature>;
   /**
    * Zeroes the session-owned private-key copy and permanently locks this session; later signing throws `SESSION_LOCKED`.
-   *
-   * @remarks If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
    */
   lock(): void;
   /**
@@ -148,8 +146,6 @@ type Ed25519SigningSession = {
   signMessage(message: Uint8Array): Promise<Uint8Array<ArrayBuffer>>;
   /**
    * Zeroes the session-owned private-key copy and permanently locks this session; later signing throws `SESSION_LOCKED`.
-   *
-   * @remarks If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
    */
   lock(): void;
   /**

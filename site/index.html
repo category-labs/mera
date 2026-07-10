@@ -368,12 +368,12 @@
 
         <figure class="demo demo-hero">
           <iframe
-            src="https://various-cake.surge.sh"
+            src="https://demo-production-8ad3.up.railway.app"
             title="mera demo wallet app"
             allow="
-              publickey-credentials-create https://various-cake.surge.sh;
-              publickey-credentials-get https://various-cake.surge.sh;
-              clipboard-write https://various-cake.surge.sh;
+              publickey-credentials-create https://demo-production-8ad3.up.railway.app;
+              publickey-credentials-get https://demo-production-8ad3.up.railway.app;
+              clipboard-write https://demo-production-8ad3.up.railway.app;
             "
           ></iframe>
         </figure>
@@ -383,7 +383,7 @@
           manager. It's scoped to the demo and controls nothing else. If the
           prompt doesn't appear here,
           <a
-            href="https://various-cake.surge.sh/"
+            href="https://demo-production-8ad3.up.railway.app/"
             target="_blank"
             rel="noopener"
             >open the demo in a new tab</a
@@ -999,13 +999,13 @@ const address = getEvmAddress(session.publicKey)</code></pre>
 
         <figure class="demo">
           <iframe
-            src="https://various-cake.surge.sh/"
+            src="https://demo-production-8ad3.up.railway.app/"
             title="mera demo wallet app"
             loading="lazy"
             allow="
-              publickey-credentials-create https://various-cake.surge.sh;
-              publickey-credentials-get https://various-cake.surge.sh;
-              clipboard-write https://various-cake.surge.sh;
+              publickey-credentials-create https://demo-production-8ad3.up.railway.app;
+              publickey-credentials-get https://demo-production-8ad3.up.railway.app;
+              clipboard-write https://demo-production-8ad3.up.railway.app;
             "
           ></iframe>
         </figure>
@@ -1013,7 +1013,7 @@ const address = getEvmAddress(session.publicKey)</code></pre>
         <p class="demo-note">
           If the prompt doesn't appear here,
           <a
-            href="https://various-cake.surge.sh/"
+            href="https://demo-production-8ad3.up.railway.app/"
             target="_blank"
             rel="noopener"
             >open the demo in a new tab</a
@@ -1223,7 +1223,7 @@ const address = getEvmAddress(session.publicKey)</code></pre>
     // only the frame that sent the message. The CSS clamp() is the fallback
     // height until the first message arrives (or if the demo isn't redeployed).
     (() => {
-      const DEMO_ORIGIN = "https://various-cake.surge.sh";
+      const DEMO_ORIGIN = "https://demo-production-8ad3.up.railway.app";
       window.addEventListener("message", (e) => {
         if (e.origin !== DEMO_ORIGIN) return;
         const data = e.data;

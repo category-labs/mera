@@ -31,7 +31,7 @@ Fixed section order:
 
 Parameters use subheadings and lists, never wide tables. The content column is narrow; a five-column table does not survive it. Tables are reserved for genuinely tabular data, like the authenticator matrix.
 
-Source of truth is the JSDoc in `src/`. Write reference prose from it, and check the README when the JSDoc is silent. When the two disagree, the code wins; flag the README in the PR.
+Source of truth is the JSDoc in `src/`. Write reference prose from it. When the JSDoc is silent, inspect the implementation and tests.
 
 ## Recipes
 
@@ -66,12 +66,12 @@ The bar is simple, concise, and detailed at once: detail survives the cut, fille
 
 ## Accuracy
 
-- Every claim must be checkable against the README or the JSDoc in `src/`.
+- Every claim must be checkable against the JSDoc, implementation, or tests.
 - Implementation details live only on the page that owns them: error codes and library internals on the reference, demo internals (derivation schemes, storage, UI) in the recipes that adapt its code. Every other page links to the owning page instead of restating the detail, so a demo or library change touches one page.
 - Examples import only the public API plus explicitly declared app-side dependencies.
 - Examples define every identifier they use. Values the app supplies enter through a placeholder with realistic shape and provenance: `crypto.getRandomValues(new Uint8Array(32))` for key material, `new TextEncoder().encode(...)` for secret text, a literal for addresses and rpIds. Never use an all-zero buffer where the library validates the value; an all-zero secp256k1 key throws.
 - Security-sensitive behavior is stated plainly on the page where the risk is acted on: key material lifetimes, zeroing, nonce handling, prompt counts, and what the library cannot protect against.
-- Support claims are date-stamped. The authenticator matrix lives in the README; this site mirrors it, and updates land in both places.
+- Support claims are date-stamped. The authenticator matrix lives on the authenticator-support page and is maintained there only.
 
 ## Mechanics
 

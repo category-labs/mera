@@ -186,7 +186,6 @@ const features = [
   .demo {
     display: flex;
     flex-direction: column;
-    height: clamp(30rem, calc(100dvh - var(--sl-nav-height) - 8rem), 34rem);
     margin: 0;
     overflow: hidden;
     border: 1px solid var(--sl-color-hairline);
@@ -195,7 +194,8 @@ const features = [
   }
 
   .demo :global(iframe) {
-    flex: 1;
+    flex: none;
+    height: var(--demo-content-height, clamp(42rem, 110dvh, 52rem));
     min-height: 0;
   }
 
@@ -294,6 +294,11 @@ const features = [
       height: 100%;
     }
 
+    .demo :global(iframe) {
+      flex: 1;
+      height: 100%;
+    }
+
     .actions {
       display: flex;
       flex-wrap: wrap;
@@ -313,7 +318,7 @@ const features = [
   }
 
   /* Tighten the left column on short laptop viewports without changing the
-     demo's independent scrolling behavior. */
+     sticky demo's viewport-sized panel. */
   @media (min-width: 56rem) and (max-height: 53rem) {
     .copy {
       gap: 1rem;

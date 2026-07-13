@@ -1,8 +1,8 @@
 ---
-// Renders the demo app in an iframe that fills its container; the host
-// element decides the size, and the demo scrolls inside when its content is
-// taller. The delegated permissions let passkey ceremonies and clipboard
-// writes run in-frame.
+// Renders the demo app in an iframe. The demo reports its content height so
+// stacked layouts can show it without an inner scrollbar; wide layouts may
+// still constrain it to the viewport. The delegated permissions let passkey
+// ceremonies and clipboard writes run in-frame.
 const DEMO_ORIGIN = "https://demo-production-8ad3.up.railway.app";
 const DEMO_PERMISSIONS = [
   "publickey-credentials-create",
@@ -15,6 +15,7 @@ const DEMO_PERMISSIONS = [
 
 <iframe
   src={DEMO_ORIGIN}
+  data-demo-origin={DEMO_ORIGIN}
   title="mera demo"
   class="not-content"
   allow={DEMO_PERMISSIONS}></iframe>
@@ -22,11 +23,37 @@ const DEMO_PERMISSIONS = [
   If the demo does not work, try opening it in a new tab.
 </a>
 
+<script>
+  window.addEventListener("message", (event) => {
+    const data = event.data;
+    if (
+      data?.type !== "mera:resize" ||
+      !Number.isFinite(data.height) ||
+      data.height <= 0
+    ) {
+      return;
+    }
+
+    for (const frame of document.querySelectorAll<HTMLIFrameElement>(
+      "iframe[data-demo-origin]",
+    )) {
+      if (
+        frame.contentWindow === event.source &&
+        frame.dataset.demoOrigin === event.origin
+      ) {
+        frame.style.setProperty(
+          "--demo-content-height",
+          `${Math.ceil(data.height)}px`,
+        );
+      }
+    }
+  });
+</script>
+
 <style>
   iframe {
     display: block;
     width: 100%;
-    height: 100%;
     border: none;
   }
 

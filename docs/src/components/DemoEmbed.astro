@@ -18,6 +18,9 @@ const DEMO_PERMISSIONS = [
   title="mera demo"
   class="not-content"
   allow={DEMO_PERMISSIONS}></iframe>
+<a class="open-demo" href={DEMO_ORIGIN} target="_blank" rel="noreferrer">
+  If the demo does not work, try opening it in a new tab.
+</a>
 
 <style>
   iframe {
@@ -25,5 +28,21 @@ const DEMO_PERMISSIONS = [
     width: 100%;
     height: 100%;
     border: none;
+  }
+
+  .open-demo {
+    display: block;
+    padding: 0.625rem 0.875rem;
+    border-top: 1px solid var(--sl-color-hairline);
+    color: var(--sl-color-text-accent);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .open-demo:hover {
+    text-decoration: underline;
   }
 </style>

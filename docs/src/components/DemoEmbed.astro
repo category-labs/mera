@@ -1,15 +1,23 @@
 ---
 // Renders the demo app in an iframe that fills its container; the host
 // element decides the size, and the demo scrolls inside when its content is
-// taller. The WebAuthn permissions let passkey ceremonies run in-frame.
+// taller. The delegated permissions let passkey ceremonies and clipboard
+// writes run in-frame.
 const DEMO_ORIGIN = "https://demo-production-8ad3.up.railway.app";
+const DEMO_PERMISSIONS = [
+  "publickey-credentials-create",
+  "publickey-credentials-get",
+  "clipboard-write",
+]
+  .map((permission) => `${permission} ${DEMO_ORIGIN}`)
+  .join("; ");
 ---
 
 <iframe
   src={DEMO_ORIGIN}
   title="mera demo"
   class="not-content"
-  allow="publickey-credentials-create *; publickey-credentials-get *"></iframe>
+  allow={DEMO_PERMISSIONS}></iframe>
 
 <style>
   iframe {

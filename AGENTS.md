@@ -34,7 +34,7 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 - Document security-sensitive behavior explicitly, especially for key material, randomness, WebAuthn prompts, encryption nonces, storage formats, and mutation/zeroing behavior.
 - Document thrown `MeraError` codes with the appropriate JSDoc tag.
 - Examples should be runnable, concise, and focused on library behavior, not on provider boilerplate.
-- README examples should reflect actual tested behavior.
+- The root README is a nontechnical project overview. Installation, examples, compatibility, security details, API documentation, and the demo live on the documentation website.
 - Keep documentation prose neutral: name keys, secrets, and passkeys plainly ("the passkey", "one encrypted secret") rather than attributing them to the reader ("your passkey", "a secret you provide" / "you own").
 - Internal helpers with non-obvious invariants should have short `//` comments or full JSDoc.
 - Document observable behavior, not caller instructions: state what a function does to its inputs and outputs (for example, "the input is copied before use; the original buffer is not modified") rather than what the caller may or should do with them. Callers derive correct usage from the stated facts.
@@ -56,8 +56,8 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 
 - Write PR descriptions for reviewers who need to understand the reason for the change, not just the diff.
 - Start with the problem or risk that motivated the change. If the PR replaces one path with another, explain why the replacement is equivalent or better, including what behavior still runs and what coverage is added or preserved.
-- Keep the implementation summary short and concrete after the rationale.
-- List the validation that was run and any follow-up outside the diff, such as branch-protection changes or rollout notes.
+- Add only context that is not visible in the diff or CI, such as a related discussion, a non-obvious constraint or trade-off, manual validation, requested review focus, or follow-up outside the diff.
+- Do not restate the implementation or automated validation that reviewers can inspect directly.
 
 ## File Scope Guidelines
 
@@ -69,7 +69,7 @@ This file should stay stable and process-oriented.
 - coding and API design principles
 - safety and review expectations
 
-Project commands and the testing workflow live in the README's Development section.
+Project commands and the testing workflow live in `CONTRIBUTING.md`.
 
 ### What Not to Include
 

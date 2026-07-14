@@ -9,10 +9,9 @@
   <title>
     The path from a passkey ceremony to a signature, split by ownership. In
     mera, a passkey ceremony produces 32 bytes of PRF output. The app derives
-    the private key from that output. Back in mera, a signing session consumes
-    the key and produces signatures without prompts until it is locked. A dashed
-    return path shows signing back in: the same ceremony returns the same 32
-    bytes. No secret is stored anywhere.
+    the private key from that output. Back in mera, a signing session signs
+    with the key held in memory. A dashed return path shows signing back in:
+    the same ceremony returns the same 32 bytes. No secret is stored anywhere.
   </title>
   <defs>
     <marker
@@ -70,7 +69,7 @@
   <rect class="d-secret" x="130" y="414" width="300" height="56" rx="8" />
   <text x="280" y="438" text-anchor="middle">Signing session</text>
   <text x="280" y="457" text-anchor="middle" class="d-sub">
-    signs without prompts until lock()
+    signs with the key held in memory
   </text>
 
   <path class="d-edge" d="M280 470 V502" marker-end="url(#gs-arrow)" />

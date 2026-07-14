@@ -675,16 +675,20 @@ html[data-embedded="true"] .app {
 
 /* Embedded in a frame taller than the content (embed.ts sets
    `data-footer-pinned`): the hugged column has no spare height for
-   `margin-top: auto` to distribute, so pin the mode switch to the frame's
-   bottom edge instead. The column reserves the link's own band (column gap +
-   link height), keeping the measured content height the same whether or not
-   the link is in the flow. */
+   `margin-top: auto` to distribute, so pin the mode switch just above the
+   frame's bottom edge instead. The column reserves the link's in-flow band so
+   the measured content height stays the same whether or not the link is in
+   the flow; small drift between the reserve and the real band is absorbed by
+   FOOTER_PIN_SLACK_PX in embed.ts. */
 html[data-footer-pinned="true"] .app:has(.mode-switch) {
+  /* The 18px `.app` column gap + the link's ~24px box. */
   padding-bottom: 42px;
 }
 
 html[data-footer-pinned="true"] .mode-switch {
   position: fixed;
+  /* 16px embedded body padding + 8px `.app` margin: the same offset the
+     in-flow link gets in a content-sized frame. */
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);

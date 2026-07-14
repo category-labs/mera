@@ -5,7 +5,7 @@ description: Numbered EVM and Solana accounts from a single ceremony, with crede
 
 This recipe builds [passkey accounts](/concepts/passkey-accounts/), extending [Getting started](/getting-started/) with numbered EVM and Solana accounts, credential pinning, one passkey ceremony per session, and locking.
 
-Derivation and storage are app-owned; mera provides the ceremonies and signing sessions.
+Derivation and storage are app-owned; mera provides the ceremonies and signing sessions. Seeds, derivation paths, and phrases are introduced in [Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/).
 
 Prerequisites: `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a PRF-capable authenticator ([authenticator support](/concepts/authenticator-support/)).
 
@@ -68,7 +68,7 @@ localStorage.setItem("app.derivedCredential", JSON.stringify(record));
 
 ## Hold a master seed for the session
 
-Turn the PRF output into a BIP-39 master seed once, zero the output, and keep the seed in memory for the session; deriving account 3 later is pure HD math with no further prompt.
+Turn the PRF output into a BIP-39 master seed once, zero the output, and keep the seed in memory for the session. The master seed is the one secret every account below derives from, so deriving account 3 later is pure HD (hierarchical deterministic) math with no further prompt.
 
 ```ts
 import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
@@ -82,7 +82,7 @@ prfOutput.fill(0);
 
 ## Derive numbered accounts
 
-EVM accounts follow BIP-32 over the BIP-44 Ethereum path, the MetaMask convention:
+EVM accounts follow BIP-32 over the BIP-44 Ethereum path, the MetaMask convention. BIP-44 fixes the path shape `m/44'/coin'/account'/change/index`, and 60 is Ethereum's registered coin type:
 
 ```ts
 import {
@@ -101,7 +101,7 @@ function deriveEvmAccount(seed: Uint8Array, index: number) {
 }
 ```
 
-Solana uses SLIP-0010 hardened Ed25519 derivation on `m/44'/501'/{index}'/0'`, the path Phantom and Solflare use. Ed25519 supports only hardened steps, so the implementation is a short HMAC chain:
+Solana uses SLIP-0010, the Ed25519 counterpart of BIP-32, on `m/44'/501'/{index}'/0'`, the path Phantom and Solflare use (501 is Solana's coin type). A hardened step is one that requires the parent private key, and Ed25519 supports only hardened steps, so the implementation is a short chain of HMAC (keyed hash) calls:
 
 ```ts
 import {

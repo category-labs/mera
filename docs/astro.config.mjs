@@ -1,10 +1,41 @@
 // @ts-check
+
+import { unified } from "@astrojs/markdown-remark";
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
+import { visit } from "unist-util-visit";
+
+const site = process.env.DOCS_SITE;
+const configuredBase = process.env.DOCS_BASE;
+
+if (configuredBase && !configuredBase.startsWith("/")) {
+  throw new Error("DOCS_BASE must start with a forward slash");
+}
+
+const base = configuredBase?.replace(/\/+$/, "") ?? "";
+/** @param {string} path */
+const withBase = (path) => `${base}${path}`;
+const socialImage = site
+  ? new URL(withBase("/og.png"), site).href
+  : withBase("/og.png");
+
+/** @type {import("unified").Plugin<[], import("mdast").Root>} */
+const prefixRootRelativeLinks = () => (tree) => {
+  visit(tree, "link", (node) => {
+    if (node.url.startsWith("/")) {
+      node.url = withBase(node.url);
+    }
+  });
+};
 
 // https://astro.build/config
 export default defineConfig({
-  redirects: { "/demo": "/" },
+  site,
+  base: base || undefined,
+  redirects: { "/demo": withBase("/") },
+  markdown: {
+    processor: unified({ remarkPlugins: [prefixRootRelativeLinks] }),
+  },
   integrations: [
     starlight({
       title: "mera",
@@ -18,7 +49,7 @@ export default defineConfig({
       head: [
         {
           tag: "meta",
-          attrs: { property: "og:image", content: "/og.png" },
+          attrs: { property: "og:image", content: socialImage },
         },
         {
           tag: "meta",
@@ -46,7 +77,7 @@ export default defineConfig({
         },
         {
           tag: "meta",
-          attrs: { name: "twitter:image", content: "/og.png" },
+          attrs: { name: "twitter:image", content: socialImage },
         },
         {
           tag: "meta",

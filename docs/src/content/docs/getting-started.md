@@ -22,7 +22,7 @@ npm install @scure/bip32 @scure/bip39
 
 ## Create a passkey
 
-`createPasskeyWithPrfOutput` creates a discoverable passkey and evaluates its PRF in one call. The PRF (pseudorandom function) is a function each passkey carries: pass it a salt, a 32-byte input that acts as a namespace, and it returns 32 bytes that are stable for that passkey and salt ([Passkeys and the PRF extension](/concepts/passkeys-and-prf/)).
+`createPasskeyWithPrfOutput` creates a discoverable passkey and evaluates its PRF in one call. The PRF (pseudorandom function) is a function each passkey carries: given a salt, a 32-byte input acting as a namespace, it returns 32 bytes stable for that passkey and salt ([Passkeys and the PRF extension](/concepts/passkeys-and-prf/)).
 
 ```ts
 import { createPasskeyWithPrfOutput } from "@category-labs/mera";
@@ -41,7 +41,7 @@ mera uses its fixed v1 salt for this call. The `rpId` is the relying party ID, t
 
 ## Derive an account
 
-The PRF output is entropy: 32 bytes an attacker cannot predict, strong enough to be the root of every account that follows ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)). This walkthrough maps it through BIP-39, the standard that encodes entropy as a phrase of common words, and BIP-32, the standard that derives numbered keys from one seed, so the account can be imported into wallet apps that speak those standards.
+The PRF output is entropy: 32 bytes an attacker cannot predict, enough to root every account that follows ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)). This walkthrough maps it through BIP-39, which encodes entropy as a phrase of common words, and BIP-32, which derives numbered keys from one seed, so the account can be imported into wallet apps that speak those standards.
 
 ```ts
 import { HDKey } from "@scure/bip32";
@@ -56,7 +56,7 @@ const node = HDKey.fromMasterSeed(seed).derive("m/44'/60'/0'/0/0");
 if (node.privateKey === null) throw new Error("derivation produced no key");
 ```
 
-`m/44'/60'/0'/0/0` is a BIP-44 derivation path, the address of one key in the tree BIP-32 grows from the seed; this one selects the first Ethereum account, the same key MetaMask derives first from an imported phrase.
+`m/44'/60'/0'/0/0` is a BIP-44 derivation path naming one key in the BIP-32 tree; this one selects the first Ethereum account, the key MetaMask derives first from an imported phrase.
 
 ## Sign
 
@@ -97,7 +97,7 @@ Without `credential`, the browser offers any discoverable passkey it holds for t
 
 ## Where next
 
-- [Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/): the background for every term this page glossed in passing.
+- [Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/): the background behind the terms this page glosses.
 - [Create passkey accounts](/recipes/create-passkey-accounts/): numbered accounts, credential pinning, Solana keys.
 - [Passkey accounts](/concepts/passkey-accounts/): why the same passkey reproduces the same accounts, and what losing it means.
 - [Secret vaults](/concepts/secret-vaults/): encrypting a secret that already exists behind the passkey.

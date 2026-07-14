@@ -3,6 +3,8 @@ title: Signing sessions
 description: How a session owns its private key, why signing never prompts, and what locking destroys.
 ---
 
+import SessionLifecycle from "../../../assets/diagrams/session-lifecycle.svg";
+
 A signing session holds one private key and signs with it until it is locked. It is the last step in mera's flow: a ceremony produces PRF output, the app turns that output into a private key, and the session does the signing.
 
 Two constructors exist, one per signature scheme ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/) introduces both): [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) signs 32-byte digests (a digest is the fixed-length hash of the content to sign) and [createEd25519SigningSession](/reference/create-ed25519-signing-session/) signs arbitrary-length messages. The custody model is the same for both.
@@ -18,6 +20,8 @@ Because a session never contacts an authenticator, signing never prompts: the on
 Construction consumes the key: the session keeps the only library-side copy and zeroes the caller's input buffer, even when construction throws. Locking zeroes the session's copy and is permanent: a locked session throws on signing, there is no unlock, and new signatures require a new session. An unlock path would mean the key still existed somewhere after `lock()`; permanence is what makes the lock meaningful.
 
 Sessions also support `using` declarations: disposal calls `lock()` when the scope exits, so a session can be bound to a block instead of a manual call.
+
+<SessionLifecycle />
 
 ## The open window
 

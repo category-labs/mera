@@ -3,7 +3,7 @@ title: Passkeys and the PRF extension
 description: What a passkey is, what the PRF extension adds, and why its output is stable.
 ---
 
-A passkey is a discoverable WebAuthn credential: a key pair created at a website's request by an authenticator (a phone, a password manager, a hardware key). The private half never leaves the authenticator. Discoverable means the authenticator finds the credential for a domain on its own, so signing in needs no username and no stored identifier.
+A passkey is a discoverable WebAuthn credential. WebAuthn is the browser standard for signing in with key pairs instead of passwords; a credential is one such key pair, created at a website's request by an authenticator (a phone, a password manager, a hardware key). The private half never leaves the authenticator. Discoverable means the authenticator finds the credential for a domain on its own, so signing in needs no username and no stored identifier.
 
 **Passkeys are bound to a relying party ID.** The `rpId` is a domain, and a credential created under one rpId cannot be used under another. The [security model](/concepts/security-model/) covers what this means for domain migrations.
 
@@ -13,11 +13,11 @@ A passkey is a discoverable WebAuthn credential: a key pair created at a website
 
 Every mera ceremony requires user verification, the authenticator's local check that the person is present and is the owner. The gesture depends on the platform: a biometric, a device PIN, a password.
 
-The requirement is not configurable. Authenticators built on CTAP's `hmac-secret` keep two PRFs per credential, one for user-verified requests and one for the rest; WebAuthn exposes only the user-verified PRF and overrides a weaker `userVerification` setting when evaluating it. A setting could neither change the output nor skip the check, so mera does not offer one.
+The requirement is not configurable. Authenticators built on `hmac-secret`, the CTAP primitive behind PRF (CTAP is the protocol browsers use to talk to authenticators), keep two PRFs per credential, one for user-verified requests and one for the rest; WebAuthn exposes only the user-verified PRF and overrides a weaker `userVerification` setting when evaluating it. A setting could neither change the output nor skip the check, so mera does not offer one.
 
 ## The PRF extension
 
-The [PRF extension](https://www.w3.org/TR/webauthn-3/#prf-extension) gives each credential a pseudorandom function. The caller passes a 32-byte salt with the ceremony and the authenticator returns 32 bytes.
+The [PRF extension](https://www.w3.org/TR/webauthn-3/#prf-extension) gives each credential a pseudorandom function: a function whose output looks random but is fully determined by its inputs. The caller passes a 32-byte salt with the ceremony and the authenticator returns 32 bytes.
 
 PRF output is determined by the credential, relying party ID, and salt. Those inputs produce the same 32 bytes on every synced device; a different salt produces unrelated output. Salts act as namespaces, which is why passkey accounts share one [fixed salt](/reference/get-deterministic-prf-salt-v1/) while each secret vault gets a fresh random one.
 
@@ -25,7 +25,7 @@ PRF output is determined by the credential, relying party ID, and salt. Those in
 
 The output is suitable as the root secret for accounts. It is stable wherever the passkey syncs, it appears only after user verification, and it never needs to be stored: the authenticator re-evaluates it on each ceremony.
 
-Fed to a key-derivation scheme, the output produces a hierarchy of accounts; used as key material, it decrypts a vault. mera returns the output and does nothing else with it. [Passkey accounts](/concepts/passkey-accounts/) is the default pattern built on the first path; [secret vaults](/concepts/secret-vaults/) cover the second, for secrets that already exist.
+Fed to a key-derivation scheme, the deterministic computation that turns one root secret into per-account keys ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)), the output produces a hierarchy of accounts; used as key material, it decrypts a vault. mera returns the output and does nothing else with it. [Passkey accounts](/concepts/passkey-accounts/) is the default pattern built on the first path; [secret vaults](/concepts/secret-vaults/) cover the second, for secrets that already exist.
 
 ## Ceremonies and prompts
 
@@ -39,5 +39,6 @@ Signing itself never prompts: a [signing session](/concepts/signing-sessions/) h
 
 ## See also
 
+- [Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/): what the 32 bytes become once the app holds them.
 - [Authenticator support](/concepts/authenticator-support/): which stacks deliver PRF today.
 - [Getting started](/getting-started/): the ceremony-to-signature path in code.

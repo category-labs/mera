@@ -3,7 +3,7 @@ title: Authenticator support
 description: Which authenticators deliver WebAuthn PRF, and since when.
 ---
 
-mera requires three things from the authenticator stack: the WebAuthn PRF extension, discoverable credentials, and user verification.
+mera requires three things from the authenticator stack: the WebAuthn PRF extension, discoverable credentials, and user verification. [Passkeys and the PRF extension](/concepts/passkeys-and-prf/) defines all three.
 
 In the table, `✓` means a live PRF create + get cycle has been confirmed end-to-end; `Not supported` means a live test did not return PRF.
 

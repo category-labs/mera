@@ -5,11 +5,11 @@ description: How a session owns its private key, why signing never prompts, and 
 
 A signing session holds one private key and signs with it until it is locked. It is the last step in mera's flow: a ceremony produces PRF output, the app turns that output into a private key, and the session does the signing.
 
-Two constructors exist, one per curve: [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) signs 32-byte digests and [createEd25519SigningSession](/reference/create-ed25519-signing-session/) signs arbitrary-length messages. The custody model is the same for both.
+Two constructors exist, one per signature scheme ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/) introduces both): [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) signs 32-byte digests, a digest being the fixed-length hash of the content to sign, and [createEd25519SigningSession](/reference/create-ed25519-signing-session/) signs arbitrary-length messages. The custody model is the same for both.
 
 ## Independent of passkeys
 
-A session's input is a raw private key, derived from PRF output, decrypted from a vault, or imported from elsewhere; the session does not record where the key came from. The step in between, turning 32 bytes of entropy into a chain-specific private key, is app-owned by design; [passkey accounts](/concepts/passkey-accounts/) and [secret vaults](/concepts/secret-vaults/) describe the two sources of key material.
+A session's input is a raw private key, derived from PRF output, decrypted from a vault, or imported from elsewhere; the session does not record where the key came from. The step in between, turning 32 bytes of [entropy](/concepts/entropy-keys-and-accounts/) into a chain-specific private key, is app-owned by design; [passkey accounts](/concepts/passkey-accounts/) and [secret vaults](/concepts/secret-vaults/) describe the two sources of key material.
 
 Because a session never contacts an authenticator, signing never prompts: the one user-verification prompt happened in the ceremony that produced the entropy, and it covers any number of signatures.
 

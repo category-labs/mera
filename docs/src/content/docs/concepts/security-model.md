@@ -3,7 +3,7 @@ title: Security model
 description: What mera protects, what it cannot, and the risks left to the app.
 ---
 
-mera has a narrow scope: it runs passkey ceremonies, returns entropy to the app, and holds signing keys in [lockable sessions](/concepts/signing-sessions/).
+mera has a narrow scope: it runs passkey ceremonies, returns [entropy](/concepts/entropy-keys-and-accounts/) to the app, and holds signing keys in [lockable sessions](/concepts/signing-sessions/).
 
 ## What the library handles
 
@@ -11,7 +11,7 @@ Input buffers are copied before any async work starts, so mutating a buffer afte
 
 Owned copies are zeroed where possible. A signing session zeroes the caller's private-key buffer when it consumes it, even when construction throws, and zeroes its own copy on `lock()`. [createSecretVault](/reference/create-secret-vault/) zeroes its internal secret and PRF-output copies. Secret-vault workflow functions also zero the transient secret and PRF-output copies they own before settling.
 
-WebAuthn challenges are generated internally. So are AES-GCM nonces, 12 fresh bytes per encryption, which means a caller cannot reuse one. Every ceremony requires user verification, and the requirement is [not configurable](/concepts/passkeys-and-prf/#user-verification).
+WebAuthn challenges are generated internally. So are AES-GCM nonces: a nonce is a value that must never repeat under one encryption key, so the library generates 12 fresh bytes per encryption and a caller cannot reuse one. Every ceremony requires user verification, and the requirement is [not configurable](/concepts/passkeys-and-prf/#user-verification).
 
 ## What a compromised runtime sees
 
@@ -27,7 +27,7 @@ Treat the rpId as a long-lived choice. Before any planned migration, accounts ne
 
 ## One output, one purpose
 
-If one PRF output is reused for unrelated purposes, exposing it compromises them all. Use a different salt per purpose, or split one output with a purpose-labeled KDF.
+If one PRF output is reused for unrelated purposes, exposing it compromises them all. Use a different salt per purpose, or split one output with a purpose-labeled key-derivation function (KDF), a deterministic function that turns one secret into separate purpose-specific keys ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)).
 
 A vault is bound to its PRF output only, never to the credential ID or salt. Secrets encrypted using one reused output share an encryption key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored vault JSON. The secret-vault creation functions generate a fresh random 32-byte salt for each secret; the [createSecretVault](/reference/create-secret-vault/) page documents the low-level requirement.
 

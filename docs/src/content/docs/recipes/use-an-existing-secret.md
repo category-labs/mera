@@ -77,7 +77,7 @@ async function unlockPhrase(): Promise<string> {
 
 ## Derive signing sessions
 
-The phrase is a standard BIP-39 mnemonic, so key derivation from here is the same derivation passkey accounts use: master seed, then per-index paths. [Create passkey accounts](/recipes/create-passkey-accounts/) has both curves; feed it `mnemonicToSeedSync(phrase)` instead of a PRF-derived seed and zero the seed after the sessions exist.
+The phrase is a standard BIP-39 mnemonic, so key derivation from here is the same derivation passkey accounts use: master seed, then per-index paths. [Create passkey accounts](/recipes/create-passkey-accounts/) has both curves; pass it `mnemonicToSeedSync(phrase)` instead of a PRF-derived seed and zero the seed after the sessions exist.
 
 ## Pitfalls
 

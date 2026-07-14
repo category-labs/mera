@@ -25,7 +25,7 @@ PRF output is determined by the credential, relying party ID, and salt. Those in
 
 The output is suitable as the root secret for accounts. It is stable wherever the passkey syncs, it appears only after user verification, and it never needs to be stored: the authenticator re-evaluates it on each ceremony.
 
-Fed to a key-derivation scheme, the output produces a hierarchy of accounts; used as key material, it decrypts a vault. mera returns the output and does nothing else with it. [Passkey accounts](/concepts/passkey-accounts/) is the default pattern built on the first path; [secret vaults](/concepts/secret-vaults/) cover the second, for secrets that already exist.
+Passed to a key-derivation scheme, the output produces a hierarchy of accounts; used as key material, it decrypts a vault. mera returns the output and does nothing else with it. [Passkey accounts](/concepts/passkey-accounts/) is the default pattern built on the first path; [secret vaults](/concepts/secret-vaults/) cover the second, for secrets that already exist.
 
 ## Ceremonies and prompts
 

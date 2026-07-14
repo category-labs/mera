@@ -7,7 +7,7 @@ A passkey account is a blockchain account whose keys derive from a passkey's PRF
 
 ## One salt, one stable output
 
-When the PRF salt is omitted, mera uses its [fixed v1 salt](/reference/get-deterministic-prf-salt-v1/). The same passkey and relying party then produce the same 32 bytes of PRF output on every ceremony. The app feeds that output into a derivation scheme of its choosing, the deterministic computation that turns root entropy into per-account keys ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)); [Create passkey accounts](/recipes/create-passkey-accounts/) shows one built on common HD standards.
+When the PRF salt is omitted, mera uses its [fixed v1 salt](/reference/get-deterministic-prf-salt-v1/). The same passkey and relying party then produce the same 32 bytes of PRF output on every ceremony. The app passes that output to a derivation scheme of its choosing, the deterministic computation that turns root entropy into per-account keys ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)); [Create passkey accounts](/recipes/create-passkey-accounts/) shows one built on common HD standards.
 
 ## No stored state
 

@@ -6,6 +6,7 @@ import SocialIcons from "virtual:starlight/components/SocialIcons";
 import ThemeSelect from "virtual:starlight/components/ThemeSelect";
 import config from "virtual:starlight/user-config";
 import { withBasePath } from "../base-path";
+import CategoryLogotype from "./CategoryLogotype.astro";
 
 // Match Starlight's default search behavior so an explicit Search override
 // can still opt in when Pagefind is disabled.
@@ -16,6 +17,10 @@ const shouldRenderSearch =
 
 <div class="header">
   <div class="title-wrapper sl-flex">
+    <a class="brand-link" href="https://category.xyz" aria-label="Category Labs">
+      <CategoryLogotype />
+    </a>
+    <span class="brand-divider" aria-hidden="true"></span>
     <SiteTitle />
   </div>
 
@@ -51,6 +56,37 @@ const shouldRenderSearch =
       margin: -0.25rem;
       padding: 0.25rem;
       overflow: clip;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-link {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+      color: var(--sl-color-white);
+      transition: opacity 0.15s;
+    }
+
+    .brand-link:hover {
+      opacity: 0.7;
+    }
+
+    /* The wordmark's viewBox includes descenders (g, y), so centering the
+       boxes leaves its baseline above the site title's. Nudge it down so
+       both sit on one baseline; the offset shrinks as the svg grows. */
+    .brand-link :global(svg) {
+      height: 0.875rem;
+      width: auto;
+      display: block;
+      transform: translateY(3.5px);
+    }
+
+    .brand-divider {
+      width: 1px;
+      height: 1.125rem;
+      flex-shrink: 0;
+      background: var(--sl-color-gray-5);
     }
 
     .search-wrapper,
@@ -60,7 +96,7 @@ const shouldRenderSearch =
     }
 
     .right-group {
-      gap: 0.65rem;
+      gap: 0.5rem;
     }
 
     .social-icons {
@@ -73,7 +109,7 @@ const shouldRenderSearch =
       align-items: center;
       justify-content: center;
       border-radius: 10px;
-      padding: 0.45rem 0.65rem;
+      padding: 0.45rem 0.55rem;
       background: var(--sl-color-accent);
       color: #ffffff;
       font-size: 0.78rem;
@@ -93,6 +129,19 @@ const shouldRenderSearch =
     }
 
     @media (min-width: 50rem) {
+      .title-wrapper {
+        gap: 0.75rem;
+      }
+
+      .brand-link :global(svg) {
+        height: 1rem;
+        transform: translateY(4px);
+      }
+
+      .brand-divider {
+        height: 1.25rem;
+      }
+
       .header {
         grid-template-columns:
           minmax(min-content, 1fr)

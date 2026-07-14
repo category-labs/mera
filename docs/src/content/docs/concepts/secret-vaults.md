@@ -1,6 +1,6 @@
 ---
 title: Secret vaults
-description: Passkey-encrypted storage for one existing secret, and when to reach for it.
+description: Passkey-encrypted storage for one existing secret, and when to use them.
 sidebar:
   badge:
     text: Advanced
@@ -21,7 +21,7 @@ The secret exists independently of the passkey: an account that predates it can 
 
 ## When to use a vault
 
-Reach for a vault when the key material must come from outside the passkey. The main case is migration: an account created elsewhere, with an existing recovery phrase or private key, moves to passkey sign-in by encrypting that secret once. Recovery also differs: losing the passkey still loses access through mera, but any surviving copy of the secret restores the account, while a passkey account is recoverable only through an export taken beforehand.
+Use a vault when the key material must come from outside the passkey. The main case is migration: an account created elsewhere, with an existing recovery phrase or private key, moves to passkey sign-in by encrypting that secret once. Recovery also differs: losing the passkey still loses access through mera, but any surviving copy of the secret restores the account, while a passkey account is recoverable only through an export taken beforehand.
 
 The challenge is storage. The vault blob must live in durable storage, and where it lives, how it syncs, and how it survives device loss are design decisions the app owns; losing every copy of both the vault and the secret loses the account. That design burden is why vaults are the advanced option: when the secret does not already exist elsewhere, passkey accounts cover the same ground with nothing to store.
 

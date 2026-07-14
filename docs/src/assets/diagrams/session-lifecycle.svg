@@ -1,20 +1,17 @@
 <svg
   xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 640 476"
-  width="640"
+  viewBox="200 0 440 476"
+  width="440"
   height="476"
   role="img"
   class="mera-diagram"
 >
   <title>
     The signing session lifecycle. A private key, derived, decrypted, or
-    imported, is consumed at construction: the session keeps the only
-    library-side copy and zeroes the input buffer, even on throw. The unlocked
-    session signs on request with no prompts; while unlocked, a compromised
-    runtime can request signatures. Calling lock(), which using disposal also
-    calls at scope exit, zeroes the session's key copy. The locked state is
-    permanent: signing after lock() throws SESSION_LOCKED, and a new signature
-    needs a new session.
+    imported, is consumed at construction. The unlocked session holds the only
+    copy of the key and signs on request. Calling lock() zeroes the session's
+    key copy; the locked state is permanent, and a new signature needs a new
+    session.
   </title>
   <defs>
     <marker
@@ -37,15 +34,12 @@
   </text>
 
   <path class="d-edge" d="M320 80 V164" marker-end="url(#sl-arrow)" />
-  <text x="332" y="112" class="d-sub">construction consumes the key;</text>
-  <text x="332" y="130" class="d-sub">
-    the input buffer is zeroed, even on throw
-  </text>
+  <text x="332" y="121" class="d-sub">construction consumes the key</text>
 
   <rect class="d-secret" x="220" y="168" width="200" height="64" rx="16" />
   <text x="320" y="194" text-anchor="middle">Unlocked</text>
   <text x="320" y="213" text-anchor="middle" class="d-sub">
-    holds the only library-side copy
+    holds the only copy of the key
   </text>
 
   <path
@@ -53,19 +47,11 @@
     d="M420 184 C 480 184, 480 216, 420 216"
     marker-end="url(#sl-arrow)"
   />
-  <text x="490" y="194" class="d-mono">signDigest / sign</text>
-  <text x="490" y="212" class="d-sub">no prompts</text>
-
-  <text x="24" y="186" class="d-sub">while unlocked, a</text>
-  <text x="24" y="204" class="d-sub">compromised runtime</text>
-  <text x="24" y="222" class="d-sub">can request signatures</text>
+  <text x="490" y="203" class="d-sub">signs on request</text>
 
   <path class="d-edge" d="M320 232 V344" marker-end="url(#sl-arrow)" />
   <text x="332" y="280" class="d-mono">lock()</text>
   <text x="332" y="298" class="d-sub">zeroes the session's key copy</text>
-  <text x="332" y="316" class="d-sub">
-    using disposal calls lock() at scope exit
-  </text>
 
   <rect class="d-node" x="220" y="348" width="200" height="64" rx="16" />
   <text x="320" y="374" text-anchor="middle">Locked</text>
@@ -73,8 +59,7 @@
     permanent; there is no unlock
   </text>
 
-  <text x="320" y="456" text-anchor="middle" class="d-note">
-    Signing after lock() throws SESSION_LOCKED; a new signature needs a new
-    session.
+  <text x="420" y="456" text-anchor="middle" class="d-note">
+    A new signature needs a new session.
   </text>
 </svg>

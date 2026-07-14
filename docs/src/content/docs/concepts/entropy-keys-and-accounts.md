@@ -3,43 +3,43 @@ title: Entropy, keys, and accounts
 description: How random bytes become a private key, an address, and a reproducible family of accounts.
 ---
 
-This page is the blockchain background the rest of the docs assume: how 32 random bytes become a private key, how a private key becomes an account, and how one root secret reproduces any number of accounts. Readers who already know BIP-32 and BIP-39 can skip to [Passkeys and the PRF extension](/concepts/passkeys-and-prf/).
+The blockchain background the rest of the docs assume: how 32 random bytes become a private key, an account, and a reproducible family of accounts. Readers who know BIP-32 and BIP-39 can skip to [Passkeys and the PRF extension](/concepts/passkeys-and-prf/).
 
 ## Randomness and entropy
 
-Entropy is randomness an attacker cannot predict, measured in bits. One fair coin flip carries one bit. 32 random bytes carry 256 bits, which puts guessing out of reach: a search over 2^256 values is infeasible for any computer, present or projected.
+Entropy is randomness an attacker cannot predict, measured in bits. A fair coin flip carries one bit; 32 random bytes carry 256, and searching 2^256 values is infeasible for any computer.
 
-Everything on this page starts from one such random value and proceeds by deterministic computation, meaning the same input always produces the same output. That structure carries the security story: the root secret is the only unpredictable input, so it is the only thing that needs protecting, and everything below it can be recomputed instead of stored.
+Everything below starts from one such value and proceeds deterministically. The root secret is the only unpredictable input, so it is the only thing to protect; everything derived from it can be recomputed instead of stored.
 
 ## Private keys, public keys, and signatures
 
-A private key is a large secret number, in practice 256 bits, so it fits in 32 bytes. A one-way function computes a public key from it: cheap to run forward, infeasible to reverse. The public key can be shared with anyone without exposing the private key.
+A private key is a 256-bit secret number. A one-way function computes the public key from it: cheap to run forward, infeasible to reverse, so the public key is safe to share.
 
-A signature is a value computed from a message and a private key. Anyone holding the public key can verify it, and a valid signature proves the private key's holder approved that exact message. The key itself is never revealed; approving one message grants nothing over any other.
+A signature is computed from a message and a private key and verified with the public key alone. A valid signature proves the key's holder approved that exact message, without revealing the key.
 
-The docs use two signature schemes, named after their underlying elliptic curves (the mathematical structure the keys live on; nothing else here depends on the details). secp256k1 is the scheme of Ethereum and other EVM chains, the chains that run the Ethereum Virtual Machine. Ed25519 is the scheme Solana uses.
+The docs use two signature schemes, named for their curves: secp256k1 on Ethereum and other EVM chains (chains that run the Ethereum Virtual Machine), and Ed25519 on Solana.
 
 ## Accounts and addresses
 
-A blockchain account is the state a chain tracks for one key pair: a balance and a transaction history. The address is the account's public name, a short encoding computed from the public key, safe to publish and share.
+A blockchain account is the state a chain tracks for one key pair: a balance and a transaction history. The address is a short encoding of the public key, safe to publish.
 
-Control of an account is exactly the ability to sign. A transaction moves funds when it carries a signature that the account's public key verifies, so whoever holds the private key controls the account. No authority stands behind the key: there is no reset path, losing the key loses the account, and anyone who obtains it gains full control.
+Control of an account is the ability to sign: a transaction is valid when its signature verifies against the account's public key. There is no reset path. Losing the private key loses the account, and anyone who obtains it controls the account.
 
 ## Deterministic derivation
 
-A key-derivation function (KDF) turns one secret into others. Its output looks random, yet the same input produces the same output every time. Determinism is the point: a key that can be recomputed from the root never needs to be stored.
+A key-derivation function (KDF) turns one secret into others: the output looks random, and the same input always produces the same output. A key that can be recomputed never needs to be stored.
 
-Hierarchical derivation extends one secret into a family of keys. BIP-32 (for secp256k1) and SLIP-0010 (for Ed25519) turn one master seed, a single root secret, into a tree of child keys. A derivation path such as `m/44'/60'/0'/0/0` names one position in that tree. Same seed, same path, same key, on any machine, which is how one 32-byte value stands behind any number of accounts with nothing stored per account. (BIP stands for Bitcoin Improvement Proposal; several of these documents were adopted as standards well beyond Bitcoin.)
+BIP-32 (secp256k1) and SLIP-0010 (Ed25519) extend one master seed into a tree of child keys, where a derivation path such as `m/44'/60'/0'/0/0` names one key. The same seed and path produce the same key on any machine, so one 32-byte value backs any number of accounts with nothing stored per account. (BIP is a Bitcoin Improvement Proposal; several became standards beyond Bitcoin.)
 
 ## Seed phrases
 
-BIP-39 maps entropy to a phrase of common words and back: 128 bits become 12 words, 256 bits become 24. The phrase is an encoding for backup and interoperability, and it adds no security of its own; whoever reads the phrase holds the entropy.
+BIP-39 maps entropy to a phrase of common words and back: 128 bits become 12 words, 256 bits become 24. The phrase is an encoding, adding no security of its own; whoever reads it holds the entropy.
 
-The phrase is also an exit path that does not depend on any one library or app. A wallet app that follows the same standards (MetaMask and Phantom are two) turns an imported phrase back into the same seed, the same tree, and the same accounts.
+A wallet app that follows the same standards (MetaMask and Phantom are two) turns an imported phrase back into the same accounts, which gives accounts built this way an exit path independent of any one library.
 
 ## Where mera fits
 
-Every step above is pure computation over 32 unpredictable bytes. mera produces those bytes: a passkey ceremony returns 32 bytes of PRF output, and the app treats them as the root entropy for the pipeline on this page. Derivation, paths, and phrases stay app-owned; the library returns entropy and signs.
+mera supplies the root: a passkey ceremony returns 32 bytes of PRF output, and the app uses them as the entropy for this pipeline. Derivation, paths, and phrases are app-owned; the library returns entropy and signs.
 
 ## See also
 

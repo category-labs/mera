@@ -1,0 +1,78 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 680 500"
+  width="680"
+  height="500"
+  role="img"
+  class="mera-diagram"
+>
+  <title>
+    The vault round trip. A secret, a phrase, a key, or any bytes, is encrypted
+    with AES-256-GCM. The encryption key material is the PRF output of a passkey
+    ceremony run against a fresh random salt for this secret. The result is
+    ordinary vault JSON, stored in localStorage, a backend, or a sync service,
+    with the salt stored inside. Unlocking runs the same ceremony with the
+    stored salt, which reproduces the key and recovers the secret. Tampering
+    with the stored bytes makes decryption fail.
+  </title>
+  <defs>
+    <marker
+      id="vr-arrow"
+      viewBox="0 0 10 10"
+      refX="8"
+      refY="5"
+      markerWidth="7"
+      markerHeight="7"
+      orient="auto-start-reverse"
+    >
+      <path d="M0 0 L10 5 L0 10 z" class="d-head" />
+    </marker>
+  </defs>
+
+  <rect class="d-secret" x="60" y="24" width="240" height="56" rx="8" />
+  <text x="180" y="48" text-anchor="middle">Secret</text>
+  <text x="180" y="67" text-anchor="middle" class="d-sub">
+    a phrase, a key, any bytes
+  </text>
+
+  <path class="d-edge" d="M180 80 V140" marker-end="url(#vr-arrow)" />
+
+  <rect class="d-node" x="60" y="144" width="240" height="56" rx="8" />
+  <text x="180" y="168" text-anchor="middle">AES-256-GCM</text>
+  <text x="180" y="187" text-anchor="middle" class="d-sub">
+    authenticated encryption
+  </text>
+
+  <rect class="d-node" x="380" y="144" width="260" height="56" rx="8" />
+  <text x="510" y="168" text-anchor="middle">Passkey ceremony</text>
+  <text x="510" y="187" text-anchor="middle" class="d-sub">
+    a fresh random salt per secret
+  </text>
+
+  <path class="d-edge" d="M380 172 H308" marker-end="url(#vr-arrow)" />
+  <text x="344" y="162" text-anchor="middle" class="d-sub">PRF output</text>
+  <text x="344" y="188" text-anchor="middle" class="d-sub">32 bytes</text>
+
+  <path class="d-edge" d="M180 200 V260" marker-end="url(#vr-arrow)" />
+  <text x="192" y="234" class="d-sub">the salt is stored in the vault</text>
+
+  <rect class="d-node" x="60" y="264" width="240" height="64" rx="8" />
+  <text x="180" y="290" text-anchor="middle">Vault JSON</text>
+  <text x="180" y="309" text-anchor="middle" class="d-sub">
+    localStorage, a backend, a sync service
+  </text>
+
+  <path class="d-edge" d="M180 328 V388" marker-end="url(#vr-arrow)" />
+  <text x="192" y="352" class="d-sub">unlock: the same ceremony with the</text>
+  <text x="192" y="370" class="d-sub">stored salt reproduces the key</text>
+
+  <rect class="d-secret" x="60" y="392" width="240" height="56" rx="8" />
+  <text x="180" y="416" text-anchor="middle">Secret</text>
+  <text x="180" y="435" text-anchor="middle" class="d-sub">
+    only the ceremony recovers it
+  </text>
+
+  <text x="340" y="488" text-anchor="middle" class="d-note">
+    Tampering with the stored bytes makes decryption fail.
+  </text>
+</svg>

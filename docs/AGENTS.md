@@ -90,6 +90,7 @@ The bar is simple, concise, and detailed at once: detail survives the cut, fille
 - The sidebar in `astro.config.mjs` is hand-maintained. A sidebar slug without a page fails the build.
 - Plain `.md` unless the page imports a component; then `.mdx`.
 - Internal links are root-relative with a trailing slash: `/reference/errors/`. Link text is descriptive; no bare "here".
+- Link the first mention of a spec'd name on each page to its spec (BIP-32/BIP-39/BIP-44 to the bips repo, SLIP-0010 to the slips repo, WebAuthn to the W3C spec, CTAP and `hmac-secret` to the FIDO spec); later mentions on the page stay plain.
 - Never reference sections by number; name the thing and link it.
 - `npm run build` must pass before a PR.
 

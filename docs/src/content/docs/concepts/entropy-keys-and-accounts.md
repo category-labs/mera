@@ -3,7 +3,7 @@ title: Entropy, keys, and accounts
 description: How random bytes become a private key, an address, and a reproducible family of accounts.
 ---
 
-The blockchain background the rest of the docs assume: how 32 random bytes become a private key, an account, and a reproducible family of accounts. Readers who know BIP-32 and BIP-39 can skip to [Passkeys and the PRF extension](/concepts/passkeys-and-prf/).
+The blockchain background the rest of the docs assume: how 32 random bytes become a private key, an account, and a reproducible family of accounts. Readers who know [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) and [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) can skip to [Passkeys and the PRF extension](/concepts/passkeys-and-prf/).
 
 ## Randomness and entropy
 
@@ -29,7 +29,7 @@ Control of an account is the ability to sign: a transaction is valid when its si
 
 A key-derivation function (KDF) turns one secret into others: the output looks random, and the same input always produces the same output. A key that can be recomputed never needs to be stored.
 
-BIP-32 (secp256k1) and SLIP-0010 (Ed25519) extend one master seed into a tree of child keys, where a derivation path such as `m/44'/60'/0'/0/0` names one key. The same seed and path produce the same key on any machine, so one 32-byte value backs any number of accounts with nothing stored per account. (BIP is a Bitcoin Improvement Proposal; several became standards beyond Bitcoin.)
+BIP-32 (secp256k1) and [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md) (Ed25519) extend one master seed into a tree of child keys, where a derivation path such as `m/44'/60'/0'/0/0` names one key. The same seed and path produce the same key on any machine, so one 32-byte value backs any number of accounts with nothing stored per account. (BIP is a Bitcoin Improvement Proposal; several became standards beyond Bitcoin.)
 
 ## Seed phrases
 

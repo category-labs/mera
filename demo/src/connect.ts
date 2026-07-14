@@ -13,7 +13,6 @@ import {
   parseSecretVault,
   type Secp256k1SigningSession,
 } from "@category-labs/mera";
-import { currentPasskeyWallet, rememberPasskeyWallet } from "./passkeyWallet";
 import {
   deriveEthereumPrivateKey,
   deriveSolanaSeed,
@@ -21,6 +20,7 @@ import {
   mnemonicToSeed,
   prfOutputToMnemonic,
 } from "./hd";
+import { currentPasskeyWallet, rememberPasskeyWallet } from "./passkeyWallet";
 
 /** The two account modes the demo offers. */
 type AccountMode = "vault" | "passkey";

@@ -7,7 +7,7 @@ sidebar:
     variant: default
 ---
 
-A secret vault holds one secret, a recovery phrase, a private key, any bytes, encrypted so that only a passkey ceremony can decrypt it. Most apps need only [passkey accounts](/concepts/passkey-accounts/); the vault is the advanced pattern, and its main job is protecting a secret that predates the passkey.
+A secret vault holds one secret, a recovery phrase, a private key, any bytes, encrypted so that only a passkey ceremony can decrypt it. Vaults serve the cases where key material must come from outside the passkey, and above all migration: an existing account moves to passkey sign-in by encrypting its secret once. Apps creating accounts from scratch need only [passkey accounts](/concepts/passkey-accounts/).
 
 ## How a vault works
 
@@ -21,9 +21,9 @@ The secret exists independently of the passkey: an account that predates it can 
 
 ## When to use a vault
 
-Reach for a vault when the secret already exists: an account created elsewhere becomes passkey-protected by encrypting its phrase or key. Losing the passkey still loses access through mera, but any surviving copy of the secret restores the account; a passkey account is recoverable only through an export taken beforehand.
+Reach for a vault when the key material must come from outside the passkey. The main case is migration: an account created elsewhere, with an existing recovery phrase or private key, moves to passkey sign-in by encrypting that secret once. Recovery also differs: losing the passkey still loses access through mera, but any surviving copy of the secret restores the account, while a passkey account is recoverable only through an export taken beforehand.
 
-The cost is storage. The app has to keep the vault blob somewhere, and losing every copy of both the vault and the secret loses the account. When the secret does not already exist somewhere else, passkey accounts cover the same ground with nothing to store.
+The challenge is storage. The vault blob must live in durable storage, and where it lives, how it syncs, and how it survives device loss are design decisions the app owns; losing every copy of both the vault and the secret loses the account. That design burden is why vaults are the advanced option: when the secret does not already exist elsewhere, passkey accounts cover the same ground with nothing to store.
 
 ## See also
 

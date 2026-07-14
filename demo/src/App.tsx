@@ -9,8 +9,8 @@ import {
   type ConnectResult,
   describeError,
 } from "./connect";
-import { setPasskeyAccountCount } from "./passkeyWallet";
 import type { NetworkMode } from "./network";
+import { setPasskeyAccountCount } from "./passkeyWallet";
 
 /** Root component: holds the connected wallet + accounts, fetches network info. */
 function App(): ReactElement {

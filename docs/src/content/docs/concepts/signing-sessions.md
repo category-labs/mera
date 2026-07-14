@@ -5,7 +5,7 @@ description: How a session owns its private key, why signing never prompts, and 
 
 A signing session holds one private key and signs with it until it is locked. It is the last step in mera's flow: a ceremony produces PRF output, the app turns that output into a private key, and the session does the signing.
 
-Two constructors exist, one per signature scheme ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/) introduces both): [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) signs 32-byte digests, a digest being the fixed-length hash of the content to sign, and [createEd25519SigningSession](/reference/create-ed25519-signing-session/) signs arbitrary-length messages. The custody model is the same for both.
+Two constructors exist, one per signature scheme ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/) introduces both): [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) signs 32-byte digests (a digest is the fixed-length hash of the content to sign) and [createEd25519SigningSession](/reference/create-ed25519-signing-session/) signs arbitrary-length messages. The custody model is the same for both.
 
 ## Independent of passkeys
 

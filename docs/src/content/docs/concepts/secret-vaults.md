@@ -21,7 +21,7 @@ The secret exists independently of the passkey: an account that predates it can 
 
 ## When to use a vault
 
-Reach for a vault when the secret already exists: an account created elsewhere becomes passkey-protected by encrypting its phrase or key. A vault also changes what recovery means. Losing the passkey still loses access through mera, but any surviving copy of the secret restores the account, while a passkey account is recoverable only through an export taken beforehand.
+Reach for a vault when the secret already exists: an account created elsewhere becomes passkey-protected by encrypting its phrase or key. Losing the passkey still loses access through mera, but any surviving copy of the secret restores the account; a passkey account is recoverable only through an export taken beforehand.
 
 The cost is storage. The app has to keep the vault blob somewhere, and losing every copy of both the vault and the secret loses the account. When the secret does not already exist somewhere else, passkey accounts cover the same ground with nothing to store.
 

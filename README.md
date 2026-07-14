@@ -13,7 +13,7 @@ Developers can use mera to:
 
 ## Documentation and demo
 
-Installation, guides, compatibility information, the security model, the API reference, and the live demo are on the [mera documentation website](https://determined-tenderness-production-79fe.up.railway.app/).
+Installation, guides, compatibility information, the security model, the API reference, and the live demo are on the [mera documentation website](https://mera.category.xyz/).
 
 ## Repository
 
@@ -24,7 +24,7 @@ Installation, guides, compatibility information, the security model, the API ref
 
 ## Status
 
-mera is an experimental reference implementation. The documentation describes its [security model](https://determined-tenderness-production-79fe.up.railway.app/concepts/security-model/) and [known authenticator support](https://determined-tenderness-production-79fe.up.railway.app/concepts/authenticator-support/).
+mera is an experimental reference implementation. The documentation describes its [security model](https://mera.category.xyz/concepts/security-model/) and [known authenticator support](https://mera.category.xyz/concepts/authenticator-support/).
 
 ## Contributing
 

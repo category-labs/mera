@@ -657,10 +657,10 @@ clientDataJSON
           it.
         </p>
 
-        <h3 id="derived-mode">Derived mode</h3>
+        <h3 id="passkey-accounts">Passkey accounts</h3>
 
         <p>
-          In derived mode the account is computed from the passkey. mera's PRF
+          A passkey account is computed from the passkey. mera's PRF
           output methods use a fixed v1 salt by default, so the same passkey
           yields the same account. The application runs the passkey-derived
           bytes through its derivation scheme of choice; mera's demo wallet app
@@ -815,8 +815,8 @@ const session = createSecp256k1SigningSession({
 const address = getEvmAddress(session.publicKey)</code></pre>
 
         <p>
-          Derived mode stores no database row, localStorage entry, or vault
-          blob. Sign in on a new device with the synced passkey, and the same
+          A passkey account stores no database row, localStorage entry, or
+          vault blob. Sign in on a new device with the synced passkey, and the same
           account appears. Cross-device use follows the password manager's
           normal sync and security assumptions. Because the derivation is
           standard, the application can offer an explicit export: the entropy
@@ -951,7 +951,7 @@ const address = getEvmAddress(session.publicKey)</code></pre>
             <thead>
               <tr>
                 <td></td>
-                <th scope="col">Derived</th>
+                <th scope="col">Passkey account</th>
                 <th scope="col">Secret vault</th>
               </tr>
             </thead>
@@ -981,16 +981,18 @@ const address = getEvmAddress(session.publicKey)</code></pre>
         </div>
 
         <p>
-          An application can mix the patterns: derive new accounts or use secret
-          vaults for existing recovery phrases or keys.
+          An application can mix the patterns: passkey accounts for new accounts,
+          secret vaults for existing recovery phrases or keys.
         </p>
 
         <h2 id="try-it">Try it</h2>
 
         <p>
-          The demo below runs both patterns. Create a passkey or sign in with an
-          existing one, switch between Derived and Vault, see Ethereum and
-          Solana addresses, and reveal the recovery phrase in either pattern.
+          The demo below runs both patterns. It opens with passkey accounts;
+          create a passkey or sign in with an existing one, see Ethereum and
+          Solana addresses, and reveal the recovery phrase. The link under the
+          card switches to the secret-vault flow for importing an existing
+          phrase.
         </p>
 
         <figure class="demo">
@@ -1048,15 +1050,15 @@ const address = getEvmAddress(session.publicKey)</code></pre>
         <ul>
           <li>
             <strong>The app stores less key material.</strong>
-            The derived pattern stores no app-owned secret. The secret-vault
+            The passkey-account pattern stores no app-owned secret. The secret-vault
             pattern stores a vault blob that still needs the passkey ceremony,
             and locking is one call.
           </li>
           <li>
-            <strong>Derived mode has no chain infrastructure.</strong>
-            It needs no contracts, bundlers, paymasters, executor accounts, key
-            servers, or provider dependencies. It also needs no server-side
-            account state.
+            <strong>Passkey accounts have no chain infrastructure.</strong>
+            They need no contracts, bundlers, paymasters, executor accounts,
+            key servers, or provider dependencies. They also need no
+            server-side account state.
           </li>
           <li>
             <strong>The dependency surface is small.</strong>

@@ -156,8 +156,16 @@ svg.mera-diagram {
 }
 
 .mera-diagram .d-secret {
-  fill: color-mix(in srgb, var(--sl-color-accent-low) 55%, var(--sl-color-black));
-  stroke: color-mix(in srgb, var(--sl-color-accent) 35%, var(--sl-color-accent-low));
+  fill: color-mix(
+    in srgb,
+    var(--sl-color-accent-low) 55%,
+    var(--sl-color-black)
+  );
+  stroke: color-mix(
+    in srgb,
+    var(--sl-color-accent) 35%,
+    var(--sl-color-accent-low)
+  );
 }
 
 .mera-diagram .d-edge {

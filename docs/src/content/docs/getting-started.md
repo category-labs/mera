@@ -6,7 +6,7 @@ description: Install the library, derive an account, and make a first signature.
 Prerequisites:
 
 - A browser with WebAuthn, in a secure context: HTTPS, or `localhost` during development.
-- A passkey authenticator that supports the WebAuthn PRF extension. [Authenticator support](/concepts/authenticator-support/) lists the combinations known to work; 1Password and iCloud Keychain are safe first picks.
+- A passkey authenticator that supports the WebAuthn PRF extension. [Authenticator support](/concepts/authenticator-support/) lists the combinations known to work; 1Password and iCloud Keychain are good first choices.
 
 ## Install
 
@@ -41,7 +41,7 @@ mera uses its fixed v1 salt for this call. The `rpId` is the relying party ID, t
 
 ## Derive an account
 
-The PRF output is entropy: 32 bytes an attacker cannot predict, enough to root every account that follows ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)). This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki), which encodes entropy as a phrase of common words, and [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki), which derives numbered keys from one seed, so the account can be imported into wallet apps that speak those standards.
+The PRF output is entropy: 32 bytes an attacker cannot predict, enough to root every account that follows ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)). This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki), which encodes entropy as a phrase of common words, and [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki), which derives numbered keys from one seed, so the account can be imported into wallet apps that follow those standards.
 
 ```ts
 import { HDKey } from "@scure/bip32";

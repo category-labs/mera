@@ -182,6 +182,13 @@ svg.mera-diagram {
   stroke-dasharray: 5 4;
 }
 
+/* A boundary region, such as the authenticator. */
+.mera-diagram .d-zone {
+  fill: none;
+  stroke: var(--sl-color-gray-5);
+  stroke-dasharray: 5 4;
+}
+
 /* Lifts a label off the edge that runs behind it. */
 .mera-diagram .d-underlay {
   fill: var(--sl-color-black);

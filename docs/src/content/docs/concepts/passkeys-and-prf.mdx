@@ -3,6 +3,8 @@ title: Passkeys and the PRF extension
 description: What a passkey is, what the PRF extension adds, and why its output is stable.
 ---
 
+import PrfFunction from "../../../assets/diagrams/prf-function.svg";
+
 A passkey is a discoverable WebAuthn credential. [WebAuthn](https://www.w3.org/TR/webauthn-3/) is the browser standard for signing in with key pairs instead of passwords; a credential is one such key pair, created at a website's request by an authenticator (a phone, a password manager, a hardware key). The private half never leaves the authenticator. Discoverable means the authenticator finds the credential for a domain on its own, so signing in needs no username and no stored identifier.
 
 **Passkeys are bound to a relying party ID.** The `rpId` is a domain, and a credential created under one rpId cannot be used under another. The [security model](/concepts/security-model/) covers what this means for domain migrations.
@@ -20,6 +22,8 @@ The requirement is not configurable. Authenticators built on [`hmac-secret`](htt
 The [PRF extension](https://www.w3.org/TR/webauthn-3/#prf-extension) gives each credential a pseudorandom function: a function whose output looks random but is fully determined by its inputs. The caller passes a 32-byte salt with the ceremony and the authenticator returns 32 bytes.
 
 PRF output is determined by the credential, relying party ID, and salt. Those inputs produce the same 32 bytes on every synced device; a different salt produces unrelated output. Salts act as namespaces, which is why passkey accounts share one [fixed salt](/reference/get-deterministic-prf-salt-v1/) while each secret vault gets a fresh random one.
+
+<PrfFunction />
 
 ## Using the output
 

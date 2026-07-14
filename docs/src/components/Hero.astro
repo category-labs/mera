@@ -4,6 +4,7 @@
 // The title, tagline, and action buttons come from the page frontmatter; the
 // rest of the landing copy lives here.
 import { LinkButton } from "@astrojs/starlight/components";
+import { withBasePath } from "../base-path";
 import DemoEmbed from "./DemoEmbed.astro";
 
 const { data } = Astro.locals.starlightRoute.entry;
@@ -51,7 +52,7 @@ const features = [
               {String(index + 1).padStart(2, "0")}
             </span>
             <div>
-              <a href={feature.link}>{feature.title}</a>
+              <a href={withBasePath(feature.link)}>{feature.title}</a>
               <p>{feature.text}</p>
             </div>
           </li>
@@ -66,12 +67,12 @@ const features = [
             ({
               attrs: { class: className, ...attrs } = {},
               icon,
-              link: href,
+              link,
               text,
               variant,
             }) => (
               <LinkButton
-                {href}
+                href={withBasePath(link)}
                 {variant}
                 icon={icon?.name}
                 class:list={[className]}

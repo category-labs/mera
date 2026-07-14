@@ -131,7 +131,7 @@ function deriveSolanaAccount(seed: Uint8Array, index: number) {
 }
 ```
 
-The derivation paths are an app choice; these two are the shared wallet conventions. A phrase imported into a wallet app that speaks them (MetaMask and Phantom are two) reproduces the same addresses, so accounts keep an exit path that does not depend on mera.
+The derivation paths are an app choice; these two are the shared wallet conventions. A phrase imported into a wallet app that follows them (MetaMask and Phantom are two) reproduces the same addresses, so accounts keep an exit path that does not depend on mera.
 
 Build the account list from these helpers:
 

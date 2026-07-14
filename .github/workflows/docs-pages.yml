@@ -31,8 +31,7 @@ jobs:
           path: docs
           node-version: 24
         env:
-          DOCS_SITE: https://category-labs.github.io
-          DOCS_BASE: /mera
+          DOCS_SITE: https://mera.category.xyz
 
   deploy:
     name: Deploy

@@ -4,7 +4,6 @@ import { ConnectCard } from "./ConnectCard";
 import { type EthereumContext, getEthereumContext } from "./chains/ethereum";
 import { getSolanaContext, type SolanaContext } from "./chains/solana";
 import {
-  type AccountMode,
   type AccountSlot,
   type ConnectedWallet,
   type ConnectResult,
@@ -24,7 +23,6 @@ function App(): ReactElement {
   );
   const [solanaError, setSolanaError] = useState<string | null>(null);
 
-  const [mode, setMode] = useState<AccountMode>("derived");
   const [networkMode, setNetworkMode] = useState<NetworkMode>("testnet");
 
   const [wallet, setWallet] = useState<ConnectedWallet | null>(null);
@@ -144,11 +142,7 @@ function App(): ReactElement {
           onLock={handleLock}
         />
       ) : (
-        <ConnectCard
-          mode={mode}
-          onModeChange={setMode}
-          onConnected={handleConnected}
-        />
+        <ConnectCard onConnected={handleConnected} />
       )}
     </main>
   );

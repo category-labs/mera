@@ -26,22 +26,33 @@
   box-sizing: border-box;
 }
 
+/* body and `#root` form a flex-column chain that hands the viewport height down
+   to `.app`, so `.app` can pin its footer link to the bottom of the page.
+   Horizontal centering stays on `.app` itself (`margin-inline: auto`): React
+   mounts into `<div id="root">` between body and `.app`, so centering applied
+   to body would center that full-width container instead. */
 body {
   margin: 0;
   min-height: 100vh;
   padding: 24px;
+  display: flex;
+  flex-direction: column;
   background: var(--bg);
   color: var(--text);
 }
 
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 .app {
-  /* `margin-inline: auto` instead of body-level grid or flex centering. React mounts
-     into a `<div id="root">` between body and `.app`, so any centering applied
-     to body centers that container, which already fills the width. Self-centering
-     `.app` remains centered regardless of the container's layout. */
-  margin: 48px auto;
+  margin: 48px auto 0;
   width: min(420px, 100%);
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   gap: 18px;
 }
 
@@ -415,6 +426,32 @@ input:focus-visible {
 .field-head .link {
   text-transform: none;
   letter-spacing: normal;
+}
+
+/* Mode switch at the bottom of the connect screen: `margin-top: auto` pushes it
+   to the bottom of the viewport-filling `.app` column (and collapses to the
+   plain column gap when embedded, where the page hugs its content). Quiet by
+   default, accent on hover. */
+.mode-switch {
+  align-self: center;
+  margin-top: auto;
+  border: none;
+  background: none;
+  padding: 4px 8px;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.mode-switch:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.mode-switch:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .hint {

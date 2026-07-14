@@ -41,7 +41,7 @@ mera uses its fixed v1 salt for this call. The `rpId` is the relying party ID, t
 
 ## Derive an account
 
-The PRF output is entropy: 32 bytes an attacker cannot predict, enough to root every account that follows ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)). This walkthrough maps it through BIP-39, which encodes entropy as a phrase of common words, and BIP-32, which derives numbered keys from one seed, so the account can be imported into wallet apps that speak those standards.
+The PRF output is entropy: 32 bytes an attacker cannot predict, enough to root every account that follows ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)). This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki), which encodes entropy as a phrase of common words, and [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki), which derives numbered keys from one seed, so the account can be imported into wallet apps that speak those standards.
 
 ```ts
 import { HDKey } from "@scure/bip32";
@@ -56,7 +56,7 @@ const node = HDKey.fromMasterSeed(seed).derive("m/44'/60'/0'/0/0");
 if (node.privateKey === null) throw new Error("derivation produced no key");
 ```
 
-`m/44'/60'/0'/0/0` is a BIP-44 derivation path naming one key in the BIP-32 tree; this one selects the first Ethereum account, the key MetaMask derives first from an imported phrase.
+`m/44'/60'/0'/0/0` is a [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) derivation path naming one key in the BIP-32 tree; this one selects the first Ethereum account, the key MetaMask derives first from an imported phrase.
 
 ## Sign
 

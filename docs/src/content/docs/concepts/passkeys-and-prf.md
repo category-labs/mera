@@ -3,7 +3,7 @@ title: Passkeys and the PRF extension
 description: What a passkey is, what the PRF extension adds, and why its output is stable.
 ---
 
-A passkey is a discoverable WebAuthn credential. WebAuthn is the browser standard for signing in with key pairs instead of passwords; a credential is one such key pair, created at a website's request by an authenticator (a phone, a password manager, a hardware key). The private half never leaves the authenticator. Discoverable means the authenticator finds the credential for a domain on its own, so signing in needs no username and no stored identifier.
+A passkey is a discoverable WebAuthn credential. [WebAuthn](https://www.w3.org/TR/webauthn-3/) is the browser standard for signing in with key pairs instead of passwords; a credential is one such key pair, created at a website's request by an authenticator (a phone, a password manager, a hardware key). The private half never leaves the authenticator. Discoverable means the authenticator finds the credential for a domain on its own, so signing in needs no username and no stored identifier.
 
 **Passkeys are bound to a relying party ID.** The `rpId` is a domain, and a credential created under one rpId cannot be used under another. The [security model](/concepts/security-model/) covers what this means for domain migrations.
 
@@ -13,7 +13,7 @@ A passkey is a discoverable WebAuthn credential. WebAuthn is the browser standar
 
 Every mera ceremony requires user verification, the authenticator's local check that the person is present and is the owner. The gesture depends on the platform: a biometric, a device PIN, a password.
 
-The requirement is not configurable. Authenticators built on `hmac-secret`, the CTAP primitive behind PRF (CTAP is the protocol browsers use to talk to authenticators), keep two PRFs per credential, one for user-verified requests and one for the rest; WebAuthn exposes only the user-verified PRF and overrides a weaker `userVerification` setting when evaluating it. A setting could neither change the output nor skip the check, so mera does not offer one.
+The requirement is not configurable. Authenticators built on [`hmac-secret`](https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html#sctn-hmac-secret-extension), the CTAP primitive behind PRF ([CTAP](https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html) is the protocol browsers use to talk to authenticators), keep two PRFs per credential, one for user-verified requests and one for the rest; WebAuthn exposes only the user-verified PRF and overrides a weaker `userVerification` setting when evaluating it. A setting could neither change the output nor skip the check, so mera does not offer one.
 
 ## The PRF extension
 

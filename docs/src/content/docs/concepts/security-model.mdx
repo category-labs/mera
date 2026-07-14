@@ -3,6 +3,8 @@ title: Security model
 description: What mera protects, what it cannot, and the risks left to the app.
 ---
 
+import TrustBoundary from "../../../assets/diagrams/trust-boundary.svg";
+
 mera has a narrow scope: it runs passkey ceremonies, returns [entropy](/concepts/entropy-keys-and-accounts/) to the app, and holds signing keys in [lockable sessions](/concepts/signing-sessions/).
 
 ## What the library handles
@@ -18,6 +20,8 @@ WebAuthn challenges are generated internally. So are AES-GCM nonces: a nonce is 
 A compromised JavaScript runtime, whether an injected script, a malicious dependency, or an extension with page access, can observe key material during app-owned derivation or import. It can also sign with an active session until `session.lock()` is called.
 
 The mitigations are app-level: lock sessions when idle, keep derivation windows short, and treat everything that can run script on the page as inside the trust boundary.
+
+<TrustBoundary />
 
 ## rpId binding
 

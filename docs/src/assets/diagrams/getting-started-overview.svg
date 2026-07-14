@@ -1,0 +1,97 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 680 612"
+  width="680"
+  height="612"
+  role="img"
+  class="mera-diagram"
+>
+  <title>
+    The path from a passkey ceremony to a signature, split by ownership. In
+    mera, a passkey ceremony produces 32 bytes of PRF output. The app derives
+    the private key from that output. Back in mera, a signing session consumes
+    the key and produces signatures without prompts until it is locked. A dashed
+    return path shows signing back in: the same ceremony returns the same 32
+    bytes. No secret is stored anywhere.
+  </title>
+  <defs>
+    <marker
+      id="gs-arrow"
+      viewBox="0 0 10 10"
+      refX="8"
+      refY="5"
+      markerWidth="7"
+      markerHeight="7"
+      orient="auto-start-reverse"
+    >
+      <path d="M0 0 L10 5 L0 10 z" class="d-head" />
+    </marker>
+  </defs>
+
+  <!-- mera: the ceremony and its output -->
+  <rect class="d-zone" x="100" y="24" width="360" height="190" rx="10" />
+  <text x="114" y="46" class="d-sub">mera</text>
+
+  <rect class="d-node" x="130" y="56" width="300" height="56" rx="8" />
+  <text x="280" y="80" text-anchor="middle">Passkey ceremony</text>
+  <text x="280" y="99" text-anchor="middle" class="d-mono">
+    createPasskeyWithPrfOutput
+  </text>
+
+  <path class="d-edge" d="M280 112 V144" marker-end="url(#gs-arrow)" />
+
+  <rect class="d-secret" x="130" y="148" width="300" height="56" rx="8" />
+  <text x="280" y="172" text-anchor="middle">PRF output</text>
+  <text x="280" y="191" text-anchor="middle" class="d-sub">
+    32 bytes of entropy
+  </text>
+
+  <!-- the app: derivation -->
+  <path class="d-edge" d="M280 204 V270" marker-end="url(#gs-arrow)" />
+
+  <rect class="d-zone" x="100" y="242" width="360" height="112" rx="10" />
+  <text x="114" y="264" class="d-sub">the app</text>
+
+  <rect class="d-secret" x="130" y="274" width="300" height="56" rx="8" />
+  <text x="280" y="298" text-anchor="middle">Derive the private key</text>
+  <text x="280" y="317" text-anchor="middle" class="d-mono">
+    @scure/bip39 + @scure/bip32
+  </text>
+
+  <path class="d-edge" d="M280 330 V410" marker-end="url(#gs-arrow)" />
+  <text x="292" y="368" class="d-sub">
+    the session consumes and zeroes the key
+  </text>
+
+  <!-- mera: the signing session -->
+  <rect class="d-zone" x="100" y="382" width="360" height="190" rx="10" />
+  <text x="114" y="404" class="d-sub">mera</text>
+
+  <rect class="d-secret" x="130" y="414" width="300" height="56" rx="8" />
+  <text x="280" y="438" text-anchor="middle">Signing session</text>
+  <text x="280" y="457" text-anchor="middle" class="d-sub">
+    signs without prompts until lock()
+  </text>
+
+  <path class="d-edge" d="M280 470 V502" marker-end="url(#gs-arrow)" />
+
+  <rect class="d-node" x="130" y="506" width="300" height="56" rx="8" />
+  <text x="280" y="530" text-anchor="middle">Signature</text>
+  <text x="280" y="549" text-anchor="middle" class="d-sub">
+    as many as the app asks
+  </text>
+
+  <!-- signing back in reruns the ceremony -->
+  <path
+    class="d-edge d-dashed"
+    d="M430 534 H560 V84 H438"
+    marker-end="url(#gs-arrow)"
+  />
+  <text x="572" y="290" class="d-sub">sign back in:</text>
+  <text x="572" y="310" class="d-sub">same ceremony,</text>
+  <text x="572" y="330" class="d-sub">same 32 bytes</text>
+
+  <text x="280" y="600" text-anchor="middle" class="d-note">
+    No secret is stored anywhere; a later ceremony recomputes the same accounts.
+  </text>
+</svg>

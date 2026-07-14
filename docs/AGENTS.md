@@ -2,6 +2,14 @@
 
 Guidance for authoring content in this site (`src/content/docs/`). [site/WRITING.md](../site/WRITING.md) governs voice for everything published under the mera name; this file adds the structure and mechanics specific to the docs site.
 
+## Audience
+
+The reader is a strong software engineer who may know none of blockchain, cryptography, or WebAuthn. Build explanations bottom-up: start from concrete pieces the reader can hold ("32 random bytes", "a 12-word phrase"), then assemble them into the larger mechanism.
+
+Define every complex concept or acronym on first mention in a page: one to three sentences, tied to the step the reader is in, linking the owning page for depth. Later mentions on the same page reuse the short name without re-explaining. The foundations concept page (`concepts/entropy-keys-and-accounts`) owns the blockchain background; glosses elsewhere link there rather than re-teaching it.
+
+Reference pages are exempt: they state facts and link to the page that teaches.
+
 ## Information architecture
 
 The site follows the Diátaxis split (<https://diataxis.fr/>): each page does one job.
@@ -47,6 +55,8 @@ The bar is simple, concise, and detailed at once: detail survives the cut, fille
 `site/WRITING.md` applies in full. The rules that carry the most weight here:
 
 - Say "account". "Wallet" is only for wallet apps: MetaMask, Phantom, the demo.
+- Say "passkey account", never "derived account". "Derive" survives as the verb: derive a key, a derivation path, address derivation.
+- Passkey accounts are the default path; secret vaults are the advanced option for secrets that predate the passkey. Never present the two as coequal alternatives.
 - Word choice fits technical documentation. Plain nouns over narrative or dramatic ones: "trade-offs", never "stories"; "complication", never "trap". A word that belongs in a blog headline gets replaced.
 - Calm explanation, no marketing. If a sentence would fit in a product brochure, rewrite it.
 - Named wallet apps are examples, never an exhaustive list.

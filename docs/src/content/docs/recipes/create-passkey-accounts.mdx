@@ -3,11 +3,15 @@ title: Create passkey accounts
 description: Numbered EVM and Solana accounts from a single ceremony, with credential pinning.
 ---
 
+import FirstVsReturning from "../../../assets/diagrams/first-vs-returning.svg";
+
 This recipe builds [passkey accounts](/concepts/passkey-accounts/), extending [Getting started](/getting-started/) with numbered EVM and Solana accounts, credential pinning, one passkey ceremony per session, and locking.
 
 Derivation and storage are app-owned; mera provides the ceremonies and signing sessions. Seeds, derivation paths, and phrases are introduced in [Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/).
 
 Prerequisites: `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a PRF-capable authenticator ([authenticator support](/concepts/authenticator-support/)).
+
+<FirstVsReturning />
 
 ## Create the passkey
 

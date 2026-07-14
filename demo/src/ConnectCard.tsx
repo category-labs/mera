@@ -9,7 +9,7 @@ import {
 import { createMnemonic, isValidMnemonic } from "./hd";
 
 const MODE_HINTS: Record<AccountMode, string> = {
-  derived:
+  passkey:
     "Accounts are derived from the passkey. A synced passkey can reproduce the same addresses on another device.",
   vault:
     "The demo encrypts a generated or imported recovery phrase in a vault that opens with the passkey.",
@@ -22,12 +22,12 @@ type ConnectCardProps = {
 };
 
 /**
- * Connect view: create or sign in with a single passkey ceremony. Derived mode
+ * Connect view: create or sign in with a single passkey ceremony. Passkey mode
  * is the default; a footer link below the card switches to vault mode for
  * importing an existing recovery phrase.
  */
 function ConnectCard({ onConnected }: ConnectCardProps): ReactElement {
-  const [mode, setMode] = useState<AccountMode>("derived");
+  const [mode, setMode] = useState<AccountMode>("passkey");
   const [username, setUsername] = useState(DEFAULT_USER);
   const [secret, setSecret] = useState("");
   const [busy, setBusy] = useState<Busy>(null);
@@ -136,7 +136,7 @@ function ConnectCard({ onConnected }: ConnectCardProps): ReactElement {
         {error && <p className="status error">{error}</p>}
       </section>
 
-      {mode === "derived" ? (
+      {mode === "passkey" ? (
         <button
           type="button"
           className="mode-switch"
@@ -149,7 +149,7 @@ function ConnectCard({ onConnected }: ConnectCardProps): ReactElement {
         <button
           type="button"
           className="mode-switch"
-          onClick={() => switchMode("derived")}
+          onClick={() => switchMode("passkey")}
           disabled={busy !== null}
         >
           ← Back to passkey accounts

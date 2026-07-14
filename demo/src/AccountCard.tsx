@@ -35,7 +35,7 @@ type AccountCardProps = {
 };
 
 /**
- * Account view: an account selector (derived mode only), then a chain toggle,
+ * Account view: an account selector (passkey mode only), then a chain toggle,
  * then the chain-specific card for the active account.
  *
  * Switching accounts or chains never triggers a passkey ceremony because every
@@ -81,7 +81,7 @@ function AccountCard({
   // bump appears until the account is revealed.
   const isTestnet = networkMode === "testnet";
   const suggestion = useMemo(() => {
-    if (!isTestnet || wallet.mode !== "derived") return null;
+    if (!isTestnet || wallet.mode !== "passkey") return null;
     const index = active.index === 0 ? 1 : 0;
     return {
       index,
@@ -142,7 +142,7 @@ function AccountCard({
 
   return (
     <div className="account-shell">
-      {wallet.mode === "derived" && (
+      {wallet.mode === "passkey" && (
         <div className="account-bar">
           <div className="account-pills" role="tablist" aria-label="Account">
             {accounts.map((slot) => (

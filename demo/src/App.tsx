@@ -9,7 +9,7 @@ import {
   type ConnectResult,
   describeError,
 } from "./connect";
-import { setDerivedAccountCount } from "./derivedWallet";
+import { setPasskeyAccountCount } from "./passkeyWallet";
 import type { NetworkMode } from "./network";
 
 /** Root component: holds the connected wallet + accounts, fetches network info. */
@@ -65,11 +65,11 @@ function App(): ReactElement {
 
   function handleConnected(result: ConnectResult) {
     setWallet(result.wallet);
-    // Derived wallets start with two accounts so transfers between demo accounts
+    // Passkey wallets start with two accounts so transfers between demo accounts
     // work immediately: the second pill is visible and the recipient chip points
     // at a real account. Vault mode has a single account.
     const count =
-      result.wallet.mode === "derived"
+      result.wallet.mode === "passkey"
         ? Math.max(result.accountCount, 2)
         : result.accountCount;
     setAccounts(
@@ -78,18 +78,18 @@ function App(): ReactElement {
       ),
     );
     setActiveIndex(0);
-    if (result.wallet.mode === "derived" && count !== result.accountCount) {
-      setDerivedAccountCount(count);
+    if (result.wallet.mode === "passkey" && count !== result.accountCount) {
+      setPasskeyAccountCount(count);
     }
   }
 
   function handleAddAccount() {
-    if (wallet?.mode !== "derived") return;
+    if (wallet?.mode !== "passkey") return;
     const next = wallet.deriveAccount(accounts.length);
     const updated = [...accounts, next];
     setAccounts(updated);
     setActiveIndex(next.index);
-    setDerivedAccountCount(updated.length);
+    setPasskeyAccountCount(updated.length);
   }
 
   function handleLock() {

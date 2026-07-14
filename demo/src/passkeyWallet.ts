@@ -1,7 +1,7 @@
 import type { PasskeyCredentialTransport } from "@category-labs/mera";
 
 /**
- * Non-secret metadata for a derived wallet created on this device.
+ * Non-secret metadata for a passkey wallet created on this device.
  *
  * It holds no key material. The app uses it to pin the right passkey with
  * `allowCredentials` on the next same-device sign-in instead of showing every
@@ -9,39 +9,39 @@ import type { PasskeyCredentialTransport } from "@category-labs/mera";
  * wallet had derived so sign-in can restore them. A fresh device has no record
  * and falls back to a discoverable sign-in.
  */
-type DerivedWalletRecord = {
+type PasskeyWalletRecord = {
   credentialId: string;
   transports?: readonly PasskeyCredentialTransport[];
   label: string;
   accountCount: number;
 };
 
-const STORAGE_KEY = "mera.demo.derivedWallet";
+const STORAGE_KEY = "mera.demo.passkeyWallet";
 
-function currentDerivedWallet(): DerivedWalletRecord | undefined {
+function currentPasskeyWallet(): PasskeyWalletRecord | undefined {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return undefined;
     const parsed: unknown = JSON.parse(raw);
-    return isDerivedWalletRecord(parsed) ? parsed : undefined;
+    return isPasskeyWalletRecord(parsed) ? parsed : undefined;
   } catch {
     return undefined;
   }
 }
 
-function rememberDerivedWallet(record: DerivedWalletRecord): void {
+function rememberPasskeyWallet(record: PasskeyWalletRecord): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
 }
 
 /** Persists a new account count so a later sign-in restores every account. */
-function setDerivedAccountCount(accountCount: number): void {
-  const existing = currentDerivedWallet();
-  if (existing) rememberDerivedWallet({ ...existing, accountCount });
+function setPasskeyAccountCount(accountCount: number): void {
+  const existing = currentPasskeyWallet();
+  if (existing) rememberPasskeyWallet({ ...existing, accountCount });
 }
 
-function isDerivedWalletRecord(value: unknown): value is DerivedWalletRecord {
+function isPasskeyWalletRecord(value: unknown): value is PasskeyWalletRecord {
   if (!value || typeof value !== "object") return false;
-  const record = value as Partial<DerivedWalletRecord>;
+  const record = value as Partial<PasskeyWalletRecord>;
   return (
     typeof record.credentialId === "string" &&
     typeof record.label === "string" &&
@@ -49,4 +49,4 @@ function isDerivedWalletRecord(value: unknown): value is DerivedWalletRecord {
   );
 }
 
-export { currentDerivedWallet, rememberDerivedWallet, setDerivedAccountCount };
+export { currentPasskeyWallet, rememberPasskeyWallet, setPasskeyAccountCount };

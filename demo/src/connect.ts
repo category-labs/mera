@@ -13,7 +13,7 @@ import {
   parseSecretVault,
   type Secp256k1SigningSession,
 } from "@category-labs/mera";
-import { currentDerivedWallet, rememberDerivedWallet } from "./derivedWallet";
+import { currentPasskeyWallet, rememberPasskeyWallet } from "./passkeyWallet";
 import {
   deriveEthereumPrivateKey,
   deriveSolanaSeed,
@@ -23,7 +23,7 @@ import {
 } from "./hd";
 
 /** The two account modes the demo offers. */
-type AccountMode = "vault" | "derived";
+type AccountMode = "vault" | "passkey";
 
 /** One numbered account with a signing session per chain. */
 type AccountSlot = {
@@ -41,14 +41,14 @@ type AccountSlot = {
 /**
  * A connected wallet with one passkey ceremony's worth of authority.
  *
- * Derived mode holds the BIP-39 master seed for the session and can mint more
+ * Passkey mode holds the BIP-39 master seed for the session and can mint more
  * numbered HD accounts with no further passkey prompt. Vault mode exposes the
  * single decrypted account from its vault. Either way, `lock()` zeroes every
  * secret the wallet still holds.
  */
 type ConnectedWallet = {
   mode: AccountMode;
-  /** Credential to pin when re-running a ceremony for this wallet; derived mode only, absent otherwise. */
+  /** Credential to pin when re-running a ceremony for this wallet; passkey mode only, absent otherwise. */
   credentialId?: string;
   /** Returns the account at `index`, deriving and caching it on first use. */
   deriveAccount(index: number): AccountSlot;
@@ -88,17 +88,17 @@ function deriveSlotFromSeed(seed: Uint8Array, index: number): AccountSlot {
   };
 }
 
-// ----- Derived mode: one PRF output is the HD master for every account -------
+// ----- Passkey mode: one PRF output is the HD master for every account -------
 
 /**
- * Builds a derived-mode wallet from a single PRF output.
+ * Builds a passkey-mode wallet from a single PRF output.
  *
  * The PRF output becomes a BIP-39 master seed held in memory for the session,
  * exactly like the signing keys are, and is zeroed alongside them on `lock()`.
  * Holding it lets "Add account" derive a new HD account without another
  * ceremony. The demo runs one ceremony per session rather than per account.
  */
-function buildDerivedWallet(
+function buildPasskeyWallet(
   prfOutput: Uint8Array,
   credentialId: string,
 ): ConnectedWallet {
@@ -113,7 +113,7 @@ function buildDerivedWallet(
   const cache = new Map<number, AccountSlot>();
 
   return {
-    mode: "derived",
+    mode: "passkey",
     credentialId,
     deriveAccount(index): AccountSlot {
       const cached = cache.get(index);
@@ -137,7 +137,7 @@ function buildDerivedWallet(
   };
 }
 
-async function createDerived(label: string): Promise<ConnectResult> {
+async function createPasskeyWallet(label: string): Promise<ConnectResult> {
   // `user.id` is left to default (32 random bytes), so every "Create" is a
   // distinct, parallel passkey rather than silently overwriting an existing one.
   const credential = await createPasskeyWithPrfOutput({
@@ -145,24 +145,24 @@ async function createDerived(label: string): Promise<ConnectResult> {
     user: { name: label, displayName: label },
   });
 
-  rememberDerivedWallet({
+  rememberPasskeyWallet({
     credentialId: credential.credentialId,
     transports: credential.transports,
     label,
     accountCount: 1,
   });
 
-  const wallet = buildDerivedWallet(
+  const wallet = buildPasskeyWallet(
     credential.prfOutput,
     credential.credentialId,
   );
   return { wallet, accountCount: 1 };
 }
 
-async function openDerived(): Promise<ConnectResult> {
+async function openPasskeyWallet(): Promise<ConnectResult> {
   // Pin to the passkey created on this device when we know it; otherwise fall
   // back to a discoverable credential so a freshly synced device still works.
-  const known = currentDerivedWallet();
+  const known = currentPasskeyWallet();
   const { prfOutput, credentialId } = await getPasskeyPrfOutput({
     rpId,
     credential: known?.credentialId
@@ -175,14 +175,14 @@ async function openDerived(): Promise<ConnectResult> {
   const record = known?.credentialId === credentialId ? known : undefined;
   const label = record?.label ?? DEFAULT_USER;
   const accountCount = record?.accountCount ?? 1;
-  rememberDerivedWallet({
+  rememberPasskeyWallet({
     credentialId,
     transports: record?.transports,
     label,
     accountCount,
   });
 
-  const wallet = buildDerivedWallet(prfOutput, credentialId);
+  const wallet = buildPasskeyWallet(prfOutput, credentialId);
   return { wallet, accountCount };
 }
 
@@ -279,11 +279,11 @@ function buildVaultWallet(slot: AccountSlot): ConnectedWallet {
 /**
  * Connects a wallet for the chosen mode and action.
  *
- * One passkey ceremony unlocks the wallet; in derived mode every numbered
+ * One passkey ceremony unlocks the wallet; in passkey mode every numbered
  * account afterwards is pure HD math with no further prompt.
  *
  * `secret` is the recovery phrase a vault-backed account is created from; every
- * other path (derived, or signing back into an existing secret vault) ignores
+ * other path (passkey, or signing back into an existing secret vault) ignores
  * it, so it is optional.
  */
 function connect(
@@ -298,13 +298,13 @@ function connect(
       ? createVaultAccount(label, secret ?? "")
       : unlockVaultAccount();
   }
-  return action === "create" ? createDerived(label) : openDerived();
+  return action === "create" ? createPasskeyWallet(label) : openPasskeyWallet();
 }
 
 /**
  * Reveals a wallet's BIP-39 recovery phrase behind a fresh passkey ceremony.
  *
- * Derived wallets re-derive the phrase from the passkey PRF output; vault-backed
+ * Passkey wallets re-derive the phrase from the passkey PRF output; vault-backed
  * wallets decrypt the generated or imported phrase from the secret vault.
  * Either way, the mnemonic is fetched on demand after fresh user verification.
  * PRF output and decrypted secret bytes are zeroed where possible before the
@@ -316,7 +316,7 @@ async function revealMnemonic(wallet: ConnectedWallet): Promise<string> {
     return decryptStoredVaultPhrase();
   }
 
-  const record = currentDerivedWallet();
+  const record = currentPasskeyWallet();
   const { prfOutput } = await getPasskeyPrfOutput({
     rpId,
     credential: wallet.credentialId

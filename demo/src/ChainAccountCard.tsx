@@ -89,7 +89,7 @@ function ChainAccountCard({
     feeReserve: bigint;
   } | null>(null);
   // Pre-fill a one-click self-transfer when a suggested recipient is offered
-  // (testnet, derived). The card remounts per account, so these initializers
+  // (testnet, passkey). The card remounts per account, so these initializers
   // re-seed on every account switch.
   const [to, setTo] = useState(() => suggestion?.address ?? "");
   const [amount, setAmount] = useState(() =>
@@ -303,7 +303,7 @@ function ChainAccountCard({
         {signed && (
           <details className="reveal" open>
             <summary>
-              {mode === "derived"
+              {mode === "passkey"
                 ? "The transaction was signed locally with a passkey-derived key."
                 : "The transaction was signed locally with a key derived from the recovery phrase."}
             </summary>

@@ -84,7 +84,7 @@ The credential is requested with fixed parameters: ES256 or RS256 key types, att
 
 The WebAuthn challenge is generated internally. The raw attestation response is not returned.
 
-A `PRF_UNAVAILABLE` failure happens after the creation ceremony has completed: the passkey exists on the authenticator, but the thrown error does not carry its metadata. The orphaned credential appears in the authenticator's passkey list.
+A `PRF_UNAVAILABLE` failure happens after the creation ceremony has completed: the passkey exists on the authenticator, but the thrown error does not carry its metadata. The credential still appears in the authenticator's passkey list.
 
 WebAuthn availability is checked before Web Crypto, so an environment missing both throws `PASSKEY_OPERATION_FAILED`.
 

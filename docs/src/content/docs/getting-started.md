@@ -37,7 +37,7 @@ const { prfOutput } = await createPasskeyWithPrfOutput({
 
 The call prompts once or twice when the authenticator needs a follow-up assertion to evaluate PRF.
 
-mera uses its fixed v1 salt for this call. The same passkey and relying party produce the same 32 bytes on any device the passkey syncs to. The result also carries the credential ID; [Derive accounts from one passkey](/recipes/derive-accounts/) stores it to pin later sign-ins.
+mera uses its fixed v1 salt for this call. The same passkey and relying party produce the same 32 bytes on any device the passkey syncs to. The result also carries the credential ID; [Create passkey accounts](/recipes/create-passkey-accounts/) stores it to pin later sign-ins.
 
 ## Derive an account
 
@@ -95,6 +95,7 @@ Without `credential`, the browser offers any discoverable passkey it holds for t
 
 ## Where next
 
-- [Derive accounts from one passkey](/recipes/derive-accounts/): numbered accounts, credential pinning, Solana keys.
-- [Derived accounts and secret vaults](/concepts/derived-accounts-and-secret-vaults/): when to reach for an encrypted vault instead of derivation.
+- [Create passkey accounts](/recipes/create-passkey-accounts/): numbered accounts, credential pinning, Solana keys.
+- [Passkey accounts](/concepts/passkey-accounts/): why the same passkey reproduces the same accounts, and what losing it means.
+- [Secret vaults](/concepts/secret-vaults/): encrypting a secret that already exists behind the passkey.
 - [API reference](/reference/): every function used on this page.

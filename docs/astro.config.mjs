@@ -32,7 +32,13 @@ const prefixRootRelativeLinks = () => (tree) => {
 export default defineConfig({
   site,
   base: base || undefined,
-  redirects: { "/demo": withBase("/") },
+  redirects: {
+    "/demo": withBase("/"),
+    "/concepts/derived-accounts-and-secret-vaults": withBase(
+      "/concepts/passkey-accounts/",
+    ),
+    "/recipes/derive-accounts": withBase("/recipes/create-passkey-accounts/"),
+  },
   markdown: {
     processor: unified({ remarkPlugins: [prefixRootRelativeLinks] }),
   },
@@ -124,15 +130,19 @@ export default defineConfig({
           items: [
             "concepts/entropy-keys-and-accounts",
             "concepts/passkeys-and-prf",
-            "concepts/derived-accounts-and-secret-vaults",
+            "concepts/passkey-accounts",
             "concepts/signing-sessions",
+            "concepts/secret-vaults",
             "concepts/security-model",
             "concepts/authenticator-support",
           ],
         },
         {
           label: "Recipes",
-          items: ["recipes/derive-accounts", "recipes/use-an-existing-secret"],
+          items: [
+            "recipes/create-passkey-accounts",
+            "recipes/use-an-existing-secret",
+          ],
         },
         {
           label: "Reference",

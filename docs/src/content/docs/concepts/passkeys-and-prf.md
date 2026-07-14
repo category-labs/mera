@@ -19,13 +19,13 @@ The requirement is not configurable. Authenticators built on CTAP's `hmac-secret
 
 The [PRF extension](https://www.w3.org/TR/webauthn-3/#prf-extension) gives each credential a pseudorandom function. The caller passes a 32-byte salt with the ceremony and the authenticator returns 32 bytes.
 
-PRF output is determined by the credential, relying party ID, and salt. Those inputs produce the same 32 bytes on every synced device; a different salt produces unrelated output. Salts act as namespaces, which is why derived accounts share one [fixed salt](/reference/get-deterministic-prf-salt-v1/) while each secret vault gets a fresh random one.
+PRF output is determined by the credential, relying party ID, and salt. Those inputs produce the same 32 bytes on every synced device; a different salt produces unrelated output. Salts act as namespaces, which is why passkey accounts share one [fixed salt](/reference/get-deterministic-prf-salt-v1/) while each secret vault gets a fresh random one.
 
 ## Using the output
 
 The output is suitable as the root secret for accounts. It is stable wherever the passkey syncs, it appears only after user verification, and it never needs to be stored: the authenticator re-evaluates it on each ceremony.
 
-Fed to a key-derivation scheme, the output produces a hierarchy of accounts; used as key material, it decrypts a vault. mera returns the output and does nothing else with it. [Derived accounts and secret vaults](/concepts/derived-accounts-and-secret-vaults/) compares the two patterns.
+Fed to a key-derivation scheme, the output produces a hierarchy of accounts; used as key material, it decrypts a vault. mera returns the output and does nothing else with it. [Passkey accounts](/concepts/passkey-accounts/) is the default pattern built on the first path; [secret vaults](/concepts/secret-vaults/) cover the second, for secrets that already exist.
 
 ## Ceremonies and prompts
 

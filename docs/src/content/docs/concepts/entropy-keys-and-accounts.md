@@ -44,5 +44,6 @@ Every step above is pure computation over 32 unpredictable bytes. mera produces 
 ## See also
 
 - [Passkeys and the PRF extension](/concepts/passkeys-and-prf/): where the 32 bytes come from and why they are stable.
-- [Derive accounts from one passkey](/recipes/derive-accounts/): this pipeline in code.
+- [Passkey accounts](/concepts/passkey-accounts/): the default pattern built on this pipeline.
+- [Create passkey accounts](/recipes/create-passkey-accounts/): the pipeline in code.
 - [Getting started](/getting-started/): the shortest path from ceremony to signature.

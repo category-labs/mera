@@ -1,9 +1,9 @@
 ---
-title: Derive accounts from one passkey
+title: Create passkey accounts
 description: Numbered EVM and Solana accounts from a single ceremony, with credential pinning.
 ---
 
-This recipe extends [Getting started](/getting-started/) with numbered EVM and Solana accounts, credential pinning, one passkey ceremony per session, and locking.
+This recipe builds [passkey accounts](/concepts/passkey-accounts/), extending [Getting started](/getting-started/) with numbered EVM and Solana accounts, credential pinning, one passkey ceremony per session, and locking.
 
 Derivation and storage are app-owned; mera provides the ceremonies and signing sessions.
 
@@ -154,4 +154,4 @@ Sessions zero their own key copies on `lock()`. The master seed is the app's buf
 
 - **Do not change the derivation after launch.** Changing the mnemonic mapping or either path changes every account address.
 - **Zero the PRF output as soon as the seed exists**, and the seed on lock. Between those two moments a compromised runtime can read them ([security model](/concepts/security-model/)).
-- **Accounts reproduce only under the same rpId.** A domain migration silently orphans them; give accounts an export path first. The phrase to show is `entropyToMnemonic` over the PRF output from a fresh assertion, the same mapping the seed step uses ([Derived accounts and secret vaults](/concepts/derived-accounts-and-secret-vaults/)).
+- **Accounts reproduce only under the same rpId.** A domain migration silently orphans them; give accounts an export path first. The phrase to show is `entropyToMnemonic` over the PRF output from a fresh assertion, the same mapping the seed step uses ([Passkey accounts](/concepts/passkey-accounts/)).

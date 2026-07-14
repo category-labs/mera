@@ -78,4 +78,4 @@ WebAuthn availability is checked before Web Crypto, so an environment missing bo
 
 - [getDeterministicPrfSaltV1](/reference/get-deterministic-prf-salt-v1/): access the default salt explicitly for protocol interoperability.
 - [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/): the same assertion, driven by a stored vault.
-- [Derive accounts from one passkey](/recipes/derive-accounts/): credential pinning in practice.
+- [Create passkey accounts](/recipes/create-passkey-accounts/): credential pinning in practice.

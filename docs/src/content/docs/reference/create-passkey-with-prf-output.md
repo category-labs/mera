@@ -76,4 +76,4 @@ If the fallback ceremony fails, the passkey from the completed creation ceremony
 
 - [createSecretVault](/reference/create-secret-vault/): low-level vault encryption with explicit PRF material.
 - [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/): create a passkey and vault with a fresh random salt.
-- [Getting started](/getting-started/): the derived-mode flow built on this call.
+- [Getting started](/getting-started/): the passkey-account flow built on this call.

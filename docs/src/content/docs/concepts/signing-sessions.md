@@ -9,7 +9,7 @@ Two constructors exist, one per curve: [createSecp256k1SigningSession](/referenc
 
 ## Independent of passkeys
 
-A session's input is a raw private key, derived from PRF output, decrypted from a vault, or imported from elsewhere; the session does not record where the key came from. The step in between, turning 32 bytes of entropy into a chain-specific private key, is app-owned by design; [derived accounts and secret vaults](/concepts/derived-accounts-and-secret-vaults/) compares the two common patterns.
+A session's input is a raw private key, derived from PRF output, decrypted from a vault, or imported from elsewhere; the session does not record where the key came from. The step in between, turning 32 bytes of entropy into a chain-specific private key, is app-owned by design; [passkey accounts](/concepts/passkey-accounts/) and [secret vaults](/concepts/secret-vaults/) describe the two sources of key material.
 
 Because a session never contacts an authenticator, signing never prompts: the one user-verification prompt happened in the ceremony that produced the entropy, and it covers any number of signatures.
 

@@ -59,4 +59,4 @@ The vault is plain JSON suitable for `localStorage`, a database, a file, or a sy
 - [decryptSecretVaultWithPasskey](/reference/decrypt-secret-vault-with-passkey/): the workflow function that performs the assertion and decryption.
 - [createSecretVault](/reference/create-secret-vault/), [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/), and [decryptSecretVault](/reference/decrypt-secret-vault/): low-level primitives for the same format.
 - [parseSecretVault](/reference/parse-secret-vault/): the validation boundary for stored JSON.
-- [Derived accounts and secret vaults](/concepts/derived-accounts-and-secret-vaults/): where the vault fits.
+- [Secret vaults](/concepts/secret-vaults/): where the vault fits.

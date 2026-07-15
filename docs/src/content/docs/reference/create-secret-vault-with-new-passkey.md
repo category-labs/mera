@@ -61,7 +61,7 @@ WebAuthn timeout in milliseconds, applied to each ceremony.
 
 ## Returns
 
-`Promise<PasskeySecretVault>`: a JSON-safe vault containing the new credential metadata, generated PRF salt, nonce, and ciphertext.
+`Promise<PasskeySecretVault>`: a JSON-safe vault containing the new credential metadata, generated PRF salt, nonce, and ciphertext. The [secret vault format](/reference/secret-vault-format/) page documents every field.
 
 ## Errors
 

@@ -68,11 +68,11 @@ Secret bytes to encrypt. Any non-empty length; the library does not interpret th
 
 ## Notes
 
-**Use a fresh random salt per secret.** A vault is bound to its `prfOutput` only, never to the credential ID or salt. Secrets encrypted using one reused PRF output share an encryption key, so their nonce/ciphertext pairs are interchangeable by anyone who can rewrite stored vault JSON.
+A vault is bound to its `prfOutput` only, never to the credential ID or salt: secrets encrypted using one reused PRF output share an encryption key, so their nonce/ciphertext pairs are interchangeable by anyone who can rewrite stored vault JSON. A fresh random salt per secret produces unrelated PRF outputs and distinct keys.
 
 The GCM nonce (12 bytes) is generated internally for each encryption, so a caller cannot accidentally reuse one.
 
-Input byte buffers are copied before async cryptographic work starts; mutating them after the call does not change the vault being produced. Caller-owned buffers are not modified or zeroed by this function; the internal copies of the PRF output and secret are zeroed before it returns. Callers that are done with their own `prfOutput` and `secret` buffers should zero them.
+Input byte buffers are copied before async cryptographic work starts; mutating them after the call does not change the vault being produced. Caller-owned buffers are not modified or zeroed by this function; the internal copies of the PRF output and secret are zeroed before it returns, so the caller's `prfOutput` and `secret` buffers are the only copies left in memory.
 
 ## See also
 

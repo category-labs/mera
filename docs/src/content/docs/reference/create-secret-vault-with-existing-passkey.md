@@ -3,7 +3,7 @@ title: createSecretVaultWithExistingPasskey
 description: Encrypts one secret into a vault using an existing passkey and a fresh random salt.
 ---
 
-Evaluates an existing passkey against a fresh random salt and encrypts one secret into a vault. Runs one `navigator.credentials.get()` ceremony, which may show browser or authenticator UI.
+Evaluates an existing passkey and encrypts one secret into a vault. Runs one `navigator.credentials.get()` ceremony, which may show browser or authenticator UI.
 
 ## Import
 
@@ -67,7 +67,7 @@ WebAuthn timeout in milliseconds.
 
 ## Returns
 
-`Promise<PasskeySecretVault>`: a JSON-safe vault containing the selected credential metadata, generated PRF salt, nonce, and ciphertext.
+`Promise<PasskeySecretVault>`: a JSON-safe vault containing the selected credential metadata, generated PRF salt, nonce, and ciphertext. The [secret vault format](/reference/secret-vault-format/) page documents every field.
 
 ## Errors
 

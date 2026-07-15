@@ -3,7 +3,7 @@ title: createPasskeyWithPrfOutput
 description: Creates a passkey and returns its deterministic PRF output in one call.
 ---
 
-Creates a passkey and returns its [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF output, using mera's fixed v1 salt by default. If [createPasskey](/reference/create-passkey/) returns no `prfOutput`, the function runs [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt, which may show a second browser prompt.
+Creates a passkey and returns its [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF output. It runs [createPasskey](/reference/create-passkey/)'s creation ceremony, which may show browser or authenticator UI; when that ceremony returns no `prfOutput`, it runs [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt, which may show a second prompt.
 
 ## Import
 
@@ -32,12 +32,26 @@ const result = await createPasskeyWithPrfOutput({
 
 Relying party identity, passed to WebAuthn.
 
-### options.user
+### options.user.name
 
-- Type: `{ id?: Uint8Array; name: string; displayName: string }`
+- Type: `string`
 - Required
 
-Same fields and constraints as on [createPasskey](/reference/create-passkey/#optionsusername): `name` and `displayName` are required, `id` is optional (1 to 64 bytes, fresh 32-byte random handle per call when omitted).
+User name displayed or stored by the authenticator.
+
+### options.user.displayName
+
+- Type: `string`
+- Required
+
+Human-readable display name for the authenticator UI.
+
+### options.user.id
+
+- Type: `Uint8Array`
+- Optional; a fresh 32-byte random handle is generated per call when omitted
+
+User handle stored with the discoverable credential. Must be 1 to 64 bytes when provided, the same constraint as on [createPasskey](/reference/create-passkey/#optionsuserid). Copied before use.
 
 ### options.prfSalt
 

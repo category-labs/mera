@@ -34,7 +34,7 @@ Authenticator transports reported by the browser when the passkey was created. O
 
 ### prfSalt
 
-The PRF salt for this secret, 32 bytes as canonical unpadded base64url. Chosen by the app per vault, and typically generated fresh and randomly; storing it lets a later ceremony reproduce the exact PRF output that keyed the encryption. The salt is not secret: without the passkey it yields nothing, because the PRF lives in the authenticator.
+The PRF salt for this secret, 32 bytes as canonical unpadded base64url. The workflow functions generate it fresh and randomly per vault; the low-level [createSecretVault](/reference/create-secret-vault/) path accepts an app-supplied salt, which must be fresh per secret. Storing it lets a later ceremony reproduce the exact PRF output that keyed the encryption. The salt is not secret: without the passkey it yields nothing, because the PRF lives in the authenticator.
 
 ### nonce
 
@@ -48,7 +48,7 @@ The AES-GCM ciphertext including its 16-byte authentication tag, base64url. The 
 
 The encryption key and the PRF output are never stored; both exist only transiently in memory. The rpId is also absent: the vault does not record which relying party it belongs to, and the unlock assertion supplies it.
 
-The credential ID and salt are stored but not authenticated: the AES-GCM additional authenticated data is a fixed constant (`mera.v1.secret.aad` plus the version), so a vault is cryptographically bound to its PRF output only. This is why each secret needs a fresh salt: vaults that share a PRF output share an encryption key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored JSON. [createSecretVault](/reference/create-secret-vault/) carries the same warning.
+The credential ID and salt are stored but not authenticated: the AES-GCM additional authenticated data is a fixed constant (`mera.v1.secret.aad` plus the version), so a vault is cryptographically bound to its PRF output only. This is why each secret needs a fresh salt: vaults that share a PRF output share an encryption key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored JSON.
 
 ## Portability
 

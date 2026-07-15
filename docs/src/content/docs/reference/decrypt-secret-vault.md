@@ -43,24 +43,30 @@ try {
 - Type: `PasskeySecretVault`
 - Required
 
-A parsed secret vault. Run untrusted stored data through [parseSecretVault](/reference/parse-secret-vault/) first.
+A parsed secret vault; [parseSecretVault](/reference/parse-secret-vault/) produces one from untrusted stored data.
 
 ### options.prfOutput
 
 - Type: `Uint8Array`
 - Required
 
-The 32-byte [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF output for the vault's stored salt. Copied before async cryptographic work starts; the caller-owned buffer is not modified or zeroed.
+The 32-byte [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF output for the vault's stored salt.
 
 ## Returns
 
-`Promise<Uint8Array>`: the decrypted secret bytes, exactly as they were passed to [createSecretVault](/reference/create-secret-vault/). The returned buffer is a fresh allocation; the library keeps no reference to it and never zeroes it. Zeroing it after use is the caller's job.
+`Promise<Uint8Array>`: the decrypted secret bytes, exactly as they were passed to [createSecretVault](/reference/create-secret-vault/).
 
 ## Errors
 
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url (already validated for vaults from `parseSecretVault`).
 - [`DECRYPT_FAILED`](/reference/errors/#decrypt_failed): AES-GCM authentication failed, meaning wrong key material or a tampered vault. The two are indistinguishable.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): Web Crypto is unavailable.
+
+## Notes
+
+The `prfOutput` buffer is copied before async cryptographic work starts; the caller-owned buffer is not modified or zeroed.
+
+The returned buffer is a fresh allocation; the library keeps no reference to it and never zeroes it. Zeroing it after use is the caller's job.
 
 ## See also
 

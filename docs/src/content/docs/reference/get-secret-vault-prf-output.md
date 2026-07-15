@@ -39,14 +39,14 @@ const secret = await decryptSecretVault({ vault, prfOutput });
 - Type: `string`
 - Required
 
-Relying party ID for the WebAuthn assertion. Must match the rpId the passkey was created under.
+Relying party ID for the WebAuthn assertion. It must match the rpId the passkey was created under.
 
 ### options.vault
 
 - Type: `PasskeySecretVault`
 - Required
 
-A parsed secret vault. Run untrusted stored data through [parseSecretVault](/reference/parse-secret-vault/) first; this function trusts the vault's shape.
+A parsed secret vault; this function trusts its shape. [parseSecretVault](/reference/parse-secret-vault/) produces one from untrusted stored data.
 
 ### options.timeout
 

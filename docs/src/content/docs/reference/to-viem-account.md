@@ -3,7 +3,7 @@ title: toViemAccount
 description: Adapts a secp256k1 signing session into a viem local account.
 ---
 
-Adapts a secp256k1 signing session into a viem local account. Each signing method hashes its input with viem's own hashers and signs the resulting 32-byte digest with `session.signDigest`, so signing shows no passkey prompt. The function lives in the `@category-labs/mera/viem` entry point, which requires `viem` (`^2.28.0`) as an optional peer dependency; the root entry point does not use viem.
+Adapts a secp256k1 signing session into a viem local account. Every signing method signs through `session.signDigest`, so signing shows no passkey prompt. The function lives in the `@category-labs/mera/viem` entry point, which requires `viem` (`^2.28.0`) as an optional peer dependency; the root entry point does not use viem.
 
 ## Import
 

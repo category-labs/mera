@@ -3,11 +3,9 @@ title: Send a transaction with viem
 description: Sign in with a passkey, derive the first EVM account, and send a transaction through viem.
 ---
 
-This recipe turns a passkey sign-in into a sent transaction. [viem](https://viem.sh) is a TypeScript client library for EVM chains (chains that run the Ethereum Virtual Machine); [toViemAccount](/reference/to-viem-account/) adapts a [signing session](/concepts/signing-sessions/) into the account shape viem accepts, so viem signs and broadcasts while the key stays in the session.
+This recipe turns a passkey sign-in into a sent transaction. Prerequisites: `@category-labs/mera`, `viem`, `@scure/bip32`, and `@scure/bip39` installed, a PRF-capable authenticator ([authenticator support](/authenticator-support/)), an existing passkey ([Create passkey accounts](/recipes/create-passkey-accounts/) covers the first visit), and test funds on the sending address. PRF is the [WebAuthn](https://www.w3.org/TR/webauthn-3/) extension that makes a passkey return deterministic secret bytes; [Passkeys and PRF](/concepts/passkeys-and-prf/) explains the mechanism.
 
-Derivation and client setup are app-owned; mera provides the ceremony, the session, and the adapter.
-
-Prerequisites: `@category-labs/mera`, `viem`, `@scure/bip32`, and `@scure/bip39` installed, a PRF-capable authenticator ([authenticator support](/authenticator-support/)), an existing passkey ([Create passkey accounts](/recipes/create-passkey-accounts/) covers the first visit), and test funds on the sending address.
+[viem](https://viem.sh) is a TypeScript client library for EVM chains (chains that run the Ethereum Virtual Machine); [toViemAccount](/reference/to-viem-account/) adapts a [signing session](/concepts/signing-sessions/) into the account shape viem accepts, so viem signs and broadcasts while the key stays in the session. Derivation and client setup are app-owned; mera provides the ceremony, the session, and the adapter.
 
 ## Sign in
 
@@ -19,7 +17,7 @@ const rpId = location.hostname;
 const { prfOutput } = await getPasskeyPrfOutput({ rpId });
 ```
 
-One ceremony, one user-verification prompt, and the only prompt on this page. Without `credential`, the browser offers every discoverable passkey for the domain; [Create passkey accounts](/recipes/create-passkey-accounts/) shows pinning the stored credential ID.
+The call runs one ceremony with one user-verification prompt, the only prompt in this recipe. Without `credential`, the browser offers every discoverable passkey for the domain; [Create passkey accounts](/recipes/create-passkey-accounts/) shows pinning the stored credential ID.
 
 ## Derive the key
 

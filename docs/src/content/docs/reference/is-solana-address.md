@@ -32,7 +32,7 @@ The string to check.
 
 ## Returns
 
-`boolean`, and a type predicate for `SolanaAddress`. Decode failures are caught internally and return `false`.
+`boolean`, and a type predicate for `SolanaAddress`.
 
 ## Errors
 

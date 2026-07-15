@@ -45,11 +45,11 @@ try {
 }
 ```
 
-The function copies the secret before the passkey prompt and zeroes its internal secret and PRF output before settling. The `finally` zeroes the caller-owned encoded phrase. A private key is encrypted the same way: pass its raw bytes as `secret` instead of encoded text. The [vault format](/reference/secret-vault-format/) stores everything needed for the later ceremony.
+The function copies the secret before the passkey prompt and zeroes its internal secret and PRF output before settling. PRF output is the deterministic secret bytes the passkey returns through the [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF extension, and it keys the encryption; [Passkeys and PRF](/concepts/passkeys-and-prf/) explains the mechanism. The `finally` zeroes the caller-owned encoded phrase. A private key is encrypted the same way: pass its raw bytes as `secret` instead of encoded text. The [vault format](/reference/secret-vault-format/) stores everything needed for the later ceremony.
 
 ## Unlock
 
-One ceremony, pinned automatically to the credential stored in the vault:
+The unlock runs one ceremony, pinned automatically to the credential stored in the vault:
 
 ```ts
 import {

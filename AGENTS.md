@@ -54,7 +54,7 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 
 ### Checks
 
-Run `npm run check` before pushing; biome verifies formatting and lint across the repository, including CSS and SVG files. [CONTRIBUTING.md](./CONTRIBUTING.md) documents the remaining checks and when each applies.
+Before pushing, run the checks documented in [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### Pull Requests
 

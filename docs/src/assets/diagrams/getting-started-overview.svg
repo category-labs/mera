@@ -12,8 +12,8 @@
     authenticator, and receives 32 secret bytes, the same bytes on every
     sign-in. The app turns those bytes into an account key. Back in mera, a
     signing session signs with the key held in memory. A dashed return path
-    shows signing back in: the same passkey returns the same 32 bytes. No
-    secret is stored anywhere.
+    shows signing back in: the same passkey returns the same 32 bytes. No secret
+    is stored anywhere.
   </title>
   <defs>
     <marker

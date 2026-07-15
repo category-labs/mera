@@ -30,6 +30,11 @@ jobs:
         with:
           path: docs
           node-version: 24
+          # The action restores node_modules/.astro from any older commit's
+          # cache; a stale content-layer store makes the build emit module
+          # imports that no longer resolve. The cache only holds optimized
+          # remote images, which this site does not use.
+          cache: "false"
         env:
           DOCS_SITE: https://mera.category.xyz
 

@@ -70,9 +70,9 @@ const record =
 localStorage.setItem("app.derivedCredential", JSON.stringify(record));
 ```
 
-## Hold a master seed for the session
+## Hold a seed for the session
 
-Turn the PRF output into a [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) master seed once, zero the output, and keep the seed in memory for the session. The master seed is the one secret every account below derives from, so deriving account 3 later is pure HD (hierarchical deterministic) math with no further prompt.
+Turn the PRF output into a [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed once, zero the output, and keep the seed in memory for the session. The seed is the one secret every account below derives from, so deriving account 3 later is pure HD (hierarchical deterministic) math with no further prompt.
 
 ```ts
 import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
@@ -152,7 +152,7 @@ for (const account of accounts) {
 seed.fill(0);
 ```
 
-Sessions zero their own key copies on `lock()`. The master seed is the app's buffer, so zeroing it is the app's job.
+Sessions zero their own key copies on `lock()`. The seed is the app's buffer, so zeroing it is the app's job.
 
 ## Pitfalls
 

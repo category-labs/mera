@@ -8,10 +8,10 @@
 >
   <title>
     Pipeline from entropy to an address. Entropy, encoded as a seed phrase by
-    BIP-39, derives a master seed, then a private key via a derivation path,
-    then a public key via a one-way function, then an address. The entropy, seed
-    phrase, master seed, and private key are secret; the public key and address
-    are safe to share.
+    BIP-39, derives a seed, then a private key via a derivation path, then a
+    public key via a one-way function, then an address. The entropy, seed
+    phrase, seed, and private key are secret; the public key and address are
+    safe to share.
   </title>
   <defs>
     <marker
@@ -52,7 +52,7 @@
   <text x="152" y="107" class="d-note">key derivation (KDF)</text>
 
   <rect class="d-secret" x="30" y="132" width="220" height="56" rx="8" />
-  <text x="140" y="156" text-anchor="middle">Master seed</text>
+  <text x="140" y="156" text-anchor="middle">Seed</text>
   <text x="140" y="175" text-anchor="middle" class="d-sub">
     extends into a tree of keys
   </text>

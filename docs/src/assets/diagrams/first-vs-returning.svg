@@ -11,9 +11,9 @@
     creates the passkey and the app stores the credential metadata, credentialId
     and transports, which holds no key material. On a returning visit,
     getPasskeyPrfOutput signs in using the stored metadata. The PRF output
-    becomes the master seed through BIP-39, held in memory for the session, and
-    HD derivation by index produces the EVM and Solana signing sessions, ended
-    by lock().
+    becomes the seed through BIP-39, held in memory for the session, and HD
+    derivation by index produces the EVM and Solana signing sessions, ended by
+    lock().
   </title>
   <defs>
     <marker
@@ -77,7 +77,7 @@
   <text x="520" y="242" class="d-sub">BIP-39</text>
 
   <rect class="d-secret" x="384" y="264" width="248" height="56" rx="8" />
-  <text x="508" y="288" text-anchor="middle">Master seed</text>
+  <text x="508" y="288" text-anchor="middle">Seed</text>
   <text x="508" y="307" text-anchor="middle" class="d-sub">
     held in memory for the session
   </text>

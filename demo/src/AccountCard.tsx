@@ -39,7 +39,7 @@ type AccountCardProps = {
  * then the chain-specific card for the active account.
  *
  * Switching accounts or chains never triggers a passkey ceremony because every
- * account was derived from the one master seed the wallet already holds.
+ * account was derived from the one seed the wallet already holds.
  */
 function AccountCard({
   wallet,

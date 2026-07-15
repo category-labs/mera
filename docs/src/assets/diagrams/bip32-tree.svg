@@ -7,8 +7,8 @@
   class="mera-diagram"
 >
   <title>
-    One master seed derives a tree of keys. The BIP-44 paths m/44'/60'/0'/0/0
-    and m/44'/60'/0'/0/1 name two EVM accounts, and the SLIP-0010 path
+    One seed derives a tree of keys. The BIP-44 paths m/44'/60'/0'/0/0 and
+    m/44'/60'/0'/0/1 name two EVM accounts, and the SLIP-0010 path
     m/44'/501'/0'/0' names a Solana account. The same seed and path produce the
     same key on any machine.
   </title>
@@ -27,7 +27,7 @@
   </defs>
 
   <rect class="d-secret" x="230" y="20" width="180" height="44" rx="8" />
-  <text x="320" y="48" text-anchor="middle">Master seed</text>
+  <text x="320" y="48" text-anchor="middle">Seed</text>
 
   <path class="d-edge" d="M320 64 L118 190" marker-end="url(#bt-arrow)" />
   <path class="d-edge" d="M320 64 V190" marker-end="url(#bt-arrow)" />

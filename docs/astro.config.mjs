@@ -141,6 +141,7 @@ export default defineConfig({
           label: "Recipes",
           items: [
             "recipes/create-passkey-accounts",
+            "recipes/send-a-transaction-with-viem",
             "recipes/use-an-existing-secret",
           ],
         },

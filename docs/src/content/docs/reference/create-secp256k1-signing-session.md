@@ -3,7 +3,7 @@ title: createSecp256k1SigningSession
 description: Creates an explicitly lockable signing session from a secp256k1 private key.
 ---
 
-Creates an explicitly lockable signing session from a secp256k1 private key.
+Creates an explicitly lockable signing session from a [secp256k1](/concepts/entropy-keys-and-accounts/) private key.
 
 ## Import
 
@@ -41,7 +41,7 @@ session.lock();
 - Type: `Uint8Array`
 - Required
 
-secp256k1 private key. Must be exactly 32 bytes and a valid scalar. Copied into one session-owned snapshot; the input buffer is zeroed before the call returns or throws. Callers holding the key inside another structure (an `HDKey`, for example) should pass a copy.
+secp256k1 private key. Must be exactly 32 bytes and a valid scalar, an integer inside the curve's private-key range. Copied into one session-owned snapshot; the input buffer is zeroed before the call returns or throws. Callers holding the key inside another structure (an `HDKey`, for example) should pass a copy.
 
 ## Returns
 
@@ -53,7 +53,7 @@ A `Secp256k1SigningSession`, unlocked.
 
 ### signDigest(digest32)
 
-Signs a 32-byte digest without prehashing it and resolves to a `Secp256k1Signature`: `compact` (64 bytes, `r || s`, low-S) plus `recovery` (0 or 1).
+Signs a 32-byte digest without prehashing it and resolves to a `Secp256k1Signature`: `compact` (64 bytes, `r || s`, low-S: `s` lies in the lower half of the curve order) plus `recovery` (0 or 1).
 
 ### lock()
 
@@ -83,7 +83,7 @@ Signing needs no passkey ceremony and shows no prompt; the session signs as ofte
 
 The digest is copied before signing; the original is not modified.
 
-The recovery ID is declared `0 | 1`. Values 2 and 3 exist in ECDSA but require the signature's `r` to reach the curve order, which happens with probability around 2^-127; if it ever did, the call would fail loudly with [`INPUT_INVALID`](/reference/errors/#input_invalid) rather than return a signature that cannot be address-recovered.
+The recovery ID is declared `0 | 1`. Values 2 and 3 exist in ECDSA, the signature algorithm secp256k1 uses, but require the signature's `r` to reach the curve order, which happens with probability around 2^-127; if it ever did, the call would fail loudly with [`INPUT_INVALID`](/reference/errors/#input_invalid) rather than return a signature that cannot be address-recovered.
 
 ## See also
 

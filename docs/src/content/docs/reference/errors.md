@@ -45,7 +45,7 @@ WebAuthn failed, was cancelled, returned an unexpected credential, or the creden
 
 ### CRYPTO_UNAVAILABLE
 
-Web Crypto is unavailable. In practice this means the page is running outside a secure context, or in a runtime without `globalThis.crypto`.
+Web Crypto is unavailable. In practice this means the page is running outside a secure context (HTTPS, or `localhost` during development), or in a runtime without `globalThis.crypto`.
 
 ### PRF_UNAVAILABLE
 
@@ -57,11 +57,11 @@ A signing call was made after the session's `lock()`. Locking is permanent; new 
 
 ### DECRYPT_FAILED
 
-AES-GCM authentication failed while decrypting a vault: wrong key material, or tampered ciphertext or additional authenticated data. The two cases are indistinguishable by design; GCM authenticates before it decrypts.
+[AES-GCM](/concepts/secret-vaults/#how-a-vault-works) authentication failed while decrypting a vault: wrong key material, or tampered ciphertext or [additional authenticated data](/reference/secret-vault-format/#what-is-deliberately-absent). The two cases are indistinguishable by design; GCM authenticates before it decrypts.
 
 ### INPUT_INVALID
 
-A caller-supplied value at a public boundary did not satisfy a length, range, encoding, or curve (scalar or point) constraint. Each function's Errors section lists its specific conditions.
+A caller-supplied value at a public boundary did not satisfy a length, range, encoding, or curve constraint (a private key that is not a valid scalar, a public key that is not a valid point). Each function's Errors section lists its specific conditions.
 
 ### VAULT_FORMAT_INVALID
 

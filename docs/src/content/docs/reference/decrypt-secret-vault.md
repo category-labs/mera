@@ -70,6 +70,6 @@ The returned buffer is a fresh allocation; the library keeps no reference to it 
 
 ## See also
 
-- [decryptSecretVaultWithPasskey](/reference/decrypt-secret-vault-with-passkey/): perform the assertion and decryption in one call.
+- [decryptSecretVaultWithPasskey](/reference/decrypt-secret-vault-with-passkey/): perform the [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) and decryption in one call.
 - [Use an existing secret](/recipes/use-an-existing-secret/): create, store, and decrypt with the zeroing pattern.
 - [Secret vault format](/reference/secret-vault-format/): what the ciphertext actually contains.

@@ -5,7 +5,7 @@ description: Create numbered EVM and Solana accounts from one passkey ceremony, 
 
 import FirstVsReturning from "../../../assets/diagrams/first-vs-returning.svg";
 
-This recipe builds [passkey accounts](/concepts/passkey-accounts/), extending [Getting started](/getting-started/) with numbered EVM (Ethereum Virtual Machine) and Solana accounts, credential pinning, one passkey ceremony per session, and locking. It requires `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a PRF-capable authenticator ([authenticator support](/authenticator-support/)). PRF is the [WebAuthn](https://www.w3.org/TR/webauthn-3/) extension that makes a passkey return deterministic secret bytes; [Passkeys and PRF](/concepts/passkeys-and-prf/) explains the mechanism.
+This recipe builds [passkey accounts](/concepts/passkey-accounts/), extending [Getting started](/getting-started/) with numbered EVM (Ethereum Virtual Machine) and Solana accounts, credential pinning, one passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) per session, and locking. It requires `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a PRF-capable authenticator ([authenticator support](/authenticator-support/)). PRF is the [WebAuthn](https://www.w3.org/TR/webauthn-3/) extension that makes a passkey return deterministic secret bytes; [Passkeys and PRF](/concepts/passkeys-and-prf/) explains the mechanism.
 
 Derivation and storage are app-owned; mera provides the ceremonies and signing sessions. Seeds, derivation paths, and phrases are introduced in [Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/).
 
@@ -23,7 +23,7 @@ const created = await createPasskeyWithPrfOutput({
   user: { name: "account@example.com", displayName: "Example account" },
 });
 
-// The seed comes from the sign-in assertion below, so this flow never uses
+// The seed comes from the sign-in ceremony below, so this flow never uses
 // the create-time PRF output; zero it right away.
 created.prfOutput.fill(0);
 ```
@@ -32,7 +32,7 @@ created.prfOutput.fill(0);
 
 ## Remember the credential
 
-Store the credential metadata. It holds no key material; its only job is letting the next sign-in pin the exact passkey instead of showing every discoverable credential for the domain.
+Store the credential metadata. It holds no key material; its only job is letting the next sign-in pin the exact passkey instead of showing every [discoverable credential](/concepts/passkeys-and-prf/) the authenticator holds for the domain.
 
 ```ts
 localStorage.setItem(
@@ -70,7 +70,7 @@ localStorage.setItem("app.derivedCredential", JSON.stringify(record));
 
 ## Hold a seed for the session
 
-Turn the PRF output into a [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed once, zero the output, and keep the seed in memory for the session. The seed is the one secret every account below derives from, so deriving account 3 later is pure HD (hierarchical deterministic) math with no further prompt.
+Turn the PRF output into a [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed once, [zero](/concepts/security-model/#what-the-library-handles) the output, and keep the seed in memory for the session. The seed is the one secret every account below derives from, so deriving account 3 later is pure HD (hierarchical deterministic) math with no further prompt.
 
 ```ts
 import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
@@ -103,7 +103,7 @@ function deriveEvmAccount(seed: Uint8Array, index: number) {
 }
 ```
 
-Solana uses [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md), the Ed25519 counterpart of BIP-32, on `m/44'/501'/{index}'/0'`, the path Phantom and Solflare use (501 is Solana's coin type). A hardened step is one that requires the parent private key, and Ed25519 supports only hardened steps, so the implementation is a short chain of HMAC (keyed hash) calls:
+Solana uses [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md), the [Ed25519](/concepts/entropy-keys-and-accounts/) counterpart of BIP-32, on `m/44'/501'/{index}'/0'`, the path Phantom and Solflare use (501 is Solana's coin type). A hardened step is one that requires the parent private key, and Ed25519 supports only hardened steps, so the implementation is a short chain of HMAC (keyed hash) calls:
 
 ```ts
 import {
@@ -156,4 +156,4 @@ Sessions zero their own key copies on `lock()`. The seed is the app's buffer, so
 
 - **Do not change the derivation after launch.** Changing the mnemonic mapping or either path changes every account address.
 - **Zero the PRF output as soon as the seed exists**, and the seed on lock. Between those two moments a compromised runtime can read them ([security model](/concepts/security-model/)).
-- **Accounts reproduce only under the same rpId.** A domain migration leaves them unreachable, with no error until someone tries to sign in; give accounts an export path first. The phrase to show is `entropyToMnemonic` over the PRF output from a fresh assertion, the same mapping the seed step uses ([Passkey accounts](/concepts/passkey-accounts/)).
+- **Accounts reproduce only under the same [rpId](/concepts/passkeys-and-prf/)**, the domain the passkey is bound to. A domain migration leaves them unreachable, with no error until someone tries to sign in; give accounts an export path first. The phrase to show is `entropyToMnemonic` over the PRF output from a fresh sign-in ceremony, the same mapping the seed step uses ([Passkey accounts](/concepts/passkey-accounts/)).

@@ -26,7 +26,7 @@ Always `1`. [parseSecretVault](/reference/parse-secret-vault/) rejects anything 
 
 ### credential.credentialId
 
-The passkey credential that unlocks this vault, as canonical unpadded base64url. Stored so the unlock assertion can pin itself to the right passkey instead of letting the browser offer every discoverable credential.
+The passkey credential that unlocks this vault, as canonical unpadded [base64url](https://datatracker.ietf.org/doc/html/rfc4648#section-5). Stored so the unlock [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) can pin itself to the right passkey instead of letting the browser offer every discoverable credential.
 
 ### credential.transports
 
@@ -38,11 +38,11 @@ The PRF salt for this secret, 32 bytes as canonical unpadded base64url. The work
 
 ### nonce
 
-The 12-byte AES-GCM nonce, base64url. Generated internally by [createSecretVault](/reference/create-secret-vault/) for each encryption.
+The 12-byte [AES-GCM](/concepts/secret-vaults/#how-a-vault-works) nonce, base64url. Generated internally by [createSecretVault](/reference/create-secret-vault/) for each encryption.
 
 ### ciphertext
 
-The AES-GCM ciphertext including its 16-byte authentication tag, base64url. The plaintext is the secret exactly as it was passed in; the library never interprets it.
+The AES-GCM ciphertext including its 16-byte authentication tag, the value decryption checks to detect tampering, base64url. The plaintext is the secret exactly as it was passed in; the library never interprets it.
 
 ## What is deliberately absent
 

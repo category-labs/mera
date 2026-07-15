@@ -28,7 +28,7 @@ const { credentialId, prfOutput } = await getPasskeyPrfOutput({
 - Type: `string`
 - Required
 
-Relying party ID for the [WebAuthn](https://www.w3.org/TR/webauthn-3/) assertion.
+Relying party ID for the [WebAuthn](https://www.w3.org/TR/webauthn-3/) [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts).
 
 ### options.credential
 

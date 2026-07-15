@@ -5,7 +5,7 @@ description: Returns mera's fixed v1 deterministic PRF salt.
 
 Returns mera's fixed v1 deterministic PRF salt: `sha256("mera.v1.deterministic.prf")`. The PRF output functions use this value internally when `prfSalt` is omitted; this helper supports explicit protocol interoperability and custom composition.
 
-The salt will not change across library versions, so one passkey assertion against it produces one stable 32-byte PRF output per credential and relying party. [Passkey accounts](/concepts/passkey-accounts/) are built on that stability.
+The salt will not change across library versions, so one passkey [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) against it produces one stable 32-byte PRF output per credential and relying party. [Passkey accounts](/concepts/passkey-accounts/) are built on that stability.
 
 ## Import
 

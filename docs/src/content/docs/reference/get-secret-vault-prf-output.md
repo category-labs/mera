@@ -3,7 +3,7 @@ title: getSecretVaultPrfOutput
 description: Performs the WebAuthn assertion needed to unlock a secret vault.
 ---
 
-Performs the [WebAuthn](https://www.w3.org/TR/webauthn-3/) assertion needed to unlock a secret vault. Runs one `navigator.credentials.get()` ceremony, which may show browser or authenticator UI.
+Performs the [WebAuthn](https://www.w3.org/TR/webauthn-3/) [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) needed to unlock a secret vault. Runs one `navigator.credentials.get()` ceremony, which may show browser or authenticator UI.
 
 Reads the credential metadata and PRF salt out of a parsed vault and delegates to [getPasskeyPrfOutput](/reference/get-passkey-prf-output/), so the assertion is automatically pinned to the credential that encrypted the secret.
 

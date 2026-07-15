@@ -78,6 +78,6 @@ Input byte buffers are copied before async cryptographic work starts; mutating t
 
 - [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/): create a passkey and vault in one workflow.
 - [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/): create a vault with an existing passkey.
-- [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/) and [decryptSecretVault](/reference/decrypt-secret-vault/): the assertion and decryption that recover the secret.
+- [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/) and [decryptSecretVault](/reference/decrypt-secret-vault/): the [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) and decryption that recover the secret.
 - [Use an existing secret](/recipes/use-an-existing-secret/): the full flow with zeroing.
 - [Security model](/concepts/security-model/#one-output-one-purpose): why PRF outputs must not be reused across purposes.

@@ -71,12 +71,12 @@
     }
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.3",
+    "@biomejs/biome": "2.5.4",
     "@playwright/test": "^1.61.1",
     "@types/node": "^25.9.3",
     "publint": "^0.3.21",
     "typescript": "^6.0.3",
-    "viem": "^2.52.2"
+    "viem": "^2.55.2"
   },
   "engines": {
     "node": ">=24"

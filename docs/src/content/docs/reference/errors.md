@@ -35,7 +35,7 @@ try {
 }
 ```
 
-A type guard: returns `true` when the value is a `MeraError` instance. Narrow with it first, then branch on `code`.
+`isMeraError` is a type guard that returns `true` when the value is a `MeraError` instance, narrowing the value so `code` can be branched on.
 
 ## Codes
 
@@ -49,11 +49,11 @@ Web Crypto is unavailable. In practice this means the page is running outside a 
 
 ### PRF_UNAVAILABLE
 
-The authenticator did not enable PRF, or did not return a usable 32-byte PRF output. On the create path this fires after the creation ceremony has completed, so the passkey exists on the authenticator even though the error carries no metadata; [createPasskey](/reference/create-passkey/) documents the caveat. [Authenticator support](/authenticator-support/) lists tested compatible stacks.
+The authenticator did not enable PRF, or did not return a usable 32-byte PRF output. On the create path this fires after the creation ceremony has completed, so the passkey exists on the authenticator even though the error carries no metadata ([createPasskey](/reference/create-passkey/) documents the create path). [Authenticator support](/authenticator-support/) lists tested compatible stacks.
 
 ### SESSION_LOCKED
 
-A signing call was made after the session's `lock()`. Locking is permanent; recover by building a new session from fresh key material.
+A signing call was made after the session's `lock()`. Locking is permanent; new signatures require a new session built from fresh key material.
 
 ### DECRYPT_FAILED
 

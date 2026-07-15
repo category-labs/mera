@@ -6,7 +6,7 @@ description: How random bytes become a private key, an address, and a reproducib
 import DerivationPipeline from "../../../assets/diagrams/derivation-pipeline.svg";
 import Bip32Tree from "../../../assets/diagrams/bip32-tree.svg";
 
-The blockchain background the rest of the docs assume: how 32 random bytes become a private key, an account, and a reproducible family of accounts. Readers who know [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) and [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) can skip to [Passkeys and the PRF extension](/concepts/passkeys-and-prf/).
+The rest of the docs assume the blockchain background this page teaches: how 32 random bytes become a private key, an account, and a reproducible family of accounts. Readers who know [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) and [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) can skip to [Passkeys and the PRF extension](/concepts/passkeys-and-prf/).
 
 <DerivationPipeline />
 
@@ -46,7 +46,7 @@ A wallet app that follows the same standards (MetaMask and Phantom are two) turn
 
 ## Where mera fits
 
-mera supplies the root: a passkey ceremony returns 32 bytes of PRF output, and the app uses them as the entropy for this pipeline. Derivation, paths, and phrases are app-owned; the library returns entropy and signs.
+mera supplies the root: a passkey ceremony returns 32 bytes of PRF output, secret bytes the passkey recomputes deterministically ([Passkeys and PRF](/concepts/passkeys-and-prf/) explains how), and the app uses them as the entropy for this pipeline. Derivation, paths, and phrases are app-owned; the library returns entropy and signs.
 
 ## See also
 

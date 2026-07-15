@@ -47,7 +47,7 @@ Relying party ID for the [WebAuthn](https://www.w3.org/TR/webauthn-3/) assertion
 - Type: `PasskeySecretVault`
 - Required
 
-A parsed secret vault. Run untrusted stored data through [parseSecretVault](/reference/parse-secret-vault/) first. The assertion is restricted to the credential stored in the vault.
+A parsed secret vault; [parseSecretVault](/reference/parse-secret-vault/) produces one from untrusted stored data. The assertion is restricted to the credential stored in the vault.
 
 ### options.timeout
 

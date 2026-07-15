@@ -7,7 +7,7 @@ import GettingStartedOverview from "../../assets/diagrams/getting-started-overvi
 
 Prerequisites:
 
-- A browser with [WebAuthn](https://www.w3.org/TR/webauthn-3/) (the browser standard for signing in with key pairs instead of passwords), in a secure context: HTTPS, or `localhost` during development.
+- A browser with [WebAuthn](https://www.w3.org/TR/webauthn-3/) (the browser standard for signing in with key pairs instead of passwords; [Passkeys and the PRF extension](/concepts/passkeys-and-prf/) covers the background), in a secure context: HTTPS, or `localhost` during development.
 - A passkey authenticator that supports the WebAuthn PRF extension. [Authenticator support](/authenticator-support/) lists the combinations known to work; 1Password and iCloud Keychain are good first choices.
 
 <GettingStartedOverview />
@@ -39,7 +39,7 @@ const { prfOutput } = await createPasskeyWithPrfOutput({
 });
 ```
 
-The call prompts once or twice when the authenticator needs a follow-up assertion to evaluate PRF.
+The call prompts once, or twice when the authenticator needs a follow-up assertion to evaluate PRF.
 
 mera uses its fixed v1 salt for this call. The `rpId` is the relying party ID, the domain the passkey is bound to. The same passkey and relying party produce the same 32 bytes on any device the passkey syncs to. The result also carries the credential ID; [Create passkey accounts](/recipes/create-passkey-accounts/) stores it to pin later sign-ins.
 
@@ -71,8 +71,7 @@ import {
 } from "@category-labs/mera";
 
 const session = createSecp256k1SigningSession({
-  // Copy out of the HDKey so the session can own and later zero the buffer.
-  consumePrivateKey: new Uint8Array(node.privateKey),
+  consumePrivateKey: node.privateKey,
 });
 
 const address = getEvmAddress(session.publicKey);

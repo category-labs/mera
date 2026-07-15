@@ -1,11 +1,11 @@
 ---
 title: Create passkey accounts
-description: Numbered EVM and Solana accounts from a single ceremony, with credential pinning.
+description: Create numbered EVM and Solana accounts from one passkey ceremony, with credential pinning.
 ---
 
 import FirstVsReturning from "../../../assets/diagrams/first-vs-returning.svg";
 
-This recipe builds [passkey accounts](/concepts/passkey-accounts/), extending [Getting started](/getting-started/) with numbered EVM and Solana accounts, credential pinning, one passkey ceremony per session, and locking. It requires `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a PRF-capable authenticator ([authenticator support](/authenticator-support/)).
+This recipe builds [passkey accounts](/concepts/passkey-accounts/), extending [Getting started](/getting-started/) with numbered EVM (Ethereum Virtual Machine) and Solana accounts, credential pinning, one passkey ceremony per session, and locking. It requires `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a PRF-capable authenticator ([authenticator support](/authenticator-support/)). PRF is the [WebAuthn](https://www.w3.org/TR/webauthn-3/) extension that makes a passkey return deterministic secret bytes; [Passkeys and PRF](/concepts/passkeys-and-prf/) explains the mechanism.
 
 Derivation and storage are app-owned; mera provides the ceremonies and signing sessions. Seeds, derivation paths, and phrases are introduced in [Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/).
 
@@ -28,7 +28,7 @@ const created = await createPasskeyWithPrfOutput({
 created.prfOutput.fill(0);
 ```
 
-`user.id` is left to its default, a fresh 32-byte random handle, so every create call makes a distinct, parallel passkey rather than silently overwriting an existing one.
+`user.id` is left to its default, a fresh 32-byte random handle, so every create call makes a distinct, parallel passkey.
 
 ## Remember the credential
 
@@ -61,8 +61,8 @@ const { prfOutput, credentialId } = await getPasskeyPrfOutput({
   credential: known,
 });
 
-// The ceremony reports which credential was actually used; the person may
-// have picked a different passkey than the stored one.
+// The ceremony reports which credential was used; with no stored record,
+// the browser may have offered any discoverable passkey for the domain.
 const record =
   known?.credentialId === credentialId ? known : { credentialId };
 localStorage.setItem("app.derivedCredential", JSON.stringify(record));
@@ -97,8 +97,7 @@ function deriveEvmAccount(seed: Uint8Array, index: number) {
   const node = HDKey.fromMasterSeed(seed).derive(`m/44'/60'/0'/0/${index}`);
   if (node.privateKey === null) throw new Error("derivation produced no key");
   const session = createSecp256k1SigningSession({
-    // Copy out of the HDKey so the session can own and later zero the buffer.
-    consumePrivateKey: new Uint8Array(node.privateKey),
+    consumePrivateKey: node.privateKey,
   });
   return { session, address: getEvmAddress(session.publicKey) };
 }
@@ -134,7 +133,7 @@ function deriveSolanaAccount(seed: Uint8Array, index: number) {
 }
 ```
 
-The derivation paths are an app choice; these two are the shared wallet conventions. A phrase imported into a wallet app that follows them (MetaMask and Phantom are two) reproduces the same addresses, so accounts keep an exit path that does not depend on mera.
+The derivation paths are an app choice; these two are the conventions wallet apps share. A phrase imported into a wallet app that follows them (MetaMask and Phantom are two) reproduces the same addresses, so accounts keep an exit path that does not depend on mera.
 
 Build the account list from these helpers:
 

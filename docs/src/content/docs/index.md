@@ -1,9 +1,9 @@
 ---
 title: mera
-description: Derive accounts on any chain and platform from a passkey.
+description: Accounts on any chain and platform, backed by a passkey.
 template: splash
 hero:
-  tagline: Derive accounts on any chain and platform from a passkey.
+  tagline: Accounts on any chain and platform, backed by a passkey.
   actions:
     - text: Getting started
       link: /getting-started/

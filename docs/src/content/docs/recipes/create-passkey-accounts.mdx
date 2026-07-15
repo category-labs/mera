@@ -5,11 +5,9 @@ description: Numbered EVM and Solana accounts from a single ceremony, with crede
 
 import FirstVsReturning from "../../../assets/diagrams/first-vs-returning.svg";
 
-This recipe builds [passkey accounts](/concepts/passkey-accounts/), extending [Getting started](/getting-started/) with numbered EVM and Solana accounts, credential pinning, one passkey ceremony per session, and locking.
+This recipe builds [passkey accounts](/concepts/passkey-accounts/), extending [Getting started](/getting-started/) with numbered EVM and Solana accounts, credential pinning, one passkey ceremony per session, and locking. It requires `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a PRF-capable authenticator ([authenticator support](/authenticator-support/)).
 
 Derivation and storage are app-owned; mera provides the ceremonies and signing sessions. Seeds, derivation paths, and phrases are introduced in [Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/).
-
-Prerequisites: `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a PRF-capable authenticator ([authenticator support](/authenticator-support/)).
 
 <FirstVsReturning />
 
@@ -99,7 +97,8 @@ function deriveEvmAccount(seed: Uint8Array, index: number) {
   const node = HDKey.fromMasterSeed(seed).derive(`m/44'/60'/0'/0/${index}`);
   if (node.privateKey === null) throw new Error("derivation produced no key");
   const session = createSecp256k1SigningSession({
-    consumePrivateKey: node.privateKey,
+    // Copy out of the HDKey so the session can own and later zero the buffer.
+    consumePrivateKey: new Uint8Array(node.privateKey),
   });
   return { session, address: getEvmAddress(session.publicKey) };
 }

@@ -31,7 +31,7 @@ Fixed section order:
 2. A short lead with no heading: what the function does, plus only facts no later section carries. Visible side effects belong here; functions that run WebAuthn ceremonies say so, because a browser prompt is one. Anything stated in or inferable from Parameters, Returns, or Errors is not repeated in the lead.
 3. `## Import`: a single import statement.
 4. `## Usage`: one focused, compilable example.
-5. `## Parameters`: an intro line naming the options type, then one `### options.field` subheading per field (dotted for nested fields). Under each: a `- Type:` line, a `- Required` or `- Optional` line (with the default or omission behavior), then prose.
+5. `## Parameters`: an intro line naming the options type, then one `### options.field` subheading per field (dotted for nested fields). Under each: a `- Type:` line, a `- Required` or `- Optional` line (with the default or omission behavior), then prose. Functions without an options object use one `### name` subheading per positional parameter and omit the intro line.
 6. `## Returns`: the named result type and what it contains. When the return value has members of its own, each member is documented here.
 7. `## Errors`: one bullet per error code with its trigger condition, each code linked to its anchor on the errors page.
 8. `## Notes`: copy and zeroing semantics, determinism statements, caveats. Omit the section when there is nothing to say.

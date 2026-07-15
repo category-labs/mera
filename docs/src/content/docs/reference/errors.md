@@ -13,7 +13,7 @@ class MeraError extends Error {
 }
 ```
 
-`name` is always `"MeraError"`. When a lower-level failure triggered the error (a WebAuthn rejection, a Web Crypto failure), it is attached as `cause`.
+`name` is always `"MeraError"`. When a lower-level failure triggered the error (a [WebAuthn](https://www.w3.org/TR/webauthn-3/) rejection, a Web Crypto failure), it is attached as `cause`.
 
 ## isMeraError
 

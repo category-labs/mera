@@ -57,7 +57,7 @@ Signs an arbitrary-length message and resolves to the 64-byte Ed25519 signature 
 
 ### lock()
 
-Zeroes the session-owned private-key copy and permanently locks the session; later signing throws `SESSION_LOCKED`.
+Zeroes the session-owned private-key copy and permanently locks the session; later signing throws [`SESSION_LOCKED`](/reference/errors/#session_locked).
 
 ### [Symbol.dispose]()
 

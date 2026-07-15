@@ -24,7 +24,7 @@ npm test            # library build, test typecheck, and Playwright tests
 npm run check:pack  # publishable package contents, exports, and types
 ```
 
-Run `npm test` for library or test changes. Run `npm run check:pack` when packaged files, exports, types, or package metadata change.
+`npm run check` applies to every change; `npm run format` fixes the formatting failures it reports. Run `npm test` for library or test changes. Run `npm run check:pack` when packaged files, exports, types, or package metadata change.
 
 The demo compiles against the built library:
 

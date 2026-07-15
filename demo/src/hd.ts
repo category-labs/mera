@@ -31,7 +31,7 @@ function prfOutputToMnemonic(prfOutput: Uint8Array): string {
   return entropyToMnemonic(prfOutput, wordlist);
 }
 
-/** Derives the 64-byte BIP-39 master seed (PBKDF2, empty passphrase). */
+/** Derives the 64-byte BIP-39 seed (PBKDF2, empty passphrase). */
 function mnemonicToSeed(mnemonic: string): Uint8Array {
   return mnemonicToSeedSync(mnemonic);
 }

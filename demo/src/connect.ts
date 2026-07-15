@@ -41,7 +41,7 @@ type AccountSlot = {
 /**
  * A connected wallet with one passkey ceremony's worth of authority.
  *
- * Passkey mode holds the BIP-39 master seed for the session and can mint more
+ * Passkey mode holds the BIP-39 seed for the session and can mint more
  * numbered HD accounts with no further passkey prompt. Vault mode exposes the
  * single decrypted account from its vault. Either way, `lock()` zeroes every
  * secret the wallet still holds.
@@ -52,7 +52,7 @@ type ConnectedWallet = {
   credentialId?: string;
   /** Returns the account at `index`, deriving and caching it on first use. */
   deriveAccount(index: number): AccountSlot;
-  /** Zeroes the master seed and every signing session handed out. */
+  /** Zeroes the seed and every signing session handed out. */
   lock(): void;
 };
 
@@ -65,10 +65,10 @@ const DEFAULT_USER = "nad";
 
 const rpId = location.hostname;
 
-/** Derives both chain sessions for one HD account index from the master seed. */
+/** Derives both chain sessions for one HD account index from the seed. */
 function deriveSlotFromSeed(seed: Uint8Array, index: number): AccountSlot {
   // Each derive* call returns a fresh buffer the session takes ownership of and
-  // zeroes; the master `seed` itself is never handed to a session.
+  // zeroes; the `seed` itself is never handed to a session.
   const secpSession = createSecp256k1SigningSession({
     consumePrivateKey: deriveEthereumPrivateKey(seed, index),
   });
@@ -88,12 +88,12 @@ function deriveSlotFromSeed(seed: Uint8Array, index: number): AccountSlot {
   };
 }
 
-// ----- Passkey mode: one PRF output is the HD master for every account -------
+// ----- Passkey mode: one PRF output is the HD root for every account ---------
 
 /**
  * Builds a passkey-mode wallet from a single PRF output.
  *
- * The PRF output becomes a BIP-39 master seed held in memory for the session,
+ * The PRF output becomes a BIP-39 seed held in memory for the session,
  * exactly like the signing keys are, and is zeroed alongside them on `lock()`.
  * Holding it lets "Add account" derive a new HD account without another
  * ceremony. The demo runs one ceremony per session rather than per account.
@@ -102,7 +102,7 @@ function buildPasskeyWallet(
   prfOutput: Uint8Array,
   credentialId: string,
 ): ConnectedWallet {
-  // PRF output -> BIP-39 mnemonic -> 64-byte master seed. The mnemonic string
+  // PRF output -> BIP-39 mnemonic -> 64-byte seed. The mnemonic string
   // is transient (re-derivable from a fresh ceremony for a future export flow);
   // only the zeroable seed bytes are retained.
   let seed: Uint8Array | undefined = mnemonicToSeed(

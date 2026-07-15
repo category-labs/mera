@@ -48,11 +48,10 @@ A wallet app that follows the same standards (MetaMask and Phantom are two) turn
 
 ## Where mera fits
 
-mera supplies the root: a passkey ceremony returns 32 bytes of PRF output, secret bytes the passkey recomputes deterministically ([Passkeys and PRF](/concepts/passkeys-and-prf/) explains how), and the app uses them as the entropy for this pipeline. [How mera works](/concepts/how-mera-works/) shows where this app-owned derivation sits between passkey access and signing.
+mera supplies the root: a passkey ceremony returns 32 bytes of PRF output, secret bytes the passkey recomputes deterministically ([Passkeys and PRF](/concepts/passkeys-and-prf/) explains how), and the app uses them as the entropy for this pipeline. Derivation, paths, and phrases are app-owned; the library returns entropy and signs.
 
 ## See also
 
-- [How mera works](/concepts/how-mera-works/): the boundary between passkey access, account policy, and signing.
 - [Passkeys and the PRF extension](/concepts/passkeys-and-prf/): where the 32 bytes come from and why they are stable.
 - [Passkey accounts](/concepts/passkey-accounts/): the default pattern built on this pipeline.
 - [Create passkey accounts](/recipes/create-passkey-accounts/): the pipeline in code.

@@ -129,7 +129,6 @@ export default defineConfig({
         {
           label: "Concepts",
           items: [
-            "concepts/how-mera-works",
             "concepts/entropy-keys-and-accounts",
             "concepts/passkeys-and-prf",
             "concepts/passkey-accounts",

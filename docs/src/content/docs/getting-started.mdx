@@ -14,7 +14,7 @@ Prerequisites:
 
 ## How mera works
 
-mera separates passkey access, account policy, and signing. A passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) is one WebAuthn call with user verification. The pseudorandom function (PRF) extension makes that ceremony return 32 secret bytes for a salt.
+mera separates passkey access, account policy, and signing. A passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) is one WebAuthn call with user verification. The pseudorandom function (PRF) extension makes that ceremony return 32 secret bytes.
 
 The app decides what those bytes become. A signing session then holds one private key until it is locked.
 
@@ -26,7 +26,7 @@ The application owns:
 - signing-session lifetime;
 - transaction construction, transport, or chain interaction.
 
-Keeping these decisions in the app lets the same primitives support different chains and product flows. It also makes those decisions part of the app's compatibility and security contract.
+Keeping these decisions in the app lets the same primitives support different chains and product flows.
 
 ## Install
 

@@ -3,5 +3,6 @@ node_modules/
 .astro/
 playwright-report/
 test-results/
-.claude
+.claude/*
+!.claude/settings.json
 .DS_Store

@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.json|*.jsonc|*.css|*.svg|*.astro|*.html) [ -x ./node_modules/.bin/biome ] || exit 0; out=$(./node_modules/.bin/biome check \"$f\" 2>&1) || { printf 'biome check failed for %s. Run biome format --write on it, then re-check.\\n%s\\n' \"$f\" \"$out\" >&2; exit 2; } ;; esac",
+            "timeout": 30,
+            "statusMessage": "biome check"
+          }
+        ]
+      }
+    ]
+  }
+}

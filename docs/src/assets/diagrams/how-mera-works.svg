@@ -1,0 +1,113 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 760 690"
+  width="760"
+  height="690"
+  role="img"
+  class="mera-diagram"
+>
+  <title>
+    How mera separates passkey access, app-owned account policy, and signing. A
+    passkey ceremony returns PRF output. The default path derives a private key
+    in the app. The advanced path decrypts a stored vault, then the app
+    interprets the existing secret. Both paths feed a mera signing session,
+    which produces signatures until it is locked.
+  </title>
+  <defs>
+    <marker
+      id="hmw-arrow"
+      viewBox="0 0 10 10"
+      refX="8"
+      refY="5"
+      markerWidth="7"
+      markerHeight="7"
+      orient="auto-start-reverse"
+    >
+      <path d="M0 0 L10 5 L0 10 z" class="d-head" />
+    </marker>
+  </defs>
+
+  <!-- Passkey access is shared by both paths. -->
+  <rect class="d-zone" x="160" y="24" width="440" height="182" rx="10" />
+  <text x="174" y="46" class="d-sub">mera</text>
+
+  <rect class="d-node" x="200" y="58" width="360" height="56" rx="8" />
+  <text x="380" y="82" text-anchor="middle">Passkey ceremony</text>
+  <text x="380" y="101" text-anchor="middle" class="d-sub">
+    user verification through WebAuthn
+  </text>
+
+  <path class="d-edge" d="M380 114 V142" marker-end="url(#hmw-arrow)" />
+
+  <rect class="d-secret" x="200" y="146" width="360" height="48" rx="8" />
+  <text x="380" y="175" text-anchor="middle">PRF output · 32 secret bytes</text>
+
+  <!-- The output branches into the default and advanced account paths. -->
+  <path
+    class="d-edge"
+    d="M380 194 V232 H190 V270"
+    marker-end="url(#hmw-arrow)"
+  />
+  <path
+    class="d-edge d-dashed"
+    d="M380 232 H570 V270"
+    marker-end="url(#hmw-arrow)"
+  />
+
+  <text x="190" y="252" text-anchor="middle" class="d-note">
+    Default · passkey account
+  </text>
+  <text x="570" y="252" text-anchor="middle" class="d-note">
+    Advanced · existing secret
+  </text>
+
+  <rect class="d-secret" x="40" y="274" width="300" height="64" rx="8" />
+  <text x="190" y="300" text-anchor="middle">Derive a private key</text>
+  <text x="190" y="321" text-anchor="middle" class="d-sub">
+    the app chooses the derivation
+  </text>
+
+  <rect class="d-secret" x="420" y="274" width="300" height="64" rx="8" />
+  <text x="570" y="300" text-anchor="middle">Decrypt the stored vault</text>
+  <text x="570" y="321" text-anchor="middle" class="d-sub">
+    mera returns the existing secret
+  </text>
+
+  <path
+    class="d-edge d-dashed"
+    d="M570 338 V382"
+    marker-end="url(#hmw-arrow)"
+  />
+
+  <rect class="d-secret" x="420" y="386" width="300" height="64" rx="8" />
+  <text x="570" y="412" text-anchor="middle">Interpret or derive the key</text>
+  <text x="570" y="433" text-anchor="middle" class="d-sub">
+    the secret format belongs to the app
+  </text>
+
+  <!-- Both paths produce one raw private key for a signing session. -->
+  <path
+    class="d-edge"
+    d="M190 338 V478 H380 V518"
+    marker-end="url(#hmw-arrow)"
+  />
+  <path class="d-edge d-dashed" d="M570 450 V478 H380" />
+
+  <rect class="d-zone" x="160" y="494" width="440" height="170" rx="10" />
+  <text x="174" y="516" class="d-sub">mera</text>
+
+  <rect class="d-secret" x="200" y="522" width="360" height="56" rx="8" />
+  <text x="380" y="546" text-anchor="middle">Signing session</text>
+  <text x="380" y="565" text-anchor="middle" class="d-sub">
+    owns one private key until lock
+  </text>
+
+  <path class="d-edge" d="M380 578 V606" marker-end="url(#hmw-arrow)" />
+
+  <rect class="d-node" x="200" y="610" width="360" height="42" rx="8" />
+  <text x="380" y="636" text-anchor="middle">Signature</text>
+
+  <text x="380" y="684" text-anchor="middle" class="d-note">
+    Derivation, storage, recovery, and chain interaction remain app-owned.
+  </text>
+</svg>

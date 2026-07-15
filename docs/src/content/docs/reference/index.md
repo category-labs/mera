@@ -7,9 +7,9 @@ Each exported function has its own page. Types are documented on the pages of th
 
 ## Passkeys
 
-- [createPasskey](/reference/create-passkey/): creates a discoverable, user-verified passkey with the [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF extension enabled.
 - [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/): creates a passkey and returns its deterministic PRF output in one call.
 - [getPasskeyPrfOutput](/reference/get-passkey-prf-output/): requests a passkey PRF evaluation and returns the deterministic output.
+- [createPasskey](/reference/create-passkey/): creates a discoverable, user-verified passkey with the [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF extension enabled.
 - [getDeterministicPrfSaltV1](/reference/get-deterministic-prf-salt-v1/): returns the default salt explicitly for interoperability and custom composition.
 
 ## Signing sessions

@@ -52,6 +52,10 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 - Do not add runtime checks for typed internal invariants that TypeScript already proves, such as required callbacks or disallowed fields within SDK-only control flow.
 - Avoid unnecessary assertions and wrappers; use them only when narrowing external input or bridging third-party type limitations.
 
+### Checks
+
+Run `npm run check` before pushing; biome verifies formatting and lint across the repository, including CSS and SVG files. [CONTRIBUTING.md](./CONTRIBUTING.md) documents the remaining checks and when each applies.
+
 ### Pull Requests
 
 - Write PR descriptions for reviewers who need to understand the reason for the change, not just the diff.
@@ -69,7 +73,7 @@ This file should stay stable and process-oriented.
 - coding and API design principles
 - safety and review expectations
 
-Project commands and the testing workflow live in `CONTRIBUTING.md`.
+Project commands and the testing workflow live in [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### What Not to Include
 

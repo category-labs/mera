@@ -75,7 +75,7 @@
     "@playwright/test": "^1.61.1",
     "@types/node": "^25.9.3",
     "publint": "^0.3.21",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "viem": "^2.52.2"
   },
   "engines": {

@@ -3,7 +3,7 @@ title: createPasskey
 description: Creates a discoverable, user-verified passkey with the WebAuthn PRF extension enabled.
 ---
 
-Creates a discoverable, user-verified passkey with the [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF extension enabled. Runs one `navigator.credentials.create()` ceremony, which may show browser or authenticator UI.
+Creates a [discoverable](/concepts/passkeys-and-prf/), user-verified passkey with the [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF extension enabled. Runs one `navigator.credentials.create()` ceremony, which may show browser or authenticator UI.
 
 ## Import
 
@@ -80,7 +80,7 @@ WebAuthn timeout in milliseconds.
 
 ## Notes
 
-The credential is requested with fixed parameters: ES256 or RS256 key types, attestation `"none"`, a required resident key, and required user verification. The user-verification requirement is not configurable: the PRF extension evaluates only the credential's user-verified PRF, so a `userVerification` setting could neither change the PRF output nor remove the check. [Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism.
+The credential is requested with fixed parameters: ES256 or RS256 key types, attestation `"none"` (no statement about the authenticator's make is requested), a required resident key (the WebAuthn term for a discoverable credential), and required user verification. The user-verification requirement is not configurable: the PRF extension evaluates only the credential's user-verified PRF, so a `userVerification` setting could neither change the PRF output nor remove the check. [Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism.
 
 The WebAuthn challenge is generated internally. The raw attestation response is not returned.
 

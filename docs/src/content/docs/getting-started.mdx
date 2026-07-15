@@ -39,13 +39,13 @@ const { prfOutput } = await createPasskeyWithPrfOutput({
 });
 ```
 
-The call prompts once, or twice when the authenticator needs a follow-up assertion to evaluate PRF.
+The call prompts once, or twice when the authenticator needs a follow-up [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts), a second WebAuthn call that uses the new passkey, to evaluate PRF.
 
 mera uses its fixed v1 salt for this call. The `rpId` is the relying party ID, the domain the passkey is bound to. The same passkey and relying party produce the same 32 bytes on any device the passkey syncs to. The result also carries the credential ID; [Create passkey accounts](/recipes/create-passkey-accounts/) stores it to pin later sign-ins.
 
 ## Derive an account
 
-The PRF output is entropy: 32 bytes an attacker cannot predict, enough to root every account that follows ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)). This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki), which encodes entropy as a phrase of common words, and [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki), which derives numbered keys from one seed, so the account can be imported into wallet apps that follow those standards.
+The PRF output is entropy: 32 bytes an attacker cannot predict, enough to root every account that follows ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)). This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki), which encodes entropy as a phrase of common words, and [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki), which derives numbered keys from one seed, a byte string computed from the phrase, so the account can be imported into wallet apps that follow those standards.
 
 ```ts
 import { HDKey } from "@scure/bip32";
@@ -82,7 +82,7 @@ const signature = await session.signDigest(digest);
 session.lock();
 ```
 
-The session copies the key, zeroes the buffer it was given, and signs without further passkey prompts until `lock()` is called. Locking zeroes the session's copy too; after that, signing throws.
+The session copies the key, [zeroes](/concepts/security-model/#what-the-library-handles) the buffer it was given, and signs without further passkey prompts until `lock()` is called. Locking zeroes the session's copy too; after that, signing throws.
 
 ## Sign back in
 

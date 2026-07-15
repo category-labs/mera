@@ -11,13 +11,13 @@ Two constructors exist, one per signature scheme ([Entropy, keys, and accounts](
 
 ## Independent of passkeys
 
-A session's input is a raw private key, derived from PRF output, decrypted from a vault, or imported from elsewhere; the session does not record where the key came from. The step in between, turning 32 bytes of [entropy](/concepts/entropy-keys-and-accounts/) into a chain-specific private key, is app-owned by design; [passkey accounts](/concepts/passkey-accounts/) and [secret vaults](/concepts/secret-vaults/) describe the two sources of key material.
+A session's input is a raw private key, derived from PRF output, decrypted from a vault, or imported from elsewhere; the session does not record where the key came from. The step in between, turning 32 bytes of [entropy](/concepts/entropy-keys-and-accounts/) into a chain-specific private key, is app-owned by design; [passkey accounts](/concepts/passkey-accounts/) and [secret vaults](/concepts/secret-vaults/) describe the two sources of [key material](/concepts/entropy-keys-and-accounts/#deterministic-derivation).
 
 Because a session never contacts an authenticator, signing never prompts: the one user-verification prompt happened in the ceremony that produced the entropy, and it covers any number of signatures.
 
 ## The lifecycle
 
-Construction consumes the key: the session keeps the only library-side copy and zeroes the caller's input buffer, even when construction throws. Locking zeroes the session's copy and is permanent: a locked session throws on signing, there is no unlock, and new signatures require a new session. An unlock path would mean the key still existed somewhere after `lock()`.
+Construction consumes the key: the session keeps the only library-side copy and [zeroes](/concepts/security-model/#what-the-library-handles) the caller's input buffer, even when construction throws. Locking zeroes the session's copy and is permanent: a locked session throws on signing, there is no unlock, and new signatures require a new session. An unlock path would mean the key still existed somewhere after `lock()`.
 
 Sessions also support `using` declarations: disposal calls `lock()` when the scope exits, so a session can be bound to a block instead of a manual call.
 

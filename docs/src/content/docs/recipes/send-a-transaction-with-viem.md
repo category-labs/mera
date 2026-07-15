@@ -35,7 +35,7 @@ const node = HDKey.fromMasterSeed(seed).derive("m/44'/60'/0'/0/0");
 if (node.privateKey === null) throw new Error("derivation produced no key");
 ```
 
-`entropyToMnemonic` creates a phrase string on the way to the seed, and strings cannot be zeroed ([security model](/concepts/security-model/#strings-cannot-be-zeroed)); the buffers are zeroed as soon as each one has served its purpose.
+`entropyToMnemonic` creates a phrase string on the way to the seed, and strings cannot be zeroed ([security model](/concepts/security-model/#strings-cannot-be-zeroed)); the buffers are [zeroed](/concepts/security-model/#what-the-library-handles) as soon as each one has served its purpose.
 
 ## Create the viem account
 
@@ -75,7 +75,7 @@ const hash = await client.sendTransaction({
 session.lock();
 ```
 
-`sepolia` is Ethereum's Sepolia test network, and `http()` with no URL uses the chain's default public RPC endpoint; production apps pass a dedicated RPC URL. Signing shows no passkey prompt: the one prompt happened at sign-in, and the session covers every signature until it is locked.
+`sepolia` is Ethereum's Sepolia test network, and `http()` with no URL uses the chain's default public RPC endpoint (RPC, remote procedure call, is the HTTP API a chain node exposes for queries and transactions); production apps pass a dedicated RPC URL. Signing shows no passkey prompt: the one prompt happened at sign-in, and the session covers every signature until it is locked.
 
 `sendTransaction` fills the missing transaction fields from the RPC, signs through the session, broadcasts, and resolves to the transaction hash. Confirmation is a separate query; viem's `waitForTransactionReceipt` on a public client covers it.
 
@@ -83,7 +83,7 @@ session.lock();
 
 - **The derivation must match the app's other sign-in paths.** This recipe repeats the mapping and path from [Create passkey accounts](/recipes/create-passkey-accounts/); a different mapping or path reaches a different address.
 - **A locked session rejects every viem signing method** with [`SESSION_LOCKED`](/reference/errors/#session_locked), and the account has no key of its own. Keep the session for the active burst of work, lock it when the burst ends, and build a new session from a fresh ceremony for the next one ([Signing sessions](/concepts/signing-sessions/)).
-- **Concurrent transactions can be assigned the same nonce**, and the chain accepts only one of them. viem's nonce manager assigns nonces in sequence; pass it through [toViemAccount](/reference/to-viem-account/) options.
+- **Concurrent transactions can be assigned the same nonce**, the per-account counter that orders transactions, and the chain accepts only one of them. viem's nonce manager assigns nonces in sequence; pass it through [toViemAccount](/reference/to-viem-account/) options.
 
 ## See also
 

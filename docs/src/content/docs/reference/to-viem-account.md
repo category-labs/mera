@@ -62,7 +62,7 @@ A viem `LocalAccount` with `source: "mera"`, accepted anywhere viem takes an acc
 
 ### address
 
-The EIP-55 checksummed address of the session key, the same value [getEvmAddress](/reference/get-evm-address/) returns for `session.publicKey`.
+The [EIP-55](https://eips.ethereum.org/EIPS/eip-55) checksummed address of the session key, the same value [getEvmAddress](/reference/get-evm-address/) returns for `session.publicKey`.
 
 ### publicKey
 
@@ -70,19 +70,19 @@ The 65-byte uncompressed secp256k1 public key as hex: the `0x04` prefix, then 12
 
 ### signTransaction(transaction, options?)
 
-Serializes the transaction, signs its keccak-256 digest, and resolves to the signed serialized transaction. `options.serializer` replaces viem's `serializeTransaction` for both steps. EIP-4844 transactions are hashed without their sidecars and serialized with them.
+Serializes the transaction, signs its keccak-256 digest, and resolves to the signed serialized transaction. `options.serializer` replaces viem's `serializeTransaction` for both steps. [EIP-4844](https://eips.ethereum.org/EIPS/eip-4844) transactions are hashed without their sidecars and serialized with them.
 
 ### signMessage({ message })
 
-Resolves to the EIP-191 personal-message signature for `message`, 65 bytes as hex.
+Resolves to the [EIP-191](https://eips.ethereum.org/EIPS/eip-191) personal-message signature for `message`, 65 bytes as hex.
 
 ### signTypedData(typedData)
 
-Resolves to the EIP-712 signature for the typed data, 65 bytes as hex.
+Resolves to the [EIP-712](https://eips.ethereum.org/EIPS/eip-712) signature for the typed data, 65 bytes as hex.
 
 ### signAuthorization(authorization)
 
-Signs an EIP-7702 authorization and resolves to the signed authorization object: the contract address, chain ID, and nonce together with the signature fields.
+Signs an [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702) authorization and resolves to the signed authorization object: the contract address, chain ID, and nonce together with the signature fields.
 
 ### sign({ hash })
 
@@ -95,7 +95,7 @@ Signs a 32-byte hash directly, with no additional hashing, and resolves to the 6
 
 ## Notes
 
-Signatures are low-S, which EVM chains require since EIP-2; `signDigest` enforces this, so the adapter adds no normalization.
+Signatures are low-S (the signature's `s` value lies in the lower half of the curve order), which EVM chains require since [EIP-2](https://eips.ethereum.org/EIPS/eip-2); `signDigest` enforces this, so the adapter adds no normalization.
 
 ## See also
 

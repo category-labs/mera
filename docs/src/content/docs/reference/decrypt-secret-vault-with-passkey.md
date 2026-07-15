@@ -3,7 +3,7 @@ title: decryptSecretVaultWithPasskey
 description: Performs a passkey assertion and decrypts one secret vault.
 ---
 
-Performs the passkey assertion for a parsed vault and decrypts its secret. Runs one `navigator.credentials.get()` ceremony, which may show browser or authenticator UI.
+Performs the passkey [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) for a parsed vault and decrypts its secret. Runs one `navigator.credentials.get()` ceremony, which may show browser or authenticator UI.
 
 ## Import
 
@@ -64,13 +64,13 @@ WebAuthn timeout in milliseconds.
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not return a usable 32-byte PRF output.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): the vault contains an invalid credential ID, PRF salt, nonce, or ciphertext.
-- [`DECRYPT_FAILED`](/reference/errors/#decrypt_failed): AES-GCM authentication failed because the PRF output was wrong or the vault was modified.
+- [`DECRYPT_FAILED`](/reference/errors/#decrypt_failed): [AES-GCM](/concepts/secret-vaults/#how-a-vault-works) authentication failed because the PRF output was wrong or the vault was modified.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): Web Crypto is unavailable.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## Notes
 
-The vault is copied before the assertion starts, so post-call mutation changes neither the credential restriction nor the ciphertext being decrypted. The transient PRF output is zeroed before the function settles, including when decryption fails.
+The vault is copied before the assertion starts, so post-call mutation changes neither the credential restriction nor the ciphertext being decrypted. The transient PRF output is zeroed before the function finishes, even when decryption fails.
 
 The WebAuthn challenge is generated internally, and the raw assertion response is not returned.
 

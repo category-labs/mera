@@ -38,6 +38,7 @@ export default defineConfig({
       "/concepts/passkey-accounts/",
     ),
     "/recipes/derive-accounts": withBase("/recipes/create-passkey-accounts/"),
+    "/concepts/authenticator-support": withBase("/authenticator-support/"),
   },
   markdown: {
     processor: unified({ remarkPlugins: [prefixRootRelativeLinks] }),
@@ -134,7 +135,6 @@ export default defineConfig({
             "concepts/signing-sessions",
             "concepts/secret-vaults",
             "concepts/security-model",
-            "concepts/authenticator-support",
           ],
         },
         {
@@ -144,6 +144,7 @@ export default defineConfig({
             "recipes/use-an-existing-secret",
           ],
         },
+        { label: "Authenticator support", slug: "authenticator-support" },
         {
           label: "Reference",
           items: [

@@ -24,7 +24,7 @@ Installation, guides, compatibility information, the security model, the API ref
 
 ## Status
 
-mera is an experimental reference implementation. The documentation describes its [security model](https://mera.category.xyz/concepts/security-model/) and [known authenticator support](https://mera.category.xyz/concepts/authenticator-support/).
+mera is an experimental reference implementation. The documentation describes its [security model](https://mera.category.xyz/concepts/security-model/) and [known authenticator support](https://mera.category.xyz/authenticator-support/).
 
 ## Contributing
 

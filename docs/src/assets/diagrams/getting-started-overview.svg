@@ -7,11 +7,13 @@
   class="mera-diagram"
 >
   <title>
-    The path from a passkey ceremony to a signature, split by ownership. In
-    mera, a passkey ceremony produces 32 bytes of PRF output. The app derives
-    the private key from that output. Back in mera, a signing session signs with
-    the key held in memory. A dashed return path shows signing back in: the same
-    ceremony returns the same 32 bytes. No secret is stored anywhere.
+    The path from signing in with a passkey to a signature, split by ownership.
+    In mera, the user signs in with the passkey, which stays in the
+    authenticator, and receives 32 secret bytes, the same bytes on every
+    sign-in. The app turns those bytes into an account key. Back in mera, a
+    signing session signs with the key held in memory. A dashed return path
+    shows signing back in: the same passkey returns the same 32 bytes. No
+    secret is stored anywhere.
   </title>
   <defs>
     <marker
@@ -32,17 +34,17 @@
   <text x="114" y="46" class="d-sub">mera</text>
 
   <rect class="d-node" x="130" y="56" width="300" height="56" rx="8" />
-  <text x="280" y="80" text-anchor="middle">Passkey ceremony</text>
-  <text x="280" y="99" text-anchor="middle" class="d-mono">
-    createPasskeyWithPrfOutput
+  <text x="280" y="80" text-anchor="middle">Sign in with the passkey</text>
+  <text x="280" y="99" text-anchor="middle" class="d-sub">
+    the passkey stays in the authenticator
   </text>
 
   <path class="d-edge" d="M280 112 V144" marker-end="url(#gs-arrow)" />
 
   <rect class="d-secret" x="130" y="148" width="300" height="56" rx="8" />
-  <text x="280" y="172" text-anchor="middle">PRF output</text>
+  <text x="280" y="172" text-anchor="middle">32 secret bytes</text>
   <text x="280" y="191" text-anchor="middle" class="d-sub">
-    32 bytes of entropy
+    the same bytes on every sign-in
   </text>
 
   <!-- the app: derivation -->
@@ -52,13 +54,15 @@
   <text x="114" y="264" class="d-sub">the app</text>
 
   <rect class="d-secret" x="130" y="274" width="300" height="56" rx="8" />
-  <text x="280" y="298" text-anchor="middle">Derive the private key</text>
-  <text x="280" y="317" text-anchor="middle" class="d-mono">
-    @scure/bip39 + @scure/bip32
+  <text x="280" y="298" text-anchor="middle">Derive an account</text>
+  <text x="280" y="317" text-anchor="middle" class="d-sub">
+    the bytes become a private key
   </text>
 
   <path class="d-edge" d="M280 330 V410" marker-end="url(#gs-arrow)" />
-  <text x="292" y="368" class="d-sub">the session consumes the key</text>
+  <text x="292" y="368" class="d-sub">
+    the session takes ownership of the key
+  </text>
 
   <!-- mera: the signing session -->
   <rect class="d-zone" x="100" y="382" width="360" height="190" rx="10" />
@@ -85,10 +89,10 @@
     marker-end="url(#gs-arrow)"
   />
   <text x="572" y="290" class="d-sub">sign back in:</text>
-  <text x="572" y="310" class="d-sub">same ceremony,</text>
+  <text x="572" y="310" class="d-sub">same passkey,</text>
   <text x="572" y="330" class="d-sub">same 32 bytes</text>
 
   <text x="280" y="600" text-anchor="middle" class="d-note">
-    No secret is stored anywhere; a later ceremony recomputes the same accounts.
+    No secret is stored anywhere.
   </text>
 </svg>

@@ -40,7 +40,7 @@ BIP-32 (secp256k1) and [SLIP-0010](https://github.com/satoshilabs/slips/blob/mas
 
 ## Seed phrases
 
-BIP-39 maps entropy to a phrase of common words and back: 128 bits become 12 words, 256 bits become 24. The phrase is an encoding, adding no security of its own; whoever reads it holds the entropy.
+BIP-39 maps entropy to a phrase of common words and back: 128 bits become 12 words, 256 bits become 24. The phrase is an encoding, adding no security of its own: anyone who reads the phrase can recover the entropy.
 
 A wallet app that follows the same standards (MetaMask and Phantom are two) turns an imported phrase back into the same accounts, which gives accounts built this way an exit path independent of any one library.
 

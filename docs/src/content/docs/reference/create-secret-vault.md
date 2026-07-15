@@ -30,9 +30,13 @@ const credential = await createPasskeyWithPrfOutput({
 });
 
 const secret = new TextEncoder().encode("the secret to protect");
-
-const vault = await createSecretVault({ credential, secret });
-localStorage.setItem("vault", JSON.stringify(vault));
+try {
+  const vault = await createSecretVault({ credential, secret });
+  localStorage.setItem("vault", JSON.stringify(vault));
+} finally {
+  secret.fill(0);
+  credential.prfOutput.fill(0);
+}
 ```
 
 ## Parameters

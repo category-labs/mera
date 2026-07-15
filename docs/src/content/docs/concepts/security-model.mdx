@@ -13,7 +13,7 @@ Input buffers are copied before any async work starts, so mutating a buffer afte
 
 Owned copies are zeroed where possible. A signing session zeroes the caller's private-key buffer when it consumes it, even when construction throws, and zeroes its own copy on `lock()`. [createSecretVault](/reference/create-secret-vault/) zeroes its internal secret and PRF-output copies. Secret-vault workflow functions also zero the transient secret and PRF-output copies they own before settling.
 
-WebAuthn challenges are generated internally. So are AES-GCM nonces: a nonce is a value that must never repeat under one encryption key, so the library generates 12 fresh bytes per encryption and a caller cannot reuse one. Every ceremony requires user verification, and the requirement is [not configurable](/concepts/passkeys-and-prf/#user-verification).
+[WebAuthn](https://www.w3.org/TR/webauthn-3/) challenges are generated internally. So are AES-GCM nonces: a nonce is a value that must never repeat under one encryption key, so the library generates 12 fresh bytes per encryption and a caller cannot reuse one. Every ceremony requires user verification, and the requirement is [not configurable](/concepts/passkeys-and-prf/#user-verification).
 
 ## What a compromised runtime sees
 

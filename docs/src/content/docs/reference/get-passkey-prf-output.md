@@ -14,8 +14,6 @@ import { getPasskeyPrfOutput } from "@category-labs/mera";
 ## Usage
 
 ```ts
-import { getPasskeyPrfOutput } from "@category-labs/mera";
-
 const { credentialId, prfOutput } = await getPasskeyPrfOutput({
   rpId: "account.example.com",
 });
@@ -30,7 +28,7 @@ const { credentialId, prfOutput } = await getPasskeyPrfOutput({
 - Type: `string`
 - Required
 
-Relying party ID for the WebAuthn assertion.
+Relying party ID for the [WebAuthn](https://www.w3.org/TR/webauthn-3/) assertion.
 
 ### options.credential
 
@@ -72,7 +70,7 @@ The assertion requires user verification, and the requirement is not configurabl
 
 The WebAuthn challenge is generated internally. The raw assertion response is not returned.
 
-WebAuthn availability is checked before Web Crypto, so an environment missing both throws `PASSKEY_OPERATION_FAILED`.
+WebAuthn availability is checked before Web Crypto, so an environment missing both throws [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed).
 
 ## See also
 

@@ -3,11 +3,9 @@ title: Encrypt an existing secret with a passkey
 description: Encrypt an existing secret into a passkey-protected vault and unlock it later.
 ---
 
-A [secret vault](/concepts/secret-vaults/) encrypts one recovery phrase (the [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) word encoding of an account's root entropy), private key, or other byte string behind a passkey; mera never interprets it. The vault is the pattern for secrets that predate the passkey. This recipe validates a phrase, stores its vault, and decrypts it with explicit zeroing.
+A [secret vault](/concepts/secret-vaults/) encrypts one recovery phrase (the [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) word encoding of an account's root entropy), private key, or other byte string behind a passkey; mera never interprets it. The vault is the pattern for secrets that predate the passkey. This recipe validates a phrase, stores its vault, and decrypts it with explicit zeroing. It requires `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
 
 The surrounding code is app-owned; mera provides the passkey ceremonies and vault functions.
-
-Prerequisites: `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
 
 ## Validate the phrase
 

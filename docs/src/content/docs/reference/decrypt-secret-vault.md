@@ -50,7 +50,7 @@ A parsed secret vault. Run untrusted stored data through [parseSecretVault](/ref
 - Type: `Uint8Array`
 - Required
 
-The 32-byte WebAuthn PRF output for the vault's stored salt. Copied before async cryptographic work starts; the caller-owned buffer is not modified or zeroed.
+The 32-byte [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF output for the vault's stored salt. Copied before async cryptographic work starts; the caller-owned buffer is not modified or zeroed.
 
 ## Returns
 

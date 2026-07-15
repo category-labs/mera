@@ -3,7 +3,7 @@ title: createPasskey
 description: Creates a discoverable, user-verified passkey with the WebAuthn PRF extension enabled.
 ---
 
-Creates a discoverable, user-verified passkey with the WebAuthn PRF extension enabled. Runs one `navigator.credentials.create()` ceremony, which may show browser or authenticator UI.
+Creates a discoverable, user-verified passkey with the [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF extension enabled. Runs one `navigator.credentials.create()` ceremony, which may show browser or authenticator UI.
 
 ## Import
 
@@ -84,9 +84,9 @@ The credential is requested with fixed parameters: ES256 or RS256 key types, att
 
 The WebAuthn challenge is generated internally. The raw attestation response is not returned.
 
-A `PRF_UNAVAILABLE` failure happens after the creation ceremony has completed: the passkey exists on the authenticator, but the thrown error does not carry its metadata. The credential still appears in the authenticator's passkey list.
+A [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable) failure happens after the creation ceremony has completed: the passkey exists on the authenticator, but the thrown error does not carry its metadata. The credential still appears in the authenticator's passkey list.
 
-WebAuthn availability is checked before Web Crypto, so an environment missing both throws `PASSKEY_OPERATION_FAILED`.
+WebAuthn availability is checked before Web Crypto, so an environment missing both throws [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed).
 
 ## See also
 

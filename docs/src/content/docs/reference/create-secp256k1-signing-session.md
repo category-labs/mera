@@ -57,7 +57,7 @@ Signs a 32-byte digest without prehashing it and resolves to a `Secp256k1Signatu
 
 ### lock()
 
-Zeroes the session-owned private-key copy and permanently locks the session; later signing throws `SESSION_LOCKED`.
+Zeroes the session-owned private-key copy and permanently locks the session; later signing throws [`SESSION_LOCKED`](/reference/errors/#session_locked).
 
 ### [Symbol.dispose]()
 
@@ -83,7 +83,7 @@ Signing needs no passkey ceremony and shows no prompt; the session signs as ofte
 
 The digest is copied before signing; the original is not modified.
 
-The recovery ID is declared `0 | 1`. Values 2 and 3 exist in ECDSA but require the signature's `r` to reach the curve order, which happens with probability around 2^-127; if it ever did, the call would fail loudly with `INPUT_INVALID` rather than return a signature that cannot be address-recovered.
+The recovery ID is declared `0 | 1`. Values 2 and 3 exist in ECDSA but require the signature's `r` to reach the curve order, which happens with probability around 2^-127; if it ever did, the call would fail loudly with [`INPUT_INVALID`](/reference/errors/#input_invalid) rather than return a signature that cannot be address-recovered.
 
 ## See also
 

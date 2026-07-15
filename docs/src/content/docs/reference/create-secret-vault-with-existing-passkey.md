@@ -42,7 +42,7 @@ try {
 - Type: `string`
 - Required
 
-Relying party ID for the WebAuthn assertion. It must match the ID under which the passkey was created.
+Relying party ID for the [WebAuthn](https://www.w3.org/TR/webauthn-3/) assertion. It must match the ID under which the passkey was created.
 
 ### options.credential
 

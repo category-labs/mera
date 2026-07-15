@@ -14,8 +14,6 @@ import { createSecretVaultWithNewPasskey } from "@category-labs/mera";
 ## Usage
 
 ```ts
-import { createSecretVaultWithNewPasskey } from "@category-labs/mera";
-
 const secret = new TextEncoder().encode("the secret to protect");
 try {
   const vault = await createSecretVaultWithNewPasskey({
@@ -38,7 +36,7 @@ try {
 - Type: `PublicKeyCredentialRpEntity & { id: string }`
 - Required, including `rp.id`
 
-Relying party identity passed to WebAuthn. The required ID is reused by the fallback assertion.
+Relying party identity passed to [WebAuthn](https://www.w3.org/TR/webauthn-3/). The required ID is reused by the fallback assertion.
 
 ### options.user
 

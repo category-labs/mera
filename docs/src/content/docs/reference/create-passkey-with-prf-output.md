@@ -3,7 +3,7 @@ title: createPasskeyWithPrfOutput
 description: Creates a passkey and returns its deterministic PRF output in one call.
 ---
 
-Creates a passkey and returns its WebAuthn PRF output, using mera's fixed v1 salt by default. If [createPasskey](/reference/create-passkey/) returns no `prfOutput`, the function runs [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt, which may show a second browser prompt.
+Creates a passkey and returns its [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF output, using mera's fixed v1 salt by default. If [createPasskey](/reference/create-passkey/) returns no `prfOutput`, the function runs [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt, which may show a second browser prompt.
 
 ## Import
 
@@ -14,8 +14,6 @@ import { createPasskeyWithPrfOutput } from "@category-labs/mera";
 ## Usage
 
 ```ts
-import { createPasskeyWithPrfOutput } from "@category-labs/mera";
-
 const result = await createPasskeyWithPrfOutput({
   rp: { id: "account.example.com", name: "Example" },
   user: { name: "account@example.com", displayName: "Example account" },

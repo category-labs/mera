@@ -129,6 +129,7 @@ export default defineConfig({
         {
           label: "Concepts",
           items: [
+            "concepts/how-mera-works",
             "concepts/entropy-keys-and-accounts",
             "concepts/passkeys-and-prf",
             "concepts/passkey-accounts",
@@ -153,9 +154,9 @@ export default defineConfig({
             {
               label: "Passkeys",
               items: [
-                "reference/create-passkey",
                 "reference/create-passkey-with-prf-output",
                 "reference/get-passkey-prf-output",
+                "reference/create-passkey",
                 "reference/get-deterministic-prf-salt-v1",
               ],
             },

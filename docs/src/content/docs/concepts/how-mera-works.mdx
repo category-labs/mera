@@ -1,0 +1,58 @@
+---
+title: How mera works
+description: How passkey ceremonies, app-owned account policy, and signing sessions fit together.
+---
+
+import HowMeraWorks from "../../../assets/diagrams/how-mera-works.svg";
+
+mera separates passkey access, account policy, and signing. A passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) is one [WebAuthn](https://www.w3.org/TR/webauthn-3/) call with user verification. The pseudorandom function (PRF) extension makes that ceremony return 32 secret bytes for a salt.
+
+The app decides what those bytes become. A signing session then holds one private key until it is locked.
+
+<HowMeraWorks />
+
+## Three responsibilities
+
+### Passkey access belongs to mera
+
+mera creates or selects the passkey, generates the WebAuthn challenge, requires user verification, and returns the PRF output. The passkey's private key stays in the authenticator. The PRF output enters the JavaScript runtime as [key material](/concepts/entropy-keys-and-accounts/#deterministic-derivation), so code running on the page can observe it.
+
+### Account policy belongs to the app
+
+The app decides whether the PRF output roots new accounts or decrypts an existing secret. It also chooses the derivation scheme, derivation paths, account indexes, recovery format, and storage. These choices determine which accounts the same passkey reproduces.
+
+### Key lifetime belongs to a signing session
+
+The app passes one raw private key to a secp256k1 or Ed25519 signing session. The session consumes the input buffer, keeps one owned copy, and signs until it is locked. A session has no passkey, derivation, storage, or chain-transport policy.
+
+## Passkey accounts are the default
+
+For a new account, the app uses the PRF output as root entropy and derives one or more private keys. A later ceremony with the same passkey, relying party ID, and salt returns the same output, so the same derivation reproduces the accounts. No encrypted secret needs to be stored.
+
+The derivation is part of the app's account format. Changing its mapping or paths changes every resulting account. [Passkey accounts](/concepts/passkey-accounts/) explains the recovery consequences, and [Create passkey accounts](/recipes/create-passkey-accounts/) shows one interoperable derivation in code.
+
+## Secret vaults cover existing secrets
+
+An existing recovery phrase or private key cannot be reproduced from a newly created passkey. A secret vault encrypts those bytes behind a separate PRF output. The vault is stored as JSON, and a later ceremony reproduces the encryption key material needed to decrypt it.
+
+This path adds ciphertext storage and recovery decisions, so it is the advanced option for key material that predates the passkey. [Secret vaults](/concepts/secret-vaults/) explains the storage model and its trade-offs.
+
+## The application boundary
+
+The application owns:
+
+- account derivation and paths;
+- credential metadata and vault storage;
+- export and recovery formats;
+- signing-session lifetime;
+- transaction construction, transport, or chain interaction.
+
+Keeping these decisions in the app lets the same primitives support different chains and product flows. It also makes those decisions part of the app's compatibility and security contract.
+
+## See also
+
+- [Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/): how root entropy becomes account keys and addresses.
+- [Passkeys and the PRF extension](/concepts/passkeys-and-prf/): how ceremonies produce stable secret output.
+- [Signing sessions](/concepts/signing-sessions/): key ownership, locking, and the open signing window.
+- [Security model](/concepts/security-model/): the runtime trust boundary and what mera cannot protect.
+- [Getting started](/getting-started/): the default path from a new passkey to a first signature.

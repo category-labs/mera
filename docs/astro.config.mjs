@@ -75,7 +75,7 @@ export default defineConfig({
           attrs: {
             property: "og:image:alt",
             content:
-              "mera. Accounts on any chain and platform, backed by a passkey. npm install @category-labs/mera",
+              "mera. Accounts on any chain and platform, from a passkey. npm install @category-labs/mera",
           },
         },
         {
@@ -91,7 +91,7 @@ export default defineConfig({
           attrs: {
             name: "twitter:image:alt",
             content:
-              "mera. Accounts on any chain and platform, backed by a passkey. npm install @category-labs/mera",
+              "mera. Accounts on any chain and platform, from a passkey. npm install @category-labs/mera",
           },
         },
         {
@@ -129,12 +129,13 @@ export default defineConfig({
         {
           label: "Concepts",
           items: [
+            "concepts/app-owned-accounts",
             "concepts/entropy-keys-and-accounts",
             "concepts/passkeys-and-prf",
+            "concepts/security-model",
             "concepts/passkey-accounts",
             "concepts/signing-sessions",
             "concepts/secret-vaults",
-            "concepts/security-model",
           ],
         },
         {

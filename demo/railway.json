@@ -5,6 +5,7 @@
     "buildCommand": "npm ci && npm run build && npm --prefix demo ci && npm --prefix demo run build",
     "watchPatterns": [
       "/demo/**",
+      "!/demo/network/**",
       "/src/**",
       "/package.json",
       "/package-lock.json",

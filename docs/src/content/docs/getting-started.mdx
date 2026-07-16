@@ -18,7 +18,7 @@ mera separates passkey access, account policy, and signing. A passkey [ceremony]
 
 The app decides what those bytes become. A signing session then holds one private key until it is locked.
 
-The PRF output and every key derived from it are ordinary values in the page's JavaScript memory. The passkey's own private key never leaves the authenticator; the derived account keys never enter it. mera signs in the page with software keys, where a hardware wallet keeps keys out of the page entirely; the [security model](/concepts/security-model/) states what the library protects and what stays with the app.
+The PRF output and every key derived from it are ordinary values in the page's JavaScript memory. The passkey's own private key never leaves the authenticator; the derived account keys never enter it. mera signs in the page with software keys; the [security model](/concepts/security-model/) states what the library protects and what stays with the app.
 
 The application owns:
 
@@ -28,7 +28,7 @@ The application owns:
 - signing-session lifetime;
 - transaction construction, transport, or chain interaction.
 
-Keeping these decisions in the app lets the same primitives support different chains and product flows; [App-owned accounts](/concepts/app-owned-accounts/) covers what that ownership changes for onboarding and new platforms.
+Keeping these decisions in the app lets the same primitives support different chains and product flows.
 
 ## Install
 

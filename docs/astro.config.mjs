@@ -129,7 +129,6 @@ export default defineConfig({
         {
           label: "Concepts",
           items: [
-            "concepts/app-owned-accounts",
             "concepts/entropy-keys-and-accounts",
             "concepts/passkeys-and-prf",
             "concepts/security-model",

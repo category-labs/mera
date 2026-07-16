@@ -5,15 +5,9 @@ description: What mera protects, what it cannot, and the risks left to the app.
 
 import TrustBoundary from "../../../assets/diagrams/trust-boundary.svg";
 
-mera has a narrow scope: it runs [passkey ceremonies](/concepts/passkeys-and-prf/#ceremonies-and-prompts), returns [entropy](/concepts/entropy-keys-and-accounts/) to the app, and holds signing keys in [lockable sessions](/concepts/signing-sessions/).
+mera derives accounts with software keys. The passkey's own private key never leaves the authenticator; the PRF output, the secret bytes a passkey returns through its [PRF extension](/concepts/passkeys-and-prf/), does leave it, and every key derived from that output lives in the page's JavaScript memory while in use. The guarantees match a wallet app holding an imported seed phrase in the page. A hardware wallet never exposes its key to the page; mera signs in the page.
 
-## What the library handles
-
-Input buffers are copied before any async work starts, so mutating a buffer after a call cannot change what gets signed, encrypted, or derived.
-
-Owned copies are zeroed where possible: overwritten with zeros so the secret stops existing in memory instead of lingering until garbage collection. A signing session zeroes the caller's private-key buffer when it consumes it, even when construction throws, and zeroes its own copy on `lock()`. [createSecretVault](/reference/create-secret-vault/) zeroes its internal secret and PRF-output copies. Secret-vault workflow functions also zero the transient secret and PRF-output copies they own before they finish, even when they fail.
-
-[WebAuthn](https://www.w3.org/TR/webauthn-3/) challenges are generated internally. So are [AES-GCM](/concepts/secret-vaults/#how-a-vault-works) nonces: a nonce is a value that must never repeat under one encryption key, so the library generates 12 fresh bytes per encryption and a caller cannot reuse one. Every ceremony requires user verification, and the requirement is [not configurable](/concepts/passkeys-and-prf/#user-verification).
+The library's scope is narrow: it runs [passkey ceremonies](/concepts/passkeys-and-prf/#ceremonies-and-prompts), returns [entropy](/concepts/entropy-keys-and-accounts/) to the app, and holds signing keys in [lockable sessions](/concepts/signing-sessions/).
 
 ## What a compromised runtime sees
 
@@ -23,9 +17,17 @@ The mitigations are app-level: lock sessions when idle, keep derivation windows 
 
 <TrustBoundary />
 
+## What the library handles
+
+Input buffers are copied before any async work starts, so mutating a buffer after a call cannot change what gets signed, encrypted, or derived.
+
+Owned copies are zeroed where possible: overwritten with zeros so the secret stops existing in memory instead of lingering until garbage collection. A signing session zeroes the caller's private-key buffer when it consumes it, even when construction throws, and zeroes its own copy on `lock()`. [createSecretVault](/reference/create-secret-vault/) zeroes its internal secret and PRF-output copies. Secret-vault workflow functions also zero the transient secret and PRF-output copies they own before they finish, even when they fail.
+
+[WebAuthn](https://www.w3.org/TR/webauthn-3/) challenges are generated internally. So are [AES-GCM](/concepts/secret-vaults/#how-a-vault-works) nonces: a nonce is a value that must never repeat under one encryption key, so the library generates 12 fresh bytes per encryption and a caller cannot reuse one. Every ceremony requires user verification, and the requirement is [not configurable](/concepts/passkeys-and-prf/#user-verification).
+
 ## rpId binding
 
-PRF output, the secret bytes a passkey returns through its [PRF extension](/concepts/passkeys-and-prf/), is a function of the credential, the relying party ID, and the salt. A passkey can be used only under the rpId it was created for, so after a domain migration the app cannot run ceremonies under the old one. That breaks both patterns: passkey accounts can no longer be reproduced, and secret vaults can no longer be decrypted.
+PRF output is a function of the credential, the relying party ID, and the salt. A passkey can be used only under the rpId it was created for, so after a domain migration the app cannot run ceremonies under the old one. That breaks both patterns: passkey accounts can no longer be reproduced, and secret vaults can no longer be decrypted.
 
 Treat the rpId as a long-lived choice. Before any planned migration, accounts need an export path.
 

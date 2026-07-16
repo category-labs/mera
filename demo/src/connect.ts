@@ -14,7 +14,7 @@ import {
   type Secp256k1SigningSession,
 } from "@category-labs/mera";
 import {
-  deriveEthereumPrivateKey,
+  deriveEvmPrivateKey,
   deriveSolanaSeed,
   isValidMnemonic,
   mnemonicToSeed,
@@ -28,7 +28,7 @@ type AccountMode = "vault" | "passkey";
 /** One numbered account with a signing session per chain. */
 type AccountSlot = {
   index: number;
-  ethereum: {
+  evm: {
     session: Secp256k1SigningSession;
     address: EvmAddress;
   };
@@ -70,14 +70,14 @@ function deriveSlotFromSeed(seed: Uint8Array, index: number): AccountSlot {
   // Each derive* call returns a fresh buffer the session takes ownership of and
   // zeroes; the `seed` itself is never handed to a session.
   const secpSession = createSecp256k1SigningSession({
-    consumePrivateKey: deriveEthereumPrivateKey(seed, index),
+    consumePrivateKey: deriveEvmPrivateKey(seed, index),
   });
   const ed25519Session = createEd25519SigningSession({
     consumePrivateKey: deriveSolanaSeed(seed, index),
   });
   return {
     index,
-    ethereum: {
+    evm: {
       session: secpSession,
       address: getEvmAddress(secpSession.publicKey),
     },
@@ -125,7 +125,7 @@ function buildPasskeyWallet(
     },
     lock(): void {
       for (const slot of cache.values()) {
-        slot.ethereum.session.lock();
+        slot.evm.session.lock();
         slot.solana.session.lock();
       }
       cache.clear();
@@ -270,7 +270,7 @@ function buildVaultWallet(slot: AccountSlot): ConnectedWallet {
       return slot;
     },
     lock(): void {
-      slot.ethereum.session.lock();
+      slot.evm.session.lock();
       slot.solana.session.lock();
     },
   };

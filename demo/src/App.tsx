@@ -1,16 +1,53 @@
+import type { Connection } from "@solana/web3.js";
 import { type ReactElement, useEffect, useState } from "react";
 import { AccountCard } from "./AccountCard";
 import { ConnectCard } from "./ConnectCard";
-import { type EthereumContext, getEthereumContext } from "./chains/ethereum";
-import { getSolanaContext, type SolanaContext } from "./chains/solana";
+import {
+  type EthereumContext,
+  resolveEthereumContext,
+} from "./chains/ethereum";
+import { resolveSolanaConnection } from "./chains/solana";
 import {
   type AccountSlot,
   type ConnectedWallet,
   type ConnectResult,
   describeError,
 } from "./connect";
-import type { NetworkMode } from "./network";
 import { setPasskeyAccountCount } from "./passkeyWallet";
+
+const RESOLVE_RETRY_MS = 5_000;
+
+/**
+ * Resolves a chain context, retrying on failure until stopped. Each failure
+ * is surfaced through `onError` while the retries continue, because the demo
+ * networks come back empty but reachable after a restart, which can take up
+ * to a minute. Returns a stop function for effect cleanup.
+ */
+function retryingResolve<T>(
+  resolve: () => Promise<T>,
+  onResolved: (value: T) => void,
+  onError: (message: string) => void,
+): () => void {
+  let stopped = false;
+  let timer: number | undefined;
+  function attempt(): void {
+    resolve().then(
+      (value) => {
+        if (!stopped) onResolved(value);
+      },
+      (error: unknown) => {
+        if (stopped) return;
+        onError(describeError(error));
+        timer = window.setTimeout(attempt, RESOLVE_RETRY_MS);
+      },
+    );
+  }
+  attempt();
+  return () => {
+    stopped = true;
+    window.clearTimeout(timer);
+  };
+}
 
 /** Root component: holds the connected wallet + accounts, fetches network info. */
 function App(): ReactElement {
@@ -18,50 +55,31 @@ function App(): ReactElement {
     useState<EthereumContext | null>(null);
   const [ethereumError, setEthereumError] = useState<string | null>(null);
 
-  const [solanaContext, setSolanaContext] = useState<SolanaContext | null>(
+  const [solanaConnection, setSolanaConnection] = useState<Connection | null>(
     null,
   );
   const [solanaError, setSolanaError] = useState<string | null>(null);
-
-  const [networkMode, setNetworkMode] = useState<NetworkMode>("testnet");
 
   const [wallet, setWallet] = useState<ConnectedWallet | null>(null);
   const [accounts, setAccounts] = useState<AccountSlot[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
-    let cancelled = false;
-
-    setEthereumContext(null);
-    setEthereumError(null);
-    setSolanaContext(null);
-    setSolanaError(null);
-
-    getEthereumContext(networkMode).then(
-      (ctx) => {
-        if (cancelled) return;
-        setEthereumContext(ctx);
-      },
-      (error: unknown) => {
-        if (cancelled) return;
-        setEthereumError(describeError(error));
-      },
+    const stopEthereum = retryingResolve(
+      resolveEthereumContext,
+      setEthereumContext,
+      setEthereumError,
     );
-    getSolanaContext(networkMode).then(
-      (ctx) => {
-        if (cancelled) return;
-        setSolanaContext(ctx);
-      },
-      (error: unknown) => {
-        if (cancelled) return;
-        setSolanaError(describeError(error));
-      },
+    const stopSolana = retryingResolve(
+      resolveSolanaConnection,
+      setSolanaConnection,
+      setSolanaError,
     );
-
     return () => {
-      cancelled = true;
+      stopEthereum();
+      stopSolana();
     };
-  }, [networkMode]);
+  }, []);
 
   function handleConnected(result: ConnectResult) {
     setWallet(result.wallet);
@@ -110,21 +128,6 @@ function App(): ReactElement {
             <h1>Mera Demo</h1>
           </div>
         </div>
-
-        <label className="network-toggle">
-          <span>Testnet</span>
-          <input
-            type="checkbox"
-            checked={networkMode === "testnet"}
-            onChange={(event) =>
-              setNetworkMode(
-                event.currentTarget.checked ? "testnet" : "mainnet",
-              )
-            }
-            aria-label="Use testnet networks"
-          />
-          <span className="network-switch" aria-hidden="true" />
-        </label>
       </header>
 
       {wallet && accounts.length > 0 ? (
@@ -132,12 +135,11 @@ function App(): ReactElement {
           wallet={wallet}
           accounts={accounts}
           activeIndex={activeIndex}
-          networkMode={networkMode}
           onSwitch={setActiveIndex}
           onAddAccount={handleAddAccount}
           ethereum={ethereumContext}
           ethereumError={ethereumError}
-          solana={solanaContext}
+          solana={solanaConnection}
           solanaError={solanaError}
           onLock={handleLock}
         />

@@ -6,10 +6,8 @@ import type { ChainAdapter } from "./ChainAccountCard";
 import {
   createTransactionClient,
   type EthereumContext,
-  explorerTxUrl,
 } from "./chains/ethereum";
 
-const MONAD_FAUCET_URL = "https://faucet.monad.xyz/";
 const ETH_DECIMALS = 18;
 
 /**
@@ -29,9 +27,6 @@ function createEthereumAdapter(
     chainName: "Ethereum",
     badgeClassName: "badge",
     symbol,
-    networkName: chain.name,
-    faucetUrl: MONAD_FAUCET_URL,
-    faucetText: `Get testnet ${symbol} ↗`,
     recipientPlaceholder: "0x…",
     balanceTooLowError: "Balance is too low to cover gas.",
     isValidRecipient: isAddress,
@@ -59,7 +54,6 @@ function createEthereumAdapter(
           publicClient.sendRawTransaction({ serializedTransaction }),
       };
     },
-    explorerTxUrl: (hash) => explorerTxUrl(chain, hash),
   };
 }
 

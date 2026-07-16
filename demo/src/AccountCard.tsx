@@ -1,7 +1,7 @@
+import type { Connection } from "@solana/web3.js";
 import { type ReactElement, useMemo, useState } from "react";
 import { ChainAccountCard, type RecipientSuggestion } from "./ChainAccountCard";
 import type { EthereumContext } from "./chains/ethereum";
-import type { SolanaContext } from "./chains/solana";
 import {
   type AccountSlot,
   type ConnectedWallet,
@@ -9,7 +9,6 @@ import {
   revealMnemonic,
 } from "./connect";
 import { createEthereumAdapter } from "./ethereumAdapter";
-import type { NetworkMode } from "./network";
 import { createSolanaAdapter } from "./solanaAdapter";
 import { WalletBackup } from "./WalletBackup";
 
@@ -24,12 +23,11 @@ type AccountCardProps = {
   wallet: ConnectedWallet;
   accounts: AccountSlot[];
   activeIndex: number;
-  networkMode: NetworkMode;
   onSwitch: (index: number) => void;
   onAddAccount: () => void;
   ethereum: EthereumContext | null;
   ethereumError: string | null;
-  solana: SolanaContext | null;
+  solana: Connection | null;
   solanaError: string | null;
   onLock: () => void;
 };
@@ -45,7 +43,6 @@ function AccountCard({
   wallet,
   accounts,
   activeIndex,
-  networkMode,
   onSwitch,
   onAddAccount,
   ethereum,
@@ -76,19 +73,18 @@ function AccountCard({
     }
   }
 
-  // On testnet, suggest sending to another HD account controlled by the same
-  // passkey. Deriving it here is cached and invisible: no pill or stored-account
+  // Suggest sending to another HD account controlled by the same passkey.
+  // Deriving it here is cached and invisible: no pill or stored-account
   // bump appears until the account is revealed.
-  const isTestnet = networkMode === "testnet";
   const suggestion = useMemo(() => {
-    if (!isTestnet || wallet.mode !== "passkey") return null;
+    if (wallet.mode !== "passkey") return null;
     const index = active.index === 0 ? 1 : 0;
     return {
       index,
       slot: wallet.deriveAccount(index),
       label: `Account ${index + 1}`,
     };
-  }, [isTestnet, wallet, active.index]);
+  }, [wallet, active.index]);
 
   // Reveal the suggested recipient: switch to it if it already has a pill,
   // otherwise add it (which appends at accounts.length and switches).
@@ -190,11 +186,10 @@ function AccountCard({
       {chain === "ethereum" ? (
         ethereumAdapter ? (
           <ChainAccountCard
-            key={`eth-${active.index}-${networkMode}`}
+            key={`eth-${active.index}`}
             adapter={ethereumAdapter}
             address={active.ethereum.address}
             mode={wallet.mode}
-            isTestnet={isTestnet}
             suggestion={suggestionFor("ethereum")}
             onLock={onLock}
           />
@@ -207,11 +202,10 @@ function AccountCard({
         )
       ) : solanaAdapter ? (
         <ChainAccountCard
-          key={`sol-${active.index}-${networkMode}`}
+          key={`sol-${active.index}`}
           adapter={solanaAdapter}
           address={active.solana.address}
           mode={wallet.mode}
-          isTestnet={isTestnet}
           suggestion={suggestionFor("solana")}
           onLock={onLock}
         />

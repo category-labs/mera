@@ -18,11 +18,6 @@ type ChainAdapter = {
   chainName: string;
   badgeClassName: string;
   symbol: string;
-  /** Network display name for the receive hint, e.g. "Solana Devnet". */
-  networkName: string;
-  faucetUrl: string;
-  /** Faucet link text, e.g. "Get testnet MON ↗". */
-  faucetText: string;
   recipientPlaceholder: string;
   /** Error shown when Max is pressed but the balance cannot cover the fee reserve. */
   balanceTooLowError: string;
@@ -47,7 +42,6 @@ type ChainAdapter = {
     to: string,
     amount: bigint,
   ) => Promise<{ signed: string; broadcast: () => Promise<string> }>;
-  explorerTxUrl: (id: string) => string | undefined;
 };
 
 /** A self-owned recipient the card pre-fills for a one-click transfer. */
@@ -62,12 +56,11 @@ type ChainAccountCardProps = {
   /**
    * Chain behavior for the card. Balance polling restarts when the adapter
    * identity changes; all other card state is seeded once per mount. The demo
-   * remounts the card per account and network via `key`.
+   * remounts the card per account via `key`.
    */
   adapter: ChainAdapter;
   address: string;
   mode: AccountMode;
-  isTestnet: boolean;
   suggestion?: RecipientSuggestion;
   onLock: () => void;
 };
@@ -77,7 +70,6 @@ function ChainAccountCard({
   adapter,
   address,
   mode,
-  isTestnet,
   suggestion,
   onLock,
 }: ChainAccountCardProps): ReactElement {
@@ -89,7 +81,7 @@ function ChainAccountCard({
     feeReserve: bigint;
   } | null>(null);
   // Pre-fill a one-click self-transfer when a suggested recipient is offered
-  // (testnet, passkey). The card remounts per account, so these initializers
+  // (passkey mode). The card remounts per account, so these initializers
   // re-seed on every account switch.
   const [to, setTo] = useState(() => suggestion?.address ?? "");
   const [amount, setAmount] = useState(() =>
@@ -104,18 +96,13 @@ function ChainAccountCard({
   // The suggestion chip stays visible until manual entry is enabled.
   const shownSuggestion = manual ? undefined : suggestion;
   const sendAmount = adapter.parseAmount(amount);
-  // Testnet gates Send on a *known* balance that covers amount + fee reserve,
-  // and prompts the faucet when it doesn't. Mainnet is unchanged: send on a
-  // valid form. `covered` is false while the balance is still unknown, so Send
-  // stays disabled until we actually know there are funds.
+  // Send is gated on a *known* balance that covers amount + fee reserve:
+  // `covered` is false while the balance is still unknown, so Send stays
+  // disabled until we actually know there are funds.
   const covered =
     funds !== null && funds.balance >= (sendAmount ?? 0n) + funds.feeReserve;
-  const needsFunds = isTestnet && funds !== null && !covered;
   const canSend =
-    adapter.isValidRecipient(to) &&
-    sendAmount !== null &&
-    !busy &&
-    (!isTestnet || covered);
+    adapter.isValidRecipient(to) && sendAmount !== null && !busy && covered;
 
   // Drop the pre-filled recipient and enable manual address entry.
   function switchToManual(): void {
@@ -143,8 +130,8 @@ function ChainAccountCard({
     const interval = window.setInterval(() => {
       void refreshBalance();
     }, BALANCE_REFRESH_MS);
-    // Refresh when the tab regains focus, such as after returning from the
-    // faucet, so the new balance appears without a manual Refresh button.
+    // Refresh when the tab regains focus, so a balance that changed while
+    // the tab was hidden appears without a manual Refresh button.
     const onVisible = () => {
       if (document.visibilityState === "visible") void refreshBalance();
     };
@@ -184,8 +171,6 @@ function ChainAccountCard({
     setAmount(adapter.formatAmount(funds.balance - funds.feeReserve));
   }
 
-  const explorer = broadcastId ? adapter.explorerTxUrl(broadcastId) : undefined;
-
   return (
     <section className="card">
       <div className="card-head">
@@ -214,22 +199,12 @@ function ChainAccountCard({
             : trimAmount(adapter.formatAmount(funds.balance))}
         </span>
         <span className="symbol">{adapter.symbol}</span>
-        {needsFunds && (
-          <a
-            className="faucet"
-            href={adapter.faucetUrl}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {adapter.faucetText}
-          </a>
-        )}
       </div>
 
       <div className="qr-frame">
         <QrCode value={address} />
       </div>
-      <p className="hint center">Scan to receive on {adapter.networkName}</p>
+      <p className="hint center">Scan to receive on the demo network</p>
 
       <form
         className="send"
@@ -313,14 +288,7 @@ function ChainAccountCard({
 
         {broadcastId && (
           <p className="status ok">
-            Broadcast:{" "}
-            {explorer ? (
-              <a href={explorer} target="_blank" rel="noreferrer">
-                {shorten(broadcastId)}
-              </a>
-            ) : (
-              <span className="mono">{shorten(broadcastId)}</span>
-            )}
+            Broadcast: <span className="mono">{shorten(broadcastId)}</span>
           </p>
         )}
 

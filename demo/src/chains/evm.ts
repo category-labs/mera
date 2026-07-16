@@ -18,7 +18,7 @@ const RPC_URL =
   "https://evm-network-production.up.railway.app";
 
 /** The resolved chain paired with a public client bound to it. */
-type EthereumContext = {
+type EvmContext = {
   chain: Chain;
   publicClient: PublicClient;
   rpcUrl: string;
@@ -30,7 +30,7 @@ type EthereumContext = {
  * also probes connectivity, so an unreachable endpoint fails here (and shows
  * on the card) rather than in the first balance read.
  */
-async function resolveEthereumContext(): Promise<EthereumContext> {
+async function resolveEvmContext(): Promise<EvmContext> {
   const bootstrap = createPublicClient({ transport: http(RPC_URL) });
   const id = await bootstrap.getChainId();
   const chain = defineChain({
@@ -87,5 +87,5 @@ function createTransactionClient(
   });
 }
 
-export type { EthereumContext };
-export { createTransactionClient, fundAccount, resolveEthereumContext };
+export type { EvmContext };
+export { createTransactionClient, fundAccount, resolveEvmContext };

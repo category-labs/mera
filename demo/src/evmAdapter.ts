@@ -5,28 +5,28 @@ import { formatDecimalAmount, parseDecimalAmount } from "./amount";
 import type { ChainAdapter } from "./ChainAccountCard";
 import {
   createTransactionClient,
-  type EthereumContext,
+  type EvmContext,
   fundAccount,
-} from "./chains/ethereum";
+} from "./chains/evm";
 import { createFundingGate } from "./funding";
 
-const ETH_DECIMALS = 18;
+const EVM_DECIMALS = 18;
 // Balances below this ask the network for funds. The top-up policy lives in
 // the network's guard (demo/network/evm/server.mts), which uses the same
 // threshold.
 const MIN_BALANCE_WEI = 10n * 10n ** 18n;
 
 /**
- * Builds the Ethereum `ChainAdapter` for one account: balance and gas-reserve
+ * Builds the EVM `ChainAdapter` for one account: balance and gas-reserve
  * reads from the context's public client, passkey signing, and raw-transaction
  * broadcast.
  */
-function createEthereumAdapter(
+function createEvmAdapter(
   session: Secp256k1SigningSession,
   address: EvmAddress,
-  ethereum: EthereumContext,
+  evm: EvmContext,
 ): ChainAdapter {
-  const { chain, publicClient, rpcUrl } = ethereum;
+  const { chain, publicClient, rpcUrl } = evm;
   const account = toViemAccount(session);
   const symbol = chain.nativeCurrency.symbol;
   const ensureFunded = createFundingGate({
@@ -35,14 +35,14 @@ function createEthereumAdapter(
     readBalance: () => publicClient.getBalance({ address }),
   });
   return {
-    chainName: "Ethereum",
+    chainName: "EVM",
     badgeClassName: "badge",
     symbol,
     recipientPlaceholder: "0x…",
     balanceTooLowError: "Balance is too low to cover gas.",
     isValidRecipient: isAddress,
-    parseAmount: (text) => parseDecimalAmount(text, ETH_DECIMALS),
-    formatAmount: (amount) => formatDecimalAmount(amount, ETH_DECIMALS),
+    parseAmount: (text) => parseDecimalAmount(text, EVM_DECIMALS),
+    formatAmount: (amount) => formatDecimalAmount(amount, EVM_DECIMALS),
     async fetchBalance() {
       const [balance, fees] = await Promise.all([
         publicClient.getBalance({ address }),
@@ -71,4 +71,4 @@ function createEthereumAdapter(
   };
 }
 
-export { createEthereumAdapter };
+export { createEvmAdapter };

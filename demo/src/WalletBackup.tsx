@@ -36,7 +36,7 @@ function WalletBackup({ phrase, onHide }: WalletBackupProps): ReactElement {
       </div>
       <p className="hint">
         Anyone with these {words.length} words controls the funds. Compatible
-        wallet apps, such as MetaMask for Ethereum and Phantom for Solana, can
+        wallet apps, such as MetaMask for EVM chains and Phantom for Solana, can
         recover the same addresses.
       </p>
       <ol className="mnemonic-grid">

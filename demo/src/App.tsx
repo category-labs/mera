@@ -2,10 +2,7 @@ import type { Connection } from "@solana/web3.js";
 import { type ReactElement, useEffect, useState } from "react";
 import { AccountCard } from "./AccountCard";
 import { ConnectCard } from "./ConnectCard";
-import {
-  type EthereumContext,
-  resolveEthereumContext,
-} from "./chains/ethereum";
+import { type EvmContext, resolveEvmContext } from "./chains/evm";
 import { resolveSolanaConnection } from "./chains/solana";
 import {
   type AccountSlot,
@@ -51,9 +48,8 @@ function retryingResolve<T>(
 
 /** Root component: holds the connected wallet + accounts, fetches network info. */
 function App(): ReactElement {
-  const [ethereumContext, setEthereumContext] =
-    useState<EthereumContext | null>(null);
-  const [ethereumError, setEthereumError] = useState<string | null>(null);
+  const [evmContext, setEvmContext] = useState<EvmContext | null>(null);
+  const [evmError, setEvmError] = useState<string | null>(null);
 
   const [solanaConnection, setSolanaConnection] = useState<Connection | null>(
     null,
@@ -65,10 +61,10 @@ function App(): ReactElement {
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
-    const stopEthereum = retryingResolve(
-      resolveEthereumContext,
-      setEthereumContext,
-      setEthereumError,
+    const stopEvm = retryingResolve(
+      resolveEvmContext,
+      setEvmContext,
+      setEvmError,
     );
     const stopSolana = retryingResolve(
       resolveSolanaConnection,
@@ -76,7 +72,7 @@ function App(): ReactElement {
       setSolanaError,
     );
     return () => {
-      stopEthereum();
+      stopEvm();
       stopSolana();
     };
   }, []);
@@ -137,8 +133,8 @@ function App(): ReactElement {
           activeIndex={activeIndex}
           onSwitch={setActiveIndex}
           onAddAccount={handleAddAccount}
-          ethereum={ethereumContext}
-          ethereumError={ethereumError}
+          evm={evmContext}
+          evmError={evmError}
           solana={solanaConnection}
           solanaError={solanaError}
           onLock={handleLock}

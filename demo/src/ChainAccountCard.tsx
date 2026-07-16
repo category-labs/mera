@@ -14,7 +14,7 @@ const DEMO_SEND_AMOUNT = "0.01";
  * convert to and from the decimal strings shown in the UI.
  */
 type ChainAdapter = {
-  /** Chain label for the card badge, e.g. "Ethereum". */
+  /** Chain label for the card badge, e.g. "EVM". */
   chainName: string;
   badgeClassName: string;
   symbol: string;

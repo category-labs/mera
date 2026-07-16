@@ -1,21 +1,21 @@
 import type { Connection } from "@solana/web3.js";
 import { type ReactElement, useMemo, useState } from "react";
 import { ChainAccountCard, type RecipientSuggestion } from "./ChainAccountCard";
-import type { EthereumContext } from "./chains/ethereum";
+import type { EvmContext } from "./chains/evm";
 import {
   type AccountSlot,
   type ConnectedWallet,
   describeError,
   revealMnemonic,
 } from "./connect";
-import { createEthereumAdapter } from "./ethereumAdapter";
+import { createEvmAdapter } from "./evmAdapter";
 import { createSolanaAdapter } from "./solanaAdapter";
 import { WalletBackup } from "./WalletBackup";
 
-type ChainKind = "ethereum" | "solana";
+type ChainKind = "evm" | "solana";
 
 const CHAINS: { id: ChainKind; label: string }[] = [
-  { id: "ethereum", label: "Ethereum" },
+  { id: "evm", label: "EVM" },
   { id: "solana", label: "Solana" },
 ];
 
@@ -25,8 +25,8 @@ type AccountCardProps = {
   activeIndex: number;
   onSwitch: (index: number) => void;
   onAddAccount: () => void;
-  ethereum: EthereumContext | null;
-  ethereumError: string | null;
+  evm: EvmContext | null;
+  evmError: string | null;
   solana: Connection | null;
   solanaError: string | null;
   onLock: () => void;
@@ -45,13 +45,13 @@ function AccountCard({
   activeIndex,
   onSwitch,
   onAddAccount,
-  ethereum,
-  ethereumError,
+  evm,
+  evmError,
   solana,
   solanaError,
   onLock,
 }: AccountCardProps): ReactElement {
-  const [chain, setChain] = useState<ChainKind>("ethereum");
+  const [chain, setChain] = useState<ChainKind>("evm");
   const active = accounts[activeIndex] ?? accounts[0];
 
   // Recovery phrase, revealed on demand by a fresh passkey ceremony. It lives
@@ -103,16 +103,12 @@ function AccountCard({
     };
   }
 
-  const ethereumAdapter = useMemo(
+  const evmAdapter = useMemo(
     () =>
-      ethereum
-        ? createEthereumAdapter(
-            active.ethereum.session,
-            active.ethereum.address,
-            ethereum,
-          )
+      evm
+        ? createEvmAdapter(active.evm.session, active.evm.address, evm)
         : null,
-    [active, ethereum],
+    [active, evm],
   );
   const solanaAdapter = useMemo(
     () =>
@@ -183,22 +179,20 @@ function AccountCard({
         ))}
       </div>
 
-      {chain === "ethereum" ? (
-        ethereumAdapter ? (
+      {chain === "evm" ? (
+        evmAdapter ? (
           <ChainAccountCard
-            key={`eth-${active.index}`}
-            adapter={ethereumAdapter}
-            address={active.ethereum.address}
+            key={`evm-${active.index}`}
+            adapter={evmAdapter}
+            address={active.evm.address}
             mode={wallet.mode}
-            suggestion={suggestionFor("ethereum")}
+            suggestion={suggestionFor("evm")}
             onLock={onLock}
           />
-        ) : ethereumError ? (
-          <p className="status error">
-            Ethereum is unavailable: {ethereumError}
-          </p>
+        ) : evmError ? (
+          <p className="status error">EVM is unavailable: {evmError}</p>
         ) : (
-          <p className="status">The demo is connecting to Ethereum…</p>
+          <p className="status">The demo is connecting to EVM…</p>
         )
       ) : solanaAdapter ? (
         <ChainAccountCard

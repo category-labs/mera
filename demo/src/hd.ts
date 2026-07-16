@@ -12,9 +12,10 @@ import { wordlist } from "@scure/bip39/wordlists/english.js";
 
 const PRF_OUTPUT_LENGTH = 32;
 
-// BIP-44 Ethereum path: the address index varies on the external chain
-// (the MetaMask convention).
-const ethereumPath = (index: number): string => `m/44'/60'/0'/0/${index}`;
+// BIP-44 path on coin type 60, Ethereum's registered type, which EVM accounts
+// share; the address index varies on the external chain (the MetaMask
+// convention).
+const evmPath = (index: number): string => `m/44'/60'/0'/0/${index}`;
 
 /**
  * Converts a 32-byte WebAuthn PRF output into the BIP-39 mnemonic that every
@@ -46,9 +47,9 @@ function isValidMnemonic(mnemonic: string): boolean {
   return validateMnemonic(mnemonic, wordlist);
 }
 
-/** secp256k1 private key for Ethereum account `index` (BIP-32 over BIP-44). */
-function deriveEthereumPrivateKey(seed: Uint8Array, index: number): Uint8Array {
-  const node = HDKey.fromMasterSeed(seed).derive(ethereumPath(index));
+/** secp256k1 private key for EVM account `index` (BIP-32 over BIP-44). */
+function deriveEvmPrivateKey(seed: Uint8Array, index: number): Uint8Array {
+  const node = HDKey.fromMasterSeed(seed).derive(evmPath(index));
   if (!node.privateKey) {
     throw new Error("BIP-32 derivation produced no private key");
   }
@@ -97,7 +98,7 @@ function slip10ChildHardened(node: Slip10Node, index: number): Slip10Node {
 
 export {
   createMnemonic,
-  deriveEthereumPrivateKey,
+  deriveEvmPrivateKey,
   deriveSolanaSeed,
   isValidMnemonic,
   mnemonicToSeed,

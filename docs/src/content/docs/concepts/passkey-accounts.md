@@ -11,7 +11,7 @@ When the PRF salt is omitted, mera uses its [fixed v1 salt](/reference/get-deter
 
 ## No stored state
 
-There is no stored secret; all state lives in the passkey. Once the passkey has synced to a new device, sign-in there is the same ceremony and produces the same accounts.
+There is no stored secret; all state lives in the passkey. Once the passkey has synced to a new device, sign-in there is the same ceremony and produces the same accounts. During use, the PRF output and the keys derived from it are values in the page's memory, readable by any script on the page ([security model](/concepts/security-model/#what-a-compromised-runtime-sees)).
 
 ## Losing the passkey
 

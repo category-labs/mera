@@ -1,5 +1,6 @@
 import {
   type Account,
+  type Address,
   type Chain,
   createPublicClient,
   createWalletClient as createViemTransactionClient,
@@ -46,6 +47,32 @@ async function resolveEthereumContext(): Promise<EthereumContext> {
 }
 
 /**
+ * Asks the network to fund `address` through the guard's demo_fundAccount
+ * method (see demo/network/evm/server.mts). The guard tops a balance below
+ * its threshold up by a fixed amount and is a no-op otherwise, so the call
+ * is idempotent; anvil's cheat methods themselves are not exposed.
+ */
+async function fundAccount(address: Address): Promise<void> {
+  const response = await fetch(RPC_URL, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "demo_fundAccount",
+      params: [address],
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Funding failed with status ${response.status}.`);
+  }
+  const body = (await response.json()) as { error?: { message?: string } };
+  if (body.error) {
+    throw new Error(body.error.message ?? "Funding failed.");
+  }
+}
+
+/**
  * Creates a viem transaction client bound to a passkey-backed account and chain.
  */
 function createTransactionClient(
@@ -61,4 +88,4 @@ function createTransactionClient(
 }
 
 export type { EthereumContext };
-export { createTransactionClient, resolveEthereumContext };
+export { createTransactionClient, fundAccount, resolveEthereumContext };

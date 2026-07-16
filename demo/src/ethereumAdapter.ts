@@ -6,9 +6,15 @@ import type { ChainAdapter } from "./ChainAccountCard";
 import {
   createTransactionClient,
   type EthereumContext,
+  fundAccount,
 } from "./chains/ethereum";
+import { createFundingGate } from "./funding";
 
 const ETH_DECIMALS = 18;
+// Balances below this ask the network for funds. The top-up policy lives in
+// the network's guard (demo/network/evm/server.mts), which uses the same
+// threshold.
+const MIN_BALANCE_WEI = 10n * 10n ** 18n;
 
 /**
  * Builds the Ethereum `ChainAdapter` for one account: balance and gas-reserve
@@ -23,6 +29,11 @@ function createEthereumAdapter(
   const { chain, publicClient, rpcUrl } = ethereum;
   const account = toViemAccount(session);
   const symbol = chain.nativeCurrency.symbol;
+  const ensureFunded = createFundingGate({
+    minBalance: MIN_BALANCE_WEI,
+    fund: () => fundAccount(address),
+    readBalance: () => publicClient.getBalance({ address }),
+  });
   return {
     chainName: "Ethereum",
     badgeClassName: "badge",
@@ -38,7 +49,10 @@ function createEthereumAdapter(
         publicClient.estimateFeesPerGas(),
       ]);
       // 21000 gas is the base cost of a native transfer to an EOA.
-      return { balance, feeReserve: 21000n * fees.maxFeePerGas };
+      return {
+        balance: await ensureFunded(balance),
+        feeReserve: 21000n * fees.maxFeePerGas,
+      };
     },
     async signTransfer(to, valueWei) {
       const transactionClient = createTransactionClient(account, chain, rpcUrl);

@@ -35,6 +35,39 @@ async function getSolBalance(
   return BigInt(balance);
 }
 
+/**
+ * Requests an airdrop from the network's built-in faucet and waits for it to
+ * confirm by polling the signature status over HTTP. `Connection`'s own
+ * confirmation helpers subscribe over a websocket, which the demo network's
+ * single HTTP port doesn't carry, so this polls instead.
+ */
+async function airdropSol(
+  connection: Connection,
+  address: string,
+  lamports: bigint,
+): Promise<void> {
+  // requestAirdrop takes a number; demo amounts stay far below 2^53 lamports.
+  const signature = await connection.requestAirdrop(
+    new PublicKey(address),
+    Number(lamports),
+  );
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const status = (await connection.getSignatureStatuses([signature]))
+      .value[0];
+    if (status?.err) {
+      throw new Error(`The airdrop failed: ${JSON.stringify(status.err)}`);
+    }
+    if (
+      status?.confirmationStatus === "confirmed" ||
+      status?.confirmationStatus === "finalized"
+    ) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error("The airdrop was not confirmed in time.");
+}
+
 type SignSolTransferOptions = {
   connection: Connection;
   session: Ed25519SigningSession;
@@ -80,4 +113,4 @@ async function signSolTransfer({
   return transaction.serialize();
 }
 
-export { getSolBalance, resolveSolanaConnection, signSolTransfer };
+export { airdropSol, getSolBalance, resolveSolanaConnection, signSolTransfer };

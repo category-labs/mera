@@ -5,12 +5,16 @@ import {
 import type { Connection } from "@solana/web3.js";
 import { formatDecimalAmount, parseDecimalAmount } from "./amount";
 import type { ChainAdapter } from "./ChainAccountCard";
-import { getSolBalance, signSolTransfer } from "./chains/solana";
+import { airdropSol, getSolBalance, signSolTransfer } from "./chains/solana";
+import { createFundingGate } from "./funding";
 import { bytesToBase64 } from "./ui";
 
 // Solana charges 5000 lamports per signature; a basic transfer needs one.
 const TRANSFER_FEE_LAMPORTS = 5000n;
 const SOL_DECIMALS = 9;
+// Balances below 10 DEMON are topped up with a 100 DEMON airdrop.
+const MIN_BALANCE_LAMPORTS = 10n * 10n ** 9n;
+const TOP_UP_LAMPORTS = 100n * 10n ** 9n;
 
 /**
  * Builds the Solana `ChainAdapter` for one account: balance reads from the
@@ -22,6 +26,11 @@ function createSolanaAdapter(
   address: string,
   connection: Connection,
 ): ChainAdapter {
+  const ensureFunded = createFundingGate({
+    minBalance: MIN_BALANCE_LAMPORTS,
+    fund: () => airdropSol(connection, address, TOP_UP_LAMPORTS),
+    readBalance: () => getSolBalance(connection, address),
+  });
   return {
     chainName: "Solana",
     badgeClassName: "badge chain-solana",
@@ -34,8 +43,9 @@ function createSolanaAdapter(
     parseAmount: (text) => parseDecimalAmount(text, SOL_DECIMALS),
     formatAmount: (amount) => formatDecimalAmount(amount, SOL_DECIMALS),
     async fetchBalance() {
+      const balance = await getSolBalance(connection, address);
       return {
-        balance: await getSolBalance(connection, address),
+        balance: await ensureFunded(balance),
         feeReserve: TRANSFER_FEE_LAMPORTS,
       };
     },

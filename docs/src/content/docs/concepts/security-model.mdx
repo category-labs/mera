@@ -5,7 +5,7 @@ description: What mera protects, what it cannot, and the risks left to the app.
 
 import TrustBoundary from "../../../assets/diagrams/trust-boundary.svg";
 
-mera derives accounts with software keys. The passkey's own private key never leaves the authenticator; the PRF output, the secret bytes a passkey returns through its [PRF extension](/concepts/passkeys-and-prf/), does leave it, and every key derived from that output lives in the page's JavaScript memory while in use. The guarantees match a wallet app holding an imported seed phrase in the page. A hardware wallet never exposes its key to the page; mera signs in the page.
+mera derives accounts with software keys. The passkey's own private key never leaves the authenticator; the PRF output, the secret bytes a passkey returns through its [PRF extension](/concepts/passkeys-and-prf/), does leave it, and every key derived from that output lives in the page's JavaScript memory while in use. The guarantees match a wallet app holding an imported seed phrase in the page.
 
 The library's scope is narrow: it runs [passkey ceremonies](/concepts/passkeys-and-prf/#ceremonies-and-prompts), returns [entropy](/concepts/entropy-keys-and-accounts/) to the app, and holds signing keys in [lockable sessions](/concepts/signing-sessions/).
 

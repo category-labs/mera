@@ -11,6 +11,7 @@ import {
   type Secp256k1SigningSession,
 } from "@category-labs/mera";
 import { BaseError as ViemError } from "viem";
+import { saveCachedAccount } from "./account";
 import {
   deriveEvmPrivateKey,
   isValidMnemonic,
@@ -19,38 +20,28 @@ import {
 } from "./hd";
 import { currentPasskeyWallet, rememberPasskeyWallet } from "./passkeyWallet";
 
-/** The two account modes the demo offers. */
 type AccountMode = "vault" | "passkey";
 
-/** One numbered account with its EVM signing session. */
-type AccountSlot = {
-  index: number;
-  evm: {
-    session: Secp256k1SigningSession;
-    address: EvmAddress;
-  };
+type Account = {
+  session: Secp256k1SigningSession;
+  address: EvmAddress;
 };
 
 /**
- * A connected wallet with one passkey ceremony's worth of authority.
+ * A connected wallet with one passkey ceremony's worth of authority over one
+ * account.
  *
- * Passkey mode holds the BIP-39 seed for the session and can mint more
- * numbered HD accounts with no further passkey prompt. Vault mode exposes the
- * single decrypted account from its vault. Either way, `lock()` zeroes every
- * secret the wallet still holds.
+ * The account's key is derived at connect and the BIP-39 seed it came from
+ * is zeroed before connect returns, so the wallet holds no secret beyond the
+ * account's signing session. `lock()` zeroes that session's key.
  */
 type ConnectedWallet = {
   mode: AccountMode;
   /** Credential to pin when re-running a ceremony for this wallet; passkey mode only, absent otherwise. */
   credentialId?: string;
-  /** Returns the account at `index`, deriving and caching it on first use. */
-  deriveAccount(index: number): AccountSlot;
-  /** Zeroes the seed and every signing session handed out. */
+  account: Account;
   lock(): void;
 };
-
-/** Result of a connect call: the wallet plus how many accounts to materialize. */
-type ConnectResult = { wallet: ConnectedWallet; accountCount: number };
 
 const RP_NAME = "Mera Demo";
 const VAULT_KEY = "mera.demo.secretVault";
@@ -58,93 +49,65 @@ const DEFAULT_USER = "nad";
 
 const rpId = location.hostname;
 
-/** Derives the signing session for one HD account index from the seed. */
-function deriveSlotFromSeed(seed: Uint8Array, index: number): AccountSlot {
-  // deriveEvmPrivateKey returns a fresh buffer the session takes ownership of
-  // and zeroes; the `seed` itself is never handed to a session.
-  const session = createSecp256k1SigningSession({
-    consumePrivateKey: deriveEvmPrivateKey(seed, index),
-  });
-  return {
-    index,
-    evm: {
-      session,
-      address: getEvmAddress(session.publicKey),
-    },
-  };
+/**
+ * Derives the demo's account (HD index 0) from a BIP-39 seed and zeroes the
+ * seed, so no caller retains it past the derivation.
+ */
+function accountFromSeed(seed: Uint8Array): Account {
+  try {
+    // deriveEvmPrivateKey returns a fresh buffer the session takes ownership
+    // of and zeroes; the `seed` itself is never handed to a session.
+    const session = createSecp256k1SigningSession({
+      consumePrivateKey: deriveEvmPrivateKey(seed, 0),
+    });
+    return { session, address: getEvmAddress(session.publicKey) };
+  } finally {
+    seed.fill(0);
+  }
 }
 
-// ----- Passkey mode: one PRF output is the HD root for every account ---------
+// ----- Passkey mode: one PRF output is the HD root of the account ------------
 
 /**
  * Builds a passkey-mode wallet from a single PRF output.
  *
- * The PRF output becomes a BIP-39 seed held in memory for the session,
- * exactly like the signing keys are, and is zeroed alongside them on `lock()`.
- * Holding it lets "Add account" derive a new HD account without another
- * ceremony. The demo runs one ceremony per session rather than per account.
+ * PRF output -> BIP-39 mnemonic -> seed -> account key; the PRF output and
+ * the seed are zeroed before this returns. The mnemonic string is transient
+ * and re-derivable from a fresh ceremony, which is how the export flow shows
+ * it again.
  */
 function buildPasskeyWallet(
   prfOutput: Uint8Array,
   credentialId: string,
 ): ConnectedWallet {
-  // PRF output -> BIP-39 mnemonic -> 64-byte seed. The mnemonic string
-  // is transient (re-derivable from a fresh ceremony for a future export flow);
-  // only the zeroable seed bytes are retained.
-  let seed: Uint8Array | undefined = mnemonicToSeed(
-    prfOutputToMnemonic(prfOutput),
-  );
+  const seed = mnemonicToSeed(prfOutputToMnemonic(prfOutput));
   prfOutput.fill(0);
-
-  const cache = new Map<number, AccountSlot>();
-
+  const account = accountFromSeed(seed);
   return {
     mode: "passkey",
     credentialId,
-    deriveAccount(index): AccountSlot {
-      const cached = cache.get(index);
-      if (cached) return cached;
-      if (!seed) throw new Error("The wallet is locked. Connect again.");
-      const slot = deriveSlotFromSeed(seed, index);
-      cache.set(index, slot);
-      return slot;
-    },
-    lock(): void {
-      for (const slot of cache.values()) {
-        slot.evm.session.lock();
-      }
-      cache.clear();
-      if (seed) {
-        seed.fill(0);
-        seed = undefined;
-      }
-    },
+    account,
+    lock: () => account.session.lock(),
   };
 }
 
-async function createPasskeyWallet(label: string): Promise<ConnectResult> {
+async function createPasskeyWallet(): Promise<ConnectedWallet> {
   // `user.id` is left to default (32 random bytes), so every "Create" is a
   // distinct, parallel passkey rather than silently overwriting an existing one.
   const credential = await createPasskeyWithPrfOutput({
     rp: { id: rpId, name: RP_NAME },
-    user: { name: label, displayName: label },
+    user: { name: DEFAULT_USER, displayName: DEFAULT_USER },
   });
 
   rememberPasskeyWallet({
     credentialId: credential.credentialId,
     transports: credential.transports,
-    label,
-    accountCount: 1,
   });
 
-  const wallet = buildPasskeyWallet(
-    credential.prfOutput,
-    credential.credentialId,
-  );
-  return { wallet, accountCount: 1 };
+  return buildPasskeyWallet(credential.prfOutput, credential.credentialId);
 }
 
-async function openPasskeyWallet(): Promise<ConnectResult> {
+async function openPasskeyWallet(): Promise<ConnectedWallet> {
   // Pin to the passkey created on this device when we know it; otherwise fall
   // back to a discoverable credential so a freshly synced device still works.
   const known = currentPasskeyWallet();
@@ -155,28 +118,20 @@ async function openPasskeyWallet(): Promise<ConnectResult> {
       : undefined,
   });
 
-  // The ceremony reports which credential was actually used; if it matches the
-  // current local record, restore that wallet's account count.
-  const record = known?.credentialId === credentialId ? known : undefined;
-  const label = record?.label ?? DEFAULT_USER;
-  const accountCount = record?.accountCount ?? 1;
+  // The ceremony reports which credential was actually used; keep transports
+  // only when it matches the current local record.
   rememberPasskeyWallet({
     credentialId,
-    transports: record?.transports,
-    label,
-    accountCount,
+    transports:
+      known?.credentialId === credentialId ? known?.transports : undefined,
   });
 
-  const wallet = buildPasskeyWallet(prfOutput, credentialId);
-  return { wallet, accountCount };
+  return buildPasskeyWallet(prfOutput, credentialId);
 }
 
 // ----- Vault mode: one passkey encrypts one seed phrase the account derives from
 
-async function createVaultAccount(
-  label: string,
-  mnemonic: string,
-): Promise<ConnectResult> {
+async function createVaultAccount(mnemonic: string): Promise<ConnectedWallet> {
   const phrase = mnemonic.trim();
   if (!isValidMnemonic(phrase)) {
     throw new Error("Enter a valid recovery phrase, or generate a fresh one.");
@@ -190,7 +145,7 @@ async function createVaultAccount(
   try {
     const vault = await createSecretVaultWithNewPasskey({
       rp: { id: rpId, name: RP_NAME },
-      user: { name: label, displayName: label },
+      user: { name: DEFAULT_USER, displayName: DEFAULT_USER },
       secret,
     });
     localStorage.setItem(VAULT_KEY, JSON.stringify(vault));
@@ -200,18 +155,11 @@ async function createVaultAccount(
     secret.fill(0);
   }
 
-  return {
-    wallet: buildVaultWallet(vaultSlotFromPhrase(phrase)),
-    accountCount: 1,
-  };
+  return vaultWalletFromPhrase(phrase);
 }
 
-async function unlockVaultAccount(): Promise<ConnectResult> {
-  const phrase = await decryptStoredVaultPhrase();
-  return {
-    wallet: buildVaultWallet(vaultSlotFromPhrase(phrase)),
-    accountCount: 1,
-  };
+async function unlockVaultAccount(): Promise<ConnectedWallet> {
+  return vaultWalletFromPhrase(await decryptStoredVaultPhrase());
 }
 
 /**
@@ -236,66 +184,52 @@ async function decryptStoredVaultPhrase(): Promise<string> {
   }
 }
 
-/** Derives the single vault-mode account (index 0) from its seed phrase. */
-function vaultSlotFromPhrase(phrase: string): AccountSlot {
-  const seed = mnemonicToSeed(phrase);
-  try {
-    return deriveSlotFromSeed(seed, 0);
-  } finally {
-    seed.fill(0);
-  }
-}
-
-/** Builds a vault-mode wallet around its single decrypted account. */
-function buildVaultWallet(slot: AccountSlot): ConnectedWallet {
+function vaultWalletFromPhrase(phrase: string): ConnectedWallet {
+  const account = accountFromSeed(mnemonicToSeed(phrase));
   return {
     mode: "vault",
-    deriveAccount(index): AccountSlot {
-      if (index !== 0) throw new Error("Vault mode has a single account.");
-      return slot;
-    },
-    lock(): void {
-      slot.evm.session.lock();
-    },
+    account,
+    lock: () => account.session.lock(),
   };
 }
 
 /**
- * Connects a wallet for the chosen mode and action.
- *
- * One passkey ceremony unlocks the wallet; in passkey mode every numbered
- * account afterwards is pure HD math with no further prompt.
+ * Connects a wallet for the chosen mode and action with one passkey ceremony,
+ * and caches the resulting account's public identity for the next page load.
  *
  * `secret` is the recovery phrase a vault-backed account is created from; every
  * other path (passkey, or signing back into an existing secret vault) ignores
  * it, so it is optional.
  */
-function connect(
+async function connect(
   mode: AccountMode,
   action: "create" | "signin",
-  username: string,
   secret?: string,
-): Promise<ConnectResult> {
-  const label = username.trim() || DEFAULT_USER;
+): Promise<ConnectedWallet> {
+  let wallet: ConnectedWallet;
   if (mode === "vault") {
-    return action === "create"
-      ? createVaultAccount(label, secret ?? "")
-      : unlockVaultAccount();
+    wallet =
+      action === "create"
+        ? await createVaultAccount(secret ?? "")
+        : await unlockVaultAccount();
+  } else {
+    wallet =
+      action === "create"
+        ? await createPasskeyWallet()
+        : await openPasskeyWallet();
   }
-  return action === "create" ? createPasskeyWallet(label) : openPasskeyWallet();
+  saveCachedAccount({ mode, address: wallet.account.address });
+  return wallet;
 }
 
 /**
- * Reveals a wallet's BIP-39 recovery phrase behind a fresh passkey ceremony.
- *
- * Passkey wallets re-derive the phrase from the passkey PRF output; vault-backed
- * wallets decrypt the generated or imported phrase from the secret vault.
- * Either way, the mnemonic is fetched on demand after fresh user verification.
- * PRF output and decrypted secret bytes are zeroed where possible before the
- * function returns. The phrase is returned as a JavaScript string, which cannot
- * be zeroed in place.
+ * Reveals the recovery phrase behind a fresh passkey ceremony: passkey mode
+ * re-derives it from the PRF output, vault mode decrypts the stored vault.
+ * Transient secret bytes are zeroed; the returned string cannot be.
  */
-async function revealMnemonic(wallet: ConnectedWallet): Promise<string> {
+async function revealMnemonic(
+  wallet: Pick<ConnectedWallet, "mode" | "credentialId">,
+): Promise<string> {
   if (wallet.mode === "vault") {
     return decryptStoredVaultPhrase();
   }
@@ -347,5 +281,5 @@ function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export type { AccountMode, AccountSlot, ConnectedWallet, ConnectResult };
-export { connect, DEFAULT_USER, describeError, revealMnemonic };
+export type { Account, AccountMode, ConnectedWallet };
+export { connect, describeError, revealMnemonic };

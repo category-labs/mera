@@ -5,15 +5,12 @@ import type { PasskeyCredentialTransport } from "@category-labs/mera";
  *
  * It holds no key material. The app uses it to pin the right passkey with
  * `allowCredentials` on the next same-device sign-in instead of showing every
- * discoverable credential, and to remember how many HD accounts the current
- * wallet had derived so sign-in can restore them. A fresh device has no record
- * and falls back to a discoverable sign-in.
+ * discoverable credential. A fresh device has no record and falls back to a
+ * discoverable sign-in.
  */
 type PasskeyWalletRecord = {
   credentialId: string;
   transports?: readonly PasskeyCredentialTransport[];
-  label: string;
-  accountCount: number;
 };
 
 const STORAGE_KEY = "mera.demo.passkeyWallet";
@@ -33,20 +30,10 @@ function rememberPasskeyWallet(record: PasskeyWalletRecord): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
 }
 
-/** Persists a new account count so a later sign-in restores every account. */
-function setPasskeyAccountCount(accountCount: number): void {
-  const existing = currentPasskeyWallet();
-  if (existing) rememberPasskeyWallet({ ...existing, accountCount });
-}
-
 function isPasskeyWalletRecord(value: unknown): value is PasskeyWalletRecord {
   if (!value || typeof value !== "object") return false;
   const record = value as Partial<PasskeyWalletRecord>;
-  return (
-    typeof record.credentialId === "string" &&
-    typeof record.label === "string" &&
-    typeof record.accountCount === "number"
-  );
+  return typeof record.credentialId === "string";
 }
 
-export { currentPasskeyWallet, rememberPasskeyWallet, setPasskeyAccountCount };
+export { currentPasskeyWallet, rememberPasskeyWallet };

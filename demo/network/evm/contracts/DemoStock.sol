@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.36;
 
-/// Nadvidia (NAD): the demo market's single stock.
+/// Nad Computer Company (NAD): the demo market's single stock.
 ///
 /// The contract is both the ERC-20 share token and the exchange: `buy` mints
 /// shares for native currency at the current price and `sell` burns them and
@@ -14,7 +14,7 @@ pragma solidity 0.8.36;
 /// from it, so payouts do not run dry. Rounding floors in the contract's
 /// favor.
 contract DemoStock {
-    string public constant name = "Nadvidia";
+    string public constant name = "Nad Computer Company";
     string public constant symbol = "NAD";
     uint8 public constant decimals = 18;
 

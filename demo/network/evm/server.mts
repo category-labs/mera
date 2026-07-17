@@ -34,11 +34,11 @@ const REFUSED_METHODS = new Set([
   "eth_signTypedData_v4",
 ]);
 // Funding policy: balances below the threshold are raised by the top-up,
-// but only for accounts that have never sent a transaction (nonce 0), so an
-// account emptied on purpose stays empty. The demo's EVM adapter applies the
-// same threshold and nonce check before asking.
-const MIN_BALANCE_WEI = 10n * 10n ** 18n;
-const TOP_UP_WEI = 100n * 10n ** 18n;
+// which reads as the $10,000 a paper-trading account opens with; the
+// threshold keeps a funded account from being credited twice. The app asks
+// at connect and through an explicit button, never on balance reads.
+const MIN_BALANCE_WEI = 100n * 10n ** 18n;
+const TOP_UP_WEI = 10_000n * 10n ** 18n;
 // Payout reserve seeded into the stock contract at boot; orders of magnitude
 // more than funded accounts can win from it.
 const MARKET_LIQUIDITY_WEI = 10n ** 27n;
@@ -115,17 +115,13 @@ async function anvilQuantity(
 }
 
 // Raises `address`'s balance to current + TOP_UP_WEI when it sits below the
-// threshold and the account has never sent a transaction, and is a no-op
-// otherwise, so callers can invoke it idempotently. Adding to the current
-// balance (anvil_setBalance is absolute) preserves amounts received while
-// the account was below the threshold. Returns the resulting balance as a
-// hex quantity.
+// threshold, and is a no-op otherwise, so callers can invoke it
+// idempotently. Adding to the current balance (anvil_setBalance is absolute)
+// preserves amounts received while the account was below the threshold.
+// Returns the resulting balance as a hex quantity.
 async function fundAccount(address: string): Promise<string> {
-  const [balance, nonce] = await Promise.all([
-    anvilQuantity("eth_getBalance", [address, "latest"]),
-    anvilQuantity("eth_getTransactionCount", [address, "latest"]),
-  ]);
-  if (balance < MIN_BALANCE_WEI && nonce === 0n) {
+  const balance = await anvilQuantity("eth_getBalance", [address, "latest"]);
+  if (balance < MIN_BALANCE_WEI) {
     const funded = balance + TOP_UP_WEI;
     await anvilRequest("anvil_setBalance", [
       address,

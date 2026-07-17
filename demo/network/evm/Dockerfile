@@ -10,7 +10,7 @@ RUN apk add --no-cache ca-certificates curl \
   && curl -fsSL https://github.com/category-labs/foundry/releases/download/v1.7.1-monad-v1.0.0/foundry_v1.7.1-monad-v1.0.0_alpine_amd64.tar.gz \
     | tar -xz -C /usr/local/bin anvil
 
-COPY server.mts /srv/server.mts
+COPY server.mts demoStock.mts /srv/
 
 EXPOSE 8545
 

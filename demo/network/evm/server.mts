@@ -5,6 +5,8 @@
 // to localhost inside the container, ordinary JSON-RPC namespaces are
 // forwarded, and everything else is refused. Funding happens through one
 // guarded method, demo_fundAccount, whose policy lives here on the server.
+// The guard also deploys the demo's stock contract at boot and reports its
+// address through demo_market.
 //
 // The file runs directly under Node 24's type stripping, so it must stay
 // within erasable TypeScript syntax; tsconfig.json enforces that. The .mts
@@ -13,6 +15,7 @@
 // one.
 import { spawn } from "node:child_process";
 import http from "node:http";
+import { DEMO_STOCK_CREATION_BYTECODE } from "./demoStock.mts";
 
 const PORT = Number(process.env.PORT ?? 8545);
 const ANVIL_URL = "http://127.0.0.1:8546";
@@ -36,6 +39,9 @@ const REFUSED_METHODS = new Set([
 // same threshold and nonce check before asking.
 const MIN_BALANCE_WEI = 10n * 10n ** 18n;
 const TOP_UP_WEI = 100n * 10n ** 18n;
+// Payout reserve seeded into the stock contract at boot; orders of magnitude
+// more than funded accounts can win from it.
+const MARKET_LIQUIDITY_WEI = 10n ** 27n;
 // Large enough for any raw transaction the demo produces; requests beyond
 // this are rejected with 413.
 const MAX_BODY_BYTES = 128 * 1024;
@@ -43,9 +49,22 @@ const MAX_BODY_BYTES = 128 * 1024;
 // Anvil runs as a child on localhost, so the cheat methods are reachable
 // only from this process. The guard exits when anvil dies and the platform
 // restarts the container, which is the network's designed recovery path.
+// Mixed mining mines transactions instantly and adds an interval block every
+// 5 seconds, so the head timestamp, and with it the stock price, keeps
+// moving between trades.
 const anvil = spawn(
   "anvil",
-  ["--network", "monad", "--host", "127.0.0.1", "--port", "8546"],
+  [
+    "--network",
+    "monad",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8546",
+    "--mixed-mining",
+    "--block-time",
+    "5",
+  ],
   { stdio: ["ignore", "inherit", "inherit"] },
 );
 anvil.on("exit", (code) => {
@@ -115,6 +134,44 @@ async function fundAccount(address: string): Promise<string> {
     return `0x${funded.toString(16)}`;
   }
   return `0x${balance.toString(16)}`;
+}
+
+// The demo's stock market, deployed fresh on every boot because anvil's
+// state lives in memory only. Set before the server starts listening.
+let marketAddress = "";
+
+/**
+ * Deploys the stock contract from anvil's first unlocked dev account and
+ * seeds its payout reserve. Using eth_sendTransaction here does not
+ * contradict refusing it for external callers: anvil is reachable only from
+ * this process.
+ */
+async function deployMarket(): Promise<string> {
+  const accounts = await anvilRequest("eth_accounts", []);
+  const deployer = Array.isArray(accounts) ? accounts[0] : undefined;
+  if (typeof deployer !== "string") {
+    throw new Error("anvil returned no unlocked accounts");
+  }
+  const hash = await anvilRequest("eth_sendTransaction", [
+    { from: deployer, data: DEMO_STOCK_CREATION_BYTECODE },
+  ]);
+  // anvil mines each transaction into its own block, but the receipt can lag
+  // the send by a moment, so poll briefly instead of reading once.
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const receipt = (await anvilRequest("eth_getTransactionReceipt", [
+      hash,
+    ])) as { contractAddress?: unknown } | null;
+    const address = receipt?.contractAddress;
+    if (typeof address === "string") {
+      await anvilRequest("anvil_setBalance", [
+        address,
+        `0x${MARKET_LIQUIDITY_WEI.toString(16)}`,
+      ]);
+      return address;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error("the deploy receipt reports no contract address");
 }
 
 // Permissive CORS on every response, since the demo calls the network
@@ -218,6 +275,11 @@ async function handle(
     return;
   }
 
+  if (method === "demo_market") {
+    respond(response, 200, rpcResult(id, { address: marketAddress }));
+    return;
+  }
+
   if (method === "demo_fundAccount") {
     const address = Array.isArray(params) ? params[0] : undefined;
     if (typeof address !== "string" || !/^0x[0-9a-fA-F]{40}$/.test(address)) {
@@ -286,6 +348,18 @@ for (let attempt = 0; ; attempt++) {
     }
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
+}
+
+try {
+  marketAddress = await deployMarket();
+} catch (error) {
+  // Exit rather than serve without a market; the platform restarts the
+  // container, matching the recovery path for a dead anvil. Killing anvil
+  // matters for local runs, where it would otherwise outlive the guard and
+  // keep its port.
+  console.error(`market deploy failed: ${String(error)}`);
+  anvil.kill("SIGTERM");
+  process.exit(1);
 }
 
 http

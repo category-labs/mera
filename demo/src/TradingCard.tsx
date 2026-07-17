@@ -530,19 +530,7 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
         )}
       </section>
 
-      {account.status === "none" ? (
-        <button
-          type="button"
-          className="mode-switch"
-          onClick={() =>
-            setConnectMode(connectMode === "passkey" ? "vault" : "passkey")
-          }
-        >
-          {connectMode === "passkey"
-            ? "Import existing secret →"
-            : "← Back to passkey accounts"}
-        </button>
-      ) : (
+      {account.status !== "none" && (
         <>
           <div className="account-links">
             {portfolio !== null && portfolio.cash < LOW_CASH_WEI && (
@@ -571,9 +559,24 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
         </>
       )}
 
-      <p className="disclaimer">
-        Runs on a demo network. Everything traded is fictional.
-      </p>
+      <div className="shell-footer">
+        {account.status === "none" && (
+          <button
+            type="button"
+            className="mode-switch"
+            onClick={() =>
+              setConnectMode(connectMode === "passkey" ? "vault" : "passkey")
+            }
+          >
+            {connectMode === "passkey"
+              ? "Import existing secret →"
+              : "← Back to passkey accounts"}
+          </button>
+        )}
+        <p className="disclaimer">
+          Runs on a demo network. Everything traded is fictional.
+        </p>
+      </div>
     </div>
   );
 }

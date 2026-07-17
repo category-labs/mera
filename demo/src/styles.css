@@ -95,13 +95,25 @@ input:focus-visible {
   box-shadow: var(--shadow);
 }
 
-/* Trading surface shell: the card, its footer links, and the disclaimer.
-   Flexing lets the signed-out mode switch push itself to the page bottom
-   with `margin-top: auto`, like the old connect screen's footer did. */
+/* Trading surface shell: the card, its footer links, and the shell footer.
+   Flexing lets the footer push itself to the page bottom with
+   `margin-top: auto`, like the old connect screen's footer did. */
 .account-shell {
   display: flex;
   flex-direction: column;
   flex: 1;
+  gap: 14px;
+}
+
+/* Page-bottom footer: the connect mode switch (signed out) and the
+   disclaimer. `margin-top: auto` pushes it to the bottom of the
+   viewport-filling column; embedded, where the page hugs its content, the
+   auto margin collapses to the plain gap. */
+.shell-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: auto;
   gap: 14px;
 }
 
@@ -305,13 +317,9 @@ input:focus-visible {
   letter-spacing: normal;
 }
 
-/* Signed-out footer link that swaps passkey and vault connect modes:
-   `margin-top: auto` pushes it to the bottom of the viewport-filling column
-   (and collapses to the plain gap when embedded, where the page hugs its
-   content). Quiet by default, accent on hover. */
+/* Signed-out footer link that swaps passkey and vault connect modes.
+   Quiet by default, accent on hover. */
 .mode-switch {
-  align-self: center;
-  margin-top: auto;
   border: none;
   background: none;
   padding: 4px 8px;
@@ -527,21 +535,28 @@ html[data-embedded="true"] .app {
 
 /* Embedded in a frame taller than the content (embed.ts sets
    `data-footer-pinned`): the hugged column has no spare height for
-   `margin-top: auto` to distribute, so pin the mode switch just above the
-   frame's bottom edge instead. The column reserves the link's in-flow band so
-   the measured content height stays the same whether or not the link is in
-   the flow; small drift between the reserve and the real band is absorbed by
-   FOOTER_PIN_SLACK_PX in embed.ts. */
-html[data-footer-pinned="true"] .app:has(.mode-switch) {
-  /* The 18px `.app` column gap + the link's ~24px box. */
-  padding-bottom: 42px;
+   `margin-top: auto` to distribute, so pin the shell footer just above the
+   frame's bottom edge instead. The column reserves the footer's in-flow band
+   so the measured content height stays the same whether or not the footer is
+   in the flow; small drift between the reserve and the real band is absorbed
+   by FOOTER_PIN_SLACK_PX in embed.ts. */
+html[data-footer-pinned="true"] .app:has(.shell-footer) {
+  /* The 14px shell gap + the disclaimer's ~14px line. */
+  padding-bottom: 28px;
 }
 
-html[data-footer-pinned="true"] .mode-switch {
+html[data-footer-pinned="true"] .app:has(.mode-switch) {
+  /* + the mode switch's ~23px box and the footer's 14px gap. */
+  padding-bottom: 65px;
+}
+
+html[data-footer-pinned="true"] .shell-footer {
   position: fixed;
-  /* 16px embedded body padding + 8px `.app` margin: the same offset the
-     in-flow link gets in a content-sized frame. */
+  /* 16px embedded body padding + 8px `.app` margin: the same bottom offset
+     the in-flow footer gets in a content-sized frame. The side offsets mirror
+     the body padding so the pinned footer keeps the in-flow width and the
+     disclaimer wraps identically in both states. */
   bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 16px;
+  right: 16px;
 }

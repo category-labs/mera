@@ -8,9 +8,10 @@
     "noUncheckedIndexedAccess": true,
     "verbatimModuleSyntax": true,
     "erasableSyntaxOnly": true,
+    "allowImportingTsExtensions": true,
     "noEmit": true,
     "types": ["node"],
     "skipLibCheck": true
   },
-  "include": ["server.mts"]
+  "include": ["server.mts", "demoStock.mts"]
 }

@@ -8,7 +8,9 @@
       "!**/.astro",
       "!.claude/worktrees",
       "!playwright-report",
-      "!test-results"
+      "!test-results",
+      "!demo/network/evm/out",
+      "!demo/network/evm/cache"
     ]
   },
   "formatter": {

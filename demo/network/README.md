@@ -9,9 +9,16 @@ on-chain activity, so an account emptied on purpose stays empty.
 [monad-foundry fork](https://github.com/category-labs/foundry) with
 `--network monad` behind a guard server (`evm/server.mts`). The guard
 forwards the `eth_*`, `net_*`, and `web3_*` namespaces, refuses anvil's
-cheat methods, and funds accounts through one guarded method:
-`demo_fundAccount(address)` tops a balance below 10 DEMON up by 100 for
-accounts that have never sent a transaction, and is a no-op otherwise.
+cheat methods, and adds three behaviors of its own:
+
+- `demo_fundAccount(address)` tops a balance below 10 DEMON up by 100 for
+  accounts that have never sent a transaction, and is a no-op otherwise.
+- At boot it deploys the demo's stock contract
+  (`evm/contracts/DemoStock.sol`) from the committed bytecode
+  (`evm/demoStock.mts`) and reports its address through `demo_market`.
+- It runs anvil with mixed mining: transactions mine instantly, and an
+  interval block every 5 seconds keeps the stock price, a pure function of
+  the head block's timestamp, moving between trades.
 
 Run it locally with Docker. The image downloads an amd64 binary, so the
 platform flag keeps it working on other hosts, such as Apple Silicon:

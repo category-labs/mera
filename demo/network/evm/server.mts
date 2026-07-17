@@ -30,9 +30,10 @@ const REFUSED_METHODS = new Set([
   "eth_signTypedData_v3",
   "eth_signTypedData_v4",
 ]);
-// Funding policy: balances below the threshold are raised by the top-up.
-// The demo's EVM adapter asks only when a balance is below the same
-// threshold (its MIN_BALANCE_WEI).
+// Funding policy: balances below the threshold are raised by the top-up,
+// but only for accounts that have never sent a transaction (nonce 0), so an
+// account emptied on purpose stays empty. The demo's EVM adapter applies the
+// same threshold and nonce check before asking.
 const MIN_BALANCE_WEI = 10n * 10n ** 18n;
 const TOP_UP_WEI = 100n * 10n ** 18n;
 // Large enough for any raw transaction the demo produces; requests beyond
@@ -83,18 +84,29 @@ async function anvilRequest(
   return body.result;
 }
 
-// Raises `address`'s balance to current + TOP_UP_WEI when it sits below the
-// threshold, and is a no-op otherwise, so callers can invoke it idempotently.
-// Adding to the current balance (anvil_setBalance is absolute) preserves
-// amounts received while the account was below the threshold. Returns the
-// resulting balance as a hex quantity.
-async function fundAccount(address: string): Promise<string> {
-  const result = await anvilRequest("eth_getBalance", [address, "latest"]);
+async function anvilQuantity(
+  method: string,
+  params: unknown[],
+): Promise<bigint> {
+  const result = await anvilRequest(method, params);
   if (typeof result !== "string") {
-    throw new Error("eth_getBalance returned a non-string result");
+    throw new Error(`${method} returned a non-string result`);
   }
-  const balance = BigInt(result);
-  if (balance < MIN_BALANCE_WEI) {
+  return BigInt(result);
+}
+
+// Raises `address`'s balance to current + TOP_UP_WEI when it sits below the
+// threshold and the account has never sent a transaction, and is a no-op
+// otherwise, so callers can invoke it idempotently. Adding to the current
+// balance (anvil_setBalance is absolute) preserves amounts received while
+// the account was below the threshold. Returns the resulting balance as a
+// hex quantity.
+async function fundAccount(address: string): Promise<string> {
+  const [balance, nonce] = await Promise.all([
+    anvilQuantity("eth_getBalance", [address, "latest"]),
+    anvilQuantity("eth_getTransactionCount", [address, "latest"]),
+  ]);
+  if (balance < MIN_BALANCE_WEI && nonce === 0n) {
     const funded = balance + TOP_UP_WEI;
     await anvilRequest("anvil_setBalance", [
       address,

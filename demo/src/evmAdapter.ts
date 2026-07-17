@@ -11,9 +11,10 @@ import {
 import { createFundingGate } from "./funding";
 
 const EVM_DECIMALS = 18;
-// Balances below this ask the network for funds. The top-up policy lives in
-// the network's guard (demo/network/evm/server.mts), which uses the same
-// threshold.
+// Balances below this ask the network for funds, but only before the
+// account's first outgoing transaction (nonce 0). The top-up policy lives in
+// the network's guard (demo/network/evm/server.mts), which applies the same
+// threshold and nonce check.
 const MIN_BALANCE_WEI = 10n * 10n ** 18n;
 
 /**
@@ -31,6 +32,8 @@ function createEvmAdapter(
   const symbol = chain.nativeCurrency.symbol;
   const ensureFunded = createFundingGate({
     minBalance: MIN_BALANCE_WEI,
+    hasActivity: async () =>
+      (await publicClient.getTransactionCount({ address })) > 0,
     fund: () => fundAccount(address),
     readBalance: () => publicClient.getBalance({ address }),
   });

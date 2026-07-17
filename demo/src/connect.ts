@@ -10,6 +10,7 @@ import {
   parseSecretVault,
   type Secp256k1SigningSession,
 } from "@category-labs/mera";
+import { BaseError as ViemError } from "viem";
 import {
   deriveEvmPrivateKey,
   isValidMnemonic,
@@ -340,6 +341,9 @@ function describeError(error: unknown): string {
         return error.message;
     }
   }
+  // A viem error's `message` appends the request URL, body, and hex payload;
+  // `shortMessage` is its one-line summary, e.g. "Transaction creation failed."
+  if (error instanceof ViemError) return error.shortMessage;
   return error instanceof Error ? error.message : String(error);
 }
 

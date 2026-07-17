@@ -2,6 +2,7 @@ dist/
 node_modules/
 demo/network/evm/out/
 demo/network/evm/cache/
+demo/.env
 .astro/
 playwright-report/
 test-results/

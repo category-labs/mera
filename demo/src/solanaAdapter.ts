@@ -5,14 +5,22 @@ import {
 import type { Connection } from "@solana/web3.js";
 import { formatDecimalAmount, parseDecimalAmount } from "./amount";
 import type { ChainAdapter } from "./ChainAccountCard";
-import { airdropSol, getSolBalance, signSolTransfer } from "./chains/solana";
+import {
+  airdropSol,
+  getSolBalance,
+  hasSignatureHistory,
+  signSolTransfer,
+} from "./chains/solana";
 import { createFundingGate } from "./funding";
 import { bytesToBase64 } from "./ui";
 
 // Solana charges 5000 lamports per signature; a basic transfer needs one.
 const TRANSFER_FEE_LAMPORTS = 5000n;
 const SOL_DECIMALS = 9;
-// Balances below 10 DEMON are topped up with a 100 DEMON airdrop.
+// Balances below 10 DEMON are topped up with a 100 DEMON airdrop, but only
+// while the address has no transaction history. The airdrop itself creates
+// history, so an address is funded at most once per ledger; validator
+// restarts reset the ledger and re-arm funding.
 const MIN_BALANCE_LAMPORTS = 10n * 10n ** 9n;
 const TOP_UP_LAMPORTS = 100n * 10n ** 9n;
 
@@ -28,6 +36,7 @@ function createSolanaAdapter(
 ): ChainAdapter {
   const ensureFunded = createFundingGate({
     minBalance: MIN_BALANCE_LAMPORTS,
+    hasActivity: () => hasSignatureHistory(connection, address),
     fund: () => airdropSol(connection, address, TOP_UP_LAMPORTS),
     readBalance: () => getSolBalance(connection, address),
   });

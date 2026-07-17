@@ -36,6 +36,22 @@ async function getSolBalance(
 }
 
 /**
+ * Reports whether any transaction on the current ledger mentions the address.
+ * The funding airdrop itself counts, so on Solana an address shows activity
+ * from its first top-up onward.
+ */
+async function hasSignatureHistory(
+  connection: Connection,
+  address: string,
+): Promise<boolean> {
+  const signatures = await connection.getSignaturesForAddress(
+    new PublicKey(address),
+    { limit: 1 },
+  );
+  return signatures.length > 0;
+}
+
+/**
  * Requests an airdrop from the network's built-in faucet and waits for it to
  * confirm by polling the signature status over HTTP. `Connection`'s own
  * confirmation helpers subscribe over a websocket, which the demo network's
@@ -113,4 +129,10 @@ async function signSolTransfer({
   return transaction.serialize();
 }
 
-export { airdropSol, getSolBalance, resolveSolanaConnection, signSolTransfer };
+export {
+  airdropSol,
+  getSolBalance,
+  hasSignatureHistory,
+  resolveSolanaConnection,
+  signSolTransfer,
+};

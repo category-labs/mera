@@ -16,8 +16,8 @@ cheat methods, and adds three behaviors of its own:
   (`evm/contracts/DemoStock.sol`) from the committed bytecode
   (`evm/demoStock.mts`) and reports its address through `demo_market`.
 - It runs anvil with mixed mining: transactions mine instantly, and an
-  interval block every 5 seconds keeps the stock price, a pure function of
-  the head block's timestamp, moving between trades.
+  interval block every second keeps the stock price, a pure function of the
+  head block's timestamp, moving between trades.
 
 Run it locally with Docker. The image downloads an amd64 binary, so the
 platform flag keeps it working on other hosts, such as Apple Silicon:

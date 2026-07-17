@@ -17,6 +17,12 @@ import {
   revealMnemonic,
 } from "./connect";
 import {
+  costBasisAfterBuy,
+  costBasisAfterSell,
+  loadCostBasis,
+  saveCostBasis,
+} from "./costBasis";
+import {
   buyShares,
   COMPANY_NAME,
   type Fill,
@@ -81,6 +87,7 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
 
   const [side, setSide] = useState<Side>("buy");
   const [amount, setAmount] = useState("");
+  const [sellAll, setSellAll] = useState(false);
   const [busy, setBusy] = useState(false);
   const [fill, setFill] = useState<(Fill & { spent?: bigint }) | null>(null);
   const [tradeError, setTradeError] = useState<string | null>(null);
@@ -105,10 +112,35 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
     setAccount(next);
     setPortfolio(null);
     setAmount("");
+    setSellAll(false);
     setFill(null);
     setTradeError(null);
     setReadError(null);
   }
+
+  // Cash invested in the open position; localStorage so P&L survives reloads.
+  const [basis, setBasis] = useState(() =>
+    address === null ? 0n : loadCostBasis(address),
+  );
+  useEffect(() => {
+    setBasis(address === null ? 0n : loadCostBasis(address));
+  }, [address]);
+  function applyBasis(next: bigint): void {
+    if (address === null) return;
+    setBasis(next);
+    saveCostBasis(address, next);
+  }
+
+  // A network restart wipes the chain, and with it the position; a basis
+  // left behind would report a loss on shares that no longer exist. Skip the
+  // reset while a trade is in flight: right after a buy mines, the basis is
+  // already updated while `portfolio` still shows the pre-trade zero shares.
+  useEffect(() => {
+    if (!busy && address !== null && portfolio?.shares === 0n && basis !== 0n) {
+      setBasis(0n);
+      saveCostBasis(address, 0n);
+    }
+  }, [busy, portfolio, basis, address]);
 
   const refresh = useCallback(async () => {
     setNow(Math.floor(Date.now() / 1000));
@@ -160,6 +192,14 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
     portfolio === null ? null : (portfolio.shares * portfolio.price) / UNIT;
   const delta = price - priceAt(BigInt(now - CHART_WINDOW_SECONDS));
 
+  // House credits change cash, never the basis, so refills cannot fake gains.
+  const pnl =
+    positionValue !== null && portfolio !== null && portfolio.shares > 0n
+      ? positionValue - basis
+      : null;
+  const pnlPercent =
+    pnl !== null && basis > 0n ? Number((pnl * 10_000n) / basis) / 100 : null;
+
   const amountWei = parseDecimalAmount(amount, 18);
   // Buys must leave the fee reserve behind; sells cannot exceed the position
   // (with a cent of slack for price movement between render and submit) and
@@ -194,6 +234,9 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
           : 0n
         : (positionValue ?? 0n);
     setAmount(usdInput(wei));
+    // Max on the sell side means the whole position: converting its stale
+    // dollar figure back to shares at a moved price can strand dust.
+    setSellAll(side === "sell");
   }
 
   async function submit(): Promise<void> {
@@ -231,16 +274,24 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
       if (side === "buy") {
         const result = await buyShares(session, evm, amountWei);
         setFill({ ...result, spent: amountWei });
+        applyBasis(costBasisAfterBuy(basis, amountWei));
       } else {
         let shares = (amountWei * UNIT) / portfolio.price;
-        // Selling within a cent of the whole position sells all of it, so
-        // Max never strands dust the display would round to $0.00.
-        if (((portfolio.shares - shares) * portfolio.price) / UNIT < CENT_WEI) {
+        // A Max sell, or a typed amount within a cent of the whole position,
+        // sells all of it, so no dust the display would round to $0.00 is
+        // left behind.
+        if (
+          sellAll ||
+          ((portfolio.shares - shares) * portfolio.price) / UNIT < CENT_WEI
+        ) {
           shares = portfolio.shares;
         }
-        setFill(await sellShares(session, evm, shares));
+        const result = await sellShares(session, evm, shares);
+        setFill(result);
+        applyBasis(costBasisAfterSell(basis, result.shares, portfolio.shares));
       }
       setAmount("");
+      setSellAll(false);
       await refresh();
     } catch (caught) {
       setTradeError(describeError(caught));
@@ -352,6 +403,21 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
                     : `${formatShares(portfolio.shares)} · ${formatUsd(positionValue)}`}
                 </span>
               </div>
+              {pnl !== null && (
+                <div className="holding-row">
+                  <span className="holding-label">P&L</span>
+                  <span
+                    className={
+                      pnl < 0n ? "holding-value down" : "holding-value up"
+                    }
+                  >
+                    {pnl < 0n ? "" : "+"}
+                    {formatUsd(pnl)}
+                    {pnlPercent !== null &&
+                      ` · ${pnlPercent < 0 ? "" : "+"}${pnlPercent.toFixed(2)}%`}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="segmented" role="tablist" aria-label="Trade side">
@@ -364,6 +430,7 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
                   className={entry === side ? "segment active" : "segment"}
                   onClick={() => {
                     setSide(entry);
+                    setSellAll(false);
                     setTradeError(null);
                   }}
                 >
@@ -399,6 +466,7 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
                     spellCheck={false}
                     onChange={(event) => {
                       setAmount(event.target.value);
+                      setSellAll(false);
                       // A new amount retires the last fill for the estimate.
                       setFill(null);
                     }}

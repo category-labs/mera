@@ -511,6 +511,14 @@ input:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+.holding-value.up {
+  color: var(--up);
+}
+
+.holding-value.down {
+  color: var(--down);
+}
+
 /* Trade form */
 .trade {
   display: grid;

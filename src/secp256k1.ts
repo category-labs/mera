@@ -1,6 +1,6 @@
-import * as secp from "@noble/secp256k1";
+import { secp256k1 } from "@noble/curves/secp256k1.js";
 import { copyBytes } from "./encoding.js";
-import { PasskeyAccountError } from "./errors.js";
+import { MeraError } from "./errors.js";
 import { createSigningKey } from "./session.js";
 import type {
   CreateSigningSessionOptions,
@@ -9,19 +9,21 @@ import type {
 } from "./types.js";
 
 /**
- * Derives an uncompressed secp256k1 public key from a private key.
+ * Derives an uncompressed secp256k1 public key from a 32-byte private key.
+ * The input is not modified.
  *
- * @internal
  * @param privateKey - A 32-byte secp256k1 private key.
  * @returns A 65-byte public key with the `0x04` uncompressed prefix.
- * @remarks Caller assumptions: the private key must be secret key material; the function does not clear or mutate the input.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `privateKey` is not a valid secp256k1 scalar.
+ * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not a valid secp256k1 scalar.
+ * @internal
  */
-function getSecp256k1PublicKey(privateKey: Uint8Array): Uint8Array {
+function getSecp256k1PublicKey(
+  privateKey: Uint8Array,
+): Uint8Array<ArrayBuffer> {
   try {
-    return new Uint8Array(secp.getPublicKey(privateKey, false));
+    return new Uint8Array(secp256k1.getPublicKey(privateKey, false));
   } catch (cause) {
-    throw new PasskeyAccountError(
+    throw new MeraError(
       "INPUT_INVALID",
       "Private key is not a valid secp256k1 scalar",
       { cause },
@@ -32,33 +34,29 @@ function getSecp256k1PublicKey(privateKey: Uint8Array): Uint8Array {
 /**
  * Converts a compressed or uncompressed secp256k1 public key to uncompressed form.
  *
- * @internal
  * @param publicKey - A compressed or uncompressed secp256k1 public key.
  * @returns A 65-byte public key with the `0x04` uncompressed prefix.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when the key length, prefix, or curve point is invalid.
+ * @throws MeraError with code `INPUT_INVALID` when the key length, prefix, or curve point is invalid.
+ * @internal
  */
-function normalizeSecp256k1PublicKey(publicKey: Uint8Array): Uint8Array {
+function normalizeSecp256k1PublicKey(
+  publicKey: Uint8Array,
+): Uint8Array<ArrayBuffer> {
   try {
-    return new Uint8Array(secp.Point.fromBytes(publicKey).toBytes(false));
+    return new Uint8Array(secp256k1.Point.fromBytes(publicKey).toBytes(false));
   } catch (cause) {
-    throw new PasskeyAccountError(
-      "INPUT_INVALID",
-      "Public key is not valid secp256k1",
-      { cause },
-    );
+    throw new MeraError("INPUT_INVALID", "Public key is not valid secp256k1", {
+      cause,
+    });
   }
 }
 
 /**
- * Wraps a secp256k1 private key in an explicitly lockable signing session.
+ * Creates an explicitly lockable signing session from a secp256k1 private key.
  *
- * `signDigest` signs exactly 32 bytes without prehashing. Calling `lock` zeroes the active private-key copy and makes future signing or export fail.
- *
- * @param options - Signing session inputs.
- * @param options.consumePrivateKey - secp256k1 private key. Zeroed before this call returns or throws.
+ * @param options - Signing session inputs; fields are documented on {@link CreateSigningSessionOptions}.
  * @returns An unlocked secp256k1 signing session.
- * @remarks Side effects: zeroes `consumePrivateKey` on every path; on success first copies it into session memory, which `lock()` later zeroes.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `consumePrivateKey` is not a valid secp256k1 scalar.
+ * @throws MeraError with code `INPUT_INVALID` when `consumePrivateKey` is not a valid secp256k1 scalar.
  */
 function createSecp256k1SigningSession({
   consumePrivateKey,
@@ -68,36 +66,53 @@ function createSecp256k1SigningSession({
     getSecp256k1PublicKey,
   );
 
+  // One function for both members, so lock and dispose cannot drift apart.
+  function lock(): void {
+    key.lock();
+  }
+
   return {
     publicKey,
     async signDigest(digest32: Uint8Array): Promise<Secp256k1Signature> {
       if (digest32.length !== 32) {
-        throw new PasskeyAccountError(
-          "INPUT_INVALID",
-          "Digest must be 32 bytes",
-        );
+        throw new MeraError("INPUT_INVALID", "Digest must be 32 bytes");
       }
 
-      // Signing reads the buffer after an await; copy it now so a later mutation can't change the signed bytes.
+      // Give the signer a standalone digest snapshot even if a future backend
+      // reads its input asynchronously.
       const digest = copyBytes(digest32);
       const unlockedKey = key.use();
-      const signature = await secp.signAsync(digest, unlockedKey, {
+      const signature = secp256k1.sign(digest, unlockedKey, {
         format: "recovered",
         lowS: true,
         prehash: false,
       });
 
+      // noble's "recovered" format is 65 bytes: the recovery ID, then r || s.
+      const recovery = signature[0];
+
+      // A recovery ID of 2 or 3 requires the signature's r to be at least the
+      // curve order, which happens with probability about 2^-127, never in
+      // practice. Such a signature cannot be address-recovered from `r` and a
+      // parity bit alone, so fail loudly instead of returning an unusable
+      // recovery ID. The check also narrows the byte to the declared `0 | 1`.
+      // INPUT_INVALID is a stretch (the recovery ID is not caller-supplied),
+      // but a range constraint failed at a public boundary and the event is
+      // unreachable in practice, so it does not warrant its own code.
+      if (recovery !== 0 && recovery !== 1) {
+        throw new MeraError(
+          "INPUT_INVALID",
+          `Signature recovery ID must be 0 or 1, got ${recovery}`,
+        );
+      }
+
       return {
         compact: signature.slice(1),
-        recovery: signature[0],
+        recovery,
       };
     },
-    exportPrivateKey(): Uint8Array {
-      return key.exportCopy();
-    },
-    lock(): void {
-      key.lock();
-    },
+    lock,
+    [Symbol.dispose]: lock,
   };
 }
 

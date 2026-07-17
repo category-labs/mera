@@ -1,4 +1,4 @@
-import * as ed25519 from "@noble/ed25519";
+import { ed25519 } from "@noble/curves/ed25519.js";
 import { hexToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
 import { createEd25519SigningSession } from "../dist/index.js";
@@ -22,27 +22,13 @@ test("signs messages and locks the session", async () => {
 
   expect(session.publicKey).toEqual(RFC_PUBLIC_KEY);
   expect(signature).toHaveLength(64);
-  expect(await ed25519.verifyAsync(signature, message, session.publicKey)).toBe(
-    true,
-  );
-  expect(session.exportPrivateKey()).toEqual(RFC_SECRET);
+  expect(ed25519.verify(signature, message, session.publicKey)).toBe(true);
 
   session.lock();
 
-  expectError(() => session.exportPrivateKey(), "SESSION_LOCKED");
   await expect(session.signMessage(message)).rejects.toMatchObject({
     code: "SESSION_LOCKED",
   });
-});
-
-test("rejects non-32-byte private keys", () => {
-  expectError(
-    () =>
-      createEd25519SigningSession({
-        consumePrivateKey: new Uint8Array(31),
-      }),
-    "INPUT_INVALID",
-  );
 });
 
 test("zeroes the caller's buffer when the private key is the wrong length", () => {
@@ -54,6 +40,22 @@ test("zeroes the caller's buffer when the private key is the wrong length", () =
   );
 
   expect(buffer).toEqual(new Uint8Array(31));
+});
+
+test("a using declaration locks the session when its scope exits", async () => {
+  let escaped: ReturnType<typeof createEd25519SigningSession> | undefined;
+
+  {
+    using session = createEd25519SigningSession({
+      consumePrivateKey: new Uint8Array(RFC_SECRET),
+    });
+    await session.signMessage(new TextEncoder().encode("mera demo"));
+    escaped = session;
+  }
+
+  await expect(
+    escaped.signMessage(new TextEncoder().encode("mera demo")),
+  ).rejects.toMatchObject({ code: "SESSION_LOCKED" });
 });
 
 test("signs the message snapshot taken at call time, not later mutations", async () => {
@@ -68,10 +70,6 @@ test("signs the message snapshot taken at call time, not later mutations", async
   const signature = await pending;
 
   // The signature is over the bytes at call time, not the later mutation.
-  expect(
-    await ed25519.verifyAsync(signature, original, session.publicKey),
-  ).toBe(true);
-  expect(await ed25519.verifyAsync(signature, message, session.publicKey)).toBe(
-    false,
-  );
+  expect(ed25519.verify(signature, original, session.publicKey)).toBe(true);
+  expect(ed25519.verify(signature, message, session.publicKey)).toBe(false);
 });

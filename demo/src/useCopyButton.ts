@@ -7,7 +7,6 @@ import { useCallback, useState } from "react";
 function useCopyButton(): {
   copied: boolean;
   copy: (text: string) => Promise<void>;
-  reset: () => void;
 } {
   const [copied, setCopied] = useState(false);
   const copy = useCallback(async (text: string) => {
@@ -15,8 +14,7 @@ function useCopyButton(): {
     setCopied(true);
     setTimeout(() => setCopied(false), 1200);
   }, []);
-  const reset = useCallback(() => setCopied(false), []);
-  return { copied, copy, reset };
+  return { copied, copy };
 }
 
 export { useCopyButton };

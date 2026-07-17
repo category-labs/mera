@@ -1,5 +1,6 @@
 import { base58 } from "@scure/base";
-import { PasskeyAccountError } from "../errors.js";
+import { MeraError } from "../errors.js";
+import type { SolanaAddress } from "../types.js";
 
 const ED25519_PUBLIC_KEY_LENGTH = 32;
 
@@ -8,28 +9,25 @@ const ED25519_PUBLIC_KEY_LENGTH = 32;
  *
  * @param publicKey - A 32-byte Ed25519 public key.
  * @returns The base58-encoded Solana address.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `publicKey` is not 32 bytes.
+ * @throws MeraError with code `INPUT_INVALID` when `publicKey` is not 32 bytes.
  */
-function getSolanaAddress(publicKey: Uint8Array): string {
+function getSolanaAddress(publicKey: Uint8Array): SolanaAddress {
   if (publicKey.length !== ED25519_PUBLIC_KEY_LENGTH) {
-    throw new PasskeyAccountError(
-      "INPUT_INVALID",
-      "Ed25519 public key must be 32 bytes",
-    );
+    throw new MeraError("INPUT_INVALID", "Ed25519 public key must be 32 bytes");
   }
 
-  return base58.encode(publicKey);
+  // Mints the SolanaAddress brand: encoding 32 validated bytes is what the
+  // brand asserts, and a nominal brand cannot be produced without an assertion.
+  return base58.encode(publicKey) as SolanaAddress;
 }
 
 /**
  * Returns true when a string is a valid base58-encoded Solana address.
  *
- * Validates both the base58 alphabet and the 32-byte decoded length.
- *
  * @param value - String to check.
- * @returns `true` when `value` decodes to 32 base58 bytes.
+ * @returns `true` when `value` is valid base58 and decodes to 32 bytes.
  */
-function isSolanaAddress(value: string): boolean {
+function isSolanaAddress(value: string): value is SolanaAddress {
   try {
     return base58.decode(value).length === ED25519_PUBLIC_KEY_LENGTH;
   } catch {

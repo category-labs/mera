@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>mera</title>
+  <rect width="64" height="64" fill="#fcfcfa" />
+  <text
+    x="32"
+    y="47"
+    font-family="Georgia,serif"
+    font-style="italic"
+    font-size="46"
+    text-anchor="middle"
+    fill="#1a1a1a"
+  >
+    m
+  </text>
+</svg>

@@ -1,0 +1,11 @@
+# Pins the compiler and settings so `forge build` in this directory
+# reproduces the bytecode committed in demoStock.mts byte for byte.
+[profile.default]
+src = "contracts"
+out = "out"
+solc = "0.8.36"
+optimizer = false
+# Omit the metadata hash so comment-only edits to the source do not change
+# the bytecode.
+bytecode_hash = "none"
+cbor_metadata = false

@@ -4,16 +4,17 @@ import { useCopyButton } from "./useCopyButton";
 type WalletBackupProps = {
   /** The revealed recovery phrase to display (12 or 24 words). */
   phrase: string;
-  /** Return to the account view, dropping the phrase from memory. */
+  /** Return to the account view, dropping the phrase reference. */
   onHide: () => void;
 };
 
 /**
  * Recovery-phrase display, shown in place of the account card.
  *
- * The phrase is held only by the caller's state while shown — `Hide`, or
- * unmounting on lock, drops it. JS strings can't be zeroed, so this is the
- * tightest lifetime achievable; the biometric gate is the real protection.
+ * The phrase is held only by the caller's state while shown. `Hide`, or
+ * unmounting on lock, drops it. JS strings cannot be zeroed, so this is the
+ * tightest lifetime achievable. Fresh user verification gates access while the
+ * phrase is hidden.
  */
 function WalletBackup({ phrase, onHide }: WalletBackupProps): ReactElement {
   const { copied, copy } = useCopyButton();
@@ -34,9 +35,8 @@ function WalletBackup({ phrase, onHide }: WalletBackupProps): ReactElement {
         </button>
       </div>
       <p className="hint">
-        Anyone with these {words.length} words controls the funds. Import them
-        into MetaMask (Ethereum) or Phantom (Solana) to recover the same
-        addresses.
+        Anyone with these {words.length} words controls the funds. Compatible
+        wallet apps, such as MetaMask, can recover the same addresses.
       </p>
       <ol className="mnemonic-grid">
         {words.map(({ position, word }) => (

@@ -1,5 +1,5 @@
+import { secp256k1 } from "@noble/curves/secp256k1.js";
 import { hexToBytes } from "@noble/hashes/utils.js";
-import * as secp from "@noble/secp256k1";
 import { expect, test } from "@playwright/test";
 import { createSecp256k1SigningSession, getEvmAddress } from "../dist/index.js";
 import { expectError } from "./helpers.js";
@@ -9,7 +9,6 @@ const PRIVATE_KEY_ONE = hexToBytes(
 );
 
 test("signs 32-byte digests and locks the session", async () => {
-  const original = new Uint8Array(PRIVATE_KEY_ONE);
   const buffer = new Uint8Array(PRIVATE_KEY_ONE);
   const session = createSecp256k1SigningSession({ consumePrivateKey: buffer });
   const digest = new Uint8Array(32).fill(1);
@@ -23,15 +22,13 @@ test("signs 32-byte digests and locks the session", async () => {
   );
   expect(signature.compact).toHaveLength(64);
   expect(
-    secp.verify(signature.compact, digest, session.publicKey, {
+    secp256k1.verify(signature.compact, digest, session.publicKey, {
       prehash: false,
     }),
   ).toBe(true);
-  expect(session.exportPrivateKey()).toEqual(original);
 
   session.lock();
 
-  expectError(() => session.exportPrivateKey(), "SESSION_LOCKED");
   await expect(session.signDigest(digest)).rejects.toMatchObject({
     code: "SESSION_LOCKED",
   });
@@ -59,6 +56,22 @@ test("zeroes the caller's buffer when the private key is an invalid scalar", () 
   expect(buffer).toEqual(new Uint8Array(32));
 });
 
+test("a using declaration locks the session when its scope exits", async () => {
+  let escaped: ReturnType<typeof createSecp256k1SigningSession> | undefined;
+
+  {
+    using session = createSecp256k1SigningSession({
+      consumePrivateKey: new Uint8Array(PRIVATE_KEY_ONE),
+    });
+    await session.signDigest(new Uint8Array(32).fill(1));
+    escaped = session;
+  }
+
+  await expect(
+    escaped.signDigest(new Uint8Array(32).fill(1)),
+  ).rejects.toMatchObject({ code: "SESSION_LOCKED" });
+});
+
 test("signs the digest snapshot taken at call time, not later mutations", async () => {
   const session = createSecp256k1SigningSession({
     consumePrivateKey: new Uint8Array(PRIVATE_KEY_ONE),
@@ -72,12 +85,12 @@ test("signs the digest snapshot taken at call time, not later mutations", async 
 
   // The signature is over the bytes at call time, not the later mutation.
   expect(
-    secp.verify(signature.compact, original, session.publicKey, {
+    secp256k1.verify(signature.compact, original, session.publicKey, {
       prehash: false,
     }),
   ).toBe(true);
   expect(
-    secp.verify(signature.compact, digest, session.publicKey, {
+    secp256k1.verify(signature.compact, digest, session.publicKey, {
       prehash: false,
     }),
   ).toBe(false);

@@ -1,3 +1,12 @@
+### Core Values
+
+Simplicity, elegance, and correctness are the bar for everything here — code, documentation, tests, and examples alike.
+
+- Correctness comes first: prefer the obviously correct implementation over a shorter or cleverer one.
+- Write the simplest code that solves the problem; reach for a plainer construct over a clever one a reader has to decode.
+- Treat elegance as what remains after removing the unnecessary — fewer moving parts and clearer names, not more abstraction.
+- Write documentation in plain language: explain things directly, avoid jargon, and define a domain term only when the reader genuinely needs it.
+
 ### API Design Philosophy
 
 This repository is a library. Its API is part of its documentation.
@@ -19,16 +28,18 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 
 ### Documentation and Examples
 
+- Documentation prose is technical writing held to a hard bar: simple, concise, and detailed at once. Every sentence must add information; cut sentences that only set up, restate, or editorialize on what adjacent sentences already show.
 - Public SDK functions should have complete, accurate JSDoc.
-- Use appropriate JSDoc tags to describe the API contract, return behavior, caller assumptions, observable side effects, and failure modes.
+- Use appropriate JSDoc tags to describe the API contract, return behavior, input constraints, observable side effects, and failure modes.
 - Document security-sensitive behavior explicitly, especially for key material, randomness, WebAuthn prompts, encryption nonces, storage formats, and mutation/zeroing behavior.
-- Document thrown `PasskeyAccountError` codes with the appropriate JSDoc tag.
+- Document thrown `MeraError` codes with the appropriate JSDoc tag.
 - Examples should be runnable, concise, and focused on library behavior, not on provider boilerplate.
-- README examples should reflect actual tested behavior.
+- The root README is a nontechnical project overview. Installation, examples, compatibility, security details, API documentation, and the demo live on the documentation website.
 - Keep documentation prose neutral: name keys, secrets, and passkeys plainly ("the passkey", "one encrypted secret") rather than attributing them to the reader ("your passkey", "a secret you provide" / "you own").
-- Internal helpers with non-obvious invariants should have short comments or docstrings.
+- Internal helpers with non-obvious invariants should have short `//` comments or full JSDoc.
 - Document observable behavior, not caller instructions: state what a function does to its inputs and outputs (for example, "the input is copied before use; the original buffer is not modified") rather than what the caller may or should do with them. Callers derive correct usage from the stated facts.
 - When a comment or doc gives a rationale, explain the mechanism, not just the claim: a reader should see *why* from the text (for example, "signing reads the buffer after an await, so copy it first") rather than having to reconstruct the cause.
+- For section-style JSDoc/TSDoc block tags, use one tag per semantic section and continue with paragraphs until the next block tag. Put the tag on its own line when the content is multi-sentence. Repeat only naturally repeatable tags such as `@param`, `@throws`, `@example`, and `@see`; do not repeat section-style tags such as `@remarks` just to split paragraphs.
 
 ### TypeScript Conventions
 
@@ -41,6 +52,17 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 - Do not add runtime checks for typed internal invariants that TypeScript already proves, such as required callbacks or disallowed fields within SDK-only control flow.
 - Avoid unnecessary assertions and wrappers; use them only when narrowing external input or bridging third-party type limitations.
 
+### Checks
+
+Before pushing, run the checks documented in [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+### Pull Requests
+
+- Write PR descriptions for reviewers who need to understand the reason for the change, not just the diff.
+- Start with the problem or risk that motivated the change. If the PR replaces one path with another, explain why the replacement is equivalent or better, including what behavior still runs and what coverage is added or preserved.
+- Add only context that is not visible in the diff or CI, such as a related discussion, a non-obvious constraint or trade-off, manual validation, requested review focus, or follow-up outside the diff.
+- Do not restate the implementation or automated validation that reviewers can inspect directly.
+
 ## File Scope Guidelines
 
 This file should stay stable and process-oriented.
@@ -49,9 +71,9 @@ This file should stay stable and process-oriented.
 
 - architectural decisions
 - coding and API design principles
-- testing and verification workflow
 - safety and review expectations
-- essential project commands
+
+Project commands and the testing workflow live in [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### What Not to Include
 

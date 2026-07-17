@@ -1,351 +1,251 @@
 import {
-  createDeterministicPrfSalt,
-  createEd25519SigningSession,
   createPasskeyWithPrfOutput,
   createSecp256k1SigningSession,
-  createSecretVault,
-  type Ed25519SigningSession,
+  createSecretVaultWithNewPasskey,
+  decryptSecretVaultWithPasskey,
   type EvmAddress,
   getEvmAddress,
   getPasskeyPrfOutput,
-  getSecretVaultPrfOutput,
-  getSolanaAddress,
-  isPasskeyAccountError,
+  isMeraError,
   parseSecretVault,
   type Secp256k1SigningSession,
-  unwrapSecretVault,
-} from "mera";
+} from "@category-labs/mera";
+import { BaseError as ViemError } from "viem";
+import { saveCachedAccount } from "./account";
 import {
-  deriveEthereumPrivateKey,
-  deriveSolanaSeed,
+  deriveEvmPrivateKey,
   isValidMnemonic,
   mnemonicToSeed,
   prfOutputToMnemonic,
 } from "./hd";
-import { currentDerivedWallet, rememberDerivedWallet } from "./registry";
+import { currentPasskeyWallet, rememberPasskeyWallet } from "./passkeyWallet";
 
-/** The two account modes the demo offers (mera itself is mode-agnostic). */
-type AccountMode = "wrapped" | "derived";
+type AccountMode = "vault" | "passkey";
 
-/** One numbered account: a passkey-derived signing session per chain. */
-type AccountSlot = {
-  index: number;
-  ethereum: {
-    session: Secp256k1SigningSession;
-    address: EvmAddress;
-  };
-  solana: {
-    session: Ed25519SigningSession;
-    address: string;
-  };
+type Account = {
+  session: Secp256k1SigningSession;
+  address: EvmAddress;
 };
 
 /**
- * A connected wallet — one passkey ceremony's worth of authority.
+ * A connected wallet with one passkey ceremony's worth of authority over one
+ * account.
  *
- * Derived mode holds the BIP-39 master seed for the session and can mint more
- * numbered HD accounts with no further passkey prompt. Wrapped mode exposes the
- * single decrypted account from its vault. Either way, `lock()` zeroes every
- * secret the wallet still holds.
+ * The account's key is derived at connect and the BIP-39 seed it came from
+ * is zeroed before connect returns, so the wallet holds no secret beyond the
+ * account's signing session. `lock()` zeroes that session's key.
  */
 type ConnectedWallet = {
   mode: AccountMode;
-  /** Credential to pin on the next sign-in (derived mode); absent otherwise. */
+  /** Credential to pin when re-running a ceremony for this wallet; passkey mode only, absent otherwise. */
   credentialId?: string;
-  /** Returns the account at `index`, deriving and caching it on first use. */
-  deriveAccount(index: number): AccountSlot;
-  /** Zeroes the master seed and every signing session handed out. */
+  account: Account;
   lock(): void;
 };
 
-/** Result of a connect call: the wallet plus how many accounts to materialize. */
-type ConnectResult = { wallet: ConnectedWallet; accountCount: number };
-
 const RP_NAME = "Mera Demo";
-const VAULT_KEY = "mera.demo.accountVault";
+const VAULT_KEY = "mera.demo.secretVault";
 const DEFAULT_USER = "nad";
 
 const rpId = location.hostname;
 
-function buildAccountSlot(
-  index: number,
-  secpSession: Secp256k1SigningSession,
-  ed25519Session: Ed25519SigningSession,
-): AccountSlot {
-  return {
-    index,
-    ethereum: {
-      session: secpSession,
-      address: getEvmAddress(secpSession.publicKey),
-    },
-    solana: {
-      session: ed25519Session,
-      address: getSolanaAddress(ed25519Session.publicKey),
-    },
-  };
-}
-
-/** Derives both chain sessions for one HD account index from the master seed. */
-function deriveSlotFromSeed(seed: Uint8Array, index: number): AccountSlot {
-  // Each derive* call returns a fresh buffer the session takes ownership of and
-  // zeroes; the master `seed` itself is never handed to a session.
-  const secpSession = createSecp256k1SigningSession({
-    consumePrivateKey: deriveEthereumPrivateKey(seed, index),
-  });
-  const ed25519Session = createEd25519SigningSession({
-    consumePrivateKey: deriveSolanaSeed(seed, index),
-  });
-  return buildAccountSlot(index, secpSession, ed25519Session);
-}
-
-// ----- Derived mode: one PRF output is the HD master for every account -------
-
 /**
- * Builds a derived-mode wallet from a single PRF output.
- *
- * The PRF output becomes a BIP-39 master seed held in memory for the session,
- * exactly like the signing keys are — and zeroed alongside them on `lock()`.
- * Holding it is what lets "Add account" derive a new HD account instantly with
- * no extra biometric: one ceremony per session, not per account.
+ * Derives the demo's account (HD index 0) from a BIP-39 seed and zeroes the
+ * seed, so no caller retains it past the derivation.
  */
-function buildDerivedWallet(
-  prfOutput: Uint8Array,
-  credentialId: string,
-): ConnectedWallet {
-  // PRF output -> BIP-39 mnemonic -> 64-byte master seed. The mnemonic string
-  // is transient (re-derivable from a fresh ceremony for a future export flow);
-  // only the zeroable seed bytes are retained.
-  let seed: Uint8Array | undefined = mnemonicToSeed(
-    prfOutputToMnemonic(prfOutput),
-  );
-  prfOutput.fill(0);
-
-  const cache = new Map<number, AccountSlot>();
-
-  return {
-    mode: "derived",
-    credentialId,
-    deriveAccount(index): AccountSlot {
-      const cached = cache.get(index);
-      if (cached) return cached;
-      if (!seed) throw new Error("Wallet is locked — connect again.");
-      const slot = deriveSlotFromSeed(seed, index);
-      cache.set(index, slot);
-      return slot;
-    },
-    lock(): void {
-      for (const slot of cache.values()) {
-        slot.ethereum.session.lock();
-        slot.solana.session.lock();
-      }
-      cache.clear();
-      if (seed) {
-        seed.fill(0);
-        seed = undefined;
-      }
-    },
-  };
-}
-
-async function createDerived(label: string): Promise<ConnectResult> {
-  // `user.id` is left to default (32 random bytes), so every "Create" is a
-  // distinct, parallel passkey rather than silently overwriting an existing one.
-  const prfSalt = createDeterministicPrfSalt();
-  const credential = await createPasskeyWithPrfOutput({
-    rp: { id: rpId, name: RP_NAME },
-    user: { name: label, displayName: label },
-    prfSalt,
-  });
-
-  rememberDerivedWallet({
-    credentialId: credential.credentialId,
-    ...(credential.transports ? { transports: credential.transports } : {}),
-    label,
-    accountCount: 1,
-  });
-
-  const wallet = buildDerivedWallet(
-    credential.prfOutput,
-    credential.credentialId,
-  );
-  return { wallet, accountCount: 1 };
-}
-
-async function openDerived(): Promise<ConnectResult> {
-  // Pin to the passkey created on this device when we know it; otherwise fall
-  // back to a discoverable credential so a freshly synced device still works.
-  const known = currentDerivedWallet();
-  const prfSalt = createDeterministicPrfSalt();
-  const { prfOutput, credentialId } = await getPasskeyPrfOutput({
-    rpId,
-    ...(known?.credentialId ? { credentialId: known.credentialId } : {}),
-    ...(known?.transports ? { transports: known.transports } : {}),
-    prfSalt,
-  });
-
-  // The ceremony reports which credential was actually used; if it matches the
-  // current local record, restore that wallet's account count.
-  const record = known?.credentialId === credentialId ? known : undefined;
-  const label = record?.label ?? DEFAULT_USER;
-  const accountCount = record?.accountCount ?? 1;
-  rememberDerivedWallet({
-    credentialId,
-    ...(record?.transports ? { transports: record.transports } : {}),
-    label,
-    accountCount,
-  });
-
-  const wallet = buildDerivedWallet(prfOutput, credentialId);
-  return { wallet, accountCount };
-}
-
-// ----- Wrapped mode: one passkey encrypts one seed phrase; both chains derive from it
-
-async function createWrapped(
-  label: string,
-  mnemonic: string,
-): Promise<ConnectResult> {
-  const phrase = mnemonic.trim();
-  if (!isValidMnemonic(phrase)) {
-    throw new Error("Enter a valid recovery phrase, or generate a fresh one.");
-  }
-
-  const credential = await createPasskeyWithPrfOutput({
-    rp: { id: rpId, name: RP_NAME },
-    user: { name: label, displayName: label },
-    prfSalt: crypto.getRandomValues(new Uint8Array(32)),
-  });
-
-  // The phrase itself is the secret the passkey encrypts. Storing the phrase —
-  // not the derived keys — is what lets wrapped mode reveal it again later;
-  // signing keys are re-derived from it on unlock, the standard HD way, so it
-  // stays portable to MetaMask / Phantom.
-  const secret = new TextEncoder().encode(phrase);
+function accountFromSeed(seed: Uint8Array): Account {
   try {
-    const vault = await createSecretVault({ credential, secret });
-    localStorage.setItem(VAULT_KEY, JSON.stringify(vault));
-  } finally {
-    // Zero the transient secret and PRF output whether or not wrapping
-    // succeeded; the wallet is rebuilt from `phrase`, not from these.
-    secret.fill(0);
-    credential.prfOutput.fill(0);
-  }
-
-  return {
-    wallet: buildWrappedWallet(wrappedSlotFromPhrase(phrase)),
-    accountCount: 1,
-  };
-}
-
-async function unlockWrapped(): Promise<ConnectResult> {
-  const phrase = await decryptStoredWrappedPhrase();
-  return {
-    wallet: buildWrappedWallet(wrappedSlotFromPhrase(phrase)),
-    accountCount: 1,
-  };
-}
-
-/**
- * Reads the stored wrapped vault and decrypts its seed phrase behind a fresh
- * passkey ceremony. Shared by unlock and reveal; the PRF output and decrypted
- * bytes are zeroed before returning, even when the decrypt itself throws.
- */
-async function decryptStoredWrappedPhrase(): Promise<string> {
-  const raw = localStorage.getItem(VAULT_KEY);
-  if (!raw) {
-    throw new Error(
-      "No wrapped account on this device yet — create one first.",
-    );
-  }
-
-  const vault = parseSecretVault(raw);
-  const { prfOutput } = await getSecretVaultPrfOutput({ rpId, vault });
-  try {
-    const secret = await unwrapSecretVault({ vault, prfOutput });
-    try {
-      return new TextDecoder().decode(secret);
-    } finally {
-      secret.fill(0);
-    }
-  } finally {
-    prfOutput.fill(0);
-  }
-}
-
-/** Derives the single wrapped-mode account (index 0) from its seed phrase. */
-function wrappedSlotFromPhrase(phrase: string): AccountSlot {
-  const seed = mnemonicToSeed(phrase);
-  try {
-    return deriveSlotFromSeed(seed, 0);
+    // deriveEvmPrivateKey returns a fresh buffer the session takes ownership
+    // of and zeroes; the `seed` itself is never handed to a session.
+    const session = createSecp256k1SigningSession({
+      consumePrivateKey: deriveEvmPrivateKey(seed, 0),
+    });
+    return { session, address: getEvmAddress(session.publicKey) };
   } finally {
     seed.fill(0);
   }
 }
 
-/** Builds a wrapped-mode wallet around its single decrypted account. */
-function buildWrappedWallet(slot: AccountSlot): ConnectedWallet {
+// ----- Passkey mode: one PRF output is the HD root of the account ------------
+
+/**
+ * Builds a passkey-mode wallet from a single PRF output.
+ *
+ * PRF output -> BIP-39 mnemonic -> seed -> account key; the PRF output and
+ * the seed are zeroed before this returns. The mnemonic string is transient
+ * and re-derivable from a fresh ceremony, which is how the export flow shows
+ * it again.
+ */
+function buildPasskeyWallet(
+  prfOutput: Uint8Array,
+  credentialId: string,
+): ConnectedWallet {
+  const seed = mnemonicToSeed(prfOutputToMnemonic(prfOutput));
+  prfOutput.fill(0);
+  const account = accountFromSeed(seed);
   return {
-    mode: "wrapped",
-    deriveAccount(index): AccountSlot {
-      if (index !== 0) throw new Error("Wrapped mode has a single account.");
-      return slot;
-    },
-    lock(): void {
-      slot.ethereum.session.lock();
-      slot.solana.session.lock();
-    },
+    mode: "passkey",
+    credentialId,
+    account,
+    lock: () => account.session.lock(),
+  };
+}
+
+async function createPasskeyWallet(): Promise<ConnectedWallet> {
+  // `user.id` is left to default (32 random bytes), so every "Create" is a
+  // distinct, parallel passkey rather than silently overwriting an existing one.
+  const credential = await createPasskeyWithPrfOutput({
+    rp: { id: rpId, name: RP_NAME },
+    user: { name: DEFAULT_USER, displayName: DEFAULT_USER },
+  });
+
+  rememberPasskeyWallet({
+    credentialId: credential.credentialId,
+    transports: credential.transports,
+  });
+
+  return buildPasskeyWallet(credential.prfOutput, credential.credentialId);
+}
+
+async function openPasskeyWallet(): Promise<ConnectedWallet> {
+  // Pin to the passkey created on this device when we know it; otherwise fall
+  // back to a discoverable credential so a freshly synced device still works.
+  const known = currentPasskeyWallet();
+  const { prfOutput, credentialId } = await getPasskeyPrfOutput({
+    rpId,
+    credential: known?.credentialId
+      ? { credentialId: known.credentialId, transports: known.transports }
+      : undefined,
+  });
+
+  // The ceremony reports which credential was actually used; keep transports
+  // only when it matches the current local record.
+  rememberPasskeyWallet({
+    credentialId,
+    transports:
+      known?.credentialId === credentialId ? known?.transports : undefined,
+  });
+
+  return buildPasskeyWallet(prfOutput, credentialId);
+}
+
+// ----- Vault mode: one passkey encrypts one seed phrase the account derives from
+
+async function createVaultAccount(mnemonic: string): Promise<ConnectedWallet> {
+  const phrase = mnemonic.trim();
+  if (!isValidMnemonic(phrase)) {
+    throw new Error("Enter a valid recovery phrase, or generate a fresh one.");
+  }
+
+  // The phrase itself is the secret the passkey encrypts. Storing it lets
+  // vault mode reveal it again later. Signing keys are re-derived from the
+  // phrase on unlock, the standard HD way, so it stays portable to wallet apps
+  // such as MetaMask.
+  const secret = new TextEncoder().encode(phrase);
+  try {
+    const vault = await createSecretVaultWithNewPasskey({
+      rp: { id: rpId, name: RP_NAME },
+      user: { name: DEFAULT_USER, displayName: DEFAULT_USER },
+      secret,
+    });
+    localStorage.setItem(VAULT_KEY, JSON.stringify(vault));
+  } finally {
+    // The library owns and zeroes transient PRF output. This caller-owned copy
+    // of the phrase remains the demo's responsibility.
+    secret.fill(0);
+  }
+
+  return vaultWalletFromPhrase(phrase);
+}
+
+async function unlockVaultAccount(): Promise<ConnectedWallet> {
+  return vaultWalletFromPhrase(await decryptStoredVaultPhrase());
+}
+
+/**
+ * Reads the stored secret vault and decrypts its seed phrase behind a fresh
+ * passkey ceremony. Unlock and reveal share this function. The PRF output and
+ * decrypted bytes are zeroed before returning, even when decryption throws.
+ */
+async function decryptStoredVaultPhrase(): Promise<string> {
+  const raw = localStorage.getItem(VAULT_KEY);
+  if (!raw) {
+    throw new Error(
+      "No vault-backed account exists on this device. Create one first.",
+    );
+  }
+
+  const vault = parseSecretVault(raw);
+  const secret = await decryptSecretVaultWithPasskey({ rpId, vault });
+  try {
+    return new TextDecoder().decode(secret);
+  } finally {
+    secret.fill(0);
+  }
+}
+
+function vaultWalletFromPhrase(phrase: string): ConnectedWallet {
+  const account = accountFromSeed(mnemonicToSeed(phrase));
+  return {
+    mode: "vault",
+    account,
+    lock: () => account.session.lock(),
   };
 }
 
 /**
- * Connects a wallet for the chosen mode and action.
+ * Connects a wallet for the chosen mode and action with one passkey ceremony,
+ * and caches the resulting account's public identity for the next page load.
  *
- * One passkey ceremony unlocks the wallet; in derived mode every numbered
- * account afterwards is pure HD math with no further prompt.
- *
- * `secret` is the recovery phrase a wrapped account is created from; every other
- * path (derived, or signing back into an existing wrapped vault) ignores it, so
- * it is optional.
+ * `secret` is the recovery phrase a vault-backed account is created from; every
+ * other path (passkey, or signing back into an existing secret vault) ignores
+ * it, so it is optional.
  */
-function connect(
+async function connect(
   mode: AccountMode,
   action: "create" | "signin",
-  username: string,
   secret?: string,
-): Promise<ConnectResult> {
-  const label = username.trim() || DEFAULT_USER;
-  if (mode === "wrapped") {
-    return action === "create"
-      ? createWrapped(label, secret ?? "")
-      : unlockWrapped();
+): Promise<ConnectedWallet> {
+  let wallet: ConnectedWallet;
+  if (mode === "vault") {
+    wallet =
+      action === "create"
+        ? await createVaultAccount(secret ?? "")
+        : await unlockVaultAccount();
+  } else {
+    wallet =
+      action === "create"
+        ? await createPasskeyWallet()
+        : await openPasskeyWallet();
   }
-  return action === "create" ? createDerived(label) : openDerived();
+  saveCachedAccount({ mode, address: wallet.account.address });
+  return wallet;
 }
 
 /**
- * Reveals a wallet's BIP-39 recovery phrase behind a fresh passkey ceremony.
- *
- * Derived wallets re-derive the phrase from the passkey PRF output; wrapped
- * wallets decrypt the phrase the user generated or imported out of the secret
- * vault. Either way the mnemonic is fetched on demand rather than held in
- * memory: revealing the whole-wallet backup is a high-privilege action, so it
- * is gated behind a fresh biometric and every secret is zeroed as soon as the
- * words are read.
+ * Reveals the recovery phrase behind a fresh passkey ceremony: passkey mode
+ * re-derives it from the PRF output, vault mode decrypts the stored vault.
+ * Transient secret bytes are zeroed; the returned string cannot be.
  */
-async function revealMnemonic(wallet: ConnectedWallet): Promise<string> {
-  if (wallet.mode === "wrapped") {
-    return decryptStoredWrappedPhrase();
+async function revealMnemonic(
+  wallet: Pick<ConnectedWallet, "mode" | "credentialId">,
+): Promise<string> {
+  if (wallet.mode === "vault") {
+    return decryptStoredVaultPhrase();
   }
 
-  const record = currentDerivedWallet();
-  const prfSalt = createDeterministicPrfSalt();
+  const record = currentPasskeyWallet();
   const { prfOutput } = await getPasskeyPrfOutput({
     rpId,
-    ...(wallet.credentialId ? { credentialId: wallet.credentialId } : {}),
-    ...(record?.credentialId === wallet.credentialId && record?.transports
-      ? { transports: record.transports }
-      : {}),
-    prfSalt,
+    credential: wallet.credentialId
+      ? {
+          credentialId: wallet.credentialId,
+          transports:
+            record?.credentialId === wallet.credentialId
+              ? record?.transports
+              : undefined,
+        }
+      : undefined,
   });
 
   try {
@@ -357,14 +257,16 @@ async function revealMnemonic(wallet: ConnectedWallet): Promise<string> {
 
 /** Turns library and chain errors into short, friendly status text. */
 function describeError(error: unknown): string {
-  if (isPasskeyAccountError(error)) {
+  if (isMeraError(error)) {
     switch (error.code) {
       case "PRF_UNAVAILABLE":
         return "This browser or authenticator doesn't support the WebAuthn PRF extension this demo needs.";
       case "DECRYPT_FAILED":
         return "Couldn't unlock the account with that passkey.";
       case "SESSION_LOCKED":
-        return "Your session is locked — connect again.";
+        return "The session is locked. Connect again.";
+      case "CRYPTO_UNAVAILABLE":
+        return "This browser doesn't provide the Web Crypto APIs this demo needs.";
       case "PASSKEY_OPERATION_FAILED":
         return "The passkey request was cancelled or failed.";
       case "VAULT_FORMAT_INVALID":
@@ -373,8 +275,11 @@ function describeError(error: unknown): string {
         return error.message;
     }
   }
+  // A viem error's `message` appends the request URL, body, and hex payload;
+  // `shortMessage` is its one-line summary, e.g. "Transaction creation failed."
+  if (error instanceof ViemError) return error.shortMessage;
   return error instanceof Error ? error.message : String(error);
 }
 
-export type { AccountMode, AccountSlot, ConnectedWallet, ConnectResult };
-export { connect, DEFAULT_USER, describeError, revealMnemonic };
+export type { Account, AccountMode, ConnectedWallet };
+export { connect, describeError, revealMnemonic };

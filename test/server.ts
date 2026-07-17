@@ -6,16 +6,18 @@ const contentTypes: Record<string, string> = {
   ".js": "text/javascript; charset=utf-8",
 };
 
-// The test page imports `/dist/index.js`, which transitively pulls in bare specifiers
-// from `@noble/*`. Browsers can't resolve bare specifiers, so we map them to the
-// files the server already serves out of `node_modules/`.
+// The test page imports the library by its package name, which transitively
+// pulls in bare specifiers from `@noble/*`. Browsers can't resolve bare
+// specifiers, so we map them to files the server already serves.
 const importMap = JSON.stringify({
   imports: {
-    "@noble/ed25519": "/node_modules/@noble/ed25519/index.js",
+    "@category-labs/mera": "/dist/index.js",
+    "@noble/curves/ed25519.js": "/node_modules/@noble/curves/ed25519.js",
+    "@noble/curves/secp256k1.js": "/node_modules/@noble/curves/secp256k1.js",
+    "@noble/hashes/hmac.js": "/node_modules/@noble/hashes/hmac.js",
     "@noble/hashes/sha2.js": "/node_modules/@noble/hashes/sha2.js",
     "@noble/hashes/sha3.js": "/node_modules/@noble/hashes/sha3.js",
     "@noble/hashes/utils.js": "/node_modules/@noble/hashes/utils.js",
-    "@noble/secp256k1": "/node_modules/@noble/secp256k1/index.js",
     "@scure/base": "/node_modules/@scure/base/index.js",
   },
 });

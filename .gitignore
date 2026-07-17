@@ -2,8 +2,11 @@ dist/
 out/
 *.tgz
 node_modules/
+demo/network/evm/out/
+demo/network/evm/cache/
+demo/.env
+.astro/
 playwright-report/
 test-results/
-coverage/
 .claude
 .DS_Store

@@ -6,11 +6,9 @@ import type { EvmAddress } from "../types.js";
 /**
  * Derives the EIP-55 checksummed EVM address for a secp256k1 public key.
  *
- * Compressed and uncompressed public keys are accepted.
- *
  * @param publicKey - A compressed or uncompressed secp256k1 public key.
  * @returns The EIP-55 mixed-case checksummed EVM address.
- * @throws PasskeyAccountError with code `INPUT_INVALID` when `publicKey` is not valid secp256k1.
+ * @throws MeraError with code `INPUT_INVALID` when `publicKey` is not valid secp256k1.
  */
 function getEvmAddress(publicKey: Uint8Array): EvmAddress {
   const uncompressed = normalizeSecp256k1PublicKey(publicKey);
@@ -21,7 +19,9 @@ function getEvmAddress(publicKey: Uint8Array): EvmAddress {
 /**
  * Returns true when a string is a 20-byte `0x`-prefixed EVM address.
  *
- * All-lowercase and all-uppercase hex bodies are accepted as-is (no checksum to verify). Mixed-case inputs are validated against EIP-55: an inconsistent mixed-case address — a typo or a tampered string — is rejected.
+ * All-lowercase and all-uppercase hex bodies are accepted as-is (no checksum
+ * to verify). Mixed-case inputs are validated against EIP-55: an inconsistent
+ * mixed-case address (a typo or a tampered string) is rejected.
  *
  * @param value - String to check.
  * @returns `true` when `value` is a 20-byte `0x`-prefixed EVM address with a valid (or absent) EIP-55 checksum.
@@ -42,13 +42,16 @@ function isEvmAddress(value: string): value is EvmAddress {
 // already lowercase; mixed-case input would produce a wrong checksum.
 function toChecksumAddress(lowercaseHex: string): EvmAddress {
   const hash = keccak_256(utf8ToBytes(lowercaseHex));
-  let result = "0x";
-  for (let i = 0; i < lowercaseHex.length; i += 1) {
-    const char = lowercaseHex[i];
-    const hashNibble = (hash[i >> 1] >> (i % 2 === 0 ? 4 : 0)) & 0xf;
-    result += hashNibble >= 8 ? char.toUpperCase() : char;
+  let body = "";
+  for (const [i, hashByte] of hash
+    .subarray(0, lowercaseHex.length / 2)
+    .entries()) {
+    const high = lowercaseHex.charAt(i * 2);
+    const low = lowercaseHex.charAt(i * 2 + 1);
+    body += hashByte >> 4 >= 8 ? high.toUpperCase() : high;
+    body += (hashByte & 0xf) >= 8 ? low.toUpperCase() : low;
   }
-  return result as EvmAddress;
+  return `0x${body}`;
 }
 
 export { getEvmAddress, isEvmAddress };

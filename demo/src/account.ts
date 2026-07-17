@@ -1,52 +1,45 @@
-import { getEvmAddress, type Secp256k1SigningSession } from "mera";
-import {
-  type Account,
-  type Hex,
-  hashMessage,
-  hexToBytes,
-  keccak256,
-  type Signature,
-  serializeSignature,
-  serializeTransaction,
-  toHex,
-} from "viem";
-import { toAccount } from "viem/accounts";
+import type { AccountMode } from "./connect";
 
 /**
- * Adapts a secp256k1 passkey signing session into a viem account.
- *
- * The library only signs a raw 32-byte digest (`signDigest`, low-S enforced), so every
- * viem signing entry point reduces to the same shape: build the digest viem expects, hand
- * it to the session, and reassemble the `{ r, s, yParity }` signature viem wants.
+ * The signed-in account's public identity, cached so a reload can show its
+ * portfolio without a passkey ceremony. Holds no key material; trading still
+ * requires unlocking.
  */
-function toPasskeyAccount(session: Secp256k1SigningSession): Account {
-  const address = getEvmAddress(session.publicKey);
+type CachedAccount = {
+  mode: AccountMode;
+  address: `0x${string}`;
+};
 
-  async function signHash(hash: Hex): Promise<Signature> {
-    const { compact, recovery } = await session.signDigest(hexToBytes(hash));
-    return {
-      r: toHex(compact.slice(0, 32)),
-      s: toHex(compact.slice(32, 64)),
-      yParity: recovery,
-      v: BigInt(27 + recovery),
-    };
+const STORAGE_KEY = "mera.demo.account";
+
+function loadCachedAccount(): CachedAccount | undefined {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return undefined;
+    const parsed: unknown = JSON.parse(raw);
+    return isCachedAccount(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
   }
-
-  return toAccount({
-    address,
-    async signTransaction(transaction) {
-      const signature = await signHash(
-        keccak256(serializeTransaction(transaction)),
-      );
-      return serializeTransaction(transaction, signature);
-    },
-    async signMessage({ message }) {
-      return serializeSignature(await signHash(hashMessage(message)));
-    },
-    async signTypedData() {
-      throw new Error("signTypedData not implemented");
-    },
-  });
 }
 
-export { toPasskeyAccount };
+function saveCachedAccount(account: CachedAccount): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(account));
+}
+
+function clearCachedAccount(): void {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+function isCachedAccount(value: unknown): value is CachedAccount {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<CachedAccount>;
+  return (
+    (record.mode === "passkey" || record.mode === "vault") &&
+    typeof record.address === "string" &&
+    /^0x[0-9a-fA-F]{40}$/.test(record.address)
+  );
+}
+
+export type { CachedAccount };
+export { clearCachedAccount, loadCachedAccount, saveCachedAccount };

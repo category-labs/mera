@@ -1,6 +1,10 @@
 import { hexToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
-import { getSolanaAddress, isSolanaAddress } from "../dist/index.js";
+import {
+  getSolanaAddress,
+  isSolanaAddress,
+  type SolanaAddress,
+} from "../dist/index.js";
 import { expectError } from "./helpers.js";
 
 // RFC 8032 test vector 1 Ed25519 public key.
@@ -13,6 +17,17 @@ test("encodes Ed25519 public keys as base58 Solana addresses", () => {
 
   expect(address).toBe("FVen3X669xLzsi6N2V91DoiyzHzg1uAgqiT8jZ9nS96Z");
   expect(isSolanaAddress(address)).toBe(true);
+});
+
+test("isSolanaAddress narrows strings to SolanaAddress", () => {
+  const value: string = "FVen3X669xLzsi6N2V91DoiyzHzg1uAgqiT8jZ9nS96Z";
+
+  expect(isSolanaAddress(value)).toBe(true);
+  if (isSolanaAddress(value)) {
+    // Type-level contract: the predicate narrows a plain string to the brand.
+    const narrowed: SolanaAddress = value;
+    expect(narrowed).toBe(value);
+  }
 });
 
 test("rejects public keys of the wrong length", () => {

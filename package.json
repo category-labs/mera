@@ -2,68 +2,87 @@
   "name": "@category-labs/mera",
   "version": "0.1.0",
   "description": "Primitive-first passkey-backed signing utilities for secp256k1 (EVM) and Ed25519 (Solana).",
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "sideEffects": false,
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE-MIT",
-    "LICENSE-APACHE"
-  ],
-  "scripts": {
-    "build": "tsc",
-    "clean": "rm -rf dist",
-    "check": "biome check .",
-    "format": "biome format --write .",
-    "lint": "biome lint .",
-    "test": "npm run build && playwright test",
-    "test:e2e": "npm run build && playwright test --project=chromium --grep @e2e",
-    "prepublishOnly": "npm run clean && npm run lint && npm run build"
-  },
-  "dependencies": {
-    "@noble/ed25519": "^3.1.0",
-    "@noble/hashes": "^2.2.0",
-    "@noble/secp256k1": "^3.1.0",
-    "@scure/base": "^2.2.0"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.5.0",
-    "@playwright/test": "^1.61.0",
-    "@types/node": "^25.9.3",
-    "typescript": "^6.0.3"
-  },
-  "engines": {
-    "node": ">=24"
-  },
-  "license": "(MIT OR Apache-2.0)",
   "keywords": [
     "passkey",
     "webauthn",
     "prf",
     "secp256k1",
     "ed25519",
+    "ethereum",
     "evm",
     "solana",
     "signing",
-    "cryptography"
+    "crypto"
   ],
+  "homepage": "https://mera.category.xyz",
+  "bugs": {
+    "url": "https://github.com/category-labs/mera/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/category-labs/mera.git"
   },
-  "homepage": "https://github.com/category-labs/mera#readme",
-  "bugs": {
-    "url": "https://github.com/category-labs/mera/issues"
+  "license": "(MIT OR Apache-2.0)",
+  "author": "Category Labs",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./viem": {
+      "types": "./dist/viem.d.ts",
+      "import": "./dist/viem.js"
+    },
+    "./package.json": "./package.json"
   },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
+  ],
+  "private": true,
   "publishConfig": {
     "access": "public",
     "provenance": true
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepack": "npm run build",
+    "check": "biome check .",
+    "check:pack": "npm run build && node scripts/verify-tarball.mjs && publint --strict",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
+    "test": "npm run build && tsc -p tsconfig.test.json && playwright test",
+    "test:e2e": "npm test -- --project chromium-e2e",
+    "prepublishOnly": "npm run clean && npm run lint && npm run build"
+  },
+  "dependencies": {
+    "@noble/curves": "2.2.0",
+    "@noble/hashes": "^2.2.0",
+    "@scure/base": "^2.2.0"
+  },
+  "peerDependencies": {
+    "viem": "^2.28.0"
+  },
+  "peerDependenciesMeta": {
+    "viem": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.4",
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^24.13.3",
+    "publint": "^0.3.21",
+    "typescript": "^7.0.2",
+    "viem": "^2.55.2"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

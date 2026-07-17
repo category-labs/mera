@@ -6,80 +6,95 @@
  */
 type EvmAddress = `0x${string}`;
 
-/** Supported signing curves. */
-type SigningCurve = "secp256k1" | "ed25519";
+declare const brand: unique symbol;
 
-/** WebAuthn authenticator transport metadata, including future browser transport values. */
+/**
+ * Nominal branding helper: tags `T` with a type-only discriminant.
+ *
+ * The symbol key is never exported, so branded values cannot be produced
+ * structurally or read back as a property; only the library functions
+ * documented on each branded type mint them. Nothing exists at runtime.
+ */
+type Brand<T, Name extends string> = T & { readonly [brand]: Name };
+
+/**
+ * A base58-encoded 32-byte Solana address.
+ *
+ * Branded nominal type: base58 has no structural shape the way `EvmAddress`
+ * does, so values are produced by `getSolanaAddress` or narrowed from strings
+ * by `isSolanaAddress`. The brand exists only in the type system; at runtime
+ * the value is a plain string.
+ */
+type SolanaAddress = Brand<string, "SolanaAddress">;
+
+/**
+ * WebAuthn authenticator transport metadata, including future browser transport values.
+ *
+ * The `string & {}` arm accepts any string without collapsing the union to
+ * plain `string`, so editors keep offering the known `AuthenticatorTransport`
+ * literals in autocomplete.
+ */
 type PasskeyCredentialTransport = AuthenticatorTransport | (string & {});
 
 /** Metadata needed to ask WebAuthn for a previously created passkey. */
 type PasskeyCredentialMetadata = {
   /** Credential ID encoded as canonical unpadded base64url. */
-  credentialId: string;
+  readonly credentialId: string;
   /** Authenticator transports reported by the browser, when available. */
-  transports?: PasskeyCredentialTransport[];
+  readonly transports?: readonly PasskeyCredentialTransport[];
 };
 
 /** Result of a successful passkey assertion with the WebAuthn PRF extension. */
 type PasskeyPrfResult = {
   /** Credential ID selected by the browser, as canonical unpadded base64url. */
-  credentialId: string;
+  readonly credentialId: string;
   /** First PRF output from WebAuthn. Always 32 bytes. */
-  prfOutput: Uint8Array;
+  readonly prfOutput: Uint8Array<ArrayBuffer>;
 };
 
-/** Result of creating a passkey. `prfOutput` is populated when `prfSalt` was provided and the authenticator returned it during creation. */
-type CreatePasskeyResult = {
-  /** Credential ID encoded as canonical unpadded base64url. */
-  credentialId: string;
-  /** Authenticator transports reported by the browser, when available. */
-  transports?: PasskeyCredentialTransport[];
+/** Result of creating a passkey. */
+type CreatePasskeyResult = PasskeyCredentialMetadata & {
   /** First WebAuthn PRF output when `prfSalt` was provided and evaluated during creation. */
-  prfOutput?: Uint8Array;
+  readonly prfOutput?: Uint8Array<ArrayBuffer>;
 };
 
 /**
  * Result of creating a passkey together with its first PRF output.
  *
- * `prfSalt` is the caller-provided salt WebAuthn evaluated, so downstream
- * helpers (in particular `createSecretVault`) can be invoked with this result
- * alone.
+ * `prfSalt` is the salt WebAuthn evaluated. It is returned for explicit
+ * low-level composition and protocol interoperability.
  */
-type CreatePasskeyWithPrfOutputResult = {
-  /** Credential ID encoded as canonical unpadded base64url. */
-  credentialId: string;
-  /** Authenticator transports reported by the browser, when available. */
-  transports?: PasskeyCredentialTransport[];
-  /** PRF salt that was evaluated. Always 32 bytes. */
-  prfSalt: Uint8Array;
+type CreatePasskeyWithPrfOutputResult = PasskeyCredentialMetadata & {
+  /** PRF salt that was evaluated. Always 32 bytes and never aliases the caller input. */
+  readonly prfSalt: Uint8Array<ArrayBuffer>;
   /** First WebAuthn PRF output for `prfSalt`. Always 32 bytes. */
-  prfOutput: Uint8Array;
+  readonly prfOutput: Uint8Array<ArrayBuffer>;
 };
 
 /**
  * Versioned JSON-safe vault holding one arbitrary secret encrypted behind a passkey.
  *
- * The secret is opaque — no curve and no public key. Callers decide what the bytes mean (a seed phrase's entropy, a backup blob, …).
+ * The secret bytes are opaque to the library; callers decide what they mean.
  */
 type PasskeySecretVault = {
   /** Secret-vault format version. */
-  version: 1;
+  readonly version: 1;
   /** Passkey credential that unlocks this secret. */
-  credential: PasskeyCredentialMetadata;
+  readonly credential: PasskeyCredentialMetadata;
   /** PRF salt for this secret, as canonical unpadded base64url. */
-  prfSalt: string;
+  readonly prfSalt: string;
   /** AES-GCM nonce as canonical unpadded base64url. */
-  nonce: string;
+  readonly nonce: string;
   /** AES-GCM ciphertext (including tag) as canonical unpadded base64url. */
-  ciphertext: string;
+  readonly ciphertext: string;
 };
 
 /** secp256k1 ECDSA signature returned by an unlocked signing session. */
 type Secp256k1Signature = {
   /** Compact 64-byte `r || s` ECDSA signature. */
-  compact: Uint8Array;
+  readonly compact: Uint8Array<ArrayBuffer>;
   /** Recovery ID (0 or 1) for the signature. */
-  recovery: number;
+  readonly recovery: 0 | 1;
 };
 
 /** Inputs for creating an explicitly lockable curve signing session. */
@@ -87,7 +102,7 @@ type CreateSigningSessionOptions = {
   /**
    * Curve private key. Must be exactly 32 bytes; secp256k1 must also be a valid scalar.
    *
-   * Zeroed before the call returns or throws. Pass a fresh copy if the bytes are needed elsewhere.
+   * Copied into one session-owned snapshot; the input is zeroed before the call returns or throws.
    */
   consumePrivateKey: Uint8Array;
 };
@@ -95,61 +110,50 @@ type CreateSigningSessionOptions = {
 /** secp256k1 signing session that can sign 32-byte digests until `lock` is called. */
 type Secp256k1SigningSession = {
   /** Uncompressed secp256k1 public key for the session. */
-  publicKey: Uint8Array;
+  readonly publicKey: Uint8Array<ArrayBuffer>;
   /**
    * Signs a 32-byte digest without prehashing it.
    *
-   * @param digest32 - Exactly 32 bytes to sign.
+   * @param digest32 - Exactly 32 bytes to sign; copied before use, the original buffer is not modified.
    * @returns A compact secp256k1 ECDSA signature with its recovery ID.
-   * @remarks Caller assumptions: `digest32` must already be the digest to sign; this method does not hash it.
-   * @remarks `digest32` is copied before use; the original buffer is not modified.
-   * @throws PasskeyAccountError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
-   * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
+   * @throws MeraError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
+   * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
    */
   signDigest(digest32: Uint8Array): Promise<Secp256k1Signature>;
   /**
-   * Returns a copy of the active private key.
-   *
-   * @returns A copy of the active private key.
-   * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
-   */
-  exportPrivateKey(): Uint8Array;
-  /**
-   * Clears the active private key and permanently locks this session.
-   *
-   * @remarks Side effects: overwrites the session-owned private-key copy with zeros and makes future signing or export fail.
-   * @remarks If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
+   * Zeroes the session-owned private-key copy and permanently locks this session; later signing throws `SESSION_LOCKED`.
    */
   lock(): void;
+  /**
+   * Calls `lock`, so a `using` declaration locks the session when its scope
+   * exits. Sessions bound with `const` or `let` are unaffected; disposal runs
+   * only where a caller opts in with `using`.
+   */
+  [Symbol.dispose](): void;
 };
 
 /** Ed25519 signing session that can sign messages until `lock` is called. */
 type Ed25519SigningSession = {
   /** 32-byte Ed25519 public key for the session. */
-  publicKey: Uint8Array;
+  readonly publicKey: Uint8Array<ArrayBuffer>;
   /**
-   * Signs an arbitrary-length message with Ed25519 (Ed25519pure).
+   * Signs an arbitrary-length message with Ed25519.
    *
-   * @param message - Message bytes to sign. Hashing happens inside Ed25519 itself.
+   * @param message - Message bytes to sign; copied before use, the original buffer is not modified. Hashing happens inside Ed25519 itself.
    * @returns A 64-byte Ed25519 signature (`R || s`).
-   * @remarks `message` is copied before use; the original buffer is not modified.
-   * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
+   * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
    */
-  signMessage(message: Uint8Array): Promise<Uint8Array>;
+  signMessage(message: Uint8Array): Promise<Uint8Array<ArrayBuffer>>;
   /**
-   * Returns a copy of the active private key (Ed25519 seed).
-   *
-   * @returns A copy of the active 32-byte seed.
-   * @throws PasskeyAccountError with code `SESSION_LOCKED` after `lock` has been called.
-   */
-  exportPrivateKey(): Uint8Array;
-  /**
-   * Clears the active private key and permanently locks this session.
-   *
-   * @remarks Side effects: overwrites the session-owned seed copy with zeros and makes future signing or export fail.
-   * @remarks If `lock` is called while a sign on the same session is still in flight, the calls race and the in-flight signature's result is unspecified.
+   * Zeroes the session-owned private-key copy and permanently locks this session; later signing throws `SESSION_LOCKED`.
    */
   lock(): void;
+  /**
+   * Calls `lock`, so a `using` declaration locks the session when its scope
+   * exits. Sessions bound with `const` or `let` are unaffected; disposal runs
+   * only where a caller opts in with `using`.
+   */
+  [Symbol.dispose](): void;
 };
 
 export type {
@@ -164,5 +168,5 @@ export type {
   PasskeySecretVault,
   Secp256k1Signature,
   Secp256k1SigningSession,
-  SigningCurve,
+  SolanaAddress,
 };

@@ -408,6 +408,10 @@ input:focus-visible {
   margin: 0;
   font-size: 13px;
   line-height: 1.4;
+  /* Error text can embed long unbroken tokens (URLs, hex payloads), which
+     would widen the card's grid track and force horizontal scrolling; see
+     `.break` for the same fix on the signed-transaction display. */
+  overflow-wrap: anywhere;
 }
 
 .status.error {

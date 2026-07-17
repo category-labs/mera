@@ -29,13 +29,6 @@ const MARKET_ABI = [
   },
   {
     type: "function",
-    name: "price",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ type: "uint256" }],
-  },
-  {
-    type: "function",
     name: "balanceOf",
     stateMutability: "view",
     inputs: [{ name: "", type: "address" }],
@@ -98,7 +91,8 @@ function priceAt(timestamp: bigint): bigint {
   const slowDrift = noiseLayerAt(timestamp, 1n, 28800n, 6n * UNIT);
   const mediumSwing = noiseLayerAt(timestamp, 2n, 600n, (5n * UNIT) / 2n);
   const fastWiggle = noiseLayerAt(timestamp, 3n, 45n, (3n * UNIT) / 5n);
-  return BASE_PRICE + slowDrift + mediumSwing + fastWiggle;
+  const fastJitter = noiseLayerAt(timestamp, 4n, 5n, (3n * UNIT) / 20n);
+  return BASE_PRICE + slowDrift + mediumSwing + fastWiggle + fastJitter;
 }
 
 // ----- Portfolio and trades ----------------------------------------------------
@@ -109,8 +103,6 @@ type Portfolio = {
   cash: bigint;
   /** Share balance (18 decimals). */
   shares: bigint;
-  /** Current on-chain share price, in wei per whole share. */
-  price: bigint;
 };
 
 /** A mined trade: the exact share amount from the contract's Transfer event. */
@@ -123,7 +115,7 @@ async function readPortfolio(
   evm: EvmContext,
   address: EvmAddress,
 ): Promise<Portfolio> {
-  const [cash, shares, price] = await Promise.all([
+  const [cash, shares] = await Promise.all([
     evm.publicClient.getBalance({ address }),
     evm.publicClient.readContract({
       address: evm.marketAddress,
@@ -131,13 +123,8 @@ async function readPortfolio(
       functionName: "balanceOf",
       args: [address],
     }),
-    evm.publicClient.readContract({
-      address: evm.marketAddress,
-      abi: MARKET_ABI,
-      functionName: "price",
-    }),
   ]);
-  return { cash, shares, price };
+  return { cash, shares };
 }
 
 /**

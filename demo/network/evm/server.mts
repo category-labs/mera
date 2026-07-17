@@ -50,8 +50,8 @@ const MAX_BODY_BYTES = 128 * 1024;
 // only from this process. The guard exits when anvil dies and the platform
 // restarts the container, which is the network's designed recovery path.
 // Mixed mining mines transactions instantly and adds an interval block every
-// 5 seconds, so the head timestamp, and with it the stock price, keeps
-// moving between trades.
+// second, so the head timestamp, and with it the stock price, moves at the
+// finest pace a second-granular timestamp allows.
 const anvil = spawn(
   "anvil",
   [
@@ -63,7 +63,7 @@ const anvil = spawn(
     "8546",
     "--mixed-mining",
     "--block-time",
-    "5",
+    "1",
   ],
   { stdio: ["ignore", "inherit", "inherit"] },
 );

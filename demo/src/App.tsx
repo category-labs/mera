@@ -1,9 +1,7 @@
-import type { Connection } from "@solana/web3.js";
 import { type ReactElement, useEffect, useState } from "react";
 import { AccountCard } from "./AccountCard";
 import { ConnectCard } from "./ConnectCard";
 import { type EvmContext, resolveEvmContext } from "./chains/evm";
-import { resolveSolanaConnection } from "./chains/solana";
 import {
   type AccountSlot,
   type ConnectedWallet,
@@ -51,31 +49,14 @@ function App(): ReactElement {
   const [evmContext, setEvmContext] = useState<EvmContext | null>(null);
   const [evmError, setEvmError] = useState<string | null>(null);
 
-  const [solanaConnection, setSolanaConnection] = useState<Connection | null>(
-    null,
-  );
-  const [solanaError, setSolanaError] = useState<string | null>(null);
-
   const [wallet, setWallet] = useState<ConnectedWallet | null>(null);
   const [accounts, setAccounts] = useState<AccountSlot[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  useEffect(() => {
-    const stopEvm = retryingResolve(
-      resolveEvmContext,
-      setEvmContext,
-      setEvmError,
-    );
-    const stopSolana = retryingResolve(
-      resolveSolanaConnection,
-      setSolanaConnection,
-      setSolanaError,
-    );
-    return () => {
-      stopEvm();
-      stopSolana();
-    };
-  }, []);
+  useEffect(
+    () => retryingResolve(resolveEvmContext, setEvmContext, setEvmError),
+    [],
+  );
 
   function handleConnected(result: ConnectResult) {
     setWallet(result.wallet);
@@ -135,8 +116,6 @@ function App(): ReactElement {
           onAddAccount={handleAddAccount}
           evm={evmContext}
           evmError={evmError}
-          solana={solanaConnection}
-          solanaError={solanaError}
           onLock={handleLock}
         />
       ) : (

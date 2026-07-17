@@ -10,8 +10,8 @@ const DEMO_SEND_AMOUNT = "0.01";
 
 /**
  * Chain-specific behavior behind an account card. Amounts are bigints in the
- * chain's smallest unit (wei, lamports); `parseAmount` and `formatAmount`
- * convert to and from the decimal strings shown in the UI.
+ * chain's smallest unit (wei); `parseAmount` and `formatAmount` convert to
+ * and from the decimal strings shown in the UI.
  */
 type ChainAdapter = {
   /** Chain label for the card badge, e.g. "EVM". */

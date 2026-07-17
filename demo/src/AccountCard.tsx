@@ -1,4 +1,3 @@
-import type { Connection } from "@solana/web3.js";
 import { type ReactElement, useMemo, useState } from "react";
 import { ChainAccountCard, type RecipientSuggestion } from "./ChainAccountCard";
 import type { EvmContext } from "./chains/evm";
@@ -9,15 +8,7 @@ import {
   revealMnemonic,
 } from "./connect";
 import { createEvmAdapter } from "./evmAdapter";
-import { createSolanaAdapter } from "./solanaAdapter";
 import { WalletBackup } from "./WalletBackup";
-
-type ChainKind = "evm" | "solana";
-
-const CHAINS: { id: ChainKind; label: string }[] = [
-  { id: "evm", label: "EVM" },
-  { id: "solana", label: "Solana" },
-];
 
 type AccountCardProps = {
   wallet: ConnectedWallet;
@@ -27,17 +18,15 @@ type AccountCardProps = {
   onAddAccount: () => void;
   evm: EvmContext | null;
   evmError: string | null;
-  solana: Connection | null;
-  solanaError: string | null;
   onLock: () => void;
 };
 
 /**
- * Account view: an account selector (passkey mode only), then a chain toggle,
- * then the chain-specific card for the active account.
+ * Account view: an account selector (passkey mode only), then the card for
+ * the active account.
  *
- * Switching accounts or chains never triggers a passkey ceremony because every
- * account was derived from the one seed the wallet already holds.
+ * Switching accounts never triggers a passkey ceremony because every account
+ * was derived from the one seed the wallet already holds.
  */
 function AccountCard({
   wallet,
@@ -47,11 +36,8 @@ function AccountCard({
   onAddAccount,
   evm,
   evmError,
-  solana,
-  solanaError,
   onLock,
 }: AccountCardProps): ReactElement {
-  const [chain, setChain] = useState<ChainKind>("evm");
   const active = accounts[activeIndex] ?? accounts[0];
 
   // Recovery phrase, revealed on demand by a fresh passkey ceremony. It lives
@@ -93,15 +79,14 @@ function AccountCard({
     else onAddAccount();
   }
 
-  // Shapes the suggestion for one chain's card, picking that chain's address.
-  function suggestionFor(kind: ChainKind): RecipientSuggestion | undefined {
-    if (!suggestion) return undefined;
-    return {
-      address: suggestion.slot[kind].address,
-      label: suggestion.label,
-      onReveal: () => revealAccount(suggestion.index),
-    };
-  }
+  // Shapes the suggestion for the card, picking the suggested EVM address.
+  const cardSuggestion: RecipientSuggestion | undefined = suggestion
+    ? {
+        address: suggestion.slot.evm.address,
+        label: suggestion.label,
+        onReveal: () => revealAccount(suggestion.index),
+      }
+    : undefined;
 
   const evmAdapter = useMemo(
     () =>
@@ -109,17 +94,6 @@ function AccountCard({
         ? createEvmAdapter(active.evm.session, active.evm.address, evm)
         : null,
     [active, evm],
-  );
-  const solanaAdapter = useMemo(
-    () =>
-      solana
-        ? createSolanaAdapter(
-            active.solana.session,
-            active.solana.address,
-            solana,
-          )
-        : null,
-    [active, solana],
   );
 
   // The recovery phrase takes over the card slot rather than stacking a second
@@ -164,49 +138,19 @@ function AccountCard({
         </div>
       )}
 
-      <div className="segmented" role="tablist" aria-label="Chain">
-        {CHAINS.map((entry) => (
-          <button
-            key={entry.id}
-            type="button"
-            role="tab"
-            aria-selected={entry.id === chain}
-            className={entry.id === chain ? "segment active" : "segment"}
-            onClick={() => setChain(entry.id)}
-          >
-            {entry.label}
-          </button>
-        ))}
-      </div>
-
-      {chain === "evm" ? (
-        evmAdapter ? (
-          <ChainAccountCard
-            key={`evm-${active.index}`}
-            adapter={evmAdapter}
-            address={active.evm.address}
-            mode={wallet.mode}
-            suggestion={suggestionFor("evm")}
-            onLock={onLock}
-          />
-        ) : evmError ? (
-          <p className="status error">EVM is unavailable: {evmError}</p>
-        ) : (
-          <p className="status">The demo is connecting to EVM…</p>
-        )
-      ) : solanaAdapter ? (
+      {evmAdapter ? (
         <ChainAccountCard
-          key={`sol-${active.index}`}
-          adapter={solanaAdapter}
-          address={active.solana.address}
+          key={active.index}
+          adapter={evmAdapter}
+          address={active.evm.address}
           mode={wallet.mode}
-          suggestion={suggestionFor("solana")}
+          suggestion={cardSuggestion}
           onLock={onLock}
         />
-      ) : solanaError ? (
-        <p className="status error">Solana is unavailable: {solanaError}</p>
+      ) : evmError ? (
+        <p className="status error">The network is unavailable: {evmError}</p>
       ) : (
-        <p className="status">The demo is connecting to Solana…</p>
+        <p className="status">The demo is connecting to the network…</p>
       )}
 
       <div className="backup-trigger">

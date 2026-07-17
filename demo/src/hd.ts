@@ -1,6 +1,3 @@
-import { hmac } from "@noble/hashes/hmac.js";
-import { sha512 } from "@noble/hashes/sha2.js";
-import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { HDKey } from "@scure/bip32";
 import {
   entropyToMnemonic,
@@ -22,8 +19,8 @@ const evmPath = (index: number): string => `m/44'/60'/0'/0/${index}`;
  * standard HD wallet derives from.
  *
  * The PRF output is used as 256 bits of BIP-39 entropy, so the same phrase
- * imported into MetaMask or Phantom reproduces the same addresses. Changing
- * this mapping would change every derived address.
+ * imported into a wallet app such as MetaMask reproduces the same addresses.
+ * Changing this mapping would change every derived address.
  */
 function prfOutputToMnemonic(prfOutput: Uint8Array): string {
   if (prfOutput.length !== PRF_OUTPUT_LENGTH) {
@@ -57,49 +54,9 @@ function deriveEvmPrivateKey(seed: Uint8Array, index: number): Uint8Array {
   return new Uint8Array(node.privateKey);
 }
 
-/** Ed25519 seed for Solana account `index` (SLIP-0010 over BIP-44). */
-function deriveSolanaSeed(seed: Uint8Array, index: number): Uint8Array {
-  let node = slip10Master(seed);
-  // m/44'/501'/{index}'/0' -- BIP-44 with the account index varying,
-  // hardened end to end (see the SLIP-0010 section below).
-  for (const pathIndex of [44, 501, index, 0]) {
-    node = slip10ChildHardened(node, pathIndex);
-  }
-  return node.key;
-}
-
-// ----- SLIP-0010 for Ed25519 ------------------------------------------------
-// Ed25519 supports only hardened derivation. Phantom and Solflare derive Solana
-// keys this exact way, so importing the same mnemonic there reproduces these
-// addresses.
-
-const ED25519_DOMAIN = utf8ToBytes("ed25519 seed");
-const HARDENED_OFFSET = 0x80000000;
-
-type Slip10Node = { key: Uint8Array; chainCode: Uint8Array };
-
-function slip10Master(seed: Uint8Array): Slip10Node {
-  const i = hmac(sha512, ED25519_DOMAIN, seed);
-  return { key: i.slice(0, 32), chainCode: i.slice(32) };
-}
-
-function slip10ChildHardened(node: Slip10Node, index: number): Slip10Node {
-  const data = new Uint8Array(1 + 32 + 4);
-  data[0] = 0x00;
-  data.set(node.key, 1);
-  new DataView(data.buffer).setUint32(
-    33,
-    (index + HARDENED_OFFSET) >>> 0,
-    false,
-  );
-  const i = hmac(sha512, node.chainCode, data);
-  return { key: i.slice(0, 32), chainCode: i.slice(32) };
-}
-
 export {
   createMnemonic,
   deriveEvmPrivateKey,
-  deriveSolanaSeed,
   isValidMnemonic,
   mnemonicToSeed,
   prfOutputToMnemonic,

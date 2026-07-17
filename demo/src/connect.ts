@@ -1,21 +1,17 @@
 import {
-  createEd25519SigningSession,
   createPasskeyWithPrfOutput,
   createSecp256k1SigningSession,
   createSecretVaultWithNewPasskey,
   decryptSecretVaultWithPasskey,
-  type Ed25519SigningSession,
   type EvmAddress,
   getEvmAddress,
   getPasskeyPrfOutput,
-  getSolanaAddress,
   isMeraError,
   parseSecretVault,
   type Secp256k1SigningSession,
 } from "@category-labs/mera";
 import {
   deriveEvmPrivateKey,
-  deriveSolanaSeed,
   isValidMnemonic,
   mnemonicToSeed,
   prfOutputToMnemonic,
@@ -25,16 +21,12 @@ import { currentPasskeyWallet, rememberPasskeyWallet } from "./passkeyWallet";
 /** The two account modes the demo offers. */
 type AccountMode = "vault" | "passkey";
 
-/** One numbered account with a signing session per chain. */
+/** One numbered account with its EVM signing session. */
 type AccountSlot = {
   index: number;
   evm: {
     session: Secp256k1SigningSession;
     address: EvmAddress;
-  };
-  solana: {
-    session: Ed25519SigningSession;
-    address: string;
   };
 };
 
@@ -65,25 +57,18 @@ const DEFAULT_USER = "nad";
 
 const rpId = location.hostname;
 
-/** Derives both chain sessions for one HD account index from the seed. */
+/** Derives the signing session for one HD account index from the seed. */
 function deriveSlotFromSeed(seed: Uint8Array, index: number): AccountSlot {
-  // Each derive* call returns a fresh buffer the session takes ownership of and
-  // zeroes; the `seed` itself is never handed to a session.
-  const secpSession = createSecp256k1SigningSession({
+  // deriveEvmPrivateKey returns a fresh buffer the session takes ownership of
+  // and zeroes; the `seed` itself is never handed to a session.
+  const session = createSecp256k1SigningSession({
     consumePrivateKey: deriveEvmPrivateKey(seed, index),
-  });
-  const ed25519Session = createEd25519SigningSession({
-    consumePrivateKey: deriveSolanaSeed(seed, index),
   });
   return {
     index,
     evm: {
-      session: secpSession,
-      address: getEvmAddress(secpSession.publicKey),
-    },
-    solana: {
-      session: ed25519Session,
-      address: getSolanaAddress(ed25519Session.publicKey),
+      session,
+      address: getEvmAddress(session.publicKey),
     },
   };
 }
@@ -126,7 +111,6 @@ function buildPasskeyWallet(
     lock(): void {
       for (const slot of cache.values()) {
         slot.evm.session.lock();
-        slot.solana.session.lock();
       }
       cache.clear();
       if (seed) {
@@ -186,7 +170,7 @@ async function openPasskeyWallet(): Promise<ConnectResult> {
   return { wallet, accountCount };
 }
 
-// ----- Vault mode: one passkey encrypts one seed phrase; both chains derive from it
+// ----- Vault mode: one passkey encrypts one seed phrase the account derives from
 
 async function createVaultAccount(
   label: string,
@@ -200,7 +184,7 @@ async function createVaultAccount(
   // The phrase itself is the secret the passkey encrypts. Storing it lets
   // vault mode reveal it again later. Signing keys are re-derived from the
   // phrase on unlock, the standard HD way, so it stays portable to wallet apps
-  // such as MetaMask and Phantom.
+  // such as MetaMask.
   const secret = new TextEncoder().encode(phrase);
   try {
     const vault = await createSecretVaultWithNewPasskey({
@@ -271,7 +255,6 @@ function buildVaultWallet(slot: AccountSlot): ConnectedWallet {
     },
     lock(): void {
       slot.evm.session.lock();
-      slot.solana.session.lock();
     },
   };
 }

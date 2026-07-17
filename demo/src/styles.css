@@ -436,11 +436,6 @@ input:focus-visible {
   color: var(--accent);
 }
 
-.badge.chain-solana {
-  background: color-mix(in srgb, #9945ff 16%, transparent);
-  color: #7a37cc;
-}
-
 .address {
   display: flex;
   align-items: center;

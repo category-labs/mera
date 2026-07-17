@@ -58,17 +58,7 @@ function App(): ReactElement {
 
   return (
     <main className="app">
-      <header className="brand">
-        <div className="brand-lockup">
-          <div className="mark" aria-hidden="true">
-            ◈
-          </div>
-          <div>
-            <h1>Mera Demo</h1>
-          </div>
-        </div>
-      </header>
-
+      <h1>Mera Demo</h1>
       <TradingCard evm={evmContext} evmError={evmError} />
     </main>
   );

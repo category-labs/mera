@@ -9,6 +9,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 5
+    # Minimum release age before an update PR is opened (supply-chain defense).
+    cooldown:
+      default-days: 7
     labels:
       - "dependencies"
     commit-message:
@@ -33,6 +37,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 5
+    # Minimum release age before an update PR is opened (supply-chain defense).
+    cooldown:
+      default-days: 7
     labels:
       - "dependencies"
       - "github-actions"

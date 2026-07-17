@@ -12,6 +12,8 @@
   --accent-text: #ffffff;
   --ok: #15a34a;
   --error: #dc2626;
+  --up: #15a34a;
+  --down: #dc2626;
   --shadow:
     0 1px 2px rgba(15, 17, 21, 0.04), 0 12px 32px rgba(15, 17, 21, 0.06);
 
@@ -125,62 +127,36 @@ input:focus-visible {
   box-shadow: var(--shadow);
 }
 
-/* Account view shell: stack the chain toggle and the chain card with the same gap as the app grid. */
+/* Trading surface shell: the card, its footer links, and the disclaimer.
+   Flexing lets the signed-out mode switch push itself to the page bottom
+   with `margin-top: auto`, like the old connect screen's footer did. */
 .account-shell {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   gap: 14px;
 }
 
-/* Account selector: a scrollable row of numbered HD accounts plus "+ Add". */
-.account-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.account-pills {
-  display: flex;
-  flex: 1;
-  gap: 4px;
-  padding: 4px;
-  background: var(--surface-2);
-  border-radius: 11px;
-  overflow-x: auto;
-}
-
-.account-pill {
-  flex: 0 0 auto;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-weight: 550;
-  font-size: 13px;
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s;
-}
-
-.account-pill.active {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: 0 1px 2px rgba(15, 17, 21, 0.12);
-}
-
-.account-add {
-  flex: 0 0 auto;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-/* Recovery-phrase backup */
-.backup-trigger {
+/* Connect area under the market data, divided from it like `.holdings`. */
+.connect-cta {
   display: grid;
-  gap: 6px;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+/* Footer links under the trading card: add funds, export, sign out. */
+.account-links {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.disclaimer {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .backup {
@@ -289,12 +265,6 @@ input:focus-visible {
   gap: 8px;
 }
 
-/* Vault-mode recovery-phrase section on the connect screen. */
-.secret {
-  display: grid;
-  gap: 10px;
-}
-
 /* Buttons */
 .actions {
   display: grid;
@@ -367,10 +337,10 @@ input:focus-visible {
   letter-spacing: normal;
 }
 
-/* Mode switch at the bottom of the connect screen: `margin-top: auto` pushes it
-   to the bottom of the viewport-filling `.app` column (and collapses to the
-   plain column gap when embedded, where the page hugs its content). Quiet by
-   default, accent on hover. */
+/* Signed-out footer link that swaps passkey and vault connect modes:
+   `margin-top: auto` pushes it to the bottom of the viewport-filling column
+   (and collapses to the plain gap when embedded, where the page hugs its
+   content). Quiet by default, accent on hover. */
 .mode-switch {
   align-self: center;
   margin-top: auto;
@@ -400,10 +370,6 @@ input:focus-visible {
   color: var(--muted);
 }
 
-.hint.center {
-  text-align: center;
-}
-
 .status {
   margin: 0;
   font-size: 13px;
@@ -422,93 +388,133 @@ input:focus-visible {
   color: var(--ok);
 }
 
-/* Account view */
-.card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.badge {
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  color: var(--accent);
-}
-
-.address {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
-  padding: 11px 13px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--field);
-  color: var(--text);
-  cursor: pointer;
-  font: inherit;
-}
-
-.address:hover {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
-}
-
-.copy {
-  font-size: 12px;
-  color: var(--muted);
-}
-
 .mono {
   font-family:
     ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
-.balance {
+/* Stock header: company and ticker on the left, live quote on the right. */
+.stock-head {
   display: flex;
-  align-items: baseline;
-  gap: 7px;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.amount {
-  font-size: 32px;
+.stock-name {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.stock-symbol {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  vertical-align: 2px;
+}
+
+.stock-quote {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+}
+
+.stock-price {
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
-.symbol {
-  font-size: 14px;
+.stock-delta {
+  font-size: 12px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.stock-delta.up {
+  color: var(--up);
+}
+
+.stock-delta.down {
+  color: var(--down);
+}
+
+/* Price chart */
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.chart-label {
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--muted);
+}
+
+/* Fake newsroom line under the chart. */
+.news {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
   color: var(--muted);
 }
 
-.qr-frame {
+.news-tag {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+/* Cash and position rows. */
+.holdings {
   display: grid;
-  place-items: center;
-  padding: 16px;
-  background: #ffffff;
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
 }
 
-.qr svg {
-  display: block;
-  width: 180px;
-  height: 180px;
-  shape-rendering: crispedges;
+.holding-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-/* Send */
-.send {
+.holding-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.holding-value {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Trade form */
+.trade {
   display: grid;
   gap: 12px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
 }
 
 .send-row {
@@ -527,61 +533,8 @@ input:focus-visible {
   height: 41px;
 }
 
-.reveal {
-  font-size: 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  background: var(--surface-2);
-}
-
-.reveal summary {
-  cursor: pointer;
-  color: var(--muted);
-  font-weight: 550;
-}
-
-.break {
-  display: block;
-  margin-top: 8px;
-  /* `overflow-wrap: anywhere` instead of `word-break: break-all`. This reduces
-     min-content intrinsic size so a long base64 token can't widen the grid
-     track and push the centered card off-screen. */
-  overflow-wrap: anywhere;
-  line-height: 1.5;
-  color: var(--text);
-}
-
 a {
   color: var(--accent);
-}
-
-/* Pre-filled self-recipient: same box as `.address`, accent-tinted so it reads
-   as a send target rather than the account's own address shown above. */
-.recipient-chip {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
-  padding: 11px 13px;
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--accent) 6%, var(--field));
-}
-
-.recipient-name {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.recipient-addr {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.reveal-recipient {
-  justify-self: start;
 }
 
 /* Embedded in the post's iframe: drop the viewport-filling height and big

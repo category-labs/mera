@@ -2,8 +2,7 @@
 
 A private, disposable network the demo runs against, one Railway service for
 the `evm/` directory. The network holds no real value: state is wiped on
-every restart, and the demo funds accounts automatically until they show
-on-chain activity, so an account emptied on purpose stays empty.
+every restart, and the house stakes accounts with play money on demand.
 
 `evm/` runs anvil from the
 [monad-foundry fork](https://github.com/category-labs/foundry) with
@@ -11,8 +10,8 @@ on-chain activity, so an account emptied on purpose stays empty.
 forwards the `eth_*`, `net_*`, and `web3_*` namespaces, refuses anvil's
 cheat methods, and adds three behaviors of its own:
 
-- `demo_fundAccount(address)` tops a balance below 10 DEMON up by 100 for
-  accounts that have never sent a transaction, and is a no-op otherwise.
+- `demo_fundAccount(address)` tops a balance below 100 DEMON up by 10,000
+  and is a no-op otherwise.
 - At boot it deploys the demo's stock contract
   (`evm/contracts/DemoStock.sol`) from the committed bytecode
   (`evm/demoStock.mts`) and reports its address through `demo_market`.

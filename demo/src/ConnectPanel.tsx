@@ -101,9 +101,6 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
 
   return (
     <div className="connect-cta">
-      <p className="hint">
-        Sign in with a passkey from before, or create a new account.
-      </p>
       <div className="actions">
         <button
           type="button"

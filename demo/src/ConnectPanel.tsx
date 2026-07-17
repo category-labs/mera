@@ -1,4 +1,3 @@
-import { isMeraError } from "@category-labs/mera";
 import { type ReactElement, useState } from "react";
 import {
   type AccountMode,
@@ -14,17 +13,15 @@ type ConnectPanelProps = {
 };
 
 /**
- * The connect area under the market data. Passkey mode is a single button:
- * it tries a discoverable sign-in and flips to offering a fresh account when
- * that fails, because WebAuthn reports "no passkey" and "cancelled" as the
- * same error. Vault mode imports or creates a phrase-backed account. Mount
- * with `key={mode}` so switching modes resets the local state.
+ * The connect area under the market data. Passkey mode offers explicit
+ * create and sign-in actions; new passkeys are created under a fixed default
+ * name. Vault mode imports or creates a phrase-backed account. Mount with
+ * `key={mode}` so switching modes resets the local state.
  */
 function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
   const [secret, setSecret] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"create" | "signin" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [offerCreate, setOfferCreate] = useState(false);
 
   const trimmedSecret = secret.trim();
   const secretValid = isValidMnemonic(trimmedSecret);
@@ -35,23 +32,14 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
   }
 
   async function run(action: "create" | "signin") {
-    setBusy(true);
+    setBusy(action);
     setError(null);
     try {
       onConnected(await connect(mode, action, secret));
     } catch (caught) {
-      if (
-        mode === "passkey" &&
-        action === "signin" &&
-        isMeraError(caught) &&
-        caught.code === "PASSKEY_OPERATION_FAILED"
-      ) {
-        setOfferCreate(true);
-      } else {
-        setError(describeError(caught));
-      }
+      setError(describeError(caught));
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
@@ -69,7 +57,7 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
               type="button"
               className="link small"
               onClick={generate}
-              disabled={busy}
+              disabled={busy !== null}
             >
               Generate
             </button>
@@ -82,7 +70,7 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
             autoCapitalize="off"
             spellCheck={false}
             onChange={(event) => setSecret(event.target.value)}
-            disabled={busy}
+            disabled={busy !== null}
           />
         </label>
         {trimmedSecret.length > 0 && !secretValid && (
@@ -93,17 +81,17 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
             type="button"
             className="btn primary"
             onClick={() => void run("create")}
-            disabled={busy || !secretValid}
+            disabled={busy !== null || !secretValid}
           >
-            {busy ? "Waiting for passkey…" : "Open account"}
+            {busy === "create" ? "Waiting for passkey…" : "Open account"}
           </button>
           <button
             type="button"
             className="btn"
             onClick={() => void run("signin")}
-            disabled={busy}
+            disabled={busy !== null}
           >
-            Sign in
+            {busy === "signin" ? "Waiting for passkey…" : "Sign in"}
           </button>
         </div>
         {error && <p className="status error">{error}</p>}
@@ -113,36 +101,27 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
 
   return (
     <div className="connect-cta">
-      {offerCreate && (
-        <p className="hint">
-          No passkey for this demo on the device. Create a new one to start.
-        </p>
-      )}
-      <button
-        type="button"
-        className="btn primary"
-        onClick={() => void run(offerCreate ? "create" : "signin")}
-        disabled={busy}
-      >
-        {busy
-          ? "Waiting for passkey…"
-          : offerCreate
-            ? "Create account"
-            : "Sign in with a passkey"}
-      </button>
-      {offerCreate && (
+      <p className="hint">
+        Sign in with a passkey from before, or create a new account.
+      </p>
+      <div className="actions">
         <button
           type="button"
-          className="link"
-          onClick={() => {
-            setOfferCreate(false);
-            setError(null);
-          }}
-          disabled={busy}
+          className="btn primary"
+          onClick={() => void run("create")}
+          disabled={busy !== null}
         >
-          Try sign-in again
+          {busy === "create" ? "Waiting for passkey…" : "Create account"}
         </button>
-      )}
+        <button
+          type="button"
+          className="btn"
+          onClick={() => void run("signin")}
+          disabled={busy !== null}
+        >
+          {busy === "signin" ? "Waiting for passkey…" : "Sign in"}
+        </button>
+      </div>
       {error && <p className="status error">{error}</p>}
     </div>
   );

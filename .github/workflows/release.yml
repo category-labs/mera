@@ -81,8 +81,6 @@ jobs:
       # publishConfig in package.json sets access:public + provenance:true.
       - name: Publish
         run: npm publish --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # Dry-run: manual trigger only. Exercises checkout -> build -> pack/publish
   # resolution without contacting the registry. Needs no secrets and no OIDC,

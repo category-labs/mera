@@ -169,6 +169,14 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
   }, [address, refresh]);
 
   useEffect(() => {
+    const tick = window.setInterval(
+      () => setNow(Math.floor(Date.now() / 1000)),
+      1_000,
+    );
+    return () => window.clearInterval(tick);
+  }, []);
+
+  useEffect(() => {
     // The immediate call covers the moments the poll would miss by up to a
     // tick: the network context resolving after mount, and account changes.
     void refresh();
@@ -185,11 +193,11 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
     };
   }, [refresh]);
 
-  // The mirror stands in for the live quote until the chain answers; the two
-  // agree by construction, so the market renders at first paint.
-  const price = portfolio?.price ?? priceAt(BigInt(now));
+  // The quote is the mirror at the current second: it equals the on-chain
+  // price by construction and ticks without network reads.
+  const price = priceAt(BigInt(now));
   const positionValue =
-    portfolio === null ? null : (portfolio.shares * portfolio.price) / UNIT;
+    portfolio === null ? null : (portfolio.shares * price) / UNIT;
   const delta = price - priceAt(BigInt(now - CHART_WINDOW_SECONDS));
 
   // House credits change cash, never the basis, so refills cannot fake gains.
@@ -276,13 +284,13 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
         setFill({ ...result, spent: amountWei });
         applyBasis(costBasisAfterBuy(basis, amountWei));
       } else {
-        let shares = (amountWei * UNIT) / portfolio.price;
+        let shares = (amountWei * UNIT) / price;
         // A Max sell, or a typed amount within a cent of the whole position,
         // sells all of it, so no dust the display would round to $0.00 is
         // left behind.
         if (
           sellAll ||
-          ((portfolio.shares - shares) * portfolio.price) / UNIT < CENT_WEI
+          ((portfolio.shares - shares) * price) / UNIT < CENT_WEI
         ) {
           shares = portfolio.shares;
         }

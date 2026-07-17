@@ -47,7 +47,8 @@ contract DemoStockPriceTest {
     {
         int256 offset = referenceNoiseLayerAt(timestamp, 1, 8 hours, 6e18) +
             referenceNoiseLayerAt(timestamp, 2, 10 minutes, 2.5e18) +
-            referenceNoiseLayerAt(timestamp, 3, 45 seconds, 0.6e18);
+            referenceNoiseLayerAt(timestamp, 3, 45 seconds, 0.6e18) +
+            referenceNoiseLayerAt(timestamp, 4, 5 seconds, 0.15e18);
         return uint256(int256(BASE_PRICE) + offset);
     }
 
@@ -65,7 +66,7 @@ contract DemoStockPriceTest {
     /// interpolation restarts, so an off-by-one in bucket or remainder math
     /// shows up here first.
     function testBucketBoundaries() external view {
-        uint256[3] memory periods = [uint256(8 hours), 10 minutes, 45];
+        uint256[4] memory periods = [uint256(8 hours), 10 minutes, 45, 5];
         // Bucket indexes: the origin, small, a 2026 timestamp's scale, and
         // a far future (year ~33658) scale.
         uint256[4] memory buckets = [uint256(0), 1, 62_000, 1_000_000_000];

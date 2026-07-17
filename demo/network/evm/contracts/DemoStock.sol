@@ -73,16 +73,18 @@ contract DemoStock {
     /// share.
     ///
     /// Layered piecewise-linear value noise around the base price: a slow
-    /// drift, a medium swing, and a fast wiggle keep the result within
-    /// $40 +/- $9.10, always positive. The demo's chart mirrors this formula
-    /// off chain; changing any constant here changes every historical point
-    /// the chart draws.
+    /// drift, a medium swing, a fast wiggle, and a second-to-second jitter
+    /// keep the result within $40 +/- $9.25, always positive. The demo's
+    /// chart mirrors this formula off chain; changing any constant here
+    /// changes every historical point the chart draws.
     function priceAt(uint256 timestamp) public pure returns (uint256) {
         int256 slowDrift = noiseLayerAt(timestamp, 1, 8 hours, 6e18);
         int256 mediumSwing = noiseLayerAt(timestamp, 2, 10 minutes, 2.5e18);
         int256 fastWiggle = noiseLayerAt(timestamp, 3, 45 seconds, 0.6e18);
+        int256 fastJitter = noiseLayerAt(timestamp, 4, 5 seconds, 0.15e18);
         return uint256(
             int256(BASE_PRICE) + slowDrift + mediumSwing + fastWiggle
+                + fastJitter
         );
     }
 

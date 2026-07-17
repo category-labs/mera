@@ -4,7 +4,7 @@ import { priceAt, TICKER } from "./market";
 // The chart shows this much history; the header's delta uses the same window
 // so the number and the shape always tell one story.
 const CHART_WINDOW_SECONDS = 1800;
-const SAMPLE_SECONDS = 15;
+const SAMPLE_SECONDS = 5;
 
 // viewBox units; the drawing scales with the card while text keeps its size.
 const WIDTH = 400;

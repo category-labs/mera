@@ -519,7 +519,6 @@ export type {
   GetPasskeyPrfOutputOptions,
 };
 export {
-  assertCredentialApiAvailable,
   copyPrfOutput,
   createPasskey,
   createPasskeyWithPrfOutput,

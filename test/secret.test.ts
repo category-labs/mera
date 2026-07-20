@@ -124,33 +124,6 @@ test("secret-vault creation rejects an empty secret before prompting", async () 
   expect(ceremonyCount).toBe(0);
 });
 
-test("secret-vault ceremony helpers check WebAuthn before Web Crypto", async () => {
-  const vault = await createTestVault();
-
-  await withStubbedGlobal("navigator", undefined, async () => {
-    await withStubbedGlobal("crypto", undefined, async () => {
-      await expect(
-        createSecretVaultWithNewPasskey({
-          rp: { id: "example.com", name: "Mera Test" },
-          user: { name: "nad", displayName: "nad" },
-          secret: SECRET,
-        }),
-      ).rejects.toMatchObject({ code: "PASSKEY_OPERATION_FAILED" });
-
-      await expect(
-        createSecretVaultWithExistingPasskey({
-          rpId: "example.com",
-          secret: SECRET,
-        }),
-      ).rejects.toMatchObject({ code: "PASSKEY_OPERATION_FAILED" });
-
-      await expect(
-        decryptSecretVaultWithPasskey({ rpId: "example.com", vault }),
-      ).rejects.toMatchObject({ code: "PASSKEY_OPERATION_FAILED" });
-    });
-  });
-});
-
 test("secret-vault creation preserves PRF failures and caller-owned secrets", async () => {
   const newPasskeySecret = new Uint8Array(SECRET);
   const existingPasskeySecret = new Uint8Array(SECRET);

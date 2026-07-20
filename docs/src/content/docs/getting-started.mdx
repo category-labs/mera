@@ -76,13 +76,13 @@ const session = createSecp256k1SigningSession({
 
 const address = getEvmAddress(session.publicKey);
 
-const digest = new Uint8Array(32); // the 32-byte hash of the transaction or message to sign
+const digest = new Uint8Array(32);
 const signature = await session.signDigest(digest);
 
 session.lock();
 ```
 
-The session copies the key and signs without further passkey prompts. `lock()` [zeroes](/concepts/security-model/#what-the-library-handles) the session's copy; a locked session throws on signing.
+The digest is the 32-byte hash of the transaction or message to sign; this walkthrough signs a placeholder buffer. The session copies the key and signs without further passkey prompts. `lock()` [zeroes](/concepts/security-model/#what-the-library-handles) the session's copy; a locked session throws on signing.
 
 ## Sign back in
 

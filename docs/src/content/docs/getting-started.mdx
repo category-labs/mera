@@ -5,7 +5,7 @@ description: Install the library, derive an account, and make a first signature.
 
 import GettingStartedOverview from "../../assets/diagrams/getting-started-overview.svg";
 
-A passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) is one call to [WebAuthn](https://www.w3.org/TR/webauthn-3/), the browser standard for signing in with key pairs instead of passwords, and shows one user-verification prompt. Through the [PRF extension](/concepts/passkeys-and-prf/), a ceremony returns 32 secret bytes, which the app uses as [entropy](/concepts/entropy-keys-and-accounts/) to derive accounts. A [signing session](/concepts/signing-sessions/) holds one private key derived from them and signs, without further prompts, until it is locked. Everything mera returns lives in the page's JavaScript memory; the [security model](/concepts/security-model/) states what that trusts.
+A passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) is one call to [WebAuthn](https://www.w3.org/TR/webauthn-3/), the browser standard for signing in with key pairs instead of passwords, and shows one user-verification prompt. Through the [PRF extension](/concepts/passkeys-and-prf/), a ceremony returns 32 secret bytes, which the app uses as [entropy](/concepts/entropy-keys-and-accounts/) to derive accounts. A [signing session](/concepts/signing-sessions/) holds one derived private key and signs, without further prompts, until it is locked. Everything mera returns lives in the page's JavaScript memory; the [security model](/concepts/security-model/) states what that trusts.
 
 Prerequisites:
 

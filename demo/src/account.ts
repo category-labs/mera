@@ -1,4 +1,23 @@
-import type { AccountMode } from "./connect";
+import type { AccountMode, ConnectedWallet } from "./connect";
+
+/**
+ * The account behind the trading surface. "locked" is a reloaded page: the
+ * cached public identity shows the portfolio, and the first trade runs a
+ * passkey ceremony to restore the signing session.
+ */
+type AccountState =
+  | { status: "none" }
+  | { status: "locked"; mode: AccountMode; address: `0x${string}` }
+  | { status: "unlocked"; wallet: ConnectedWallet };
+
+/** The address behind an account state; null when signed out. */
+function accountAddress(account: AccountState): `0x${string}` | null {
+  return account.status === "none"
+    ? null
+    : account.status === "locked"
+      ? account.address
+      : account.wallet.account.address;
+}
 
 /**
  * The signed-in account's public identity, cached so a reload can show its
@@ -41,5 +60,10 @@ function isCachedAccount(value: unknown): value is CachedAccount {
   );
 }
 
-export type { CachedAccount };
-export { clearCachedAccount, loadCachedAccount, saveCachedAccount };
+export type { AccountState, CachedAccount };
+export {
+  accountAddress,
+  clearCachedAccount,
+  loadCachedAccount,
+  saveCachedAccount,
+};

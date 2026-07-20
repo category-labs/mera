@@ -13,8 +13,6 @@ const RPC_URL =
   import.meta.env.VITE_EVM_RPC_URL ??
   "https://evm-network-production.up.railway.app";
 
-// Shown in the account chip before the async context resolves, so it lives
-// outside `resolveEvmContext`.
 const NETWORK_NAME = "Demo Network";
 
 type EvmContext = {

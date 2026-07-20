@@ -1,5 +1,10 @@
 import { type ReactElement, useEffect, useState } from "react";
 import { AccountChip } from "./AccountChip";
+import {
+  type AccountState,
+  accountAddress,
+  loadCachedAccount,
+} from "./account";
 import { type EvmContext, resolveEvmContext } from "./chains/evm";
 import { describeError } from "./connect";
 import { TradingCard } from "./TradingCard";
@@ -41,7 +46,10 @@ function retryingResolve<T>(
 function App(): ReactElement {
   const [evmContext, setEvmContext] = useState<EvmContext | null>(null);
   const [evmError, setEvmError] = useState<string | null>(null);
-  const [address, setAddress] = useState<`0x${string}` | null>(null);
+  const [account, setAccount] = useState<AccountState>(() => {
+    const cached = loadCachedAccount();
+    return cached ? { status: "locked", ...cached } : { status: "none" };
+  });
 
   useEffect(
     () =>
@@ -62,12 +70,13 @@ function App(): ReactElement {
     <main className="app">
       <header className="app-head">
         <h1>Mera Demo</h1>
-        <AccountChip address={address} />
+        <AccountChip address={accountAddress(account)} />
       </header>
       <TradingCard
         evm={evmContext}
         evmError={evmError}
-        onAddressChange={setAddress}
+        account={account}
+        onAccountChange={setAccount}
       />
     </main>
   );

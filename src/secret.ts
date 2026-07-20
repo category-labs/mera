@@ -6,6 +6,10 @@ import {
   copyBytes,
 } from "./encoding.js";
 import { MeraError } from "./errors.js";
+import type {
+  CreatePasskeyWithPrfOutputOptions,
+  GetPasskeyPrfOutputOptions,
+} from "./passkey.js";
 import {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
@@ -140,16 +144,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /** Inputs for encrypting one arbitrary secret into a vault. */
-type CreateSecretVaultInput = {
+type CreateSecretVaultOptions = {
   /**
    * Passkey credential plus the PRF salt and PRF output it produced. Secret-vault
    * flows use a fresh salt for each secret.
    */
-  credential: {
-    /** Passkey credential ID as canonical unpadded base64url. */
-    credentialId: string;
-    /** Authenticator transports reported by the browser, when available. */
-    transports?: readonly PasskeyCredentialTransport[];
+  credential: PasskeyCredentialMetadata & {
     /** PRF salt for this secret. Must be exactly 32 bytes. */
     prfSalt: Uint8Array;
     /** First WebAuthn PRF output for `prfSalt`. Must be exactly 32 bytes. */
@@ -183,7 +183,7 @@ type CreateSecretVaultInput = {
 async function createSecretVault({
   credential,
   secret,
-}: CreateSecretVaultInput): Promise<PasskeySecretVault> {
+}: CreateSecretVaultOptions): Promise<PasskeySecretVault> {
   const { credentialId, transports, prfSalt, prfOutput } = credential;
 
   base64UrlDecode(credentialId, {
@@ -225,34 +225,21 @@ async function createSecretVault({
 }
 
 /** Inputs for creating a secret vault together with a new passkey. */
-type CreateSecretVaultWithNewPasskeyInput = {
-  /** Relying party identity passed directly to WebAuthn. `id` is required. */
-  rp: PublicKeyCredentialRpEntity & { id: string };
-  /** User identity passed to WebAuthn. `id` is copied before use. */
-  user: {
-    /** User handle. Must be 1 to 64 bytes when provided. */
-    id?: Uint8Array;
-    /** User name displayed or stored by the authenticator. */
-    name: string;
-    /** Human-readable display name for the authenticator UI. */
-    displayName: string;
-  };
+type CreateSecretVaultWithNewPasskeyOptions = Omit<
+  CreatePasskeyWithPrfOutputOptions,
+  "prfSalt"
+> & {
   /** Secret bytes to encrypt. Any non-empty length. */
   secret: Uint8Array;
-  /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
-  timeout?: number;
 };
 
 /** Inputs for creating a secret vault with an existing passkey. */
-type CreateSecretVaultWithExistingPasskeyInput = {
-  /** Relying party ID for the WebAuthn assertion. */
-  rpId: string;
-  /** Credential metadata to restrict the assertion to one passkey. */
-  credential?: PasskeyCredentialMetadata;
+type CreateSecretVaultWithExistingPasskeyOptions = Omit<
+  GetPasskeyPrfOutputOptions,
+  "prfSalt"
+> & {
   /** Secret bytes to encrypt. Any non-empty length. */
   secret: Uint8Array;
-  /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
-  timeout?: number;
 };
 
 /** Copies and validates a secret before a WebAuthn ceremony can start. */
@@ -296,7 +283,7 @@ async function createSecretVaultWithNewPasskey({
   user,
   secret,
   timeout,
-}: CreateSecretVaultWithNewPasskeyInput): Promise<PasskeySecretVault> {
+}: CreateSecretVaultWithNewPasskeyOptions): Promise<PasskeySecretVault> {
   const secretCopy = copyNonEmptySecret(secret);
   let prfOutput: Uint8Array | undefined;
 
@@ -341,7 +328,7 @@ async function createSecretVaultWithExistingPasskey({
   credential,
   secret,
   timeout,
-}: CreateSecretVaultWithExistingPasskeyInput): Promise<PasskeySecretVault> {
+}: CreateSecretVaultWithExistingPasskeyOptions): Promise<PasskeySecretVault> {
   const secretCopy = copyNonEmptySecret(secret);
   // Copied before async WebAuthn work starts.
   const credentialCopy =
@@ -378,7 +365,7 @@ async function createSecretVaultWithExistingPasskey({
 }
 
 /** Inputs for decrypting a secret vault. */
-type DecryptSecretVaultInput = {
+type DecryptSecretVaultOptions = {
   /** Parsed secret vault. */
   vault: PasskeySecretVault;
   /** WebAuthn PRF output for the vault's PRF salt. Must be exactly 32 bytes. */
@@ -401,7 +388,7 @@ type DecryptSecretVaultInput = {
 async function decryptSecretVault({
   vault,
   prfOutput,
-}: DecryptSecretVaultInput): Promise<Uint8Array<ArrayBuffer>> {
+}: DecryptSecretVaultOptions): Promise<Uint8Array<ArrayBuffer>> {
   // The copy guarantee documented above is provided by hkdfSha256AesGcmKey,
   // which snapshots prfOutput synchronously before its first await.
   const encryptionKey = await deriveEncryptionKey(prfOutput);
@@ -499,7 +486,7 @@ function copySecretVault(vault: PasskeySecretVault): PasskeySecretVault {
 }
 
 /** Inputs for the WebAuthn assertion that unlocks a secret vault. */
-type GetSecretVaultPrfOutputInput = {
+type GetSecretVaultPrfOutputOptions = {
   /** Relying party ID for the WebAuthn assertion. */
   rpId: string;
   /** Parsed secret vault. */
@@ -531,7 +518,7 @@ async function getSecretVaultPrfOutput({
   rpId,
   vault,
   timeout,
-}: GetSecretVaultPrfOutputInput): Promise<PasskeyPrfResult> {
+}: GetSecretVaultPrfOutputOptions): Promise<PasskeyPrfResult> {
   return getPasskeyPrfOutput({
     rpId,
     credential: vault.credential,
@@ -541,7 +528,7 @@ async function getSecretVaultPrfOutput({
 }
 
 /** Inputs for performing the passkey ceremony and decrypting a secret vault. */
-type DecryptSecretVaultWithPasskeyInput = {
+type DecryptSecretVaultWithPasskeyOptions = {
   /** Relying party ID for the WebAuthn assertion. */
   rpId: string;
   /** Parsed secret vault. Copied before use. */
@@ -574,7 +561,7 @@ async function decryptSecretVaultWithPasskey({
   rpId,
   vault,
   timeout,
-}: DecryptSecretVaultWithPasskeyInput): Promise<Uint8Array<ArrayBuffer>> {
+}: DecryptSecretVaultWithPasskeyOptions): Promise<Uint8Array<ArrayBuffer>> {
   const vaultCopy = copySecretVault(vault);
   const { prfOutput } = await getSecretVaultPrfOutput({
     rpId,
@@ -588,27 +575,6 @@ async function decryptSecretVaultWithPasskey({
     prfOutput.fill(0);
   }
 }
-
-/** Options accepted by `createSecretVault`. */
-type CreateSecretVaultOptions = Parameters<typeof createSecretVault>[0];
-/** Options accepted by `createSecretVaultWithExistingPasskey`. */
-type CreateSecretVaultWithExistingPasskeyOptions = Parameters<
-  typeof createSecretVaultWithExistingPasskey
->[0];
-/** Options accepted by `createSecretVaultWithNewPasskey`. */
-type CreateSecretVaultWithNewPasskeyOptions = Parameters<
-  typeof createSecretVaultWithNewPasskey
->[0];
-/** Options accepted by `decryptSecretVault`. */
-type DecryptSecretVaultOptions = Parameters<typeof decryptSecretVault>[0];
-/** Options accepted by `decryptSecretVaultWithPasskey`. */
-type DecryptSecretVaultWithPasskeyOptions = Parameters<
-  typeof decryptSecretVaultWithPasskey
->[0];
-/** Options accepted by `getSecretVaultPrfOutput`. */
-type GetSecretVaultPrfOutputOptions = Parameters<
-  typeof getSecretVaultPrfOutput
->[0];
 
 export type {
   CreateSecretVaultOptions,

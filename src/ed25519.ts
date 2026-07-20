@@ -1,5 +1,4 @@
 import { ed25519 } from "@noble/curves/ed25519.js";
-import { copyBytes } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import { createSigningKey } from "./session.js";
 import type {
@@ -49,10 +48,7 @@ function createEd25519SigningSession({
   return {
     publicKey,
     async signMessage(message: Uint8Array): Promise<Uint8Array<ArrayBuffer>> {
-      // Give the signer a standalone message snapshot even if a future backend
-      // reads its input asynchronously.
-      const messageCopy = copyBytes(message);
-      return new Uint8Array(ed25519.sign(messageCopy, key.use()));
+      return new Uint8Array(ed25519.sign(message, key.use()));
     },
     lock,
     [Symbol.dispose]: lock,

@@ -15,7 +15,7 @@ The library never interprets the secret, so phrase validation is app code:
 import { validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 
-// Stand-in: a real app reads the phrase from a form field.
+// The phrase, as read from a form field.
 const phrase =
   "legal winner thank year wave sausage worth useful legal winner thank yellow";
 if (!validateMnemonic(phrase, wordlist)) {

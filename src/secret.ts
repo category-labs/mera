@@ -5,7 +5,7 @@ import {
   base64UrlEncode,
   copyBytes,
 } from "./encoding.js";
-import { MeraError, type MeraErrorCode } from "./errors.js";
+import { MeraError } from "./errors.js";
 import {
   assertCredentialApiAvailable,
   createPasskeyWithPrfOutput,
@@ -153,40 +153,17 @@ function parseJsonVault(value: string): unknown {
   }
 }
 
-function readBase64Url(
+/** Reads a required base64url string field from untrusted vault data. */
+function readVaultBase64Url(
   value: unknown,
   name: string,
-  errorCode: MeraErrorCode,
   options: { byteLength?: number; minByteLength?: number } = {},
 ): string {
   if (typeof value !== "string") {
-    throw new MeraError(errorCode, `${name} must be base64url`);
+    throw new MeraError("VAULT_FORMAT_INVALID", `${name} must be base64url`);
   }
 
-  let bytes: Uint8Array;
-  try {
-    bytes = base64UrlDecode(value);
-  } catch (cause) {
-    throw new MeraError(errorCode, `${name} must be base64url`, { cause });
-  }
-
-  if (options.byteLength !== undefined && bytes.length !== options.byteLength) {
-    throw new MeraError(
-      errorCode,
-      `${name} must be ${options.byteLength} bytes`,
-    );
-  }
-
-  if (
-    options.minByteLength !== undefined &&
-    bytes.length < options.minByteLength
-  ) {
-    throw new MeraError(
-      errorCode,
-      `${name} must be at least ${options.minByteLength} bytes`,
-    );
-  }
-
+  base64UrlDecode(value, { name, code: "VAULT_FORMAT_INVALID", ...options });
   return value;
 }
 
@@ -239,14 +216,12 @@ async function createSecretVault({
   credential,
   secret,
 }: CreateSecretVaultInput): Promise<PasskeySecretVault> {
-  const { transports, prfSalt, prfOutput } = credential;
+  const { credentialId, transports, prfSalt, prfOutput } = credential;
 
-  const credentialId = readBase64Url(
-    credential.credentialId,
-    "credential.credentialId",
-    "INPUT_INVALID",
-    { minByteLength: 1 },
-  );
+  base64UrlDecode(credentialId, {
+    name: "credential.credentialId",
+    minByteLength: 1,
+  });
 
   if (prfSalt.length !== PRF_SALT_LENGTH) {
     throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
@@ -528,10 +503,9 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
     );
   }
 
-  const credentialId = readBase64Url(
+  const credentialId = readVaultBase64Url(
     vault.credential.credentialId,
     "credential.credentialId",
-    "VAULT_FORMAT_INVALID",
     { minByteLength: 1 },
   );
 
@@ -557,21 +531,15 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
     ...(transports !== undefined ? { transports } : {}),
   };
 
-  const prfSalt = readBase64Url(
-    vault.prfSalt,
-    "prfSalt",
-    "VAULT_FORMAT_INVALID",
-    { byteLength: PRF_SALT_LENGTH },
-  );
-  const nonce = readBase64Url(vault.nonce, "nonce", "VAULT_FORMAT_INVALID", {
+  const prfSalt = readVaultBase64Url(vault.prfSalt, "prfSalt", {
+    byteLength: PRF_SALT_LENGTH,
+  });
+  const nonce = readVaultBase64Url(vault.nonce, "nonce", {
     byteLength: NONCE_LENGTH,
   });
-  const ciphertext = readBase64Url(
-    vault.ciphertext,
-    "ciphertext",
-    "VAULT_FORMAT_INVALID",
-    { minByteLength: GCM_TAG_LENGTH },
-  );
+  const ciphertext = readVaultBase64Url(vault.ciphertext, "ciphertext", {
+    minByteLength: GCM_TAG_LENGTH,
+  });
 
   // Allowlist: only v1 schema fields are copied, so unknown input keys are dropped.
   return { version: 1, credential, prfSalt, nonce, ciphertext };

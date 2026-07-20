@@ -286,6 +286,7 @@ async function getPasskeyPrfOutput({
         {
           id: asArrayBuffer(
             base64UrlDecode(allowCredential.credentialId, {
+              name: "credential.credentialId",
               minByteLength: 1,
             }),
           ),

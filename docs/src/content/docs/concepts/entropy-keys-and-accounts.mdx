@@ -12,9 +12,13 @@ The rest of the docs assume the blockchain background this page teaches: how 32 
 
 ## Keys, signatures, and accounts
 
-Entropy is randomness an attacker cannot predict; 32 random bytes carry 256 bits of it, and searching 2^256 values is infeasible for any computer. A private key is a 256-bit secret number, and a one-way function computes the public key from it, so the public key is safe to share. A signature, computed from a message and a private key and verified with the public key alone, proves the key's holder approved that exact message.
+Entropy is randomness an attacker cannot predict, and 32 random bytes carry 256 bits of it. Searching 2^256 values is infeasible for any computer.
 
-A blockchain account is the state a chain tracks for one key pair, a balance and a transaction history, at an address that is a short encoding of the public key. Control of an account is the ability to sign, and there is no reset path: losing the private key loses the account, and anyone who obtains it controls the account. The docs use two signature schemes, named for their curves: secp256k1 on Ethereum and other EVM chains (chains that run the Ethereum Virtual Machine), and Ed25519 on Solana.
+A private key is a 256-bit secret number. A one-way function computes the public key from it, so the public key is safe to share. A signature is computed from a message and a private key and verified with the public key alone. A valid signature proves the key's holder approved that exact message.
+
+A blockchain account is the state a chain tracks for one key pair: a balance and a transaction history. The address is a short encoding of the public key. Control of an account is the ability to sign, and there is no reset path: losing the private key loses the account, and anyone who obtains it controls the account.
+
+The docs use two signature schemes, named for their curves: secp256k1 on Ethereum and other EVM chains (chains that run the Ethereum Virtual Machine), and Ed25519 on Solana.
 
 ## Deterministic derivation
 

@@ -59,15 +59,10 @@ function normalizeSecp256k1PublicKey(
 function createSecp256k1SigningSession({
   privateKey,
 }: CreateSigningSessionOptions): Secp256k1SigningSession {
-  const { key, publicKey } = createSigningKey(
+  const { use, lock, publicKey } = createSigningKey(
     privateKey,
     getSecp256k1PublicKey,
   );
-
-  // One function for both members, so lock and dispose cannot drift apart.
-  function lock(): void {
-    key.lock();
-  }
 
   return {
     publicKey,
@@ -76,7 +71,7 @@ function createSecp256k1SigningSession({
         throw new MeraError("INPUT_INVALID", "Digest must be 32 bytes");
       }
 
-      const unlockedKey = key.use();
+      const unlockedKey = use();
       const signature = secp256k1.sign(digest32, unlockedKey, {
         format: "recovered",
         lowS: true,

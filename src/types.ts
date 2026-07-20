@@ -107,19 +107,8 @@ type CreateSigningSessionOptions = {
   privateKey: Uint8Array;
 };
 
-/** secp256k1 signing session that can sign 32-byte digests until `lock` is called. */
-type Secp256k1SigningSession = {
-  /** Uncompressed secp256k1 public key for the session. */
-  readonly publicKey: Uint8Array<ArrayBuffer>;
-  /**
-   * Signs a 32-byte digest without prehashing it.
-   *
-   * @param digest32 - Exactly 32 bytes to sign; read before the call returns, so later mutation cannot change what is signed.
-   * @returns A compact secp256k1 ECDSA signature with its recovery ID.
-   * @throws MeraError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
-   * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
-   */
-  signDigest(digest32: Uint8Array): Promise<Secp256k1Signature>;
+/** Members shared by every signing session: an explicit lock and `using` disposal. */
+type LockableSession = {
   /**
    * Zeroes the session-owned private-key copy and permanently locks this session; later signing throws `SESSION_LOCKED`.
    */
@@ -132,8 +121,23 @@ type Secp256k1SigningSession = {
   [Symbol.dispose](): void;
 };
 
+/** secp256k1 signing session that can sign 32-byte digests until `lock` is called. */
+type Secp256k1SigningSession = LockableSession & {
+  /** Uncompressed secp256k1 public key for the session. */
+  readonly publicKey: Uint8Array<ArrayBuffer>;
+  /**
+   * Signs a 32-byte digest without prehashing it.
+   *
+   * @param digest32 - Exactly 32 bytes to sign; read before the call returns, so later mutation cannot change what is signed.
+   * @returns A compact secp256k1 ECDSA signature with its recovery ID.
+   * @throws MeraError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
+   * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
+   */
+  signDigest(digest32: Uint8Array): Promise<Secp256k1Signature>;
+};
+
 /** Ed25519 signing session that can sign messages until `lock` is called. */
-type Ed25519SigningSession = {
+type Ed25519SigningSession = LockableSession & {
   /** 32-byte Ed25519 public key for the session. */
   readonly publicKey: Uint8Array<ArrayBuffer>;
   /**
@@ -144,16 +148,6 @@ type Ed25519SigningSession = {
    * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
    */
   signMessage(message: Uint8Array): Promise<Uint8Array<ArrayBuffer>>;
-  /**
-   * Zeroes the session-owned private-key copy and permanently locks this session; later signing throws `SESSION_LOCKED`.
-   */
-  lock(): void;
-  /**
-   * Calls `lock`, so a `using` declaration locks the session when its scope
-   * exits. Sessions bound with `const` or `let` are unaffected; disposal runs
-   * only where a caller opts in with `using`.
-   */
-  [Symbol.dispose](): void;
 };
 
 export type {

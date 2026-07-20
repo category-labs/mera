@@ -82,7 +82,7 @@ const signature = await session.signDigest(digest);
 session.lock();
 ```
 
-The digest is the 32-byte hash of the transaction or message to sign; this walkthrough signs a placeholder buffer. The session copies the key and signs without further passkey prompts. `lock()` [zeroes](/concepts/security-model/#what-the-library-handles) the session's copy; a locked session throws on signing.
+The digest is the 32-byte hash of the transaction or message to sign; this walkthrough signs a placeholder buffer. The session copies the key and signs without further passkey prompts. `lock()` [zeroes](/concepts/security-model/#copies-zeroing-and-nonces) the session's copy; a locked session throws on signing.
 
 ## Sign back in
 

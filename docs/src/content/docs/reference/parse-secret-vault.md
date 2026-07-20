@@ -15,7 +15,6 @@ import { parseSecretVault } from "@category-labs/mera";
 
 ```ts
 const vault = parseSecretVault(localStorage.getItem("vault"));
-// vault is a validated PasskeySecretVault
 ```
 
 ## Parameters

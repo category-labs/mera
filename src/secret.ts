@@ -1,4 +1,4 @@
-import { concatBytes, utf8ToBytes } from "@noble/hashes/utils.js";
+import { utf8ToBytes } from "@noble/hashes/utils.js";
 import {
   asArrayBuffer,
   base64UrlDecode,
@@ -28,44 +28,12 @@ const NONCE_LENGTH = 12;
 // any authentic ciphertext is at least this long.
 const GCM_TAG_LENGTH = 16;
 
-/**
- * Encodes a non-negative uint32 using big-endian byte order.
- *
- * @param value - Integer to encode.
- * @returns Four big-endian bytes.
- * @remarks `value` is not range-checked; `DataView.setUint32` applies the
- * uint32 conversion, so out-of-range input is reduced modulo 2^32.
- */
-function uint32Be(value: number): Uint8Array {
-  const output = new Uint8Array(4);
-  new DataView(output.buffer).setUint32(0, value, false);
-  return output;
-}
-
-/**
- * Canonically encodes byte values using uint32 big-endian length prefixes.
- *
- * The length prefixes make the concatenation unambiguous.
- *
- * @param parts - Byte arrays to encode in order.
- * @returns A new byte array containing each part with a four-byte length prefix.
- */
-function canonicalEncode(parts: readonly Uint8Array[]): Uint8Array {
-  return concatBytes(...parts.flatMap((part) => [uint32Be(part.length), part]));
-}
-
 // HKDF info and AAD for the secret vault. The HKDF info keeps the encryption key
 // distinct from any other key derived from the same PRF output. The AAD is a
-// precomputed constant (domain ‖ version): vault fields such as the credential
-// ID and PRF salt are deliberately not bound; see the Security remark on
-// createSecretVault.
+// fixed constant: vault fields such as the credential ID and PRF salt are
+// deliberately not bound; see the Security remark on createSecretVault.
 const SECRET_ENCRYPTION_INFO = utf8ToBytes("mera.v1.encrypt.secret");
-const SECRET_AAD_DOMAIN = utf8ToBytes("mera.v1.secret.aad");
-const SECRET_AAD_VERSION = 1;
-const SECRET_AAD = canonicalEncode([
-  SECRET_AAD_DOMAIN,
-  uint32Be(SECRET_AAD_VERSION),
-]);
+const SECRET_AAD = utf8ToBytes("mera.v1.secret.aad");
 
 /** AES-GCM encrypted bytes. */
 type EncryptedBytes = {

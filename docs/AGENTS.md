@@ -68,6 +68,7 @@ The bar is simple, concise, and detailed at once: detail survives the cut, fille
 
 - No em dashes. Use a comma, a period, a colon, or parentheses.
 - A sentence defines at most one term. A second definition moves to its own sentence or becomes a link to the owning page.
+- Use a period between independent statements. Reserve the semicolon for two clauses that form one thought, such as a contrast pair ("derivation is app-owned; mera provides the ceremonies").
 - No "not X, but Y" constructions, including "isn't just X" and "It's not about X". Rewrite the thought.
 - Complete sentences, plainly shaped. Fragments for punch ("Same three, same 32 bytes.") and aphorisms ("whoever holds it holds ciphertext") get rewritten as plain statements.
 - The library takes plain verbs: mera requires, returns, throws. "mera asks", "hands over", "stops there" are narration.

@@ -46,7 +46,7 @@ localStorage.setItem(
 
 `transports` is optional and only a hint: the browser uses it to reach the authenticator directly (a platform prompt for a platform passkey, a QR flow for a phone) instead of offering every option. Sign-in works the same without it.
 
-A fresh device has no record; sign-in falls back to a discoverable ceremony, and the synced passkey still produces the same accounts.
+A fresh device has no record, so sign-in falls back to a discoverable ceremony and the synced passkey still produces the same accounts.
 
 ## Sign in
 
@@ -153,4 +153,4 @@ Sessions zero their own key copies on `lock()`. The seed is the app's buffer, so
 ## Pitfalls
 
 - **Do not change the derivation after launch.** Changing the mnemonic mapping or either path changes every account address.
-- **Accounts reproduce only under the same [rpId](/concepts/passkeys-and-prf/)**, the domain the passkey is bound to. A domain migration leaves them unreachable, with no error until someone tries to sign in; give accounts an export path first. The phrase to show is `entropyToMnemonic` over the PRF output from a fresh sign-in ceremony, the same mapping the seed step uses ([Passkey accounts](/concepts/passkey-accounts/)).
+- **Accounts reproduce only under the same [rpId](/concepts/passkeys-and-prf/)**, the domain the passkey is bound to. A domain migration leaves them unreachable, with no error until someone tries to sign in. Give accounts an export path first. The phrase to show is `entropyToMnemonic` over the PRF output from a fresh sign-in ceremony, the same mapping the seed step uses ([Passkey accounts](/concepts/passkey-accounts/)).

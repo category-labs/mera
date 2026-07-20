@@ -17,7 +17,7 @@ const rpId = location.hostname;
 const { prfOutput } = await getPasskeyPrfOutput({ rpId });
 ```
 
-The call runs one ceremony with one user-verification prompt, the only prompt in this recipe. Without `credential`, the browser offers every discoverable passkey for the domain; [Create passkey accounts](/recipes/create-passkey-accounts/) shows pinning the stored credential ID.
+The call runs one ceremony with one user-verification prompt, the only prompt in this recipe. Without `credential`, the browser offers every discoverable passkey for the domain. [Create passkey accounts](/recipes/create-passkey-accounts/) shows pinning the stored credential ID.
 
 ## Derive the key
 
@@ -37,7 +37,7 @@ if (node.privateKey === null) throw new Error("derivation produced no key");
 
 ## Create the viem account
 
-`toViemAccount` lives in the `@category-labs/mera/viem` entry point, which requires the optional `viem` peer dependency; the root entry point does not use viem.
+`toViemAccount` lives in the `@category-labs/mera/viem` entry point, which requires the optional `viem` peer dependency. The root entry point does not use viem.
 
 ```ts
 import { createSecp256k1SigningSession } from "@category-labs/mera";
@@ -51,7 +51,7 @@ seed.fill(0);
 const account = toViemAccount(session);
 ```
 
-The returned account signs transactions, messages, and typed data through `session.signDigest`; the [toViemAccount reference](/reference/to-viem-account/) documents each method.
+The returned account signs transactions, messages, and typed data through `session.signDigest`. The [toViemAccount reference](/reference/to-viem-account/) documents each method.
 
 ## Send the transaction
 
@@ -74,15 +74,15 @@ const hash = await client.sendTransaction({
 session.lock();
 ```
 
-`sepolia` is Ethereum's Sepolia test network. `http()` with no URL uses the chain's default public RPC endpoint; RPC, remote procedure call, is the HTTP API a chain node exposes for queries and transactions. Production apps pass a dedicated RPC URL. Signing shows no passkey prompt: the one prompt happened at sign-in, and the session covers every signature until it is locked.
+`sepolia` is Ethereum's Sepolia test network. `http()` with no URL uses the chain's default public RPC endpoint. RPC, remote procedure call, is the HTTP API a chain node exposes for queries and transactions. Production apps pass a dedicated RPC URL. Signing shows no passkey prompt: the one prompt happened at sign-in, and the session covers every signature until it is locked.
 
-`sendTransaction` fills the missing transaction fields from the RPC, signs through the session, broadcasts, and resolves to the transaction hash. Confirmation is a separate query; viem's `waitForTransactionReceipt` on a public client covers it.
+`sendTransaction` fills the missing transaction fields from the RPC, signs through the session, broadcasts, and resolves to the transaction hash. Confirmation is a separate query. viem's `waitForTransactionReceipt` on a public client covers it.
 
 ## Pitfalls
 
-- **The derivation must match the app's other sign-in paths.** This recipe repeats the mapping and path from [Create passkey accounts](/recipes/create-passkey-accounts/); a different mapping or path reaches a different address.
+- **The derivation must match the app's other sign-in paths.** This recipe repeats the mapping and path from [Create passkey accounts](/recipes/create-passkey-accounts/). A different mapping or path reaches a different address.
 - **A locked session rejects every viem signing method** with [`SESSION_LOCKED`](/reference/errors/#session_locked), and the account has no key of its own. Keep the session for the active burst of work, lock it when the burst ends, and build a new session from a fresh ceremony for the next one ([Signing sessions](/concepts/signing-sessions/)).
-- **Concurrent transactions can be assigned the same nonce**, the per-account counter that orders transactions, and the chain accepts only one of them. viem's nonce manager assigns nonces in sequence; pass it through [toViemAccount](/reference/to-viem-account/) options.
+- **Concurrent transactions can be assigned the same nonce**, the per-account counter that orders transactions, and the chain accepts only one of them. viem's nonce manager assigns nonces in sequence. Pass it through [toViemAccount](/reference/to-viem-account/) options.
 
 ## See also
 

@@ -13,12 +13,12 @@ const RFC_PUBLIC_KEY = hexToBytes(
 
 test("signs messages and locks the session", async () => {
   const buffer = new Uint8Array(RFC_SECRET);
-  const session = createEd25519SigningSession({ consumePrivateKey: buffer });
+  const session = createEd25519SigningSession({ privateKey: buffer });
   const message = new TextEncoder().encode("mera demo");
   const signature = await session.signMessage(message);
 
-  // Caller's buffer was zeroed by the session.
-  expect(buffer).toEqual(new Uint8Array(32));
+  // The session copies the key; the caller's buffer is not modified.
+  expect(buffer).toEqual(RFC_SECRET);
 
   expect(session.publicKey).toEqual(RFC_PUBLIC_KEY);
   expect(signature).toHaveLength(64);
@@ -31,15 +31,15 @@ test("signs messages and locks the session", async () => {
   });
 });
 
-test("zeroes the caller's buffer when the private key is the wrong length", () => {
+test("rejects a wrong-length private key and leaves the caller's buffer unmodified", () => {
   const buffer = new Uint8Array(31).fill(7);
 
   expectError(
-    () => createEd25519SigningSession({ consumePrivateKey: buffer }),
+    () => createEd25519SigningSession({ privateKey: buffer }),
     "INPUT_INVALID",
   );
 
-  expect(buffer).toEqual(new Uint8Array(31));
+  expect(buffer).toEqual(new Uint8Array(31).fill(7));
 });
 
 test("a using declaration locks the session when its scope exits", async () => {
@@ -47,7 +47,7 @@ test("a using declaration locks the session when its scope exits", async () => {
 
   {
     using session = createEd25519SigningSession({
-      consumePrivateKey: new Uint8Array(RFC_SECRET),
+      privateKey: RFC_SECRET,
     });
     await session.signMessage(new TextEncoder().encode("mera demo"));
     escaped = session;
@@ -60,7 +60,7 @@ test("a using declaration locks the session when its scope exits", async () => {
 
 test("signs the message bytes read at call time, not later mutations", async () => {
   const session = createEd25519SigningSession({
-    consumePrivateKey: new Uint8Array(RFC_SECRET),
+    privateKey: RFC_SECRET,
   });
 
   const original = new TextEncoder().encode("mera demo");

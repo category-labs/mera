@@ -102,9 +102,9 @@ type CreateSigningSessionOptions = {
   /**
    * Curve private key. Must be exactly 32 bytes; secp256k1 must also be a valid scalar.
    *
-   * Copied into one session-owned snapshot; the input is zeroed before the call returns or throws.
+   * Copied into one session-owned snapshot; the input buffer is not modified.
    */
-  consumePrivateKey: Uint8Array;
+  privateKey: Uint8Array;
 };
 
 /** secp256k1 signing session that can sign 32-byte digests until `lock` is called. */

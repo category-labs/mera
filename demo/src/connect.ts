@@ -55,10 +55,8 @@ const rpId = location.hostname;
  */
 function accountFromSeed(seed: Uint8Array): Account {
   try {
-    // deriveEvmPrivateKey returns a fresh buffer the session takes ownership
-    // of and zeroes; the `seed` itself is never handed to a session.
     const session = createSecp256k1SigningSession({
-      consumePrivateKey: deriveEvmPrivateKey(seed, 0),
+      privateKey: deriveEvmPrivateKey(seed, 0),
     });
     return { session, address: getEvmAddress(session.publicKey) };
   } finally {

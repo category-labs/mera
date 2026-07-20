@@ -20,7 +20,7 @@ import {
 } from "@category-labs/mera";
 
 const session = createSecp256k1SigningSession({
-  consumePrivateKey: crypto.getRandomValues(new Uint8Array(32)),
+  privateKey: crypto.getRandomValues(new Uint8Array(32)),
 });
 
 const address = getEvmAddress(session.publicKey);

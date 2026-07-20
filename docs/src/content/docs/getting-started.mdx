@@ -71,7 +71,7 @@ import {
 } from "@category-labs/mera";
 
 const session = createSecp256k1SigningSession({
-  consumePrivateKey: node.privateKey,
+  privateKey: node.privateKey,
 });
 
 const address = getEvmAddress(session.publicKey);
@@ -82,7 +82,7 @@ const signature = await session.signDigest(digest);
 session.lock();
 ```
 
-The session copies the key and [zeroes](/concepts/security-model/#what-the-library-handles) the buffer it was given, then signs without further passkey prompts. `lock()` zeroes the session's copy; a locked session throws on signing.
+The session copies the key and signs without further passkey prompts. `lock()` [zeroes](/concepts/security-model/#what-the-library-handles) the session's copy; a locked session throws on signing.
 
 ## Sign back in
 

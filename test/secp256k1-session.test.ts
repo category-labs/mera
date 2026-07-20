@@ -72,7 +72,7 @@ test("a using declaration locks the session when its scope exits", async () => {
   ).rejects.toMatchObject({ code: "SESSION_LOCKED" });
 });
 
-test("signs the digest snapshot taken at call time, not later mutations", async () => {
+test("signs the digest bytes read at call time, not later mutations", async () => {
   const session = createSecp256k1SigningSession({
     consumePrivateKey: new Uint8Array(PRIVATE_KEY_ONE),
   });
@@ -80,7 +80,7 @@ test("signs the digest snapshot taken at call time, not later mutations", async 
   const original = new Uint8Array(32).fill(1);
   const digest = new Uint8Array(original); // caller-owned buffer we will mutate
   const pending = session.signDigest(digest); // not awaited
-  digest.fill(2); // mutate before noble reads the buffer (it reads after its await)
+  digest.fill(2);
   const signature = await pending;
 
   // The signature is over the bytes at call time, not the later mutation.

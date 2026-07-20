@@ -58,7 +58,7 @@ test("a using declaration locks the session when its scope exits", async () => {
   ).rejects.toMatchObject({ code: "SESSION_LOCKED" });
 });
 
-test("signs the message snapshot taken at call time, not later mutations", async () => {
+test("signs the message bytes read at call time, not later mutations", async () => {
   const session = createEd25519SigningSession({
     consumePrivateKey: new Uint8Array(RFC_SECRET),
   });
@@ -66,7 +66,7 @@ test("signs the message snapshot taken at call time, not later mutations", async
   const original = new TextEncoder().encode("mera demo");
   const message = new Uint8Array(original); // caller-owned buffer we will mutate
   const pending = session.signMessage(message); // not awaited
-  message.fill(0); // mutate before noble reads the buffer (it reads after its await)
+  message.fill(0);
   const signature = await pending;
 
   // The signature is over the bytes at call time, not the later mutation.

@@ -1,5 +1,4 @@
 import { secp256k1 } from "@noble/curves/secp256k1.js";
-import { copyBytes } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import { createSigningKey } from "./session.js";
 import type {
@@ -78,11 +77,8 @@ function createSecp256k1SigningSession({
         throw new MeraError("INPUT_INVALID", "Digest must be 32 bytes");
       }
 
-      // Give the signer a standalone digest snapshot even if a future backend
-      // reads its input asynchronously.
-      const digest = copyBytes(digest32);
       const unlockedKey = key.use();
-      const signature = secp256k1.sign(digest, unlockedKey, {
+      const signature = secp256k1.sign(digest32, unlockedKey, {
         format: "recovered",
         lowS: true,
         prehash: false,

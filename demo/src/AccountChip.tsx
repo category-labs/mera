@@ -4,7 +4,6 @@ import { truncateAddress } from "./ui";
 import { useCopyButton } from "./useCopyButton";
 
 type AccountChipProps = {
-  /** The active account's address; null when signed out. */
   address: `0x${string}` | null;
 };
 

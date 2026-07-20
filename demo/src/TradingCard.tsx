@@ -5,7 +5,11 @@ import {
   useRef,
   useState,
 } from "react";
-import { clearCachedAccount, loadCachedAccount } from "./account";
+import {
+  type AccountState,
+  accountAddress,
+  clearCachedAccount,
+} from "./account";
 import { parseDecimalAmount } from "./amount";
 import { ConnectPanel } from "./ConnectPanel";
 import { type EvmContext, fundAccount } from "./chains/evm";
@@ -52,21 +56,11 @@ const CENT_WEI = 10n ** 16n;
 
 type Side = "buy" | "sell";
 
-/**
- * The account behind the trading surface. "locked" is a reloaded page: the
- * cached public identity shows the portfolio, and the first trade runs a
- * passkey ceremony to restore the signing session.
- */
-type AccountState =
-  | { status: "none" }
-  | { status: "locked"; mode: AccountMode; address: `0x${string}` }
-  | { status: "unlocked"; wallet: ConnectedWallet };
-
 type TradingCardProps = {
   evm: EvmContext | null;
   evmError: string | null;
-  /** Reports the active account's address; null when signed out. */
-  onAddressChange: (address: `0x${string}` | null) => void;
+  account: AccountState;
+  onAccountChange: (next: AccountState) => void;
 };
 
 /**
@@ -79,12 +73,9 @@ type TradingCardProps = {
 function TradingCard({
   evm,
   evmError,
-  onAddressChange,
+  account,
+  onAccountChange,
 }: TradingCardProps): ReactElement {
-  const [account, setAccount] = useState<AccountState>(() => {
-    const cached = loadCachedAccount();
-    return cached ? { status: "locked", ...cached } : { status: "none" };
-  });
   const [connectMode, setConnectMode] = useState<AccountMode>("passkey");
 
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
@@ -106,19 +97,11 @@ function TradingCard({
   const [revealing, setRevealing] = useState(false);
   const [backupError, setBackupError] = useState<string | null>(null);
 
-  const address =
-    account.status === "none"
-      ? null
-      : account.status === "locked"
-        ? account.address
-        : account.wallet.account.address;
-
-  // Mirrors the address into the app-level account chip.
-  useEffect(() => onAddressChange(address), [address, onAddressChange]);
+  const address = accountAddress(account);
 
   // Switches to `next` and drops everything scoped to the previous account.
   function adoptAccount(next: AccountState): void {
-    setAccount(next);
+    onAccountChange(next);
     setPortfolio(null);
     setAmount("");
     setSellAll(false);
@@ -283,7 +266,7 @@ function TradingCard({
           );
           return;
         }
-        setAccount({ status: "unlocked", wallet });
+        onAccountChange({ status: "unlocked", wallet });
       } else {
         wallet = account.wallet;
       }

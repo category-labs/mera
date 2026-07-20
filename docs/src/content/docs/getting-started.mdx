@@ -5,30 +5,12 @@ description: Install the library, derive an account, and make a first signature.
 
 import GettingStartedOverview from "../../assets/diagrams/getting-started-overview.svg";
 
+A passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) is one call to [WebAuthn](https://www.w3.org/TR/webauthn-3/), the browser standard for signing in with key pairs instead of passwords, and shows one user-verification prompt. Through the [PRF extension](/concepts/passkeys-and-prf/), a ceremony returns 32 secret bytes, and the app decides what those bytes become. A [signing session](/concepts/signing-sessions/) holds one private key derived from them and signs, without further prompts, until it is locked. Everything mera returns lives in the page's JavaScript memory; the [security model](/concepts/security-model/) states what that trusts.
+
 Prerequisites:
 
-- A browser with [WebAuthn](https://www.w3.org/TR/webauthn-3/) (the browser standard for signing in with key pairs instead of passwords; [Passkeys and the PRF extension](/concepts/passkeys-and-prf/) covers the background), in a secure context: HTTPS, or `localhost` during development.
-- A passkey authenticator that supports the WebAuthn PRF extension. [Authenticator support](/authenticator-support/) lists the combinations known to work; 1Password and iCloud Keychain are good first choices.
-
-<GettingStartedOverview />
-
-## How mera works
-
-mera separates passkey access, account policy, and signing. A passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) is one WebAuthn call with user verification. The pseudorandom function (PRF) extension makes that ceremony return 32 secret bytes.
-
-The app decides what those bytes become. A signing session then holds one private key until it is locked.
-
-The PRF output and every key derived from it are ordinary values in the page's JavaScript memory. The passkey's own private key never leaves the authenticator; the derived account keys never enter it. mera signs in the page with software keys; the [security model](/concepts/security-model/) states what the library protects and what stays with the app.
-
-The application owns:
-
-- account derivation and paths;
-- credential metadata and [vault](/concepts/secret-vaults/) storage;
-- export and recovery formats;
-- signing-session lifetime;
-- transaction construction, transport, or chain interaction.
-
-Keeping these decisions in the app lets the same primitives support different chains and product flows.
+- A secure context: HTTPS, or `localhost` during development.
+- An authenticator that supports the PRF extension. [Authenticator support](/authenticator-support/) lists the combinations known to work; 1Password and iCloud Keychain are good first choices.
 
 ## Install
 
@@ -44,7 +26,7 @@ npm install @scure/bip32 @scure/bip39
 
 ## Create a passkey
 
-`createPasskeyWithPrfOutput` creates a discoverable passkey and evaluates its PRF in one call. The salt is a 32-byte input acting as a namespace: the passkey returns 32 bytes stable for that passkey and salt ([Passkeys and the PRF extension](/concepts/passkeys-and-prf/)).
+`createPasskeyWithPrfOutput` creates a [discoverable](/concepts/passkeys-and-prf/) passkey and evaluates its PRF in one call. The salt is a 32-byte input that acts as a namespace. For one passkey and salt, the returned 32 bytes are always the same.
 
 ```ts
 import { createPasskeyWithPrfOutput } from "@category-labs/mera";
@@ -57,13 +39,13 @@ const { prfOutput } = await createPasskeyWithPrfOutput({
 });
 ```
 
-The call prompts once, or twice when the authenticator needs a follow-up [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts), a second WebAuthn call that uses the new passkey, to evaluate PRF.
+The call prompts once, or twice when the authenticator needs a follow-up [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) to evaluate PRF. An assertion is a second WebAuthn call, one that uses the new passkey.
 
 mera uses its fixed v1 salt for this call. The `rpId` is the relying party ID, the domain the passkey is bound to. The same passkey and relying party produce the same 32 bytes on any device the passkey syncs to. The result also carries the credential ID; [Create passkey accounts](/recipes/create-passkey-accounts/) stores it to pin later sign-ins.
 
 ## Derive an account
 
-The PRF output is entropy: 32 bytes an attacker cannot predict, enough to root every account that follows ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)). This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki), which encodes entropy as a phrase of common words, and [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki), which derives numbered keys from one seed, a byte string computed from the phrase, so the account can be imported into wallet apps that follow those standards.
+The PRF output is entropy: 32 bytes an attacker cannot predict, enough to root every account that follows ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)). This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki), which encodes entropy as a phrase of common words. [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) then derives numbered keys from the [seed](/concepts/entropy-keys-and-accounts/#deterministic-derivation) computed from that phrase, so a wallet app that follows both standards can import the account.
 
 ```ts
 import { HDKey } from "@scure/bip32";
@@ -78,7 +60,7 @@ const node = HDKey.fromMasterSeed(seed).derive("m/44'/60'/0'/0/0");
 if (node.privateKey === null) throw new Error("derivation produced no key");
 ```
 
-`m/44'/60'/0'/0/0` is a [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) derivation path naming one key in the BIP-32 tree; this one selects the first Ethereum account, the key MetaMask derives first from an imported phrase.
+`m/44'/60'/0'/0/0` is a [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) derivation path, the name of one key in the BIP-32 tree. This path selects the first Ethereum account, the key MetaMask derives first from an imported phrase.
 
 ## Sign
 
@@ -94,13 +76,13 @@ const session = createSecp256k1SigningSession({
 
 const address = getEvmAddress(session.publicKey);
 
-const digest = new Uint8Array(32); // stand-in: a real app signs a transaction or message hash
+const digest = new Uint8Array(32); // the 32-byte hash of the transaction or message to sign
 const signature = await session.signDigest(digest);
 
 session.lock();
 ```
 
-The session copies the key, [zeroes](/concepts/security-model/#what-the-library-handles) the buffer it was given, and signs without further passkey prompts until `lock()` is called. Locking zeroes the session's copy too; after that, signing throws.
+The session copies the key and [zeroes](/concepts/security-model/#what-the-library-handles) the buffer it was given, then signs without further passkey prompts. `lock()` zeroes the session's copy; a locked session throws on signing.
 
 ## Sign back in
 
@@ -116,10 +98,17 @@ const { prfOutput } = await getPasskeyPrfOutput({
 
 Without `credential`, the browser offers any discoverable passkey it holds for the relying party; apps with returning users pin the stored credential ID instead.
 
+## From passkey to signature
+
+<GettingStartedOverview />
+
+Each sign-in repeats this pipeline: the same passkey and salt return the same 32 bytes, and no secret is stored anywhere.
+
 ## Where next
 
 - [Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/): the background behind the terms this page glosses.
 - [Create passkey accounts](/recipes/create-passkey-accounts/): numbered accounts, credential pinning, Solana keys.
+- [Send a transaction with viem](/recipes/send-a-transaction-with-viem/): from sign-in to a sent transaction.
 - [Passkey accounts](/concepts/passkey-accounts/): why the same passkey reproduces the same accounts, and what losing it means.
 - [Secret vaults](/concepts/secret-vaults/): encrypting a secret that already exists behind the passkey.
 - [API reference](/reference/): every function used on this page.

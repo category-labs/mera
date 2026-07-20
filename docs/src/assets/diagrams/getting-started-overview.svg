@@ -1,19 +1,17 @@
 <svg
   xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 680 612"
-  width="680"
-  height="612"
+  viewBox="0 0 784 104"
+  width="784"
+  height="104"
   role="img"
   class="mera-diagram"
 >
   <title>
-    The path from signing in with a passkey to a signature, split by ownership.
-    In mera, the user signs in with the passkey, which stays in the
-    authenticator, and receives 32 secret bytes, the same bytes on every
-    sign-in. The app turns those bytes into an account key. Back in mera, a
-    signing session signs with the key held in memory. A dashed return path
-    shows signing back in: the same passkey returns the same 32 bytes. No secret
-    is stored anywhere.
+    The pipeline from a passkey to a signature. A sign-in ceremony returns 32
+    secret bytes, the same bytes on every sign-in. The app derives a private key
+    from them. A signing session holds the key and produces signatures with no
+    further prompts. mera owns every step except the derivation, which belongs
+    to the app.
   </title>
   <defs>
     <marker
@@ -29,70 +27,37 @@
     </marker>
   </defs>
 
-  <!-- mera: the ceremony and its output -->
-  <rect class="d-zone" x="100" y="24" width="360" height="190" rx="10" />
-  <text x="114" y="46" class="d-sub">mera</text>
+  <rect class="d-node" x="4" y="16" width="136" height="56" rx="8" />
+  <text x="72" y="40" text-anchor="middle">Sign in</text>
+  <text x="72" y="59" text-anchor="middle" class="d-sub">passkey ceremony</text>
+  <text x="72" y="92" text-anchor="middle" class="d-sub">mera</text>
 
-  <rect class="d-node" x="130" y="56" width="300" height="56" rx="8" />
-  <text x="280" y="80" text-anchor="middle">Sign in with the passkey</text>
-  <text x="280" y="99" text-anchor="middle" class="d-sub">
-    the passkey stays in the authenticator
+  <path class="d-edge" d="M140 44 H160" marker-end="url(#gs-arrow)" />
+
+  <rect class="d-secret" x="164" y="16" width="136" height="56" rx="8" />
+  <text x="232" y="40" text-anchor="middle">32 secret bytes</text>
+  <text x="232" y="59" text-anchor="middle" class="d-sub">
+    same every sign-in
   </text>
+  <text x="232" y="92" text-anchor="middle" class="d-sub">mera</text>
 
-  <path class="d-edge" d="M280 112 V144" marker-end="url(#gs-arrow)" />
+  <path class="d-edge" d="M300 44 H320" marker-end="url(#gs-arrow)" />
 
-  <rect class="d-secret" x="130" y="148" width="300" height="56" rx="8" />
-  <text x="280" y="172" text-anchor="middle">32 secret bytes</text>
-  <text x="280" y="191" text-anchor="middle" class="d-sub">
-    the same bytes on every sign-in
-  </text>
+  <rect class="d-secret" x="324" y="16" width="136" height="56" rx="8" />
+  <text x="392" y="40" text-anchor="middle">Derive a key</text>
+  <text x="392" y="59" text-anchor="middle" class="d-sub">any scheme</text>
+  <text x="392" y="92" text-anchor="middle" class="d-sub">the app</text>
 
-  <!-- the app: derivation -->
-  <path class="d-edge" d="M280 204 V270" marker-end="url(#gs-arrow)" />
+  <path class="d-edge" d="M460 44 H480" marker-end="url(#gs-arrow)" />
 
-  <rect class="d-zone" x="100" y="242" width="360" height="112" rx="10" />
-  <text x="114" y="264" class="d-sub">the app</text>
+  <rect class="d-secret" x="484" y="16" width="136" height="56" rx="8" />
+  <text x="552" y="40" text-anchor="middle">Signing session</text>
+  <text x="552" y="59" text-anchor="middle" class="d-sub">holds the key</text>
+  <text x="552" y="92" text-anchor="middle" class="d-sub">mera</text>
 
-  <rect class="d-secret" x="130" y="274" width="300" height="56" rx="8" />
-  <text x="280" y="298" text-anchor="middle">Derive an account</text>
-  <text x="280" y="317" text-anchor="middle" class="d-sub">
-    the bytes become a private key
-  </text>
+  <path class="d-edge" d="M620 44 H640" marker-end="url(#gs-arrow)" />
 
-  <path class="d-edge" d="M280 330 V410" marker-end="url(#gs-arrow)" />
-  <text x="292" y="368" class="d-sub">
-    the session takes ownership of the key
-  </text>
-
-  <!-- mera: the signing session -->
-  <rect class="d-zone" x="100" y="382" width="360" height="190" rx="10" />
-  <text x="114" y="404" class="d-sub">mera</text>
-
-  <rect class="d-secret" x="130" y="414" width="300" height="56" rx="8" />
-  <text x="280" y="438" text-anchor="middle">Signing session</text>
-  <text x="280" y="457" text-anchor="middle" class="d-sub">
-    signs with the key held in memory
-  </text>
-
-  <path class="d-edge" d="M280 470 V502" marker-end="url(#gs-arrow)" />
-
-  <rect class="d-node" x="130" y="506" width="300" height="56" rx="8" />
-  <text x="280" y="530" text-anchor="middle">Signature</text>
-  <text x="280" y="549" text-anchor="middle" class="d-sub">
-    as many as the app asks
-  </text>
-
-  <!-- signing back in reruns the ceremony -->
-  <path
-    class="d-edge d-dashed"
-    d="M430 534 H560 V84 H438"
-    marker-end="url(#gs-arrow)"
-  />
-  <text x="572" y="290" class="d-sub">sign back in:</text>
-  <text x="572" y="310" class="d-sub">same passkey,</text>
-  <text x="572" y="330" class="d-sub">same 32 bytes</text>
-
-  <text x="280" y="600" text-anchor="middle" class="d-note">
-    No secret is stored anywhere.
-  </text>
+  <rect class="d-node" x="644" y="16" width="136" height="56" rx="8" />
+  <text x="712" y="40" text-anchor="middle">Signature</text>
+  <text x="712" y="59" text-anchor="middle" class="d-sub">no prompts</text>
 </svg>

@@ -2,9 +2,10 @@ import { copyBytes } from "./encoding.js";
 import { MeraError } from "./errors.js";
 
 /**
- * Handle to a session-owned private key whose lifetime is gated by `lock`.
+ * Session-owned signing key whose lifetime is gated by `lock`, paired with the
+ * public key derived from it.
  */
-type LockableKey = {
+type SigningKey = {
   /**
    * Returns the live session-owned key for immediate use.
    *
@@ -13,6 +14,8 @@ type LockableKey = {
   use(): Uint8Array<ArrayBuffer>;
   /** Zeroes the session-owned key and permanently locks this handle. */
   lock(): void;
+  /** Public key derived from the session-owned key. */
+  readonly publicKey: Uint8Array<ArrayBuffer>;
 };
 
 /**
@@ -24,13 +27,13 @@ type LockableKey = {
  *
  * @param privateKey - Private key to copy into the signing key.
  * @param derivePublicKey - Derives the public key from the owned snapshot; a throw doubles as private-key validation.
- * @returns The lockable key handle paired with the derived public key.
+ * @returns The lockable signing key with its derived public key.
  * @throws Rethrows whatever `derivePublicKey` throws.
  */
 function createSigningKey(
   privateKey: Uint8Array,
   derivePublicKey: (privateKey: Uint8Array) => Uint8Array<ArrayBuffer>,
-): { key: LockableKey; publicKey: Uint8Array<ArrayBuffer> } {
+): SigningKey {
   let activePrivateKey: Uint8Array<ArrayBuffer> | undefined;
 
   try {
@@ -39,7 +42,7 @@ function createSigningKey(
     activePrivateKey = copyBytes(privateKey);
     const publicKey = derivePublicKey(activePrivateKey);
 
-    const key: LockableKey = {
+    return {
       use(): Uint8Array<ArrayBuffer> {
         return requireUnlocked(activePrivateKey);
       },
@@ -49,9 +52,8 @@ function createSigningKey(
           activePrivateKey = undefined;
         }
       },
+      publicKey,
     };
-
-    return { key, publicKey };
   } catch (error) {
     activePrivateKey?.fill(0);
     throw error;

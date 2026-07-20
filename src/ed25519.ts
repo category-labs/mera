@@ -35,17 +35,15 @@ function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array<ArrayBuffer> {
 function createEd25519SigningSession({
   privateKey,
 }: CreateSigningSessionOptions): Ed25519SigningSession {
-  const { key, publicKey } = createSigningKey(privateKey, getEd25519PublicKey);
-
-  // One function for both members, so lock and dispose cannot drift apart.
-  function lock(): void {
-    key.lock();
-  }
+  const { use, lock, publicKey } = createSigningKey(
+    privateKey,
+    getEd25519PublicKey,
+  );
 
   return {
     publicKey,
     async signMessage(message: Uint8Array): Promise<Uint8Array<ArrayBuffer>> {
-      return new Uint8Array(ed25519.sign(message, key.use()));
+      return new Uint8Array(ed25519.sign(message, use()));
     },
     lock,
     [Symbol.dispose]: lock,

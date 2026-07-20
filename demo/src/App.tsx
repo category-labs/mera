@@ -1,4 +1,5 @@
 import { type ReactElement, useEffect, useState } from "react";
+import { AccountChip } from "./AccountChip";
 import { type EvmContext, resolveEvmContext } from "./chains/evm";
 import { describeError } from "./connect";
 import { TradingCard } from "./TradingCard";
@@ -40,6 +41,7 @@ function retryingResolve<T>(
 function App(): ReactElement {
   const [evmContext, setEvmContext] = useState<EvmContext | null>(null);
   const [evmError, setEvmError] = useState<string | null>(null);
+  const [address, setAddress] = useState<`0x${string}` | null>(null);
 
   useEffect(
     () =>
@@ -58,8 +60,15 @@ function App(): ReactElement {
 
   return (
     <main className="app">
-      <h1>Mera Demo</h1>
-      <TradingCard evm={evmContext} evmError={evmError} />
+      <header className="app-head">
+        <h1>Mera Demo</h1>
+        <AccountChip address={address} />
+      </header>
+      <TradingCard
+        evm={evmContext}
+        evmError={evmError}
+        onAddressChange={setAddress}
+      />
     </main>
   );
 }

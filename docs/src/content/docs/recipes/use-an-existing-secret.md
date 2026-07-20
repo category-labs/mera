@@ -79,5 +79,4 @@ The phrase is a standard BIP-39 mnemonic, so key derivation from here is the sam
 ## Pitfalls
 
 - **A second secret needs its own ceremony and vault.** [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/) generates the fresh salt and stores it in the new vault.
-- **The phrase is a string** while it transits the encryption and unlock code, and strings cannot be zeroed. Keep the lifetime short and never log it.
 - **The vault JSON is the only ciphertext copy.** Losing the storage loses the account unless the person still holds the phrase elsewhere.

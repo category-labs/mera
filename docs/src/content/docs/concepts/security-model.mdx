@@ -5,49 +5,20 @@ description: What mera protects, what it cannot, and the risks left to the app.
 
 import TrustBoundary from "../../../assets/diagrams/trust-boundary.svg";
 
-mera runs in the page and trusts the page: any script in the page's JavaScript context can read the PRF output, read every key derived from it, and request signatures from an unlocked session. The passkey's own private key never leaves the authenticator. Its PRF output, the secret bytes returned through the [PRF extension](/concepts/passkeys-and-prf/), does leave it, and every derived key is an ordinary value in page memory while in use. The guarantees match a wallet app holding an imported seed phrase in the page.
+mera runs [passkey ceremonies](/concepts/passkeys-and-prf/#ceremonies-and-prompts), returns [entropy](/concepts/entropy-keys-and-accounts/) to the app, and holds signing keys in [lockable sessions](/concepts/signing-sessions/). All of it runs in the page, with software keys; the guarantees match a wallet app holding an imported seed phrase in the page.
 
-Losing the passkey without a prior export loses the accounts derived from it; [Passkey accounts](/concepts/passkey-accounts/#losing-the-passkey) lists the ways a passkey is lost.
-
-The library's scope is narrow: it runs [passkey ceremonies](/concepts/passkeys-and-prf/#ceremonies-and-prompts), returns [entropy](/concepts/entropy-keys-and-accounts/) to the app, and holds signing keys in [lockable sessions](/concepts/signing-sessions/).
-
-## The page is trusted
-
-The trust boundary, the set of code trusted with key material, is the page itself. An injected script, a malicious dependency, and a browser extension with page access all run inside it; nothing separates them from the app.
-
-Code on the page can observe [key material](/concepts/entropy-keys-and-accounts/#deterministic-derivation) during app-owned derivation or import, and it can sign with an active session until `session.lock()` is called. The app bounds the exposure: locking sessions when idle and keeping derivation windows short shrink the time a secret exists to be read.
+- Any script in the page can read the [PRF output](/concepts/passkeys-and-prf/) and every key derived from it, and can sign with an unlocked session until `session.lock()`. An injected script, a malicious dependency, and a browser extension with page access are all inside this boundary; locking sessions when idle and keeping derivation windows short shorten the exposure.
+- The passkey's own private key never leaves the authenticator. The PRF output does leave it, and every derived key is an ordinary value in page memory while in use.
+- Losing the passkey without a prior export loses the accounts derived from it; [Passkey accounts](/concepts/passkey-accounts/#losing-the-passkey) lists the ways a passkey is lost.
+- A passkey works only under the rpId (the relying party domain) it was created for: after a domain migration, passkey accounts can no longer be reproduced and vaults can no longer be decrypted. Accounts need an export path before any planned migration.
+- Secrets encrypted with one reused PRF output share an encryption key, and exposing that key exposes them all. The secret-vault workflow functions generate a fresh random 32-byte salt per secret; on the low-level path, [createSecretVault](/reference/create-secret-vault/) leaves the fresh salt to the caller.
+- Input buffers are copied before any async work starts, so mutating a buffer after a call cannot change what gets signed, encrypted, or derived.
+- The library zeroes the copies it owns: a session's key copy on `lock()` or on construction failure, and the vault functions' transient copies even when they fail. Zeroing shortens how long a secret stays readable; it cannot promise no other copy exists, and any script on the page can read the secret while it lives.
+- [WebAuthn](https://www.w3.org/TR/webauthn-3/) challenges and [AES-GCM](/concepts/secret-vaults/#how-a-vault-works) nonces are generated internally, so a caller cannot reuse a nonce. Every ceremony requires user verification, and the requirement is [not configurable](/concepts/passkeys-and-prf/#user-verification).
+- A revealed recovery phrase is a JavaScript string, and strings cannot be zeroed in place. The app can only drop references, keep the lifetime short, and never log it.
+- Runtime dependencies are `@noble/*` and `@scure/*` only; build and test tooling, and the unpublished demo app, never ship to library consumers.
 
 <TrustBoundary />
-
-## rpId binding
-
-PRF output is a function of the credential, the relying party ID, and the salt. A passkey can be used only under the rpId it was created for, so after a domain migration the app cannot run ceremonies under the old one. That breaks both patterns: passkey accounts can no longer be reproduced, and secret vaults can no longer be decrypted.
-
-Treat the rpId as a long-lived choice. Before any planned migration, accounts need an export path.
-
-## One output, one purpose
-
-If one PRF output is reused for unrelated purposes, exposing it compromises them all. Use a different salt per purpose, or split one output with a purpose-labeled [key-derivation function](/concepts/entropy-keys-and-accounts/#deterministic-derivation) (KDF).
-
-A vault is bound to its PRF output only, never to the credential ID or salt. Secrets encrypted using one reused output share an encryption key, and to anyone who can rewrite stored vault JSON their stored [ciphertexts](/concepts/secret-vaults/#how-a-vault-works) become interchangeable. The secret-vault workflow functions generate a fresh random 32-byte salt for each secret; on the low-level path, [createSecretVault](/reference/create-secret-vault/) leaves supplying a fresh salt per secret to the caller.
-
-## Copies, zeroing, and nonces
-
-Input buffers are copied before any async work starts, so mutating a buffer after a call cannot change what gets signed, encrypted, or derived.
-
-The library zeroes the copies it owns. A signing session zeroes its private-key copy on `lock()`, or on construction failure before the error is rethrown. The secret-vault functions zero the transient secret and PRF-output copies they own before they finish, even when they fail; [createSecretVault](/reference/create-secret-vault/) documents the per-function semantics.
-
-[WebAuthn](https://www.w3.org/TR/webauthn-3/) challenges and [AES-GCM](/concepts/secret-vaults/#how-a-vault-works) nonces are generated internally. A nonce is a value that must never repeat under one encryption key; the library generates 12 fresh bytes per encryption, so a caller cannot reuse one. Every ceremony requires user verification, and the requirement is [not configurable](/concepts/passkeys-and-prf/#user-verification).
-
-None of this defends against the page itself. Zeroing shortens how long a secret stays readable in memory; JavaScript cannot promise that no other copy exists, and any script on the page can read the secret while it lives.
-
-## Strings cannot be zeroed
-
-A revealed recovery phrase is a JavaScript string, and strings cannot be zeroed in place. The app can only drop references and keep the lifetime short: render the phrase as late as possible, discard it as soon as possible, and never log it.
-
-## Dependency scope
-
-Runtime dependencies are `@noble/*` and `@scure/*` only. Build and test tooling, and the unpublished demo app, never ship to library consumers.
 
 ## See also
 

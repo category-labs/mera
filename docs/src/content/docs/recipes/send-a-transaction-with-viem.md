@@ -35,7 +35,7 @@ const node = HDKey.fromMasterSeed(seed).derive("m/44'/60'/0'/0/0");
 if (node.privateKey === null) throw new Error("derivation produced no key");
 ```
 
-`entropyToMnemonic` creates a phrase string on the way to the seed, and strings cannot be zeroed ([security model](/concepts/security-model/#strings-cannot-be-zeroed)); the buffers are [zeroed](/concepts/security-model/#copies-zeroing-and-nonces) as soon as each one has served its purpose.
+`entropyToMnemonic` creates a phrase string on the way to the seed, and strings cannot be zeroed ([security model](/concepts/security-model/)); the buffers are [zeroed](/concepts/security-model/) as soon as each one has served its purpose.
 
 ## Create the viem account
 

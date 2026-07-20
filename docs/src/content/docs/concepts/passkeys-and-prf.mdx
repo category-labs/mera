@@ -15,7 +15,7 @@ A passkey is a discoverable WebAuthn credential. [WebAuthn](https://www.w3.org/T
 
 Every mera ceremony requires user verification, the authenticator's local check that the person is present and is the owner. The gesture depends on the platform: a biometric, a device PIN, a password.
 
-The requirement is not configurable. PRF is built on the [`hmac-secret`](https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html#sctn-hmac-secret-extension) primitive of [CTAP](https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html), the protocol browsers use to talk to authenticators. An authenticator keeps two PRFs per credential, one for user-verified requests and one for the rest. WebAuthn exposes only the user-verified PRF and overrides a weaker `userVerification` setting when evaluating it, so a setting could neither change the output nor skip the check; mera does not offer one.
+The requirement is not configurable. PRF is built on the [`hmac-secret`](https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html#sctn-hmac-secret-extension) primitive of [CTAP](https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html), the protocol browsers use to talk to authenticators. An authenticator keeps two PRFs per credential, one for user-verified requests and one for the rest. WebAuthn exposes only the user-verified PRF and overrides a weaker `userVerification` setting when evaluating it, so a setting could neither change the output nor skip the check. mera does not offer one.
 
 ## The PRF extension
 

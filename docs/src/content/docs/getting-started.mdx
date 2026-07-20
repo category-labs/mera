@@ -5,12 +5,12 @@ description: Install the library, derive an account, and make a first signature.
 
 import GettingStartedOverview from "../../assets/diagrams/getting-started-overview.svg";
 
-A passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) is one call to [WebAuthn](https://www.w3.org/TR/webauthn-3/), the browser standard for signing in with key pairs instead of passwords, and shows one user-verification prompt. Through the [PRF extension](/concepts/passkeys-and-prf/), a ceremony returns 32 secret bytes, which the app uses as [entropy](/concepts/entropy-keys-and-accounts/) to derive accounts. A [signing session](/concepts/signing-sessions/) holds one derived private key and signs, without further prompts, until it is locked. Everything mera returns lives in the page's JavaScript memory; the [security model](/concepts/security-model/) states what that trusts.
+A passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) is one call to [WebAuthn](https://www.w3.org/TR/webauthn-3/), the browser standard for signing in with key pairs instead of passwords, and shows one user-verification prompt. Through the [PRF extension](/concepts/passkeys-and-prf/), a ceremony returns 32 secret bytes, which the app uses as [entropy](/concepts/entropy-keys-and-accounts/) to derive accounts. A [signing session](/concepts/signing-sessions/) holds one derived private key and signs, without further prompts, until it is locked. Everything mera returns lives in the page's JavaScript memory. The [security model](/concepts/security-model/) states what that trusts.
 
 Prerequisites:
 
 - A secure context: HTTPS, or `localhost` during development.
-- An authenticator that supports the PRF extension. [Authenticator support](/authenticator-support/) lists the combinations known to work; 1Password and iCloud Keychain are good first choices.
+- An authenticator that supports the PRF extension. [Authenticator support](/authenticator-support/) lists the combinations known to work. 1Password and iCloud Keychain are good first choices.
 
 ## Install
 
@@ -18,7 +18,7 @@ Prerequisites:
 npm install @category-labs/mera
 ```
 
-This walkthrough derives accounts with `@scure/bip32` and `@scure/bip39`; any derivation scheme works.
+This walkthrough derives accounts with `@scure/bip32` and `@scure/bip39`. Any derivation scheme works.
 
 ```sh
 npm install @scure/bip32 @scure/bip39
@@ -41,7 +41,7 @@ const { prfOutput } = await createPasskeyWithPrfOutput({
 
 The call prompts once, or twice when the authenticator needs a follow-up [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) to evaluate PRF. An assertion is a second WebAuthn call, one that uses the new passkey.
 
-mera uses its fixed v1 salt for this call. The `rpId` is the relying party ID, the domain the passkey is bound to. The same passkey and relying party produce the same 32 bytes on any device the passkey syncs to. The result also carries the credential ID; [Create passkey accounts](/recipes/create-passkey-accounts/) stores it to pin later sign-ins.
+mera uses its fixed v1 salt for this call. The `rpId` is the relying party ID, the domain the passkey is bound to. The same passkey and relying party produce the same 32 bytes on any device the passkey syncs to. The result also carries the credential ID. [Create passkey accounts](/recipes/create-passkey-accounts/) stores it to pin later sign-ins.
 
 ## Derive an account
 
@@ -82,7 +82,7 @@ const signature = await session.signDigest(digest);
 session.lock();
 ```
 
-The digest is the 32-byte hash of the transaction or message to sign; this walkthrough signs a placeholder buffer. The session copies the key and signs without further passkey prompts. `lock()` [zeroes](/concepts/signing-sessions/#the-lifecycle) the session's copy; a locked session throws on signing.
+The digest is the 32-byte hash of the transaction or message to sign. This walkthrough signs a placeholder buffer. The session copies the key and signs without further passkey prompts. `lock()` [zeroes](/concepts/signing-sessions/#the-lifecycle) the session's copy. A locked session throws on signing.
 
 ## Sign back in
 
@@ -96,7 +96,7 @@ const { prfOutput } = await getPasskeyPrfOutput({
 });
 ```
 
-Without `credential`, the browser offers any discoverable passkey it holds for the relying party; apps with returning users pin the stored credential ID instead.
+Without `credential`, the browser offers any discoverable passkey it holds for the relying party. Apps with returning users pin the stored credential ID instead.
 
 ## From passkey to signature
 

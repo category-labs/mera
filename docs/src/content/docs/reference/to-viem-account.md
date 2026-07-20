@@ -19,7 +19,7 @@ import { toViemAccount } from "@category-labs/mera/viem";
 import { createWalletClient, http, parseEther } from "viem";
 import { sepolia } from "viem/chains";
 
-const privateKey = crypto.getRandomValues(new Uint8Array(32)); // stand-in for an app-derived key
+const privateKey = crypto.getRandomValues(new Uint8Array(32)); // the app's derived secp256k1 private key
 const session = createSecp256k1SigningSession({ privateKey });
 
 const client = createWalletClient({

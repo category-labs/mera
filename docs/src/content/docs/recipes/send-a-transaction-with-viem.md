@@ -68,7 +68,7 @@ const client = createWalletClient({
 });
 
 const hash = await client.sendTransaction({
-  to: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8", // stand-in for a recipient address
+  to: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8", // any recipient address
   value: parseEther("0.01"),
 });
 

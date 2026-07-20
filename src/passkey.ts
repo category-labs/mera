@@ -10,6 +10,7 @@ import type {
   CreatePasskeyResult,
   CreatePasskeyWithPrfOutputResult,
   PasskeyCredentialMetadata,
+  PasskeyCredentialTransport,
   PasskeyPrfResult,
 } from "./types.js";
 import { randomBytes } from "./webcrypto.js";
@@ -199,8 +200,10 @@ async function createPasskey({
         : undefined;
 
     return {
-      credentialId: base64UrlEncode(new Uint8Array(publicKeyCredential.rawId)),
-      ...(transports !== undefined ? { transports } : {}),
+      ...toCredentialMetadata(
+        base64UrlEncode(new Uint8Array(publicKeyCredential.rawId)),
+        transports,
+      ),
       ...(prfSalt !== undefined && prf.results?.first
         ? { prfOutput: copyPrfOutput(prf.results.first) }
         : {}),
@@ -376,12 +379,10 @@ async function createPasskeyWithPrfOutput({
     prfSalt: prfSaltCopy,
   });
 
-  const credentialMetadata: PasskeyCredentialMetadata = {
-    credentialId: credential.credentialId,
-    ...(credential.transports !== undefined
-      ? { transports: credential.transports }
-      : {}),
-  };
+  const credentialMetadata = toCredentialMetadata(
+    credential.credentialId,
+    credential.transports,
+  );
 
   const prfOutput =
     credential.prfOutput ??
@@ -398,6 +399,20 @@ async function createPasskeyWithPrfOutput({
     ...credentialMetadata,
     prfSalt: prfSaltCopy,
     prfOutput,
+  };
+}
+
+/**
+ * Builds credential metadata, copying `transports` so the result never aliases
+ * a caller-owned array.
+ */
+function toCredentialMetadata(
+  credentialId: string,
+  transports: readonly PasskeyCredentialTransport[] | undefined,
+): PasskeyCredentialMetadata {
+  return {
+    credentialId,
+    ...(transports !== undefined ? { transports: [...transports] } : {}),
   };
 }
 
@@ -509,4 +524,5 @@ export {
   createPasskey,
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
+  toCredentialMetadata,
 };

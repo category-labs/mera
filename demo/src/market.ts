@@ -85,7 +85,7 @@ function noiseLayerAt(
 /**
  * Share price at Unix `timestamp` (seconds), in native wei per whole share.
  * A slow drift, a medium swing, and a fast wiggle layer on the base price,
- * so the result stays within $40 +/- $9.10 and is always positive.
+ * so the result stays within 40 +/- 9.10 DEMOCASH and is always positive.
  */
 function priceAt(timestamp: bigint): bigint {
   const slowDrift = noiseLayerAt(timestamp, 1n, 28800n, 6n * UNIT);
@@ -99,7 +99,7 @@ function priceAt(timestamp: bigint): bigint {
 
 /** One account's market state, all in wei-scale bigints. */
 type Portfolio = {
-  /** Native balance, presented as dollars. */
+  /** Native balance, presented as DEMOCASH. */
   cash: bigint;
   /** Share balance (18 decimals). */
   shares: bigint;

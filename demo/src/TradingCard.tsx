@@ -36,15 +36,15 @@ import {
 import { NewsTicker } from "./NewsTicker";
 import { CHART_WINDOW_SECONDS, PriceChart } from "./PriceChart";
 import { currentPasskeyWallet } from "./passkeyWallet";
-import { formatShares, formatUsd } from "./ui";
+import { CASH_SYMBOL, formatCash, formatShares } from "./ui";
 import { WalletBackup } from "./WalletBackup";
 
 const REFRESH_MS = 5_000;
 // Cash kept out of Max buys so the account can always pay a trade's network
 // fee; at the demo network's gas prices this covers hundreds of trades.
 const FEE_RESERVE_WEI = 10n ** 16n;
-// Cash below this offers the $10,000 top-up; the guard enforces the same
-// threshold, so the button cannot inflate a healthy account.
+// Cash below this offers the 10,000 DEMOCASH top-up; the guard enforces the
+// same threshold, so the button cannot inflate a healthy account.
 const LOW_CASH_WEI = 100n * UNIT;
 // One cent, the display resolution: sells that would leave less than this
 // behind sell the whole position instead.
@@ -65,6 +65,8 @@ type AccountState =
 type TradingCardProps = {
   evm: EvmContext | null;
   evmError: string | null;
+  /** Reports the active account's address; null when signed out. */
+  onAddressChange: (address: `0x${string}` | null) => void;
 };
 
 /**
@@ -74,7 +76,11 @@ type TradingCardProps = {
  * trades sign silently; a passkey prompt appears only at connect, at the
  * first trade after a reload, and when exporting the recovery phrase.
  */
-function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
+function TradingCard({
+  evm,
+  evmError,
+  onAddressChange,
+}: TradingCardProps): ReactElement {
   const [account, setAccount] = useState<AccountState>(() => {
     const cached = loadCachedAccount();
     return cached ? { status: "locked", ...cached } : { status: "none" };
@@ -106,6 +112,9 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
       : account.status === "locked"
         ? account.address
         : account.wallet.account.address;
+
+  // Mirrors the address into the app-level account chip.
+  useEffect(() => onAddressChange(address), [address, onAddressChange]);
 
   // Switches to `next` and drops everything scoped to the previous account.
   function adoptAccount(next: AccountState): void {
@@ -226,8 +235,8 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
   const estimatedShares =
     amountWei !== null ? (amountWei * UNIT) / price : null;
 
-  // Wei to a plain decimal dollar string, floored to cents.
-  function usdInput(wei: bigint): string {
+  // Wei to a plain decimal cash string, floored to cents.
+  function cashInput(wei: bigint): string {
     const cents = wei / CENT_WEI;
     return `${cents / 100n}.${(cents % 100n).toString().padStart(2, "0")}`;
   }
@@ -241,9 +250,9 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
           ? portfolio.cash - FEE_RESERVE_WEI
           : 0n
         : (positionValue ?? 0n);
-    setAmount(usdInput(wei));
+    setAmount(cashInput(wei));
     // Max on the sell side means the whole position: converting its stale
-    // dollar figure back to shares at a moved price can strand dust.
+    // cash figure back to shares at a moved price can strand dust.
     setSellAll(side === "sell");
   }
 
@@ -286,7 +295,7 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
       } else {
         let shares = (amountWei * UNIT) / price;
         // A Max sell, or a typed amount within a cent of the whole position,
-        // sells all of it, so no dust the display would round to $0.00 is
+        // sells all of it, so no dust the display would round to 0.00 is
         // left behind.
         if (
           sellAll ||
@@ -369,12 +378,12 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
             <span className="stock-symbol">{TICKER}</span>
           </div>
           <div className="stock-quote">
-            <span className="stock-price">{formatUsd(price)}</span>
+            <span className="stock-price">{formatCash(price)}</span>
             <span
               className={delta < 0n ? "stock-delta down" : "stock-delta up"}
             >
               {delta < 0n ? "" : "+"}
-              {formatUsd(delta)} · 30m
+              {formatCash(delta)} · 30m
             </span>
           </div>
         </div>
@@ -398,9 +407,9 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
           <>
             <div className="holdings">
               <div className="holding-row">
-                <span className="holding-label">Cash</span>
+                <span className="holding-label">{CASH_SYMBOL}</span>
                 <span className="holding-value">
-                  {portfolio === null ? "…" : formatUsd(portfolio.cash)}
+                  {portfolio === null ? "…" : formatCash(portfolio.cash)}
                 </span>
               </div>
               <div className="holding-row">
@@ -408,7 +417,7 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
                 <span className="holding-value">
                   {portfolio === null || positionValue === null
                     ? "…"
-                    : `${formatShares(portfolio.shares)} · ${formatUsd(positionValue)}`}
+                    : `${formatShares(portfolio.shares)} · ${formatCash(positionValue)}`}
                 </span>
               </div>
               {pnl !== null && (
@@ -420,7 +429,7 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
                     }
                   >
                     {pnl < 0n ? "" : "+"}
-                    {formatUsd(pnl)}
+                    {formatCash(pnl)}
                     {pnlPercent !== null &&
                       ` · ${pnlPercent < 0 ? "" : "+"}${pnlPercent.toFixed(2)}%`}
                   </span>
@@ -457,7 +466,7 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
               <div className="send-row">
                 <label className="field grow">
                   <span className="field-head">
-                    Amount (USD)
+                    Amount ({CASH_SYMBOL})
                     <button
                       type="button"
                       className="link small"
@@ -498,12 +507,6 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
                 </button>
               </div>
 
-              {account.status === "locked" && (
-                <p className="hint">
-                  The first trade asks for the account's passkey.
-                </p>
-              )}
-
               {estimatedShares !== null && !fill && (
                 <p className="hint">
                   ≈ {formatShares(estimatedShares)} {TICKER} at the current
@@ -517,7 +520,7 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
                     ? `Bought ${formatShares(fill.shares)} ${TICKER}${
                         fill.spent === undefined
                           ? ""
-                          : ` for ${formatUsd(fill.spent)}`
+                          : ` for ${formatCash(fill.spent)} ${CASH_SYMBOL}`
                       }`
                     : `Sold ${formatShares(fill.shares)} ${TICKER}`}
                 </p>
@@ -540,7 +543,7 @@ function TradingCard({ evm, evmError }: TradingCardProps): ReactElement {
                 onClick={() => void addFunds()}
                 disabled={funding}
               >
-                {funding ? "Adding funds…" : "Add $10,000"}
+                {funding ? "Adding funds…" : `Add 10,000 ${CASH_SYMBOL}`}
               </button>
             )}
             <button

@@ -63,6 +63,41 @@ h1 {
   letter-spacing: -0.01em;
 }
 
+/* Title row: app name on the left, account chip on the right. */
+.app-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.account-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chip-network {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.chip-address {
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
 input {
   width: 100%;
   padding: 10px 12px;

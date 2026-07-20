@@ -9,7 +9,6 @@ import type {
 
 /**
  * Derives an uncompressed secp256k1 public key from a 32-byte private key.
- * The input is not modified.
  *
  * @param privateKey - A 32-byte secp256k1 private key.
  * @returns A 65-byte public key with the `0x04` uncompressed prefix.

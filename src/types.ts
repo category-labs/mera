@@ -102,7 +102,7 @@ type CreateSigningSessionOptions = {
   /**
    * Curve private key. Must be exactly 32 bytes; secp256k1 must also be a valid scalar.
    *
-   * Copied into one session-owned snapshot; the input buffer is not modified.
+   * Copied into one session-owned snapshot.
    */
   privateKey: Uint8Array;
 };
@@ -114,7 +114,7 @@ type Secp256k1SigningSession = {
   /**
    * Signs a 32-byte digest without prehashing it.
    *
-   * @param digest32 - Exactly 32 bytes to sign; read before the call returns and not modified, so later mutation cannot change what is signed.
+   * @param digest32 - Exactly 32 bytes to sign; read before the call returns, so later mutation cannot change what is signed.
    * @returns A compact secp256k1 ECDSA signature with its recovery ID.
    * @throws MeraError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
    * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
@@ -139,7 +139,7 @@ type Ed25519SigningSession = {
   /**
    * Signs an arbitrary-length message with Ed25519.
    *
-   * @param message - Message bytes to sign; read before the call returns and not modified, so later mutation cannot change what is signed. Hashing happens inside Ed25519 itself.
+   * @param message - Message bytes to sign; read before the call returns, so later mutation cannot change what is signed. Hashing happens inside Ed25519 itself.
    * @returns A 64-byte Ed25519 signature (`R || s`).
    * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
    */

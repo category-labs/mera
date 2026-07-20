@@ -224,8 +224,7 @@ type CreateSecretVaultInput = {
  *
  * @remarks
  * The input byte buffers are copied before async cryptographic work starts;
- * post-call mutation does not change the vault being produced. Caller-owned
- * input buffers are not modified or zeroed.
+ * post-call mutation does not change the vault being produced.
  *
  * Security: a vault is bound to its `prfOutput` only, not to the credential
  * ID or salt. Secrets encrypted using one reused PRF output share an encryption
@@ -367,9 +366,8 @@ function getRandomVaultPrfSalt(): Uint8Array<ArrayBuffer> {
  * browser prompt.
  *
  * `secret` is copied and validated before either ceremony starts. Post-call
- * mutation does not change the encrypted secret, and the caller-owned buffer
- * is not modified or zeroed. The internal secret and PRF output are zeroed
- * before the function finishes, even when it fails.
+ * mutation does not change the encrypted secret. The internal secret and PRF
+ * output are zeroed before the function finishes, even when it fails.
  *
  * If the fallback ceremony or vault encryption fails, the passkey from the
  * completed creation ceremony still exists on the authenticator, but the
@@ -417,9 +415,8 @@ async function createSecretVaultWithNewPasskey({
  *
  * A fresh random PRF salt is generated internally and stored in the returned
  * vault. `secret` and `credential` are copied before the ceremony starts, so
- * post-call mutation does not change the operation. Caller-owned inputs are
- * not modified or zeroed. The internal secret and PRF output are zeroed before
- * the function finishes, even when it fails.
+ * post-call mutation does not change the operation. The internal secret and
+ * PRF output are zeroed before the function finishes, even when it fails.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when `secret` is empty, or `credential.credentialId` is empty or not canonical base64url.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
@@ -476,11 +473,10 @@ type DecryptSecretVaultInput = {
  *
  * @remarks
  * `prfOutput` is copied before async cryptographic work starts, so post-call
- * mutation does not change the decryption result; the caller-owned buffer is
- * not modified or zeroed.
+ * mutation does not change the decryption result.
  *
  * @param options - Vault and PRF output; fields are documented on {@link DecryptSecretVaultOptions}.
- * @returns The decrypted secret bytes, exactly as passed to `createSecretVault`. The returned buffer is a fresh allocation; the library keeps no reference to it and never zeroes it.
+ * @returns The decrypted secret bytes, exactly as passed to `createSecretVault`. The returned buffer is a fresh allocation; the library keeps no reference to it.
  * @throws MeraError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url (already validated for vaults from `parseSecretVault`).
  * @throws MeraError with code `DECRYPT_FAILED` when authentication fails.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
@@ -662,8 +658,7 @@ type DecryptSecretVaultWithPasskeyInput = {
  * The vault is copied before the ceremony starts, so post-call mutation does
  * not change the assertion or ciphertext being decrypted. The internal PRF
  * output is zeroed before the function finishes, even when decryption
- * fails. The returned secret is not zeroed; its lifetime belongs to the
- * caller.
+ * fails. The returned secret's lifetime belongs to the caller.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when the vault contains an invalid credential ID, PRF salt, nonce, or ciphertext.
  * @throws MeraError with code `DECRYPT_FAILED` when authentication fails.

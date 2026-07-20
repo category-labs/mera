@@ -39,7 +39,7 @@ session.lock();
 - Type: `Uint8Array`
 - Required
 
-Ed25519 private key (the 32-byte seed). Copied into one session-owned snapshot; the input buffer is not modified.
+Ed25519 private key (the 32-byte seed). Copied into one session-owned snapshot.
 
 ## Returns
 
@@ -70,7 +70,7 @@ Calls `lock`, so a `using` declaration locks the session when its scope exits. S
 
 Signing needs no passkey ceremony and shows no prompt; the session signs as often as the app asks until it is locked.
 
-The message is read before `signMessage` returns and is not modified; mutating the buffer after the call cannot change what was signed.
+The message is read before `signMessage` returns; mutating the buffer after the call cannot change what was signed.
 
 ## See also
 

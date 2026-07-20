@@ -72,7 +72,7 @@ A vault is bound to its `prfOutput` only, never to the credential ID or salt: se
 
 The GCM nonce (12 bytes) is generated internally for each encryption, so a caller cannot accidentally reuse one.
 
-Input byte buffers are copied before async cryptographic work starts; mutating them after the call does not change the vault being produced. Caller-owned buffers are not modified or zeroed by this function; the internal copies of the PRF output and secret are zeroed before it returns, so the caller's `prfOutput` and `secret` buffers are the only copies left in memory.
+Input byte buffers are copied before async cryptographic work starts; mutating them after the call does not change the vault being produced. The internal copies of the PRF output and secret are zeroed before it returns, so the caller's `prfOutput` and `secret` buffers are the only copies left in memory.
 
 ## See also
 

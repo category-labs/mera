@@ -72,7 +72,7 @@ WebAuthn timeout in milliseconds, applied to each ceremony.
 
 ## Notes
 
-A fresh random 32-byte PRF salt is generated for the vault and stored in it. The secret is copied before either ceremony begins. The caller-owned buffer is not modified or zeroed; internal secret and PRF-output copies are zeroed before the function finishes, even when it fails.
+A fresh random 32-byte PRF salt is generated for the vault and stored in it. The secret is copied before either ceremony begins. Internal secret and PRF-output copies are zeroed before the function finishes, even when it fails.
 
 If the fallback ceremony or vault encryption fails after creation, the passkey remains on the authenticator and the error does not contain its metadata.
 

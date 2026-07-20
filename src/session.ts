@@ -18,9 +18,9 @@ type LockableKey = {
 /**
  * Copies a private key into a lockable signing key and derives its public key.
  *
- * `privateKey` is copied into one session-owned snapshot; the input buffer is
- * not modified. The snapshot is zeroed by `lock` or, when `derivePublicKey`
- * throws, before the error is rethrown.
+ * `privateKey` is copied into one session-owned snapshot. The snapshot is
+ * zeroed by `lock` or, when `derivePublicKey` throws, before the error is
+ * rethrown.
  *
  * @param privateKey - Private key to copy into the signing key.
  * @param derivePublicKey - Derives the public key from the owned snapshot; a throw doubles as private-key validation.

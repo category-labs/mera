@@ -39,7 +39,7 @@ session.lock();
 - Type: `Uint8Array`
 - Required
 
-secp256k1 private key. Must be exactly 32 bytes and a valid scalar, an integer inside the curve's private-key range. Copied into one session-owned snapshot; the input buffer is not modified.
+secp256k1 private key. Must be exactly 32 bytes and a valid scalar, an integer inside the curve's private-key range. Copied into one session-owned snapshot.
 
 ## Returns
 
@@ -79,7 +79,7 @@ Sessions bound with `const` or `let` are unaffected; disposal runs only where a 
 
 Signing needs no passkey ceremony and shows no prompt; the session signs as often as the app asks until it is locked.
 
-The digest is read before `signDigest` returns and is not modified; mutating the buffer after the call cannot change what was signed.
+The digest is read before `signDigest` returns; mutating the buffer after the call cannot change what was signed.
 
 The recovery ID is declared `0 | 1`. Values 2 and 3 exist in ECDSA, the signature algorithm secp256k1 uses, but require the signature's `r` to reach the curve order, which happens with probability around 2^-127; if it ever did, the call would fail loudly with [`INPUT_INVALID`](/reference/errors/#input_invalid) rather than return a signature that cannot be address-recovered.
 

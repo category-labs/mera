@@ -64,9 +64,9 @@ The 32-byte [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF output for the vau
 
 ## Notes
 
-The `prfOutput` buffer is copied before async cryptographic work starts; the caller-owned buffer is not modified or zeroed.
+The `prfOutput` buffer is copied before async cryptographic work starts.
 
-The returned buffer is a fresh allocation; the library keeps no reference to it and never zeroes it. Zeroing it after use is the caller's job.
+The returned buffer is a fresh allocation; the library keeps no reference to it. Zeroing it after use is the caller's job.
 
 ## See also
 

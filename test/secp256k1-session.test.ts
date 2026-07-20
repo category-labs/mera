@@ -14,7 +14,6 @@ test("signs 32-byte digests and locks the session", async () => {
   const digest = new Uint8Array(32).fill(1);
   const signature = await session.signDigest(digest);
 
-  // The session copies the key; the caller's buffer is not modified.
   expect(buffer).toEqual(PRIVATE_KEY_ONE);
 
   expect(getEvmAddress(session.publicKey)).toBe(

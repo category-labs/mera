@@ -17,7 +17,6 @@ test("signs messages and locks the session", async () => {
   const message = new TextEncoder().encode("mera demo");
   const signature = await session.signMessage(message);
 
-  // The session copies the key; the caller's buffer is not modified.
   expect(buffer).toEqual(RFC_SECRET);
 
   expect(session.publicKey).toEqual(RFC_PUBLIC_KEY);

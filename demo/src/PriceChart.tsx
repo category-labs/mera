@@ -27,7 +27,12 @@ type PriceChartProps = {
 function PriceChart({ livePrice, now }: PriceChartProps): ReactElement {
   const { line, area, openY, up, high, low } = useMemo(() => {
     const points: { t: number; price: bigint }[] = [];
-    for (let t = now - CHART_WINDOW_SECONDS; t < now; t += SAMPLE_SECONDS) {
+    // Sample on the absolute SAMPLE_SECONDS grid, not relative to `now`:
+    // anchoring to `now` would shift every sample time each tick, re-rolling
+    // the price noise across the whole line and making it visibly shimmer.
+    const start =
+      Math.ceil((now - CHART_WINDOW_SECONDS) / SAMPLE_SECONDS) * SAMPLE_SECONDS;
+    for (let t = start; t < now; t += SAMPLE_SECONDS) {
       points.push({ t, price: priceAt(BigInt(t)) });
     }
     points.push({ t: now, price: livePrice });

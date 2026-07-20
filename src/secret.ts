@@ -10,6 +10,7 @@ import {
   assertCredentialApiAvailable,
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
+  toCredentialMetadata,
 } from "./passkey.js";
 import type {
   PasskeyCredentialMetadata,
@@ -245,10 +246,7 @@ async function createSecretVault({
 
     return {
       version: 1,
-      credential: {
-        credentialId,
-        ...(transports !== undefined ? { transports: [...transports] } : {}),
-      },
+      credential: toCredentialMetadata(credentialId, transports),
       prfSalt: base64UrlEncode(prfSaltCopy),
       nonce: base64UrlEncode(encrypted.nonce),
       ciphertext: base64UrlEncode(encrypted.ciphertext),
@@ -297,22 +295,6 @@ function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
   }
 
   return copyBytes(secret);
-}
-
-/** Copies credential metadata before async WebAuthn work starts. */
-function copyCredentialMetadata(
-  credential: PasskeyCredentialMetadata | undefined,
-): PasskeyCredentialMetadata | undefined {
-  if (credential === undefined) {
-    return undefined;
-  }
-
-  return {
-    credentialId: credential.credentialId,
-    ...(credential.transports !== undefined
-      ? { transports: [...credential.transports] }
-      : {}),
-  };
 }
 
 /**
@@ -404,7 +386,10 @@ async function createSecretVaultWithExistingPasskey({
   timeout,
 }: CreateSecretVaultWithExistingPasskeyInput): Promise<PasskeySecretVault> {
   const secretCopy = copyNonEmptySecret(secret);
-  const credentialCopy = copyCredentialMetadata(credential);
+  // Copied before async WebAuthn work starts.
+  const credentialCopy =
+    credential &&
+    toCredentialMetadata(credential.credentialId, credential.transports);
   let prfOutput: Uint8Array | undefined;
 
   try {
@@ -526,10 +511,7 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
     transports = [...vault.credential.transports];
   }
 
-  const credential: PasskeySecretVault["credential"] = {
-    credentialId,
-    ...(transports !== undefined ? { transports } : {}),
-  };
+  const credential = toCredentialMetadata(credentialId, transports);
 
   const prfSalt = readVaultBase64Url(vault.prfSalt, "prfSalt", {
     byteLength: PRF_SALT_LENGTH,
@@ -549,12 +531,10 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
 function copySecretVault(vault: PasskeySecretVault): PasskeySecretVault {
   return {
     version: vault.version,
-    credential: {
-      credentialId: vault.credential.credentialId,
-      ...(vault.credential.transports !== undefined
-        ? { transports: [...vault.credential.transports] }
-        : {}),
-    },
+    credential: toCredentialMetadata(
+      vault.credential.credentialId,
+      vault.credential.transports,
+    ),
     prfSalt: vault.prfSalt,
     nonce: vault.nonce,
     ciphertext: vault.ciphertext,

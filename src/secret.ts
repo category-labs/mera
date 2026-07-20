@@ -7,7 +7,6 @@ import {
 } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import {
-  assertCredentialApiAvailable,
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
   toCredentialMetadata,
@@ -266,16 +265,6 @@ function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
 }
 
 /**
- * Checks WebAuthn before generating a random vault salt so ceremony helpers
- * keep their existing error precedence when WebAuthn and Web Crypto are both
- * unavailable.
- */
-function getRandomVaultPrfSalt(): Uint8Array<ArrayBuffer> {
-  assertCredentialApiAvailable();
-  return randomBytes(PRF_SALT_LENGTH);
-}
-
-/**
  * Creates a passkey and encrypts one secret into a vault.
  *
  * A fresh random PRF salt is generated internally and stored in the returned
@@ -316,7 +305,7 @@ async function createSecretVaultWithNewPasskey({
       rp,
       user,
       ...(timeout !== undefined ? { timeout } : {}),
-      prfSalt: getRandomVaultPrfSalt(),
+      prfSalt: randomBytes(PRF_SALT_LENGTH),
     });
     prfOutput = credential.prfOutput;
 
@@ -361,7 +350,7 @@ async function createSecretVaultWithExistingPasskey({
   let prfOutput: Uint8Array | undefined;
 
   try {
-    const prfSalt = getRandomVaultPrfSalt();
+    const prfSalt = randomBytes(PRF_SALT_LENGTH);
     const evaluated = await getPasskeyPrfOutput({
       rpId,
       ...(credentialCopy !== undefined ? { credential: credentialCopy } : {}),

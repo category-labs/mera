@@ -119,6 +119,7 @@ export default defineConfig({
         "./src/styles/mera.css",
       ],
       components: {
+        Footer: "./src/components/Footer.astro",
         Header: "./src/components/Header.astro",
         Hero: "./src/components/Hero.astro",
         ThemeProvider: "./src/components/ThemeProvider.astro",

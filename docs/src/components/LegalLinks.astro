@@ -1,0 +1,31 @@
+---
+// Legal links, shared by Footer.astro and Hero.astro.
+---
+
+<nav aria-label="Legal">
+  <a href="https://www.category.xyz/terms-of-service">Terms of Service</a>
+  <a href="https://www.category.xyz/privacy-policy">Privacy Policy</a>
+</nav>
+
+<style>
+  nav {
+    display: flex;
+    gap: 1.25rem;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+
+  a {
+    color: var(--sl-color-gray-3);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  a:hover {
+    color: var(--sl-color-gray-1);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.16em;
+  }
+</style>

@@ -6,6 +6,7 @@
 import { LinkButton } from "@astrojs/starlight/components";
 import { withBasePath } from "../base-path";
 import DemoEmbed from "./DemoEmbed.astro";
+import LegalLinks from "./LegalLinks.astro";
 
 const { data } = Astro.locals.starlightRoute.entry;
 const { tagline, actions = [] } = data.hero || {};
@@ -86,6 +87,10 @@ const features = [
         </div>
       )
     }
+
+    <div class="legal">
+      <LegalLinks />
+    </div>
   </div>
 
   <div class="demo-column">
@@ -103,7 +108,8 @@ const features = [
       "code"
       "demo"
       "features"
-      "actions";
+      "actions"
+      "legal";
     grid-template-columns: minmax(0, 1fr);
     gap: 1.5rem;
     width: 100%;
@@ -263,6 +269,10 @@ const features = [
     color: var(--sl-color-white);
   }
 
+  .legal {
+    grid-area: legal;
+  }
+
   @media (min-width: 56rem) {
     .hero {
       grid-template-areas: none;
@@ -277,7 +287,13 @@ const features = [
       display: flex;
       flex-direction: column;
       gap: 1.25rem;
+      align-self: stretch;
       margin-inline-end: clamp(1rem, 3vw, 4rem);
+    }
+
+    /* Pin the legal links to the bottom of the viewport-sized column. */
+    .legal {
+      margin-top: auto;
     }
 
     .demo-column {

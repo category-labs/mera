@@ -16,7 +16,7 @@ import type {
 import { randomBytes } from "./webcrypto.js";
 
 /** Inputs for creating a discoverable, user-verified passkey with PRF enabled. */
-type CreatePasskeyInput = {
+type CreatePasskeyOptions = {
   /** Relying party identity passed directly to WebAuthn. */
   rp: PublicKeyCredentialRpEntity;
   /** User identity passed to WebAuthn. `id` is copied before use. */
@@ -56,8 +56,8 @@ type CreatePasskeyInput = {
  * can target the same relying party. `prfSalt` defaults to the fixed v1 value
  * returned by {@link getDeterministicPrfSaltV1}.
  */
-type CreatePasskeyWithPrfOutputInput = Omit<
-  CreatePasskeyInput,
+type CreatePasskeyWithPrfOutputOptions = Omit<
+  CreatePasskeyOptions,
   "rp" | "prfSalt"
 > & {
   /** Relying party identity passed to WebAuthn. `id` is required here. */
@@ -70,7 +70,7 @@ type CreatePasskeyWithPrfOutputInput = Omit<
 };
 
 /** Inputs for requesting the first WebAuthn PRF output from a passkey. */
-type GetPasskeyPrfOutputInput = {
+type GetPasskeyPrfOutputOptions = {
   /** Relying party ID for the WebAuthn assertion. */
   rpId: string;
   /** Credential metadata to restrict the assertion to one passkey. */
@@ -140,7 +140,7 @@ async function createPasskey({
   user,
   timeout,
   prfSalt,
-}: CreatePasskeyInput): Promise<CreatePasskeyResult> {
+}: CreatePasskeyOptions): Promise<CreatePasskeyResult> {
   try {
     assertCredentialApiAvailable();
 
@@ -258,7 +258,7 @@ async function getPasskeyPrfOutput({
   credential: allowCredential,
   prfSalt,
   timeout,
-}: GetPasskeyPrfOutputInput): Promise<PasskeyPrfResult> {
+}: GetPasskeyPrfOutputOptions): Promise<PasskeyPrfResult> {
   try {
     assertCredentialApiAvailable();
 
@@ -369,7 +369,7 @@ async function createPasskeyWithPrfOutput({
   user,
   timeout,
   prfSalt,
-}: CreatePasskeyWithPrfOutputInput): Promise<CreatePasskeyWithPrfOutputResult> {
+}: CreatePasskeyWithPrfOutputOptions): Promise<CreatePasskeyWithPrfOutputResult> {
   const prfSaltCopy = copyBytes(prfSalt ?? getDeterministicPrfSaltV1());
 
   const credential = await createPasskey({
@@ -503,15 +503,6 @@ function copyPrfOutput(
 
   return output;
 }
-
-/** Options accepted by `createPasskey`. */
-type CreatePasskeyOptions = Parameters<typeof createPasskey>[0];
-/** Options accepted by `createPasskeyWithPrfOutput`. */
-type CreatePasskeyWithPrfOutputOptions = Parameters<
-  typeof createPasskeyWithPrfOutput
->[0];
-/** Options accepted by `getPasskeyPrfOutput`. */
-type GetPasskeyPrfOutputOptions = Parameters<typeof getPasskeyPrfOutput>[0];
 
 export type {
   CreatePasskeyOptions,

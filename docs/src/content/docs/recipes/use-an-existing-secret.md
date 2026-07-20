@@ -9,13 +9,12 @@ The surrounding code is app-owned; mera provides the passkey ceremonies and vaul
 
 ## Validate the phrase
 
-The library never interprets the secret, so phrase validation is app code:
+A real app reads the phrase from a form field. The library never interprets the secret, so validation is app code:
 
 ```ts
 import { validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 
-// The phrase, as read from a form field.
 const phrase =
   "legal winner thank year wave sausage worth useful legal winner thank yellow";
 if (!validateMnemonic(phrase, wordlist)) {

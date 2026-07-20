@@ -84,4 +84,4 @@ A fresh random 32-byte PRF salt is generated for each call and stored in the vau
 
 - [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/): create the first vault together with a passkey.
 - [decryptSecretVaultWithPasskey](/reference/decrypt-secret-vault-with-passkey/): perform the assertion and decrypt a stored vault.
-- [One output, one purpose](/concepts/security-model/#one-output-one-purpose): why each vault receives a fresh salt.
+- [One output, one purpose](/concepts/security-model/): why each vault receives a fresh salt.

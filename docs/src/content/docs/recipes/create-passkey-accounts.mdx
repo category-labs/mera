@@ -70,7 +70,7 @@ localStorage.setItem("app.derivedCredential", JSON.stringify(record));
 
 ## Hold a seed for the session
 
-Turn the PRF output into a [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed once, [zero](/concepts/security-model/#copies-zeroing-and-nonces) the output, and keep the seed in memory for the session. The seed is the one secret every account below derives from, so deriving account 3 later is pure HD (hierarchical deterministic) math with no further prompt.
+Turn the PRF output into a [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed once, [zero](/concepts/security-model/) the output, and keep the seed in memory for the session. The seed is the one secret every account below derives from, so deriving account 3 later is pure HD (hierarchical deterministic) math with no further prompt.
 
 ```ts
 import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
@@ -80,7 +80,7 @@ const seed = mnemonicToSeedSync(entropyToMnemonic(prfOutput, wordlist));
 prfOutput.fill(0);
 ```
 
-`entropyToMnemonic` creates a phrase string on the way to the seed, and strings cannot be zeroed ([security model](/concepts/security-model/#strings-cannot-be-zeroed)); the phrase stays in memory until garbage collection.
+`entropyToMnemonic` creates a phrase string on the way to the seed, and strings cannot be zeroed ([security model](/concepts/security-model/)); the phrase stays in memory until garbage collection.
 
 ## Derive numbered accounts
 

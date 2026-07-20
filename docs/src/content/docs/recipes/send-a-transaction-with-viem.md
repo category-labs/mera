@@ -3,9 +3,9 @@ title: Send a transaction with viem
 description: Sign in with a passkey, derive the first EVM account, and send a transaction through viem.
 ---
 
-This recipe turns a passkey sign-in into a sent transaction. Prerequisites: `@category-labs/mera`, `viem`, `@scure/bip32`, and `@scure/bip39` installed, a PRF-capable authenticator ([authenticator support](/authenticator-support/)), an existing passkey ([Create passkey accounts](/recipes/create-passkey-accounts/) covers the first visit), and test funds on the sending address. PRF is the [WebAuthn](https://www.w3.org/TR/webauthn-3/) extension that makes a passkey return deterministic secret bytes; [Passkeys and PRF](/concepts/passkeys-and-prf/) explains the mechanism.
+This recipe turns a passkey sign-in into a sent transaction. Prerequisites: `@category-labs/mera`, `viem`, `@scure/bip32`, and `@scure/bip39` installed, a [PRF](/concepts/passkeys-and-prf/)-capable authenticator ([authenticator support](/authenticator-support/)), an existing passkey ([Create passkey accounts](/recipes/create-passkey-accounts/) covers the first visit), and test funds on the sending address.
 
-[viem](https://viem.sh) is a TypeScript client library for EVM chains (chains that run the Ethereum Virtual Machine); [toViemAccount](/reference/to-viem-account/) adapts a [signing session](/concepts/signing-sessions/) into the account shape viem accepts, so viem signs and broadcasts while the key stays in the session. Derivation and client setup are app-owned; mera provides the ceremony, the session, and the adapter.
+[viem](https://viem.sh) is a TypeScript client library for EVM chains (chains that run the Ethereum Virtual Machine). [toViemAccount](/reference/to-viem-account/) adapts a [signing session](/concepts/signing-sessions/) into the account shape viem accepts, so viem signs and broadcasts while the key stays in the session. Derivation and client setup are app-owned; mera provides the ceremony, the session, and the adapter.
 
 ## Sign in
 
@@ -74,7 +74,7 @@ const hash = await client.sendTransaction({
 session.lock();
 ```
 
-`sepolia` is Ethereum's Sepolia test network, and `http()` with no URL uses the chain's default public RPC endpoint (RPC, remote procedure call, is the HTTP API a chain node exposes for queries and transactions); production apps pass a dedicated RPC URL. Signing shows no passkey prompt: the one prompt happened at sign-in, and the session covers every signature until it is locked.
+`sepolia` is Ethereum's Sepolia test network. `http()` with no URL uses the chain's default public RPC endpoint; RPC, remote procedure call, is the HTTP API a chain node exposes for queries and transactions. Production apps pass a dedicated RPC URL. Signing shows no passkey prompt: the one prompt happened at sign-in, and the session covers every signature until it is locked.
 
 `sendTransaction` fills the missing transaction fields from the RPC, signs through the session, broadcasts, and resolves to the transaction hash. Confirmation is a separate query; viem's `waitForTransactionReceipt` on a public client covers it.
 

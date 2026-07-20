@@ -67,6 +67,7 @@ The bar is simple, concise, and detailed at once: detail survives the cut, fille
 ## Sentence mechanics
 
 - No em dashes. Use a comma, a period, a colon, or parentheses.
+- A sentence defines at most one term. A second definition moves to its own sentence or becomes a link to the owning page.
 - No "not X, but Y" constructions, including "isn't just X" and "It's not about X". Rewrite the thought.
 - Complete sentences, plainly shaped. Fragments for punch ("Same three, same 32 bytes.") and aphorisms ("whoever holds it holds ciphertext") get rewritten as plain statements.
 - The library takes plain verbs: mera requires, returns, throws. "mera asks", "hands over", "stops there" are narration.
@@ -81,6 +82,7 @@ The bar is simple, concise, and detailed at once: detail survives the cut, fille
 - Implementation details live only on the page that owns them: error codes and library internals on the reference, demo internals (derivation schemes, storage, UI) in the recipes that adapt its code. Every other page links to the owning page instead of restating the detail, so a demo or library change touches one page.
 - Examples import only the public API plus explicitly declared app-side dependencies.
 - Examples define every identifier they use. Values the app supplies enter through a placeholder with realistic shape and provenance: `crypto.getRandomValues(new Uint8Array(32))` for key material, `new TextEncoder().encode(...)` for secret text, a literal for addresses and rpIds. Never use an all-zero buffer where the library validates the value; an all-zero secp256k1 key throws.
+- A placeholder value carries its meaning in a descriptive variable name (`recipient`, `privateKey`), not in a comment. A comment that restates the variable name is deleted; provenance worth stating moves to prose.
 - Security-sensitive behavior is stated plainly on the page where the risk is acted on: key material lifetimes, zeroing, nonce handling, prompt counts, and what the library cannot protect against.
 - Support claims are date-stamped. The authenticator matrix lives on the authenticator-support page and is maintained there only.
 

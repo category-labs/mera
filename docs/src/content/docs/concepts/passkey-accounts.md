@@ -3,11 +3,11 @@ title: Passkey accounts
 description: Accounts derived from a passkey's PRF output, with no stored secret.
 ---
 
-A passkey account is a blockchain account whose keys derive from a passkey's PRF output, the 32 secret bytes a passkey returns deterministically ([Passkeys and PRF](/concepts/passkeys-and-prf/) explains the mechanism). No secret is stored anywhere; each ceremony, one [WebAuthn](https://www.w3.org/TR/webauthn-3/) call with a user-verification prompt, recomputes the same accounts. This is the default way to use mera.
+A passkey account is a blockchain account whose keys derive from a passkey's PRF output, the 32 secret bytes a passkey returns deterministically ([Passkeys and PRF](/concepts/passkeys-and-prf/) explains the mechanism). No secret is stored anywhere: each ceremony, one [WebAuthn](https://www.w3.org/TR/webauthn-3/) call with a user-verification prompt, recomputes the same accounts. This is the default way to use mera.
 
 ## One salt, one stable output
 
-When the PRF salt is omitted, mera uses its [fixed v1 salt](/reference/get-deterministic-prf-salt-v1/). The same passkey and relying party then produce the same 32 bytes of PRF output on every ceremony. The app passes that output to a derivation scheme of its choosing, the deterministic computation that turns root entropy into per-account keys ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)); [Create passkey accounts](/recipes/create-passkey-accounts/) shows one built on common HD (hierarchical deterministic) standards.
+When the PRF salt is omitted, mera uses its [fixed v1 salt](/reference/get-deterministic-prf-salt-v1/). The same passkey and relying party then produce the same 32 bytes of PRF output on every ceremony. The app passes that output to a [derivation scheme](/concepts/entropy-keys-and-accounts/) of its choosing; [Create passkey accounts](/recipes/create-passkey-accounts/) shows one built on common HD (hierarchical deterministic) standards.
 
 ## No stored state
 

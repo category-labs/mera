@@ -22,7 +22,7 @@ The docs use two signature schemes, named for their curves: secp256k1 on Ethereu
 
 ## Deterministic derivation
 
-A key-derivation function (KDF) turns one secret into others: the output looks random, and the same input always produces the same output. A key that can be recomputed never needs to be stored.
+A key-derivation function (KDF) turns one secret into others: the output looks random, and the same input always produces the same output. Because a KDF recomputes its outputs on demand, derived keys need no storage.
 
 A seed is the byte string a key tree starts from. BIP-32 (secp256k1) and [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md) (Ed25519) extend one seed into a tree of child keys, a scheme called hierarchical deterministic (HD) derivation, and a derivation path such as `m/44'/60'/0'/0/0` names one key in the tree. The same seed and path produce the same key on any machine, so one 32-byte value backs any number of accounts with nothing stored per account. (BIP is a Bitcoin Improvement Proposal; several became standards beyond Bitcoin.)
 

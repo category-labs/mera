@@ -19,8 +19,8 @@ import {
   getEvmAddress,
 } from "@category-labs/mera";
 
-const privateKey = crypto.getRandomValues(new Uint8Array(32)); // stand-in for an app-derived key
-const digest32 = new Uint8Array(32); // stand-in for a 32-byte transaction digest
+const privateKey = crypto.getRandomValues(new Uint8Array(32));
+const digest32 = new Uint8Array(32);
 
 const session = createSecp256k1SigningSession({ privateKey });
 

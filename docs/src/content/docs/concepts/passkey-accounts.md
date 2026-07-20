@@ -11,7 +11,7 @@ When the PRF salt is omitted, mera uses its [fixed v1 salt](/reference/get-deter
 
 ## No stored state
 
-There is no stored secret; all state lives in the passkey. Once the passkey has synced to a new device, sign-in there is the same ceremony and produces the same accounts. During use, the PRF output and the keys derived from it are values in the page's memory, readable by any script on the page ([security model](/concepts/security-model/#what-a-compromised-runtime-sees)).
+There is no stored secret; all state lives in the passkey. Once the passkey has synced to a new device, sign-in there is the same ceremony and produces the same accounts. During use, the PRF output and the keys derived from it are values in the page's memory, readable by any script on the page ([security model](/concepts/security-model/)).
 
 ## Losing the passkey
 
@@ -27,4 +27,4 @@ Passkey accounts are rooted in the passkey itself, so an account that predates t
 - [Create passkey accounts](/recipes/create-passkey-accounts/): the pattern in code, with numbered accounts and credential pinning.
 - [Secret vaults](/concepts/secret-vaults/): the advanced pattern for secrets that exist on their own.
 - [getDeterministicPrfSaltV1](/reference/get-deterministic-prf-salt-v1/): the fixed salt behind the stability.
-- [Security model](/concepts/security-model/#rpid-binding): what a domain migration breaks.
+- [Security model](/concepts/security-model/): what a domain migration breaks.

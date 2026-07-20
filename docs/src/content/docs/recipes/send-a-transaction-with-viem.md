@@ -35,8 +35,6 @@ const node = HDKey.fromMasterSeed(seed).derive("m/44'/60'/0'/0/0");
 if (node.privateKey === null) throw new Error("derivation produced no key");
 ```
 
-`entropyToMnemonic` creates a phrase string on the way to the seed, and strings cannot be zeroed ([security model](/concepts/security-model/#strings-cannot-be-zeroed)); the buffers are [zeroed](/concepts/security-model/#what-the-library-handles) as soon as each one has served its purpose.
-
 ## Create the viem account
 
 `toViemAccount` lives in the `@category-labs/mera/viem` entry point, which requires the optional `viem` peer dependency; the root entry point does not use viem.
@@ -67,8 +65,9 @@ const client = createWalletClient({
   transport: http(),
 });
 
+const recipient = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
 const hash = await client.sendTransaction({
-  to: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8", // stand-in for a recipient address
+  to: recipient,
   value: parseEther("0.01"),
 });
 

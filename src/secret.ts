@@ -465,7 +465,7 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
         "credential.transports must be an array of strings or omitted",
       );
     }
-    transports = [...vault.credential.transports];
+    transports = vault.credential.transports;
   }
 
   const credential = toCredentialMetadata(credentialId, transports);

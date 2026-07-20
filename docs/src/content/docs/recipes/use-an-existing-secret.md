@@ -3,19 +3,18 @@ title: Encrypt an existing secret with a passkey
 description: Encrypt an existing secret into a passkey-protected vault and unlock it later.
 ---
 
-A [secret vault](/concepts/secret-vaults/) encrypts one recovery phrase (the [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) word encoding of an account's root entropy), private key, or other byte string behind a passkey; mera never interprets it. The vault is the pattern for secrets that predate the passkey. This recipe validates a phrase, stores its vault, and decrypts it with explicit [zeroing](/concepts/security-model/#what-the-library-handles). It requires `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
+A [secret vault](/concepts/secret-vaults/) encrypts one recovery phrase (the [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) word encoding of an account's root entropy), private key, or other byte string behind a passkey; mera never interprets it. The vault is the pattern for secrets that predate the passkey. This recipe validates a phrase, stores its vault, and decrypts it with explicit zeroing. It requires `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
 
 The surrounding code is app-owned; mera provides the passkey ceremonies and vault functions.
 
 ## Validate the phrase
 
-The library never interprets the secret, so phrase validation is app code:
+A real app reads the phrase from a form field. The library never interprets the secret, so validation is app code:
 
 ```ts
 import { validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 
-// Stand-in: a real app reads the phrase from a form field.
 const phrase =
   "legal winner thank year wave sausage worth useful legal winner thank yellow";
 if (!validateMnemonic(phrase, wordlist)) {
@@ -25,7 +24,7 @@ if (!validateMnemonic(phrase, wordlist)) {
 
 ## Create and persist the vault
 
-`createSecretVaultWithNewPasskey` generates a fresh 32-byte [salt](/concepts/passkeys-and-prf/#the-prf-extension), the PRF input that namespaces its output, creates the passkey, and encrypts the secret. The salt and credential metadata are stored in the returned vault. A separate salt for each vault avoids shared encryption keys and interchangeable nonce/ciphertext pairs ([one output, one purpose](/concepts/security-model/#one-output-one-purpose)).
+`createSecretVaultWithNewPasskey` generates a fresh 32-byte [salt](/concepts/passkeys-and-prf/#the-prf-extension), the PRF input that namespaces its output, creates the passkey, and encrypts the secret. The salt and credential metadata are stored in the returned vault. A separate salt for each vault avoids shared encryption keys and interchangeable nonce/ciphertext pairs ([one output, one purpose](/concepts/security-model/)).
 
 ```ts
 import { createSecretVaultWithNewPasskey } from "@category-labs/mera";
@@ -80,5 +79,4 @@ The phrase is a standard BIP-39 mnemonic, so key derivation from here is the sam
 ## Pitfalls
 
 - **A second secret needs its own ceremony and vault.** [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/) generates the fresh salt and stores it in the new vault.
-- **The phrase is a string** while it transits the encryption and unlock code, and strings cannot be zeroed ([security model](/concepts/security-model/#strings-cannot-be-zeroed)). Keep the lifetime short and never log it.
 - **The vault JSON is the only ciphertext copy.** Losing the storage loses the account unless the person still holds the phrase elsewhere.

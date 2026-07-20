@@ -14,11 +14,10 @@ import { createPasskey } from "@category-labs/mera";
 ## Usage
 
 ```ts
-const credential = await createPasskey({
+const { credentialId, transports } = await createPasskey({
   rp: { id: "account.example.com", name: "Example" },
   user: { name: "account@example.com", displayName: "Example account" },
 });
-// credential.credentialId is base64url; credential.transports when reported.
 ```
 
 ## Parameters

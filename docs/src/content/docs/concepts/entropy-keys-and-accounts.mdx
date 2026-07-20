@@ -10,25 +10,15 @@ The rest of the docs assume the blockchain background this page teaches: how 32 
 
 <DerivationPipeline />
 
-## Randomness and entropy
+## Keys, signatures, and accounts
 
-Entropy is randomness an attacker cannot predict, measured in bits. A fair coin flip carries one bit; 32 random bytes carry 256, and searching 2^256 values is infeasible for any computer.
+Entropy is randomness an attacker cannot predict, and 32 random bytes carry 256 bits of it. Searching 2^256 values is infeasible for any computer.
 
-Everything below starts from one such value and proceeds deterministically. The root secret is the only unpredictable input, so it is the only thing to protect; everything derived from it can be recomputed instead of stored.
+A private key is a 256-bit secret number. A one-way function computes the public key from it, so the public key is safe to share. A signature is computed from a message and a private key and verified with the public key alone. A valid signature proves the key's holder approved that exact message.
 
-## Private keys, public keys, and signatures
-
-A private key is a 256-bit secret number. A one-way function computes the public key from it: cheap to run forward, infeasible to reverse, so the public key is safe to share.
-
-A signature is computed from a message and a private key and verified with the public key alone. A valid signature proves the key's holder approved that exact message, without revealing the key.
+A blockchain account is the state a chain tracks for one key pair: a balance and a transaction history. The address is a short encoding of the public key.
 
 The docs use two signature schemes, named for their curves: secp256k1 on Ethereum and other EVM chains (chains that run the Ethereum Virtual Machine), and Ed25519 on Solana.
-
-## Accounts and addresses
-
-A blockchain account is the state a chain tracks for one key pair: a balance and a transaction history. The address is a short encoding of the public key, safe to publish.
-
-Control of an account is the ability to sign: a transaction is valid when its signature verifies against the account's public key. There is no reset path. Losing the private key loses the account, and anyone who obtains it controls the account.
 
 ## Deterministic derivation
 

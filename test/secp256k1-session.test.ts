@@ -10,12 +10,12 @@ const PRIVATE_KEY_ONE = hexToBytes(
 
 test("signs 32-byte digests and locks the session", async () => {
   const buffer = new Uint8Array(PRIVATE_KEY_ONE);
-  const session = createSecp256k1SigningSession({ consumePrivateKey: buffer });
+  const session = createSecp256k1SigningSession({ privateKey: buffer });
   const digest = new Uint8Array(32).fill(1);
   const signature = await session.signDigest(digest);
 
-  // Caller's buffer was zeroed by the session.
-  expect(buffer).toEqual(new Uint8Array(32));
+  // The session copies the key; the caller's buffer is not modified.
+  expect(buffer).toEqual(PRIVATE_KEY_ONE);
 
   expect(getEvmAddress(session.publicKey)).toBe(
     "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
@@ -36,7 +36,7 @@ test("signs 32-byte digests and locks the session", async () => {
 
 test("rejects non-32-byte digests", async () => {
   const session = createSecp256k1SigningSession({
-    consumePrivateKey: new Uint8Array(PRIVATE_KEY_ONE),
+    privateKey: PRIVATE_KEY_ONE,
   });
 
   await expect(session.signDigest(new Uint8Array(31))).rejects.toMatchObject({
@@ -44,16 +44,16 @@ test("rejects non-32-byte digests", async () => {
   });
 });
 
-test("zeroes the caller's buffer when the private key is an invalid scalar", () => {
+test("rejects an invalid scalar and leaves the caller's buffer unmodified", () => {
   // All-0xff exceeds the curve order, so it is a valid length but invalid scalar.
   const buffer = new Uint8Array(32).fill(0xff);
 
   expectError(
-    () => createSecp256k1SigningSession({ consumePrivateKey: buffer }),
+    () => createSecp256k1SigningSession({ privateKey: buffer }),
     "INPUT_INVALID",
   );
 
-  expect(buffer).toEqual(new Uint8Array(32));
+  expect(buffer).toEqual(new Uint8Array(32).fill(0xff));
 });
 
 test("a using declaration locks the session when its scope exits", async () => {
@@ -61,7 +61,7 @@ test("a using declaration locks the session when its scope exits", async () => {
 
   {
     using session = createSecp256k1SigningSession({
-      consumePrivateKey: new Uint8Array(PRIVATE_KEY_ONE),
+      privateKey: PRIVATE_KEY_ONE,
     });
     await session.signDigest(new Uint8Array(32).fill(1));
     escaped = session;
@@ -74,7 +74,7 @@ test("a using declaration locks the session when its scope exits", async () => {
 
 test("signs the digest bytes read at call time, not later mutations", async () => {
   const session = createSecp256k1SigningSession({
-    consumePrivateKey: new Uint8Array(PRIVATE_KEY_ONE),
+    privateKey: PRIVATE_KEY_ONE,
   });
 
   const original = new Uint8Array(32).fill(1);

@@ -46,14 +46,14 @@ import { createSecp256k1SigningSession } from "@category-labs/mera";
 import { toViemAccount } from "@category-labs/mera/viem";
 
 const session = createSecp256k1SigningSession({
-  consumePrivateKey: node.privateKey,
+  privateKey: node.privateKey,
 });
 seed.fill(0);
 
 const account = toViemAccount(session);
 ```
 
-Construction consumes the private key and zeroes the input buffer. The returned account signs transactions, messages, and typed data through `session.signDigest`; the [toViemAccount reference](/reference/to-viem-account/) documents each method.
+The returned account signs transactions, messages, and typed data through `session.signDigest`; the [toViemAccount reference](/reference/to-viem-account/) documents each method.
 
 ## Send the transaction
 

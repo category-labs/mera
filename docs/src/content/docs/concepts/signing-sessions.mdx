@@ -17,7 +17,7 @@ Because a session never contacts an authenticator, signing never prompts: the on
 
 ## The lifecycle
 
-Construction consumes the key: the session keeps the only library-side copy and [zeroes](/concepts/security-model/#what-the-library-handles) the caller's input buffer, even when construction throws. Locking zeroes the session's copy and is permanent: a locked session throws on signing, there is no unlock, and new signatures require a new session. An unlock path would mean the key still existed somewhere after `lock()`.
+Construction copies the key into a session-owned snapshot; the caller's buffer is not modified. Locking [zeroes](/concepts/security-model/#what-the-library-handles) the session's copy and is permanent: a locked session throws on signing, there is no unlock, and new signatures require a new session. An unlock path would mean the key still existed somewhere after `lock()`.
 
 Sessions also support `using` declarations: disposal calls `lock()` when the scope exits, so a session can be bound to a block instead of a manual call.
 

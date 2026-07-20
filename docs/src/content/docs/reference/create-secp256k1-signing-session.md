@@ -22,9 +22,7 @@ import {
 const privateKey = crypto.getRandomValues(new Uint8Array(32)); // stand-in for an app-derived key
 const digest32 = new Uint8Array(32); // stand-in for a 32-byte transaction digest
 
-const session = createSecp256k1SigningSession({
-  consumePrivateKey: privateKey, // zeroed by this call
-});
+const session = createSecp256k1SigningSession({ privateKey });
 
 const address = getEvmAddress(session.publicKey);
 const { compact, recovery } = await session.signDigest(digest32);
@@ -36,12 +34,12 @@ session.lock();
 
 `options` is a `CreateSigningSessionOptions`.
 
-### options.consumePrivateKey
+### options.privateKey
 
 - Type: `Uint8Array`
 - Required
 
-secp256k1 private key. Must be exactly 32 bytes and a valid scalar, an integer inside the curve's private-key range. Copied into one session-owned snapshot; the input buffer is zeroed before the call returns or throws. Callers holding the key inside another structure (an `HDKey`, for example) should pass a copy.
+secp256k1 private key. Must be exactly 32 bytes and a valid scalar, an integer inside the curve's private-key range. Copied into one session-owned snapshot; the input buffer is not modified.
 
 ## Returns
 
@@ -65,7 +63,7 @@ Calls `lock`, so a `using` declaration locks the session when its scope exits:
 
 ```ts
 {
-  using session = createSecp256k1SigningSession({ consumePrivateKey: privateKey });
+  using session = createSecp256k1SigningSession({ privateKey });
   await session.signDigest(digest32);
 } // locked here
 ```
@@ -74,7 +72,7 @@ Sessions bound with `const` or `let` are unaffected; disposal runs only where a 
 
 ## Errors
 
-- [`INPUT_INVALID`](/reference/errors/#input_invalid): `consumePrivateKey` is not a valid secp256k1 scalar, or `digest32` is not 32 bytes. The private-key input buffer is zeroed even when session construction fails.
+- [`INPUT_INVALID`](/reference/errors/#input_invalid): `privateKey` is not a valid secp256k1 scalar, or `digest32` is not 32 bytes.
 - [`SESSION_LOCKED`](/reference/errors/#session_locked): `signDigest` was called after `lock`.
 
 ## Notes

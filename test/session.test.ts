@@ -20,7 +20,9 @@ test("derives the public key from the stored private-key snapshot", () => {
     return derived;
   });
 
-  expect(privateKey).toEqual(new Uint8Array(4));
+  // The caller's buffer keeps the callback's mutation: the library never
+  // writes to it.
+  expect(privateKey).toEqual(new Uint8Array(4).fill(9));
   expect(snapshot).not.toBe(privateKey);
   expect(snapshot?.buffer).not.toBe(privateKey.buffer);
   expect(snapshot?.buffer).toBeInstanceOf(ArrayBuffer);
@@ -42,7 +44,7 @@ test("zeroes the stored private-key snapshot when validation fails", () => {
     });
   }).toThrow("invalid test key");
 
-  expect(privateKey).toEqual(new Uint8Array(4));
+  expect(privateKey).toEqual(new Uint8Array([1, 2, 3, 4]));
   expect(snapshot).not.toBe(privateKey);
   expect(snapshot?.buffer).not.toBe(privateKey.buffer);
   expect(snapshot?.buffer).toBeInstanceOf(ArrayBuffer);

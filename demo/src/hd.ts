@@ -50,8 +50,7 @@ function deriveEvmPrivateKey(seed: Uint8Array, index: number): Uint8Array {
   if (!node.privateKey) {
     throw new Error("BIP-32 derivation produced no private key");
   }
-  // Copy out of the HDKey so the signing session can own and later zero it.
-  return new Uint8Array(node.privateKey);
+  return node.privateKey;
 }
 
 export {

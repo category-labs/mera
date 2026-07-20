@@ -20,9 +20,7 @@ import { createWalletClient, http, parseEther } from "viem";
 import { sepolia } from "viem/chains";
 
 const privateKey = crypto.getRandomValues(new Uint8Array(32)); // stand-in for an app-derived key
-const session = createSecp256k1SigningSession({
-  consumePrivateKey: privateKey, // zeroed by this call
-});
+const session = createSecp256k1SigningSession({ privateKey });
 
 const client = createWalletClient({
   account: toViemAccount(session),

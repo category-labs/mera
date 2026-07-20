@@ -55,13 +55,13 @@ function normalizeSecp256k1PublicKey(
  *
  * @param options - Signing session inputs; fields are documented on {@link CreateSigningSessionOptions}.
  * @returns An unlocked secp256k1 signing session.
- * @throws MeraError with code `INPUT_INVALID` when `consumePrivateKey` is not a valid secp256k1 scalar.
+ * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not a valid secp256k1 scalar.
  */
 function createSecp256k1SigningSession({
-  consumePrivateKey,
+  privateKey,
 }: CreateSigningSessionOptions): Secp256k1SigningSession {
   const { key, publicKey } = createSigningKey(
-    consumePrivateKey,
+    privateKey,
     getSecp256k1PublicKey,
   );
 

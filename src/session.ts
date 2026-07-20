@@ -16,19 +16,19 @@ type LockableKey = {
 };
 
 /**
- * Consumes a private key into a lockable signing key and derives its public key.
+ * Copies a private key into a lockable signing key and derives its public key.
  *
- * `consumePrivateKey` is copied into one session-owned snapshot and zeroed
- * before this function returns or throws. The snapshot is zeroed by `lock` or,
- * when `derivePublicKey` throws, before the error is rethrown.
+ * `privateKey` is copied into one session-owned snapshot; the input buffer is
+ * not modified. The snapshot is zeroed by `lock` or, when `derivePublicKey`
+ * throws, before the error is rethrown.
  *
- * @param consumePrivateKey - Private key to consume.
+ * @param privateKey - Private key to copy into the signing key.
  * @param derivePublicKey - Derives the public key from the owned snapshot; a throw doubles as private-key validation.
  * @returns The lockable key handle paired with the derived public key.
  * @throws Rethrows whatever `derivePublicKey` throws.
  */
 function createSigningKey(
-  consumePrivateKey: Uint8Array,
+  privateKey: Uint8Array,
   derivePublicKey: (privateKey: Uint8Array) => Uint8Array<ArrayBuffer>,
 ): { key: LockableKey; publicKey: Uint8Array<ArrayBuffer> } {
   let activePrivateKey: Uint8Array<ArrayBuffer> | undefined;
@@ -36,7 +36,7 @@ function createSigningKey(
   try {
     // Derive and store from the same owned snapshot, so the public key cannot
     // diverge from the private key later used for signing.
-    activePrivateKey = copyBytes(consumePrivateKey);
+    activePrivateKey = copyBytes(privateKey);
     const publicKey = derivePublicKey(activePrivateKey);
 
     const key: LockableKey = {
@@ -55,8 +55,6 @@ function createSigningKey(
   } catch (error) {
     activePrivateKey?.fill(0);
     throw error;
-  } finally {
-    consumePrivateKey.fill(0);
   }
 }
 

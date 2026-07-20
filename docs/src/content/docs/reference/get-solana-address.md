@@ -20,7 +20,7 @@ import {
 } from "@category-labs/mera";
 
 const session = createEd25519SigningSession({
-  consumePrivateKey: crypto.getRandomValues(new Uint8Array(32)),
+  privateKey: crypto.getRandomValues(new Uint8Array(32)),
 });
 
 const address = getSolanaAddress(session.publicKey);

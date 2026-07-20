@@ -30,15 +30,12 @@ function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array<ArrayBuffer> {
  *
  * @param options - Signing session inputs; fields are documented on {@link CreateSigningSessionOptions}.
  * @returns An unlocked Ed25519 signing session.
- * @throws MeraError with code `INPUT_INVALID` when `consumePrivateKey` is not 32 bytes.
+ * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not 32 bytes.
  */
 function createEd25519SigningSession({
-  consumePrivateKey,
+  privateKey,
 }: CreateSigningSessionOptions): Ed25519SigningSession {
-  const { key, publicKey } = createSigningKey(
-    consumePrivateKey,
-    getEd25519PublicKey,
-  );
+  const { key, publicKey } = createSigningKey(privateKey, getEd25519PublicKey);
 
   // One function for both members, so lock and dispose cannot drift apart.
   function lock(): void {

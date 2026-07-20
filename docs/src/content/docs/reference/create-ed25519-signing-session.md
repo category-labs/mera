@@ -22,9 +22,7 @@ import {
 const seed = crypto.getRandomValues(new Uint8Array(32)); // stand-in for an app-derived key
 const message = new TextEncoder().encode("hello mera");
 
-const session = createEd25519SigningSession({
-  consumePrivateKey: seed, // zeroed by this call
-});
+const session = createEd25519SigningSession({ privateKey: seed });
 
 const address = getSolanaAddress(session.publicKey);
 const signature = await session.signMessage(message);
@@ -36,12 +34,12 @@ session.lock();
 
 `options` is a `CreateSigningSessionOptions`.
 
-### options.consumePrivateKey
+### options.privateKey
 
 - Type: `Uint8Array`
 - Required
 
-Ed25519 private key (the 32-byte seed). Copied into one session-owned snapshot; the input buffer is zeroed before the call returns or throws. Callers holding the key elsewhere should pass a copy.
+Ed25519 private key (the 32-byte seed). Copied into one session-owned snapshot; the input buffer is not modified.
 
 ## Returns
 
@@ -65,7 +63,7 @@ Calls `lock`, so a `using` declaration locks the session when its scope exits. S
 
 ## Errors
 
-- [`INPUT_INVALID`](/reference/errors/#input_invalid): `consumePrivateKey` is not 32 bytes. The input buffer is zeroed even on this path.
+- [`INPUT_INVALID`](/reference/errors/#input_invalid): `privateKey` is not 32 bytes.
 - [`SESSION_LOCKED`](/reference/errors/#session_locked): `signMessage` was called after `lock`.
 
 ## Notes

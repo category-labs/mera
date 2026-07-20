@@ -21,7 +21,7 @@ const RECIPIENT = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
 
 function createAccount() {
   const session = createSecp256k1SigningSession({
-    consumePrivateKey: new Uint8Array(PRIVATE_KEY_ONE),
+    privateKey: PRIVATE_KEY_ONE,
   });
   return { session, account: toViemAccount(session) };
 }

@@ -9,9 +9,8 @@
   <title>
     The pipeline from a passkey to a signature. A sign-in ceremony returns 32
     secret bytes, the same bytes on every sign-in. The app derives a private key
-    from them. A signing session holds the key and produces signatures with no
-    further prompts. mera owns every step except the derivation, which belongs
-    to the app.
+    from them. A signing session holds the key and produces signatures. mera
+    owns every step except the derivation, which belongs to the app.
   </title>
   <defs>
     <marker
@@ -58,6 +57,5 @@
   <path class="d-edge" d="M620 44 H640" marker-end="url(#gs-arrow)" />
 
   <rect class="d-node" x="644" y="16" width="136" height="56" rx="8" />
-  <text x="712" y="40" text-anchor="middle">Signature</text>
-  <text x="712" y="59" text-anchor="middle" class="d-sub">no prompts</text>
+  <text x="712" y="49" text-anchor="middle">Signature</text>
 </svg>

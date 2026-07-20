@@ -14,11 +14,10 @@ import { createPasskeyWithPrfOutput } from "@category-labs/mera";
 ## Usage
 
 ```ts
-const result = await createPasskeyWithPrfOutput({
+const { credentialId, prfSalt, prfOutput } = await createPasskeyWithPrfOutput({
   rp: { id: "account.example.com", name: "Example" },
   user: { name: "account@example.com", displayName: "Example account" },
 });
-// result.credentialId, result.prfSalt, result.prfOutput
 ```
 
 ## Parameters

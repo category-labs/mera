@@ -34,6 +34,7 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 - Document security-sensitive behavior explicitly, especially for key material, randomness, WebAuthn prompts, encryption nonces, storage formats, and mutation/zeroing behavior.
 - Document thrown `MeraError` codes with the appropriate JSDoc tag.
 - Examples should be runnable, concise, and focused on library behavior, not on provider boilerplate.
+- In examples, a value's meaning lives in a descriptive variable name (`recipient`, `privateKey`), never in a comment. Extract inline literals to named variables, delete comments that restate a name, and move provenance worth keeping into surrounding prose.
 - The root README is a nontechnical project overview. Installation, examples, compatibility, security details, API documentation, and the demo live on the documentation website.
 - Keep documentation prose neutral: name keys, secrets, and passkeys plainly ("the passkey", "one encrypted secret") rather than attributing them to the reader ("your passkey", "a secret you provide" / "you own").
 - Internal helpers with non-obvious invariants should have short `//` comments or full JSDoc.

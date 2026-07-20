@@ -1,26 +1,54 @@
 import { expect, test } from "@playwright/test";
 import { getDeterministicPrfSaltV1 } from "../dist/derived.js";
 import {
-  copyPrfOutput,
   createPasskey,
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
 } from "../dist/passkey.js";
-import { expectError, withStubbedGlobal } from "./helpers.js";
+import { withStubbedGlobal } from "./helpers.js";
 
-test("copyPrfOutput copies a plain ArrayBuffer without aliasing", () => {
+// Stubs an assertion whose authenticator returns `first` as the PRF result.
+function navigatorWithPrfResult(first: unknown) {
+  return {
+    credentials: {
+      async get() {
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          getClientExtensionResults: () => ({ prf: { results: { first } } }),
+        };
+      },
+    },
+  };
+}
+
+async function getPrfOutputWithStub(first: unknown): Promise<Uint8Array> {
+  return withStubbedGlobal(
+    "navigator",
+    navigatorWithPrfResult(first),
+    async () => {
+      const { prfOutput } = await getPasskeyPrfOutput({
+        rpId: "example.com",
+        prfSalt: new Uint8Array(32),
+      });
+      return prfOutput;
+    },
+  );
+}
+
+test("getPasskeyPrfOutput copies an ArrayBuffer PRF result without aliasing", async () => {
   const source = Uint8Array.from({ length: 32 }, (_, index) => index + 1);
-  const out = copyPrfOutput(source.buffer);
+  const out = await getPrfOutputWithStub(source.buffer);
 
   expect(out).toBeInstanceOf(Uint8Array);
   expect([...out]).toEqual([...source]);
 
-  // Mutating the source buffer must not affect the copy.
+  // Mutating the source buffer must not affect the returned output.
   source[0] = 99;
   expect(out[0]).toBe(1);
 });
 
-test("copyPrfOutput copies only an ArrayBufferView's window without aliasing", () => {
+test("getPasskeyPrfOutput copies only an ArrayBufferView's window without aliasing", async () => {
   // A 32-byte view sitting in the middle of a 40-byte buffer.
   const backing = new Uint8Array(40);
   backing.set(
@@ -28,47 +56,49 @@ test("copyPrfOutput copies only an ArrayBufferView's window without aliasing", (
     4,
   );
   const view = new Uint8Array(backing.buffer, 4, 32);
-  const out = copyPrfOutput(view);
+  const out = await getPrfOutputWithStub(view);
 
   expect(out).toBeInstanceOf(Uint8Array);
   expect([...out]).toEqual([...view]);
 
-  // Mutating the underlying buffer must not affect the copy.
+  // Mutating the underlying buffer must not affect the returned output.
   backing[4] = 99;
   expect(out[0]).toBe(1);
 });
 
-test("copyPrfOutput copies a plain array of byte values", () => {
+test("getPasskeyPrfOutput copies a plain array of byte values", async () => {
   // The 1Password browser extension returns PRF output as a plain number
   // array. Includes the boundary values 0 and 255, which must stay uncoerced.
   const values = Array.from({ length: 32 }, (_, index) => index);
   values[31] = 255;
-  const out = copyPrfOutput(values);
+  const out = await getPrfOutputWithStub(values);
 
   expect(out).toBeInstanceOf(Uint8Array);
   expect([...out]).toEqual(values);
 });
 
-test("copyPrfOutput rejects non-byte array values instead of coercing them", () => {
+test("getPasskeyPrfOutput rejects non-byte array values instead of coercing them", async () => {
   // Uint8Array.from would silently coerce each of these (256 -> 0, -1 -> 255,
   // 1.5 -> 1, NaN -> 0). The result becomes HKDF key material, so a malformed
   // plain array must fail with PRF_UNAVAILABLE instead.
-  const withFirstValue = (value: number) => [value, ...new Array(31).fill(0)];
-
-  expectError(() => copyPrfOutput(withFirstValue(256)), "PRF_UNAVAILABLE");
-  expectError(() => copyPrfOutput(withFirstValue(-1)), "PRF_UNAVAILABLE");
-  expectError(() => copyPrfOutput(withFirstValue(1.5)), "PRF_UNAVAILABLE");
-  expectError(
-    () => copyPrfOutput(withFirstValue(Number.NaN)),
-    "PRF_UNAVAILABLE",
-  );
+  for (const value of [256, -1, 1.5, Number.NaN]) {
+    await expect(
+      getPrfOutputWithStub([value, ...new Array(31).fill(0)]),
+    ).rejects.toMatchObject({ code: "PRF_UNAVAILABLE" });
+  }
 });
 
-test("copyPrfOutput rejects PRF output that is not 32 bytes", () => {
-  expectError(() => copyPrfOutput(new Uint8Array(31)), "PRF_UNAVAILABLE");
-  expectError(() => copyPrfOutput(new ArrayBuffer(33)), "PRF_UNAVAILABLE");
+test("getPasskeyPrfOutput rejects PRF output that is not 32 bytes", async () => {
+  await expect(getPrfOutputWithStub(new Uint8Array(31))).rejects.toMatchObject({
+    code: "PRF_UNAVAILABLE",
+  });
+  await expect(getPrfOutputWithStub(new ArrayBuffer(33))).rejects.toMatchObject(
+    { code: "PRF_UNAVAILABLE" },
+  );
   // Valid byte values, so a plain array fails on length, not element checks.
-  expectError(() => copyPrfOutput([1, 2, 3]), "PRF_UNAVAILABLE");
+  await expect(getPrfOutputWithStub([1, 2, 3])).rejects.toMatchObject({
+    code: "PRF_UNAVAILABLE",
+  });
 });
 
 test("createPasskey without prfSalt does not evaluate or return PRF output", async () => {

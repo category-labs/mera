@@ -35,8 +35,6 @@ const node = HDKey.fromMasterSeed(seed).derive("m/44'/60'/0'/0/0");
 if (node.privateKey === null) throw new Error("derivation produced no key");
 ```
 
-`entropyToMnemonic` creates a phrase string on the way to the seed, and strings cannot be zeroed; the buffers are zeroed as soon as each one has served its purpose.
-
 ## Create the viem account
 
 `toViemAccount` lives in the `@category-labs/mera/viem` entry point, which requires the optional `viem` peer dependency; the root entry point does not use viem.

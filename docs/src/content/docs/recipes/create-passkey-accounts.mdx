@@ -80,8 +80,6 @@ const seed = mnemonicToSeedSync(entropyToMnemonic(prfOutput, wordlist));
 prfOutput.fill(0);
 ```
 
-`entropyToMnemonic` creates a phrase string on the way to the seed, and strings cannot be zeroed; the phrase stays in memory until garbage collection.
-
 ## Derive numbered accounts
 
 EVM accounts follow [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) over the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) Ethereum path, the MetaMask convention. BIP-44 fixes the path shape `m/44'/coin'/account'/change/index`, and 60 is Ethereum's registered coin type:

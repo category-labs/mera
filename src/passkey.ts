@@ -144,7 +144,6 @@ async function createPasskey({
   try {
     assertCredentialApiAvailable();
 
-    const challenge = randomBytes(32);
     if (prfSalt !== undefined && prfSalt.length !== 32) {
       throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
     }
@@ -164,7 +163,7 @@ async function createPasskey({
           name: user.name,
           displayName: user.displayName,
         },
-        challenge: asArrayBuffer(challenge),
+        challenge: asArrayBuffer(randomBytes(32)),
         pubKeyCredParams: [
           { type: "public-key", alg: -7 },
           { type: "public-key", alg: -257 },
@@ -262,7 +261,6 @@ async function getPasskeyPrfOutput({
   try {
     assertCredentialApiAvailable();
 
-    const challenge = randomBytes(32);
     const prfSaltCopy = copyBytes(prfSalt ?? getDeterministicPrfSaltV1());
     if (prfSaltCopy.length !== 32) {
       throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
@@ -272,7 +270,7 @@ async function getPasskeyPrfOutput({
 
     const publicKey: PublicKeyCredentialRequestOptions = {
       rpId,
-      challenge: asArrayBuffer(challenge),
+      challenge: asArrayBuffer(randomBytes(32)),
       ...(timeout !== undefined ? { timeout } : {}),
       userVerification: "required",
       extensions: { prf },
@@ -510,7 +508,6 @@ export type {
   GetPasskeyPrfOutputOptions,
 };
 export {
-  copyPrfOutput,
   createPasskey,
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,

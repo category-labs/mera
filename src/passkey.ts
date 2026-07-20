@@ -43,7 +43,7 @@ type CreatePasskeyInput = {
    * omits `prfOutput`; a later `getPasskeyPrfOutput` with the same `rpId`,
    * `credentialId`, and salt yields the PRF output.
    *
-   * Copied before use; the original buffer is not modified.
+   * Copied before use.
    */
   prfSalt?: Uint8Array;
 };
@@ -76,8 +76,7 @@ type GetPasskeyPrfOutputInput = {
   credential?: PasskeyCredentialMetadata;
   /**
    * PRF salt as 32 raw bytes. Defaults to the value returned by
-   * {@link getDeterministicPrfSaltV1}. Copied before use; the original buffer is
-   * not modified.
+   * {@link getDeterministicPrfSaltV1}. Copied before use.
    */
   prfSalt?: Uint8Array;
   /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */

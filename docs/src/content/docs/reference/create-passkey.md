@@ -65,7 +65,7 @@ WebAuthn timeout in milliseconds.
 - Type: `Uint8Array`
 - Optional; no PRF evaluation happens during creation when omitted
 
-32-byte PRF salt to evaluate during creation. Authenticators that do not support PRF evaluation at create time silently ignore it, and the result then omits `prfOutput`. Copied before use; the original buffer is not modified.
+32-byte PRF salt to evaluate during creation. Authenticators that do not support PRF evaluation at create time silently ignore it, and the result then omits `prfOutput`. Copied before use.
 
 ## Returns
 

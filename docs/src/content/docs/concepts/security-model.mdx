@@ -12,11 +12,7 @@ mera runs [passkey ceremonies](/concepts/passkeys-and-prf/#ceremonies-and-prompt
 - Losing the passkey without a prior export loses the accounts derived from it; [Passkey accounts](/concepts/passkey-accounts/#losing-the-passkey) lists the ways a passkey is lost.
 - A passkey works only under the rpId (the relying party domain) it was created for: after a domain migration, passkey accounts can no longer be reproduced and vaults can no longer be decrypted. Accounts need an export path before any planned migration.
 - Secrets encrypted with one reused PRF output share an encryption key, and exposing that key exposes them all. The secret-vault workflow functions generate a fresh random 32-byte salt per secret; on the low-level path, [createSecretVault](/reference/create-secret-vault/) leaves the fresh salt to the caller.
-- Input buffers are copied before any async work starts, so mutating a buffer after a call cannot change what gets signed, encrypted, or derived.
-- The library zeroes the copies it owns: a session's key copy on `lock()` or on construction failure, and the vault functions' transient copies even when they fail. Zeroing shortens how long a secret stays readable; it cannot promise no other copy exists, and any script on the page can read the secret while it lives.
-- [WebAuthn](https://www.w3.org/TR/webauthn-3/) challenges and [AES-GCM](/concepts/secret-vaults/#how-a-vault-works) nonces are generated internally, so a caller cannot reuse a nonce. Every ceremony requires user verification, and the requirement is [not configurable](/concepts/passkeys-and-prf/#user-verification).
-- A revealed recovery phrase is a JavaScript string, and strings cannot be zeroed in place. The app can only drop references, keep the lifetime short, and never log it.
-- Runtime dependencies are `@noble/*` and `@scure/*` only; build and test tooling, and the unpublished demo app, never ship to library consumers.
+- Dependencies are kept to a minimum: the only runtime dependencies are `@noble/*` and `@scure/*`, well-known audited cryptography libraries.
 
 <TrustBoundary />
 

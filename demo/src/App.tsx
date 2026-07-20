@@ -70,7 +70,10 @@ function App(): ReactElement {
     <main className="app">
       <header className="app-head">
         <h1>Mera Demo</h1>
-        <AccountChip address={accountAddress(account)} />
+        <AccountChip
+          address={accountAddress(account)}
+          connected={evmContext !== null}
+        />
       </header>
       <TradingCard
         evm={evmContext}

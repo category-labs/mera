@@ -3,7 +3,7 @@ title: getEvmAddress
 description: Derives the EIP-55 checksummed EVM address for a secp256k1 public key.
 ---
 
-Derives the EIP-55 checksummed EVM address for a secp256k1 public key: keccak-256 over the uncompressed key's coordinates, last 20 bytes, mixed-case checksum.
+Derives the [EIP-55](https://eips.ethereum.org/EIPS/eip-55) checksummed EVM address for a secp256k1 public key: keccak-256 over the uncompressed key's coordinates, last 20 bytes, mixed-case checksum.
 
 ## Import
 

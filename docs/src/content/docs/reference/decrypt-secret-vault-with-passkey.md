@@ -58,7 +58,7 @@ WebAuthn timeout in milliseconds.
 
 ## Returns
 
-`Promise<Uint8Array>`: the decrypted secret bytes as a fresh allocation. The library keeps no reference to this buffer.
+`Promise<Uint8Array>`: the decrypted secret bytes as a fresh allocation.
 
 ## Errors
 

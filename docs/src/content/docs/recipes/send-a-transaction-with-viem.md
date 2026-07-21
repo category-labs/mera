@@ -17,7 +17,7 @@ const rpId = location.hostname;
 const { prfOutput } = await getPasskeyPrfOutput({ rpId });
 ```
 
-The call runs one ceremony, the only prompt in this recipe. [Create passkey accounts](/recipes/create-passkey-accounts/) shows pinning the stored credential ID so the browser does not offer every discoverable passkey for the domain.
+The call runs one ceremony, the only prompt in this recipe. [Create passkey accounts](/recipes/create-passkey-accounts/) shows pinning the sign-in to a stored credential ID.
 
 ## Derive the key
 
@@ -78,8 +78,8 @@ session.lock();
 
 ## Pitfalls
 
-- **The derivation must match the app's other sign-in paths.** This recipe repeats the mapping and path from [Create passkey accounts](/recipes/create-passkey-accounts/). A different mapping or path reaches a different address.
-- **A locked session rejects every viem signing method** with [`SESSION_LOCKED`](/reference/errors/#session_locked), and the account has no key of its own.
+- **The derivation must match the app's other sign-in paths.** A different mapping or path reaches a different address.
+- **A locked session rejects every viem signing method** with [`SESSION_LOCKED`](/reference/errors/#session_locked): the account holds no key of its own and cannot sign without the session.
 - **Concurrent transactions can be assigned the same nonce**, the per-account counter that orders transactions, and the chain accepts only one of them. viem's nonce manager assigns nonces in sequence. Pass it through [toViemAccount](/reference/to-viem-account/) options.
 
 ## See also

@@ -3,7 +3,7 @@ title: getPasskeyPrfOutput
 description: Requests a passkey PRF evaluation and returns the output.
 ---
 
-Requests a passkey PRF evaluation and returns the output. Runs one `navigator.credentials.get()` [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts).
+Runs one `navigator.credentials.get()` [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) and returns the passkey's PRF output.
 
 ## Import
 

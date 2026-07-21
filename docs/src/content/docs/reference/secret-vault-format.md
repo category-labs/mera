@@ -26,7 +26,7 @@ Always `1`. [parseSecretVault](/reference/parse-secret-vault/) rejects anything 
 
 ### credential.credentialId
 
-The passkey credential that unlocks this vault, as canonical unpadded [base64url](https://datatracker.ietf.org/doc/html/rfc4648#section-5). Stored so the unlock [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) can pin itself to the right passkey instead of letting the browser offer every discoverable credential.
+The passkey credential that unlocks this vault, as canonical unpadded [base64url](https://datatracker.ietf.org/doc/html/rfc4648#section-5). Stored so the unlock [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) can pin itself to the right passkey.
 
 ### credential.transports
 
@@ -42,11 +42,11 @@ The 12-byte [AES-GCM](/concepts/secret-vaults/#how-a-vault-works) nonce, base64u
 
 ### ciphertext
 
-The AES-GCM ciphertext including its 16-byte authentication tag, the value decryption checks to detect tampering, base64url. The plaintext is the secret exactly as it was passed in.
+The AES-GCM ciphertext with its 16-byte authentication tag appended, base64url. Decryption checks the tag to detect tampering. The plaintext is the secret exactly as it was passed in.
 
 ## What is deliberately absent
 
-The encryption key and the PRF output are never stored; both exist only transiently in memory. The rpId is also absent: the vault does not record which relying party it belongs to, and the unlock assertion supplies it.
+The encryption key and the PRF output are never stored; both exist only transiently in memory. The rpId is also absent; the unlock assertion supplies it.
 
 The credential ID and salt are stored but not authenticated: neither is supplied as AES-GCM additional authenticated data, so a vault is cryptographically bound to its PRF output only. This is why each secret needs a fresh salt: vaults that share a PRF output share an encryption key.
 

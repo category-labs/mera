@@ -3,7 +3,7 @@ title: createEd25519SigningSession
 description: Creates a lockable signing session from an Ed25519 private key.
 ---
 
-Creates a lockable signing session from an Ed25519 private key.
+Creates a lockable signing session from an [Ed25519](/concepts/entropy-keys-and-accounts/) private key.
 
 ## Import
 

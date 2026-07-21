@@ -21,10 +21,6 @@ const DEFAULT_PRF_SALT = sha256(utf8ToBytes("mera.prf.salt.v1"));
 /**
  * Returns Mera's default PRF salt: `sha256("mera.prf.salt.v1")`.
  *
- * The salt is a constant and will not change across library versions, so one
- * passkey assertion against it produces one stable 32-byte PRF output per
- * credential and relying party.
- *
  * @returns A fresh 32-byte copy of the default salt: a `Uint8Array` cannot be
  * frozen, so a shared buffer mutated by one caller would silently change every
  * later derivation.

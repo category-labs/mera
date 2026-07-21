@@ -5,8 +5,6 @@ description: Encrypt an existing secret into a passkey-protected vault and unloc
 
 A [secret vault](/concepts/secret-vaults/) encrypts one [recovery phrase](/concepts/entropy-keys-and-accounts/#seed-phrases), private key, or other byte string behind a passkey. The vault is the pattern for secrets that predate the passkey. This recipe validates a phrase, stores its vault, and decrypts it with explicit zeroing. It requires `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
 
-The surrounding code is app-owned; mera provides the passkey ceremonies and vault functions.
-
 ## Validate the phrase
 
 A real app reads the phrase from a form field. The library never interprets the secret, so validation is app code:
@@ -24,7 +22,7 @@ if (!validateMnemonic(phrase, wordlist)) {
 
 ## Create and persist the vault
 
-`createSecretVaultWithNewPasskey` generates a fresh 32-byte [salt](/concepts/passkeys-and-prf/#the-prf-extension), creates the passkey, and encrypts the secret. The salt and credential metadata are stored in the returned vault. A separate salt for each vault avoids shared encryption keys ([one output, one purpose](/concepts/security-model/)).
+`createSecretVaultWithNewPasskey` generates a fresh 32-byte [salt](/concepts/passkeys-and-prf/#the-prf-extension) per vault ([one output, one purpose](/concepts/security-model/)), creates the passkey, and encrypts the secret. The salt and credential metadata are stored in the returned vault.
 
 ```ts
 import { createSecretVaultWithNewPasskey } from "@category-labs/mera";

@@ -81,7 +81,7 @@ session.lock();
 ## Pitfalls
 
 - **The derivation must match the app's other sign-in paths.** This recipe repeats the mapping and path from [Create passkey accounts](/recipes/create-passkey-accounts/). A different mapping or path reaches a different address.
-- **A locked session rejects every viem signing method** with [`SESSION_LOCKED`](/reference/errors/#session_locked), and the account has no key of its own. Keep the session for the active burst of work, lock it when the burst ends, and build a new session from a fresh ceremony for the next one ([Signing sessions](/concepts/signing-sessions/)).
+- **A locked session rejects every viem signing method** with [`SESSION_LOCKED`](/reference/errors/#session_locked), and the account has no key of its own.
 - **Concurrent transactions can be assigned the same nonce**, the per-account counter that orders transactions, and the chain accepts only one of them. viem's nonce manager assigns nonces in sequence. Pass it through [toViemAccount](/reference/to-viem-account/) options.
 
 ## See also

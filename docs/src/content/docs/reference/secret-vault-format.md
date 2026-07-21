@@ -48,7 +48,7 @@ The AES-GCM ciphertext including its 16-byte authentication tag, the value decry
 
 The encryption key and the PRF output are never stored; both exist only transiently in memory. The rpId is also absent: the vault does not record which relying party it belongs to, and the unlock assertion supplies it.
 
-The credential ID and salt are stored but not authenticated: neither is supplied as AES-GCM additional authenticated data, so a vault is cryptographically bound to its PRF output only. This is why each secret needs a fresh salt; [createSecretVault](/reference/create-secret-vault/) documents the risk.
+The credential ID and salt are stored but not authenticated: neither is supplied as AES-GCM additional authenticated data, so a vault is cryptographically bound to its PRF output only. This is why each secret needs a fresh salt ([createSecretVault](/reference/create-secret-vault/) documents the risk).
 
 ## See also
 

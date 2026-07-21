@@ -471,20 +471,6 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
   return { version: 1, credential, prfSalt, nonce, ciphertext };
 }
 
-/** Copies a parsed vault before a WebAuthn ceremony can yield control. */
-function copySecretVault(vault: PasskeySecretVault): PasskeySecretVault {
-  return {
-    version: vault.version,
-    credential: toCredentialMetadata(
-      vault.credential.credentialId,
-      vault.credential.transports,
-    ),
-    prfSalt: vault.prfSalt,
-    nonce: vault.nonce,
-    ciphertext: vault.ciphertext,
-  };
-}
-
 /** Inputs for the WebAuthn assertion that unlocks a secret vault. */
 type GetSecretVaultPrfOutputOptions = {
   /** Relying party ID for the WebAuthn assertion. */
@@ -528,14 +514,7 @@ async function getSecretVaultPrfOutput({
 }
 
 /** Inputs for performing the passkey ceremony and decrypting a secret vault. */
-type DecryptSecretVaultWithPasskeyOptions = {
-  /** Relying party ID for the WebAuthn assertion. */
-  rpId: string;
-  /** Parsed secret vault. Copied before use. */
-  vault: PasskeySecretVault;
-  /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
-  timeout?: number;
-};
+type DecryptSecretVaultWithPasskeyOptions = GetSecretVaultPrfOutputOptions;
 
 /**
  * Performs the passkey assertion for a vault and decrypts its secret.
@@ -547,10 +526,8 @@ type DecryptSecretVaultWithPasskeyOptions = {
  * authenticator UI. The assertion is restricted to the credential stored in
  * the vault.
  *
- * The vault is copied before the ceremony starts, so post-call mutation does
- * not change the assertion or ciphertext being decrypted. The internal PRF
- * output is zeroed before the function finishes, even when decryption
- * fails. The returned secret's lifetime belongs to the caller.
+ * The internal PRF output is zeroed before the function finishes, even when
+ * decryption fails. The returned secret's lifetime belongs to the caller.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when the vault contains an invalid credential ID, PRF salt, nonce, or ciphertext.
  * @throws MeraError with code `DECRYPT_FAILED` when authentication fails.
@@ -562,15 +539,14 @@ async function decryptSecretVaultWithPasskey({
   vault,
   timeout,
 }: DecryptSecretVaultWithPasskeyOptions): Promise<Uint8Array<ArrayBuffer>> {
-  const vaultCopy = copySecretVault(vault);
   const { prfOutput } = await getSecretVaultPrfOutput({
     rpId,
-    vault: vaultCopy,
+    vault,
     ...(timeout !== undefined ? { timeout } : {}),
   });
 
   try {
-    return await decryptSecretVault({ vault: vaultCopy, prfOutput });
+    return await decryptSecretVault({ vault, prfOutput });
   } finally {
     prfOutput.fill(0);
   }

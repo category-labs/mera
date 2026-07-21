@@ -5,7 +5,6 @@ import {
   createSecretVaultWithExistingPasskey,
   createSecretVaultWithNewPasskey,
   decryptSecretVault,
-  decryptSecretVaultWithPasskey,
   getDeterministicPrfSaltV1,
   type PasskeyCredentialTransport,
   type PasskeySecretVault,
@@ -298,51 +297,6 @@ test("createSecretVaultWithExistingPasskey snapshots inputs and preserves transp
     await expect(
       decryptSecretVault({ vault, prfOutput: evaluatedSalt }),
     ).resolves.toEqual(SECRET);
-  });
-});
-
-test("decryptSecretVaultWithPasskey snapshots the vault before prompting", async () => {
-  const stored = await createTestVault();
-  const vault = {
-    ...stored,
-    credential: {
-      ...stored.credential,
-      transports: [...(stored.credential.transports ?? [])],
-    },
-  };
-  let releaseAssertion: (() => void) | undefined;
-  const assertionGate = new Promise<void>((resolve) => {
-    releaseAssertion = resolve;
-  });
-
-  const navigator = {
-    credentials: {
-      async get() {
-        await assertionGate;
-        return {
-          type: "public-key",
-          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-          getClientExtensionResults: () => ({
-            prf: { results: { first: PRF_OUTPUT.buffer } },
-          }),
-        };
-      },
-    },
-  };
-
-  await withStubbedGlobal("navigator", navigator, async () => {
-    const pending = decryptSecretVaultWithPasskey({
-      rpId: "example.com",
-      vault,
-    });
-
-    vault.credential.credentialId = "BQYHCA";
-    vault.prfSalt = "invalid";
-    vault.nonce = "invalid";
-    vault.ciphertext = "invalid";
-    releaseAssertion?.();
-
-    await expect(pending).resolves.toEqual(SECRET);
   });
 });
 

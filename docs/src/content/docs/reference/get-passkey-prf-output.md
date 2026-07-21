@@ -3,7 +3,7 @@ title: getPasskeyPrfOutput
 description: Requests a passkey PRF evaluation and returns the output.
 ---
 
-Requests a passkey PRF evaluation and returns the output. Runs one `navigator.credentials.get()` ceremony and shows one user-verification prompt.
+Requests a passkey PRF evaluation and returns the output. Runs one `navigator.credentials.get()` [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts).
 
 ## Import
 
@@ -59,12 +59,12 @@ WebAuthn timeout in milliseconds.
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not return a usable 32-byte PRF output.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): an explicit `prfSalt` is not 32 bytes, or `credential.credentialId` is empty or not canonical base64url.
-- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): Web Crypto is unavailable.
+- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the page is not in a secure context, or the runtime lacks Web Crypto.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## Notes
 
-When `prfSalt` is omitted, the default salt is used: `sha256("mera.prf.salt.v1")`. The salt will not change across library versions: one assertion against it produces one stable 32-byte PRF output per credential and relying party. Another implementation can reproduce the output from the same constant. The salt encodes no account selection; that happens in the derivation scheme the app applies to the PRF output.
+When `prfSalt` is omitted, the default salt is used: `sha256("mera.prf.salt.v1")`. The salt will not change across library versions, and another implementation can reproduce the output from the same constant. The salt encodes no account selection; that happens in the derivation scheme the app applies to the PRF output.
 
 The assertion requires user verification, and the requirement is not configurable ([Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism).
 

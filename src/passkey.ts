@@ -41,8 +41,7 @@ type CreatePasskeyOptions = {
      *
      * This value is stored as the WebAuthn user handle for the discoverable
      * credential. When omitted, a fresh 32-byte random handle is generated for
-     * each call, so repeated calls do not share a stable user handle. The
-     * generated handle is not correlated with an app account.
+     * each call. The generated handle is not correlated with an app account.
      */
     id?: Uint8Array;
     /** User name displayed or stored by the authenticator. */

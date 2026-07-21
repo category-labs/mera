@@ -38,7 +38,7 @@ A 32-byte Ed25519 public key.
 
 ## Returns
 
-A `SolanaAddress`, a branded `string` type. TypeScript cannot check base58 the way `0x${string}` covers EVM addresses, so only this function produces values of the type. At runtime the value is a plain string.
+A `SolanaAddress`, a branded `string` type. TypeScript cannot check base58 the way `0x${string}` covers EVM addresses, so only this function produces values of the type.
 
 ## Errors
 

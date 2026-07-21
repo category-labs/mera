@@ -2,7 +2,7 @@
  * Stable error codes thrown by this package.
  *
  * - `PASSKEY_OPERATION_FAILED`: WebAuthn failed, was cancelled, returned an unexpected credential, or the credential API is unavailable.
- * - `CRYPTO_UNAVAILABLE`: Web Crypto is unavailable.
+ * - `CRYPTO_UNAVAILABLE`: the page is not in a secure context, or the runtime lacks Web Crypto.
  * - `PRF_UNAVAILABLE`: the authenticator did not enable or return a usable 32-byte WebAuthn PRF output.
  * - `SESSION_LOCKED`: a signing call was made after `lock()`.
  * - `DECRYPT_FAILED`: AES-GCM authentication failed (wrong key or tampered nonce/ciphertext).

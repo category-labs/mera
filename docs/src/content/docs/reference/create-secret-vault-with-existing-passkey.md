@@ -3,7 +3,7 @@ title: createSecretVaultWithExistingPasskey
 description: Encrypts one secret into a vault using an existing passkey and a fresh random salt.
 ---
 
-Evaluates an existing passkey and encrypts one secret into a vault. Runs one `navigator.credentials.get()` ceremony and shows one user-verification prompt.
+Evaluates an existing passkey and encrypts one secret into a vault. Runs one `navigator.credentials.get()` [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts).
 
 ## Import
 
@@ -73,7 +73,7 @@ WebAuthn timeout in milliseconds.
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not return a usable 32-byte PRF output.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `secret` is empty, or `credential.credentialId` is empty or not canonical base64url.
-- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): Web Crypto is unavailable.
+- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the page is not in a secure context, or the runtime lacks Web Crypto.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## Notes
@@ -84,4 +84,4 @@ The secret and supplied credential metadata are copied before the ceremony begin
 
 - [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/): create the first vault together with a passkey.
 - [decryptSecretVaultWithPasskey](/reference/decrypt-secret-vault-with-passkey/): perform the assertion and decrypt a stored vault.
-- [One output, one purpose](/concepts/security-model/): why each vault receives a fresh salt.
+- [Security model](/concepts/security-model/): why each vault receives a fresh salt.

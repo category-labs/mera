@@ -22,14 +22,14 @@ const { credentialId, prfSalt, prfOutput } = await createPasskeyWithPrfOutput({
 
 ## Parameters
 
-`options` is a `CreatePasskeyWithPrfOutputOptions`. It requires `rp.id` so the fallback ceremony can target the same relying party.
+`options` is a `CreatePasskeyWithPrfOutputOptions`.
 
 ### options.rp
 
 - Type: `PublicKeyCredentialRpEntity & { id: string }`
 - Required, including `rp.id`
 
-Relying party identity, passed to WebAuthn.
+Relying party identity, passed to WebAuthn. `rp.id` lets the fallback ceremony target the same relying party.
 
 ### options.user.name
 
@@ -50,7 +50,7 @@ Human-readable display name for the authenticator UI.
 - Type: `Uint8Array`
 - Optional; a fresh 32-byte random handle is generated per call when omitted
 
-User handle stored with the discoverable credential. Must be 1 to 64 bytes when provided (WebAuthn's user-handle limit). The generated handle is not correlated with an app account, so repeated calls do not share a stable user handle. Copied before use.
+User handle stored with the discoverable credential. Must be 1 to 64 bytes when provided (WebAuthn's user-handle limit). The generated handle is not correlated with an app account. Copied before use.
 
 ### options.prfSalt
 
@@ -74,7 +74,7 @@ WebAuthn timeout in milliseconds, applied to each ceremony.
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not enable PRF, or did not return PRF output on the fallback ceremony.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): an explicit `prfSalt` is not 32 bytes, or the provided `user.id` length is outside 1 to 64 bytes.
-- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): Web Crypto is unavailable.
+- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the page is not in a secure context, or the runtime lacks Web Crypto.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## Notes

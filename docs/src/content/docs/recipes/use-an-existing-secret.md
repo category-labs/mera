@@ -3,7 +3,7 @@ title: Encrypt an existing secret with a passkey
 description: Encrypt an existing secret into a passkey-protected vault and unlock it later.
 ---
 
-A [secret vault](/concepts/secret-vaults/) encrypts one [recovery phrase](/concepts/entropy-keys-and-accounts/#seed-phrases), private key, or other byte string behind a passkey. The vault is the pattern for secrets that predate the passkey. This recipe validates a phrase, stores its vault, and decrypts it with explicit zeroing. It requires `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
+A [secret vault](/concepts/secret-vaults/) encrypts one [recovery phrase](/concepts/entropy-keys-and-accounts/#seed-phrases), private key, or other byte string behind a passkey. This recipe validates a phrase, stores its vault, and decrypts it with explicit zeroing. It requires `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
 
 ## Validate the phrase
 
@@ -22,7 +22,7 @@ if (!validateMnemonic(phrase, wordlist)) {
 
 ## Create and persist the vault
 
-`createSecretVaultWithNewPasskey` generates a fresh 32-byte [salt](/concepts/passkeys-and-prf/#the-prf-extension) per vault ([one output, one purpose](/concepts/security-model/)), creates the passkey, and encrypts the secret. The salt and credential metadata are stored in the returned vault ([vault format](/reference/secret-vault-format/)).
+`createSecretVaultWithNewPasskey` generates a fresh 32-byte [salt](/concepts/passkeys-and-prf/#the-prf-extension) per vault, creates the passkey, and encrypts the secret. The salt and credential metadata are stored in the returned vault ([vault format](/reference/secret-vault-format/)).
 
 ```ts
 import { createSecretVaultWithNewPasskey } from "@category-labs/mera";
@@ -42,7 +42,7 @@ try {
 }
 ```
 
-The [PRF output](/concepts/passkeys-and-prf/) keys the encryption. The `finally` zeroes the caller-owned encoded phrase. A private key is encrypted the same way: pass its raw bytes as `secret` instead of encoded text.
+The `finally` zeroes the caller-owned encoded phrase. A private key is encrypted the same way: pass its raw bytes as `secret` instead of encoded text.
 
 ## Unlock
 
@@ -68,7 +68,7 @@ async function unlockPhrase(): Promise<string> {
 }
 ```
 
-`parseSecretVault` is the boundary for the untrusted stored JSON. The decrypted buffer is a fresh allocation, so the `finally` zeroes it after decoding.
+`parseSecretVault` is the boundary for the untrusted stored JSON. The decrypted buffer is a fresh allocation.
 
 ## Derive signing sessions
 

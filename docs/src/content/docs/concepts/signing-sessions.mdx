@@ -29,7 +29,7 @@ Between construction and lock, a compromised runtime can request signatures with
 
 ## How long to keep a session
 
-After `lock()`, the next signature needs fresh key material, and both sources, reproducing a derived key and decrypting a vault, start with a ceremony and its prompt. Session lifetime is a trade-off between that prompt and the open window.
+After `lock()`, the next signature needs fresh key material, and both sources (reproducing a derived key, decrypting a vault) start with a ceremony and its prompt. Session lifetime is a trade-off between that prompt and the open window.
 
 A high-frequency trading app keeps one session for the active burst of work and locks it when the burst ends.
 

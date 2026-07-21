@@ -41,7 +41,7 @@ const { prfOutput } = await createPasskeyWithPrfOutput({
 
 The call prompts once, or twice when the authenticator needs a follow-up [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) to evaluate PRF.
 
-mera uses its [fixed v1 salt](/reference/get-passkey-prf-output/) for this call. The `rpId` is the relying party ID, the domain the passkey is bound to. The same passkey and relying party produce the same 32 bytes on any device the passkey syncs to. The result also carries the credential ID. [Create passkey accounts](/recipes/create-passkey-accounts/) stores it to pin later sign-ins.
+mera uses its [fixed salt](/reference/get-passkey-prf-output/) for this call. The `rpId` is the relying party ID, the domain the passkey is bound to. The same passkey and relying party produce the same 32 bytes on any device the passkey syncs to. The result also carries the credential ID. [Create passkey accounts](/recipes/create-passkey-accounts/) stores it to pin later sign-ins.
 
 ## Derive an account
 

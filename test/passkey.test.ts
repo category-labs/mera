@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { getDeterministicPrfSaltV1 } from "../dist/derived.js";
+import { getMeraPrfSalt } from "../dist/derived.js";
 import {
   createPasskey,
   createPasskeyWithPrfOutput,
@@ -134,7 +134,7 @@ test("createPasskey without prfSalt does not evaluate or return PRF output", asy
   expect(createOptions?.extensions?.prf).toEqual({});
 });
 
-test("PRF output helpers default to Mera's fixed v1 salt", async () => {
+test("PRF output helpers default to Mera's fixed salt", async () => {
   const evaluatedSalts: Uint8Array[] = [];
 
   function readSalt(value: BufferSource | undefined): ArrayBuffer {
@@ -170,7 +170,7 @@ test("PRF output helpers default to Mera's fixed v1 salt", async () => {
   };
 
   await withStubbedGlobal("navigator", navigator, async () => {
-    const expected = getDeterministicPrfSaltV1();
+    const expected = getMeraPrfSalt();
     const created = await createPasskeyWithPrfOutput({
       rp: { id: "example.com", name: "Mera Test" },
       user: { name: "nad", displayName: "nad" },
@@ -192,7 +192,7 @@ test("PRF output helpers default to Mera's fixed v1 salt", async () => {
 
   expect(evaluatedSalts).toHaveLength(5);
   for (const salt of evaluatedSalts) {
-    expect(salt).toEqual(getDeterministicPrfSaltV1());
+    expect(salt).toEqual(getMeraPrfSalt());
   }
 });
 

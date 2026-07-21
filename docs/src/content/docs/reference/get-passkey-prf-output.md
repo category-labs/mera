@@ -40,7 +40,7 @@ Credential metadata that restricts the assertion to one passkey: a `credentialId
 ### options.prfSalt
 
 - Type: `Uint8Array`
-- Optional; defaults to mera's fixed v1 deterministic salt
+- Optional; defaults to mera's fixed salt
 
 PRF salt as 32 raw bytes. An explicit value supports custom PRF namespaces and low-level composition. It is copied before use.
 
@@ -64,7 +64,7 @@ WebAuthn timeout in milliseconds.
 
 ## Notes
 
-When `prfSalt` is omitted, the fixed v1 salt is used: `sha256("mera.v1.deterministic.prf")`. The salt will not change across library versions, so one assertion against it produces one stable 32-byte PRF output per credential and relying party, and another implementation can reproduce the output from the same constant. The salt encodes no account selection; that happens in the derivation scheme the app applies to the PRF output.
+When `prfSalt` is omitted, mera's fixed salt is used: `sha256("mera.v1.prf.salt")`. The salt will not change across library versions, so one assertion against it produces one stable 32-byte PRF output per credential and relying party, and another implementation can reproduce the output from the same constant. The salt encodes no account selection; that happens in the derivation scheme the app applies to the PRF output.
 
 The assertion requires user verification, and the requirement is not configurable ([Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism).
 

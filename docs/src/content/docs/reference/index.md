@@ -7,8 +7,8 @@ Each exported function has its own page. Types are documented on the pages of th
 
 ## Passkeys
 
-- [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/): creates a passkey and returns its deterministic PRF output in one call.
-- [getPasskeyPrfOutput](/reference/get-passkey-prf-output/): requests a passkey PRF evaluation and returns the deterministic output.
+- [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/): creates a passkey and returns its PRF output in one call.
+- [getPasskeyPrfOutput](/reference/get-passkey-prf-output/): requests a passkey PRF evaluation and returns the output.
 
 ## Signing sessions
 

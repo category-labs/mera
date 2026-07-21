@@ -1,16 +1,16 @@
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
-import { getDeterministicPrfSaltV1 } from "../dist/derived.js";
+import { getMeraPrfSalt } from "../dist/derived.js";
 
-test("returns the fixed v1 deterministic PRF salt", () => {
-  const salt = getDeterministicPrfSaltV1();
+test("returns Mera's fixed PRF salt", () => {
+  const salt = getMeraPrfSalt();
 
   expect(bytesToHex(salt)).toBe(
-    "0843291565a6314a928d60d0e51a6d0c46a82b3faaa6e47560b920312ba35f90",
+    "0372d7979ec1483f2f82d860d96f18058486fc65bf0f0cc1c1303aba83d0e772",
   );
 
   salt.fill(0);
-  expect(bytesToHex(getDeterministicPrfSaltV1())).toBe(
-    "0843291565a6314a928d60d0e51a6d0c46a82b3faaa6e47560b920312ba35f90",
+  expect(bytesToHex(getMeraPrfSalt())).toBe(
+    "0372d7979ec1483f2f82d860d96f18058486fc65bf0f0cc1c1303aba83d0e772",
   );
 });

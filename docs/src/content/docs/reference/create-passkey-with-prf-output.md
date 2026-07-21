@@ -1,6 +1,6 @@
 ---
 title: createPasskeyWithPrfOutput
-description: Creates a passkey and returns its deterministic PRF output in one call.
+description: Creates a passkey and returns its PRF output in one call.
 ---
 
 Creates a [discoverable](/concepts/passkeys-and-prf/), user-verified passkey with the [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF extension enabled and returns its PRF output. It runs one creation ceremony and shows one user-verification prompt; when the authenticator does not evaluate the PRF at create time, it runs [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt, which shows a second.
@@ -55,7 +55,7 @@ User handle stored with the discoverable credential. Must be 1 to 64 bytes when 
 ### options.prfSalt
 
 - Type: `Uint8Array`
-- Optional; defaults to mera's fixed v1 deterministic salt
+- Optional; defaults to mera's fixed salt
 
 32-byte PRF salt evaluated during creation or by the fallback [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts). An explicit value supports custom PRF namespaces and low-level composition. It is copied before async WebAuthn work starts, so post-call mutation changes neither the fallback ceremony nor the returned salt.
 

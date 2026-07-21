@@ -1,10 +1,10 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { utf8ToBytes } from "@noble/hashes/utils.js";
 
-const DETERMINISTIC_PRF_SALT = sha256(utf8ToBytes("mera.v1.deterministic.prf"));
+const MERA_PRF_SALT = sha256(utf8ToBytes("mera.v1.prf.salt"));
 
 /**
- * Returns Mera's fixed v1 deterministic PRF salt: `sha256("mera.v1.deterministic.prf")`.
+ * Returns Mera's fixed PRF salt: `sha256("mera.v1.prf.salt")`.
  *
  * The salt is a constant and will not change across library versions, so one
  * passkey assertion against it produces one stable 32-byte PRF output per
@@ -14,8 +14,8 @@ const DETERMINISTIC_PRF_SALT = sha256(utf8ToBytes("mera.v1.deterministic.prf"));
  * frozen, so a shared buffer mutated by one caller would silently change every
  * later derivation.
  */
-function getDeterministicPrfSaltV1(): Uint8Array<ArrayBuffer> {
-  return new Uint8Array(DETERMINISTIC_PRF_SALT);
+function getMeraPrfSalt(): Uint8Array<ArrayBuffer> {
+  return new Uint8Array(MERA_PRF_SALT);
 }
 
-export { getDeterministicPrfSaltV1 };
+export { getMeraPrfSalt };

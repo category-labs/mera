@@ -1,4 +1,4 @@
-import { getDeterministicPrfSaltV1 } from "./derived.js";
+import { getMeraPrfSalt } from "./derived.js";
 import {
   asArrayBuffer,
   base64UrlDecode,
@@ -53,8 +53,7 @@ type CreatePasskeyOptions = {
  * Inputs for creating a passkey and obtaining its first WebAuthn PRF output in one call.
  *
  * Tightens `CreatePasskeyOptions`: `rp.id` is required so the fallback ceremony
- * can target the same relying party. `prfSalt` defaults to the fixed v1
- * deterministic salt.
+ * can target the same relying party. `prfSalt` defaults to Mera's fixed salt.
  */
 type CreatePasskeyWithPrfOutputOptions = Omit<
   CreatePasskeyOptions,
@@ -64,7 +63,7 @@ type CreatePasskeyWithPrfOutputOptions = Omit<
   rp: PublicKeyCredentialRpEntity & { id: string };
   /**
    * 32-byte PRF salt evaluated during creation, or by the fallback assertion.
-   * Defaults to the fixed v1 deterministic salt.
+   * Defaults to Mera's fixed salt.
    */
   prfSalt?: Uint8Array;
 };
@@ -76,7 +75,7 @@ type GetPasskeyPrfOutputOptions = {
   /** Credential metadata to restrict the assertion to one passkey. */
   credential?: PasskeyCredentialMetadata;
   /**
-   * PRF salt as 32 raw bytes. Defaults to the fixed v1 deterministic salt.
+   * PRF salt as 32 raw bytes. Defaults to Mera's fixed salt.
    * Copied before use.
    */
   prfSalt?: Uint8Array;
@@ -227,11 +226,11 @@ async function createPasskey({
  *
  * The WebAuthn challenge is generated internally.
  *
- * When `prfSalt` is omitted, the fixed v1 salt is used:
- * `sha256("mera.v1.deterministic.prf")`. This default will not change across
- * library versions. The PRF output is a deterministic function of the
- * credential, `rpId`, and salt: the same three inputs reproduce the same
- * output, and a different salt yields an unrelated output.
+ * When `prfSalt` is omitted, Mera's fixed salt is used:
+ * `sha256("mera.v1.prf.salt")`. This default will not change across
+ * library versions. The PRF output depends only on the credential, `rpId`,
+ * and salt: the same three inputs reproduce the same output, and a
+ * different salt yields an unrelated output.
  *
  * The assertion requires user verification, and the requirement is not
  * configurable. Authenticators built on CTAP's `hmac-secret` keep two PRFs
@@ -260,7 +259,7 @@ async function getPasskeyPrfOutput({
     }
 
     const prf = {
-      eval: { first: asArrayBuffer(prfSalt ?? getDeterministicPrfSaltV1()) },
+      eval: { first: asArrayBuffer(prfSalt ?? getMeraPrfSalt()) },
     };
 
     const publicKey: PublicKeyCredentialRequestOptions = {
@@ -348,8 +347,8 @@ async function getPasskeyPrfOutput({
  * The requirement is not configurable ({@link getPasskeyPrfOutput} documents
  * the authenticator mechanism).
  *
- * When `prfSalt` is omitted, the fixed v1 salt is used:
- * `sha256("mera.v1.deterministic.prf")`. This default will not change across
+ * When `prfSalt` is omitted, Mera's fixed salt is used:
+ * `sha256("mera.v1.prf.salt")`. This default will not change across
  * library versions.
  *
  * `prfSalt` is copied before async WebAuthn work starts; post-call mutation of
@@ -369,7 +368,7 @@ async function createPasskeyWithPrfOutput({
   prfSalt,
 }: CreatePasskeyWithPrfOutputOptions): Promise<CreatePasskeyWithPrfOutputResult> {
   const prfSaltCopy =
-    prfSalt === undefined ? getDeterministicPrfSaltV1() : copyBytes(prfSalt);
+    prfSalt === undefined ? getMeraPrfSalt() : copyBytes(prfSalt);
 
   const credential = await createPasskey({
     rp,

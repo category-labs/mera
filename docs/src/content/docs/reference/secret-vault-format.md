@@ -34,7 +34,7 @@ Authenticator transports reported by the browser when the passkey was created. O
 
 ### prfSalt
 
-The PRF salt for this secret, 32 bytes as canonical unpadded base64url. The workflow functions generate it fresh and randomly per vault. Storing it lets a later ceremony reproduce the exact PRF output that keyed the encryption. The salt is not secret: without the passkey it yields nothing, because the PRF lives in the authenticator.
+The PRF salt for this secret, 32 bytes as canonical unpadded base64url. The vault functions generate a fresh random salt per vault. Storing it lets a later ceremony reproduce the exact PRF output that keyed the encryption. The salt is not secret: without the passkey it yields nothing, because the PRF lives in the authenticator.
 
 ### nonce
 

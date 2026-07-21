@@ -3,7 +3,7 @@ title: getSolanaAddress
 description: Derives the base58-encoded Solana address for an Ed25519 public key.
 ---
 
-Derives the base58-encoded Solana address for an Ed25519 public key. A Solana address is the public key itself, base58-encoded; there is no hashing step.
+Derives the base58-encoded Solana address for an Ed25519 public key. A Solana address is the public key itself, base58-encoded.
 
 ## Import
 

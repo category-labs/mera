@@ -50,7 +50,7 @@ User identity passed to WebAuthn. `id` must be 1 to 64 bytes when provided. A fr
 - Type: `Uint8Array`
 - Required
 
-Secret bytes to encrypt. Any non-empty length; the library does not interpret them.
+Secret bytes to encrypt. Any non-empty length.
 
 ### options.timeout
 

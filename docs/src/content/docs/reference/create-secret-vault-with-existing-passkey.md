@@ -56,7 +56,7 @@ Credential metadata that restricts the assertion to one passkey. Reported transp
 - Type: `Uint8Array`
 - Required
 
-Secret bytes to encrypt. Any non-empty length; the library does not interpret them.
+Secret bytes to encrypt. Any non-empty length.
 
 ### options.timeout
 

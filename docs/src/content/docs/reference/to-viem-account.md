@@ -94,7 +94,7 @@ Signs a 32-byte hash directly, with no additional hashing, and resolves to the 6
 
 ## Notes
 
-Signatures are low-S (the signature's `s` value lies in the lower half of the curve order), which EVM chains require since [EIP-2](https://eips.ethereum.org/EIPS/eip-2); `signDigest` enforces this, so the adapter adds no normalization.
+Signatures are low-S (the signature's `s` value lies in the lower half of the curve order), which EVM chains require since [EIP-2](https://eips.ethereum.org/EIPS/eip-2); `signDigest` enforces this.
 
 ## See also
 

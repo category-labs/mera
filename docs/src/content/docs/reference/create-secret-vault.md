@@ -55,7 +55,7 @@ The passkey credential plus the PRF salt and the PRF output it produced. A [crea
 - Type: `Uint8Array`
 - Required
 
-Secret bytes to encrypt. Any non-empty length; the library does not interpret them.
+Secret bytes to encrypt. Any non-empty length.
 
 ## Returns
 

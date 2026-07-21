@@ -42,7 +42,7 @@ The 12-byte [AES-GCM](/concepts/secret-vaults/#how-a-vault-works) nonce, base64u
 
 ### ciphertext
 
-The AES-GCM ciphertext including its 16-byte authentication tag, the value decryption checks to detect tampering, base64url. The plaintext is the secret exactly as it was passed in; the library never interprets it.
+The AES-GCM ciphertext including its 16-byte authentication tag, the value decryption checks to detect tampering, base64url. The plaintext is the secret exactly as it was passed in.
 
 ## What is deliberately absent
 

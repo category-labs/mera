@@ -106,7 +106,7 @@ async function aesGcmEncrypt({
 }
 
 // AES-256-GCM decrypt. Authentication failures from a wrong key or tampered
-// nonce/ciphertext surface as DECRYPT_FAILED. The returned bytes are not interpreted.
+// nonce/ciphertext surface as DECRYPT_FAILED.
 async function aesGcmDecrypt({
   encrypted,
   encryptionKey,
@@ -171,7 +171,7 @@ type CreateSecretVaultOptions = {
     /** First WebAuthn PRF output for `prfSalt`. Must be exactly 32 bytes. */
     prfOutput: Uint8Array;
   };
-  /** Secret bytes to encrypt. Any non-empty length; the library does not interpret them. */
+  /** Secret bytes to encrypt. Any non-empty length. */
   secret: Uint8Array;
 };
 

@@ -21,7 +21,7 @@ import type {
   PasskeyPrfResult,
   PasskeySecretVault,
 } from "./types.js";
-import { getCrypto, hkdfSha256AesGcmKey, randomBytes } from "./webcrypto.js";
+import { getCrypto, randomBytes } from "./webcrypto.js";
 
 const PRF_SALT_LENGTH = 32;
 const PRF_OUTPUT_LENGTH = 32;
@@ -46,14 +46,39 @@ type EncryptedBytes = {
   ciphertext: Uint8Array;
 };
 
-// Derives the vault encryption key. The 32-byte check validates caller-supplied
-// PRF output at the public boundary before it becomes key material.
+// Derives the non-extractable AES-256-GCM vault key with HKDF-SHA-256. The
+// fixed info domain-separates this key from other uses of the same PRF output.
+// asArrayBuffer snapshots the output before importKey's first await, preserving
+// the public copy guarantee while the 32-byte check validates the key material.
 async function deriveEncryptionKey(prfOutput: Uint8Array): Promise<CryptoKey> {
   if (prfOutput.length !== PRF_OUTPUT_LENGTH) {
     throw new MeraError("INPUT_INVALID", "PRF output must be 32 bytes");
   }
 
-  return hkdfSha256AesGcmKey(prfOutput, SECRET_ENCRYPTION_INFO);
+  const crypto = getCrypto();
+  const material = await crypto.subtle.importKey(
+    "raw",
+    asArrayBuffer(prfOutput),
+    "HKDF",
+    false,
+    ["deriveKey"],
+  );
+
+  return crypto.subtle.deriveKey(
+    {
+      name: "HKDF",
+      hash: "SHA-256",
+      salt: new Uint8Array(0),
+      info: asArrayBuffer(SECRET_ENCRYPTION_INFO),
+    },
+    material,
+    {
+      name: "AES-GCM",
+      length: 256,
+    },
+    false,
+    ["encrypt", "decrypt"],
+  );
 }
 
 // AES-256-GCM encrypt. subtle.encrypt copies its inputs synchronously and the
@@ -203,7 +228,7 @@ async function createSecretVault({
   const secretCopy = copyBytes(secret);
 
   try {
-    // The copy guarantee for prfOutput is provided by hkdfSha256AesGcmKey,
+    // The copy guarantee for prfOutput is provided by deriveEncryptionKey,
     // which snapshots it synchronously before its first await.
     const encryptionKey = await deriveEncryptionKey(prfOutput);
     const encrypted = await aesGcmEncrypt({
@@ -389,7 +414,7 @@ async function decryptSecretVault({
   vault,
   prfOutput,
 }: DecryptSecretVaultOptions): Promise<Uint8Array<ArrayBuffer>> {
-  // The copy guarantee documented above is provided by hkdfSha256AesGcmKey,
+  // The copy guarantee documented above is provided by deriveEncryptionKey,
   // which snapshots prfOutput synchronously before its first await.
   const encryptionKey = await deriveEncryptionKey(prfOutput);
 

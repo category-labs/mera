@@ -34,11 +34,11 @@ Authenticator transports reported by the browser when the passkey was created. O
 
 ### prfSalt
 
-The PRF salt for this secret, 32 bytes as canonical unpadded base64url. The workflow functions generate it fresh and randomly per vault; the low-level [createSecretVault](/reference/create-secret-vault/) path accepts an app-supplied salt, which must be fresh per secret. Storing it lets a later ceremony reproduce the exact PRF output that keyed the encryption. The salt is not secret: without the passkey it yields nothing, because the PRF lives in the authenticator.
+The PRF salt for this secret, 32 bytes as canonical unpadded base64url. The workflow functions generate it fresh and randomly per vault. Storing it lets a later ceremony reproduce the exact PRF output that keyed the encryption. The salt is not secret: without the passkey it yields nothing, because the PRF lives in the authenticator.
 
 ### nonce
 
-The 12-byte [AES-GCM](/concepts/secret-vaults/#how-a-vault-works) nonce, base64url. Generated internally by [createSecretVault](/reference/create-secret-vault/) for each encryption.
+The 12-byte [AES-GCM](/concepts/secret-vaults/#how-a-vault-works) nonce, base64url. Generated internally for each encryption.
 
 ### ciphertext
 
@@ -48,7 +48,7 @@ The AES-GCM ciphertext including its 16-byte authentication tag, the value decry
 
 The encryption key and the PRF output are never stored; both exist only transiently in memory. The rpId is also absent: the vault does not record which relying party it belongs to, and the unlock assertion supplies it.
 
-The credential ID and salt are stored but not authenticated: neither is supplied as AES-GCM additional authenticated data, so a vault is cryptographically bound to its PRF output only. This is why each secret needs a fresh salt ([createSecretVault](/reference/create-secret-vault/) documents the risk).
+The credential ID and salt are stored but not authenticated: neither is supplied as AES-GCM additional authenticated data, so a vault is cryptographically bound to its PRF output only. This is why each secret needs a fresh salt: vaults that share a PRF output share an encryption key.
 
 ## See also
 

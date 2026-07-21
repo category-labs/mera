@@ -2,7 +2,7 @@
  * A 20-byte EVM address with a `0x` prefix, lowercase or EIP-55 mixed case.
  *
  * Structural type only: the `0x${string}` shape does not constrain length or
- * hex digits. `isEvmAddress` is the authoritative runtime check.
+ * hex digits.
  */
 type EvmAddress = `0x${string}`;
 
@@ -21,9 +21,8 @@ type Brand<T, Name extends string> = T & { readonly [brand]: Name };
  * A base58-encoded 32-byte Solana address.
  *
  * Branded nominal type: base58 has no structural shape the way `EvmAddress`
- * does, so values are produced by `getSolanaAddress` or narrowed from strings
- * by `isSolanaAddress`. The brand exists only in the type system; at runtime
- * the value is a plain string.
+ * does, so values are produced by `getSolanaAddress`. The brand exists only
+ * in the type system; at runtime the value is a plain string.
  */
 type SolanaAddress = Brand<string, "SolanaAddress">;
 

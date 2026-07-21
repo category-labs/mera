@@ -77,5 +77,4 @@ The WebAuthn challenge is generated internally.
 ## See also
 
 - [parseSecretVault](/reference/parse-secret-vault/): validate stored JSON before this call.
-- [decryptSecretVault](/reference/decrypt-secret-vault/): decrypt with an explicitly supplied PRF output.
 - [Use an existing secret](/recipes/use-an-existing-secret/): the complete storage and secret-lifetime pattern.

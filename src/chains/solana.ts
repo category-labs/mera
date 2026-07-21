@@ -21,18 +21,4 @@ function getSolanaAddress(publicKey: Uint8Array): SolanaAddress {
   return base58.encode(publicKey) as SolanaAddress;
 }
 
-/**
- * Returns true when a string is a valid base58-encoded Solana address.
- *
- * @param value - String to check.
- * @returns `true` when `value` is valid base58 and decodes to 32 bytes.
- */
-function isSolanaAddress(value: string): value is SolanaAddress {
-  try {
-    return base58.decode(value).length === ED25519_PUBLIC_KEY_LENGTH;
-  } catch {
-    return false;
-  }
-}
-
-export { getSolanaAddress, isSolanaAddress };
+export { getSolanaAddress };

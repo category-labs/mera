@@ -53,8 +53,8 @@ type CreatePasskeyOptions = {
  * Inputs for creating a passkey and obtaining its first WebAuthn PRF output in one call.
  *
  * Tightens `CreatePasskeyOptions`: `rp.id` is required so the fallback ceremony
- * can target the same relying party. `prfSalt` defaults to the fixed v1 value
- * returned by {@link getDeterministicPrfSaltV1}.
+ * can target the same relying party. `prfSalt` defaults to the fixed v1
+ * deterministic salt.
  */
 type CreatePasskeyWithPrfOutputOptions = Omit<
   CreatePasskeyOptions,
@@ -64,7 +64,7 @@ type CreatePasskeyWithPrfOutputOptions = Omit<
   rp: PublicKeyCredentialRpEntity & { id: string };
   /**
    * 32-byte PRF salt evaluated during creation, or by the fallback assertion.
-   * Defaults to the value returned by {@link getDeterministicPrfSaltV1}.
+   * Defaults to the fixed v1 deterministic salt.
    */
   prfSalt?: Uint8Array;
 };
@@ -76,8 +76,8 @@ type GetPasskeyPrfOutputOptions = {
   /** Credential metadata to restrict the assertion to one passkey. */
   credential?: PasskeyCredentialMetadata;
   /**
-   * PRF salt as 32 raw bytes. Defaults to the value returned by
-   * {@link getDeterministicPrfSaltV1}. Copied before use.
+   * PRF salt as 32 raw bytes. Defaults to the fixed v1 deterministic salt.
+   * Copied before use.
    */
   prfSalt?: Uint8Array;
   /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
@@ -227,11 +227,11 @@ async function createPasskey({
  *
  * The WebAuthn challenge is generated internally.
  *
- * When `prfSalt` is omitted, the value returned by {@link
- * getDeterministicPrfSaltV1} is used. This default is stable across library
- * versions. The PRF output is a deterministic function of the credential,
- * `rpId`, and salt: the same three inputs reproduce the same output, and a
- * different salt yields an unrelated output.
+ * When `prfSalt` is omitted, the fixed v1 salt is used:
+ * `sha256("mera.v1.deterministic.prf")`. This default will not change across
+ * library versions. The PRF output is a deterministic function of the
+ * credential, `rpId`, and salt: the same three inputs reproduce the same
+ * output, and a different salt yields an unrelated output.
  *
  * The assertion requires user verification, and the requirement is not
  * configurable. Authenticators built on CTAP's `hmac-secret` keep two PRFs
@@ -327,10 +327,10 @@ async function getPasskeyPrfOutput({
 }
 
 /**
- * Creates a passkey and returns the first WebAuthn PRF output, falling back to
- * a second ceremony only when the authenticator does not evaluate PRF at create
- * time. Equivalent to `createPasskey` followed, when `prfOutput` is absent, by
- * `getPasskeyPrfOutput` with the same salt.
+ * Creates a discoverable, user-verified passkey that requires WebAuthn PRF
+ * support, and returns the first PRF output, falling back to
+ * {@link getPasskeyPrfOutput} with the same salt only when the authenticator
+ * does not evaluate PRF at create time.
  *
  * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyWithPrfOutputOptions}.
  * @returns Credential metadata and the first PRF output.
@@ -341,16 +341,22 @@ async function getPasskeyPrfOutput({
  *
  * WebAuthn challenges are generated internally.
  *
- * When `prfSalt` is omitted, the value returned by {@link
- * getDeterministicPrfSaltV1} is used. This default is stable across library
- * versions.
+ * The credential is requested with fixed parameters: ES256 or RS256 key types,
+ * attestation `"none"`, a required resident key, and required user
+ * verification. User verification is the authenticator's local check; the
+ * gesture depends on the platform (a biometric, a device PIN, or a password).
+ * The requirement is not configurable ({@link getPasskeyPrfOutput} documents
+ * the authenticator mechanism).
+ *
+ * When `prfSalt` is omitted, the fixed v1 salt is used:
+ * `sha256("mera.v1.deterministic.prf")`. This default will not change across
+ * library versions.
  *
  * `prfSalt` is copied before async WebAuthn work starts; post-call mutation of
  * an explicit input does not change the fallback ceremony or returned salt.
  *
- * If the fallback ceremony fails, the passkey from the completed creation
- * ceremony still exists on the authenticator, but the thrown error does not
- * carry its metadata.
+ * Any failure after the creation ceremony completes leaves the passkey on the
+ * authenticator, but the thrown error does not carry its metadata.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or does not return PRF output on the fallback ceremony.
  * @throws MeraError with code `INPUT_INVALID` when an explicit `prfSalt` is not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.

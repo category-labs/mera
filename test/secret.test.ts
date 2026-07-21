@@ -1,15 +1,17 @@
 import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
+import { getDeterministicPrfSaltV1 } from "../dist/derived.js";
+import type {
+  PasskeyCredentialTransport,
+  PasskeySecretVault,
+} from "../dist/index.js";
 import {
   createSecretVault,
   createSecretVaultWithExistingPasskey,
   createSecretVaultWithNewPasskey,
   decryptSecretVault,
-  getDeterministicPrfSaltV1,
-  type PasskeyCredentialTransport,
-  type PasskeySecretVault,
   parseSecretVault,
-} from "../dist/index.js";
+} from "../dist/secret.js";
 import { expectError, withStubbedGlobal } from "./helpers.js";
 
 const PRF_OUTPUT = new Uint8Array(32).fill(7);

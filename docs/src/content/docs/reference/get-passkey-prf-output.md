@@ -64,12 +64,12 @@ WebAuthn timeout in milliseconds.
 
 ## Notes
 
+When `prfSalt` is omitted, the fixed v1 salt is used: `sha256("mera.v1.deterministic.prf")`. The salt will not change across library versions, so one assertion against it produces one stable 32-byte PRF output per credential and relying party, and another implementation can reproduce the output from the same constant. The salt encodes no account selection; that happens in the derivation scheme the app applies to the PRF output.
+
 The assertion requires user verification, and the requirement is not configurable ([Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism).
 
 The WebAuthn challenge is generated internally.
 
 ## See also
 
-- [getDeterministicPrfSaltV1](/reference/get-deterministic-prf-salt-v1/): access the default salt explicitly for protocol interoperability.
-- [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/): the same assertion, driven by a stored vault.
 - [Create passkey accounts](/recipes/create-passkey-accounts/): credential pinning in practice.

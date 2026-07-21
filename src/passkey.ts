@@ -1,4 +1,5 @@
-import { getDeterministicPrfSaltV1 } from "./derived.js";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { utf8ToBytes } from "@noble/hashes/utils.js";
 import {
   asArrayBuffer,
   base64UrlDecode,
@@ -14,6 +15,23 @@ import type {
   PasskeyPrfResult,
 } from "./types.js";
 import { randomBytes } from "./webcrypto.js";
+
+const DEFAULT_PRF_SALT = sha256(utf8ToBytes("mera.prf.salt.v1"));
+
+/**
+ * Returns Mera's default PRF salt: `sha256("mera.prf.salt.v1")`.
+ *
+ * The salt is a constant and will not change across library versions, so one
+ * passkey assertion against it produces one stable 32-byte PRF output per
+ * credential and relying party.
+ *
+ * @returns A fresh 32-byte copy of the default salt: a `Uint8Array` cannot be
+ * frozen, so a shared buffer mutated by one caller would silently change every
+ * later derivation.
+ */
+function getDefaultPrfSalt(): Uint8Array<ArrayBuffer> {
+  return new Uint8Array(DEFAULT_PRF_SALT);
+}
 
 /** Inputs for creating a discoverable, user-verified passkey with PRF enabled. */
 type CreatePasskeyOptions = {
@@ -53,8 +71,7 @@ type CreatePasskeyOptions = {
  * Inputs for creating a passkey and obtaining its first WebAuthn PRF output in one call.
  *
  * Tightens `CreatePasskeyOptions`: `rp.id` is required so the fallback ceremony
- * can target the same relying party. `prfSalt` defaults to the fixed v1
- * deterministic salt.
+ * can target the same relying party. `prfSalt` defaults to Mera's fixed salt.
  */
 type CreatePasskeyWithPrfOutputOptions = Omit<
   CreatePasskeyOptions,
@@ -64,7 +81,7 @@ type CreatePasskeyWithPrfOutputOptions = Omit<
   rp: PublicKeyCredentialRpEntity & { id: string };
   /**
    * 32-byte PRF salt evaluated during creation, or by the fallback assertion.
-   * Defaults to the fixed v1 deterministic salt.
+   * Defaults to Mera's fixed salt.
    */
   prfSalt?: Uint8Array;
 };
@@ -76,7 +93,7 @@ type GetPasskeyPrfOutputOptions = {
   /** Credential metadata to restrict the assertion to one passkey. */
   credential?: PasskeyCredentialMetadata;
   /**
-   * PRF salt as 32 raw bytes. Defaults to the fixed v1 deterministic salt.
+   * PRF salt as 32 raw bytes. Defaults to Mera's fixed salt.
    * Copied before use.
    */
   prfSalt?: Uint8Array;
@@ -227,8 +244,8 @@ async function createPasskey({
  *
  * The WebAuthn challenge is generated internally.
  *
- * When `prfSalt` is omitted, the fixed v1 salt is used:
- * `sha256("mera.v1.deterministic.prf")`. This default will not change across
+ * When `prfSalt` is omitted, the default salt is used:
+ * `sha256("mera.prf.salt.v1")`. This default will not change across
  * library versions. The PRF output is a deterministic function of the
  * credential, `rpId`, and salt: the same three inputs reproduce the same
  * output, and a different salt yields an unrelated output.
@@ -260,7 +277,7 @@ async function getPasskeyPrfOutput({
     }
 
     const prf = {
-      eval: { first: asArrayBuffer(prfSalt ?? getDeterministicPrfSaltV1()) },
+      eval: { first: asArrayBuffer(prfSalt ?? getDefaultPrfSalt()) },
     };
 
     const publicKey: PublicKeyCredentialRequestOptions = {
@@ -348,8 +365,8 @@ async function getPasskeyPrfOutput({
  * The requirement is not configurable ({@link getPasskeyPrfOutput} documents
  * the authenticator mechanism).
  *
- * When `prfSalt` is omitted, the fixed v1 salt is used:
- * `sha256("mera.v1.deterministic.prf")`. This default will not change across
+ * When `prfSalt` is omitted, the default salt is used:
+ * `sha256("mera.prf.salt.v1")`. This default will not change across
  * library versions.
  *
  * `prfSalt` is copied before async WebAuthn work starts; post-call mutation of
@@ -369,7 +386,7 @@ async function createPasskeyWithPrfOutput({
   prfSalt,
 }: CreatePasskeyWithPrfOutputOptions): Promise<CreatePasskeyWithPrfOutputResult> {
   const prfSaltCopy =
-    prfSalt === undefined ? getDeterministicPrfSaltV1() : copyBytes(prfSalt);
+    prfSalt === undefined ? getDefaultPrfSalt() : copyBytes(prfSalt);
 
   const credential = await createPasskey({
     rp,
@@ -508,6 +525,7 @@ export type {
 export {
   createPasskey,
   createPasskeyWithPrfOutput,
+  getDefaultPrfSalt,
   getPasskeyPrfOutput,
   toCredentialMetadata,
 };

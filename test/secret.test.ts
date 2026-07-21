@@ -1,10 +1,10 @@
 import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
-import { getDeterministicPrfSaltV1 } from "../dist/derived.js";
 import type {
   PasskeyCredentialTransport,
   PasskeySecretVault,
 } from "../dist/index.js";
+import { getDefaultPrfSalt } from "../dist/passkey.js";
 import {
   createSecretVault,
   createSecretVaultWithExistingPasskey,
@@ -241,7 +241,7 @@ test("createSecretVaultWithNewPasskey owns a random salt and snapshots the secre
       transports: ["internal"],
     });
     expect(vault.prfSalt).not.toBe(
-      Buffer.from(getDeterministicPrfSaltV1()).toString("base64url"),
+      Buffer.from(getDefaultPrfSalt()).toString("base64url"),
     );
     await expect(
       decryptSecretVault({ vault, prfOutput: evaluatedSalt }),

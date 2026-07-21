@@ -1,8 +1,9 @@
+import { bytesToHex } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
-import { getDeterministicPrfSaltV1 } from "../dist/derived.js";
 import {
   createPasskey,
   createPasskeyWithPrfOutput,
+  getDefaultPrfSalt,
   getPasskeyPrfOutput,
 } from "../dist/passkey.js";
 import { withStubbedGlobal } from "./helpers.js";
@@ -134,7 +135,18 @@ test("createPasskey without prfSalt does not evaluate or return PRF output", asy
   expect(createOptions?.extensions?.prf).toEqual({});
 });
 
-test("PRF output helpers default to Mera's fixed v1 salt", async () => {
+test("getDefaultPrfSalt returns a fresh copy of the documented constant", () => {
+  const documentedDigest =
+    "896d46ac4ac191885c46137439db7bb52fb05cff3ecd34af7cdae0a1e0c00db9";
+  const salt = getDefaultPrfSalt();
+
+  expect(bytesToHex(salt)).toBe(documentedDigest);
+
+  salt.fill(0);
+  expect(bytesToHex(getDefaultPrfSalt())).toBe(documentedDigest);
+});
+
+test("PRF output helpers default to Mera's fixed salt", async () => {
   const evaluatedSalts: Uint8Array[] = [];
 
   function readSalt(value: BufferSource | undefined): ArrayBuffer {
@@ -170,7 +182,7 @@ test("PRF output helpers default to Mera's fixed v1 salt", async () => {
   };
 
   await withStubbedGlobal("navigator", navigator, async () => {
-    const expected = getDeterministicPrfSaltV1();
+    const expected = getDefaultPrfSalt();
     const created = await createPasskeyWithPrfOutput({
       rp: { id: "example.com", name: "Mera Test" },
       user: { name: "nad", displayName: "nad" },
@@ -192,7 +204,7 @@ test("PRF output helpers default to Mera's fixed v1 salt", async () => {
 
   expect(evaluatedSalts).toHaveLength(5);
   for (const salt of evaluatedSalts) {
-    expect(salt).toEqual(getDeterministicPrfSaltV1());
+    expect(salt).toEqual(getDefaultPrfSalt());
   }
 });
 

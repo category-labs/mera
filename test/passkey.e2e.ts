@@ -88,7 +88,7 @@ test("creates a PRF-capable passkey and returns stable PRF output", async ({
   });
 });
 
-test("PRF output helpers use the deterministic v1 salt by default", async ({
+test("PRF output helpers use the default salt when prfSalt is omitted", async ({
   page,
 }) => {
   await withVirtualAuthenticator(page, async () => {
@@ -112,7 +112,7 @@ test("PRF output helpers use the deterministic v1 salt by default", async ({
       const documentedSalt = new Uint8Array(
         await crypto.subtle.digest(
           "SHA-256",
-          new TextEncoder().encode("mera.v1.deterministic.prf"),
+          new TextEncoder().encode("mera.prf.salt.v1"),
         ),
       );
 

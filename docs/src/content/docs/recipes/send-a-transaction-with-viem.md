@@ -74,7 +74,7 @@ const hash = await client.sendTransaction({
 session.lock();
 ```
 
-`sepolia` is Ethereum's Sepolia test network. `http()` with no URL uses the chain's default public RPC endpoint. RPC, remote procedure call, is the HTTP API a chain node exposes for queries and transactions. Production apps pass a dedicated RPC URL.
+`http()` with no URL uses the chain's default public RPC endpoint. RPC, remote procedure call, is the HTTP API a chain node exposes for queries and transactions. Production apps pass a dedicated RPC URL.
 
 `sendTransaction` fills the missing transaction fields from the RPC, signs through the session, broadcasts, and resolves to the transaction hash. Confirmation is a separate query. viem's `waitForTransactionReceipt` on a public client covers it.
 

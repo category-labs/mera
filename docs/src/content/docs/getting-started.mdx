@@ -82,11 +82,11 @@ const signature = await session.signDigest(digest);
 session.lock();
 ```
 
-The digest is the 32-byte hash of the transaction or message to sign. This walkthrough signs a placeholder buffer. The session copies the key and signs without further passkey prompts. `lock()` [zeroes](/concepts/signing-sessions/#the-lifecycle) the session's copy. A locked session throws on signing.
+The digest is the 32-byte hash of the transaction or message to sign. This walkthrough signs a placeholder buffer. The session copies the key; `lock()` [zeroes](/concepts/signing-sessions/#the-lifecycle) that copy. A locked session throws on signing.
 
 ## Sign back in
 
-A later visit needs no stored secret: the same assertion with the same salt returns the same 32 bytes, and with them the same account.
+A later visit needs no stored secret: the same assertion reproduces the account.
 
 ```ts
 import { getPasskeyPrfOutput } from "@category-labs/mera";

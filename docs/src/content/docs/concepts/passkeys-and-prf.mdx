@@ -27,7 +27,7 @@ PRF output is determined by the credential, relying party ID, and salt. Those in
 
 ## Using the output
 
-The output is suitable as the root secret for accounts. It is stable wherever the passkey syncs, it appears only after user verification, and it never needs to be stored: the authenticator re-evaluates it on each ceremony. The output, unlike the credential's private key, leaves the authenticator: it returns to the page, and every key derived from it lives in the page's memory ([security model](/concepts/security-model/)).
+The output is suitable as the root secret for accounts. It is stable wherever the passkey syncs, it appears only after user verification, and it never needs to be stored: the authenticator re-evaluates it on each ceremony. The output, unlike the credential's private key, leaves the authenticator and returns to the page ([security model](/concepts/security-model/)).
 
 Passed to a [key-derivation scheme](/concepts/entropy-keys-and-accounts/), the output produces a hierarchy of accounts. Used as [key material](/concepts/entropy-keys-and-accounts/#deterministic-derivation), it decrypts a vault. mera returns the output and does nothing else with it. [Passkey accounts](/concepts/passkey-accounts/) is the default pattern built on the first path; [secret vaults](/concepts/secret-vaults/) cover the second, for secrets that already exist.
 
@@ -39,7 +39,7 @@ A ceremony is one WebAuthn call and one user-verification prompt. A ceremony eit
 - [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) asserts with an existing credential and returns the PRF output.
 - [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) chains the two: one prompt when the authenticator evaluates PRF at create time, two when it needs the follow-up assertion.
 
-Signing itself never prompts: a [signing session](/concepts/signing-sessions/) holds key material derived from a ceremony's output and signs until it is locked.
+Signing itself never prompts; it runs in a [signing session](/concepts/signing-sessions/) built from a ceremony's output.
 
 ## See also
 

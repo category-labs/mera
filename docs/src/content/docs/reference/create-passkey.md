@@ -68,7 +68,7 @@ WebAuthn timeout in milliseconds.
 
 ## Returns
 
-`Promise<CreatePasskeyResult>`. The credential ID as canonical unpadded base64url, the authenticator transports when the browser reports them, and a 32-byte `prfOutput` when `prfSalt` was provided and evaluated during creation.
+`Promise<CreatePasskeyResult>`. The credential ID as canonical unpadded base64url, opaque authenticator transport hints when the browser reports them, and a 32-byte `prfOutput` when `prfSalt` was provided and evaluated during creation. Store reported transports with the credential and pass them back unchanged; Mera preserves unknown values for compatibility with future browsers.
 
 ## Errors
 

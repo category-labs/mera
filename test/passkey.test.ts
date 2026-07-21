@@ -329,6 +329,51 @@ test("passkey helpers generate internal challenges and request no attestation", 
   expect(new Uint8Array(getOptions.challenge as ArrayBuffer)).toHaveLength(32);
 });
 
+test("passkey helpers preserve opaque transport hints", async () => {
+  const reportedTransports = ["internal", "future-transport"];
+  let allowedTransports: readonly string[] | undefined;
+
+  const navigator = {
+    credentials: {
+      async create() {
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          response: { getTransports: () => reportedTransports },
+          getClientExtensionResults: () => ({ prf: { enabled: true } }),
+        };
+      },
+      async get({ publicKey }: CredentialRequestOptions) {
+        allowedTransports = publicKey?.allowCredentials?.[0]?.transports;
+        return {
+          type: "public-key",
+          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+          getClientExtensionResults: () => ({
+            prf: { results: { first: new Uint8Array(32).buffer } },
+          }),
+        };
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    const created = await createPasskey({
+      rp: { id: "example.com", name: "Mera Test" },
+      user: { name: "nad", displayName: "nad" },
+    });
+
+    reportedTransports[0] = "usb";
+    expect(created.transports).toEqual(["internal", "future-transport"]);
+
+    await getPasskeyPrfOutput({
+      rpId: "example.com",
+      credential: created,
+    });
+  });
+
+  expect(allowedTransports).toEqual(["internal", "future-transport"]);
+});
+
 test("getPasskeyPrfOutput rejects an empty credentialId without prompting", async () => {
   // A malformed stored ID must fail closed instead of silently widening the
   // assertion to any discoverable credential for the relying party.

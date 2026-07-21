@@ -30,7 +30,7 @@ The passkey credential that unlocks this vault, as canonical unpadded [base64url
 
 ### credential.transports
 
-Authenticator transports reported by the browser when the passkey was created. Optional; when present, they help the browser route the unlock assertion (to a security key, to a phone) without guessing.
+Opaque authenticator transport hints reported by the browser when the passkey was created. They are stored and replayed unchanged, including values Mera does not recognize, because removing values can degrade routing or prevent the browser from reaching the credential. The field may be omitted when the browser does not expose transport metadata.
 
 ### prfSalt
 

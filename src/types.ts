@@ -28,11 +28,13 @@ type Brand<T, Name extends string> = T & { readonly [brand]: Name };
 type SolanaAddress = Brand<string, "SolanaAddress">;
 
 /**
- * WebAuthn authenticator transport metadata, including future browser transport values.
+ * An opaque WebAuthn authenticator transport hint, including values introduced
+ * by future browsers.
  *
  * The `string & {}` arm accepts any string without collapsing the union to
  * plain `string`, so editors keep offering the known `AuthenticatorTransport`
- * literals in autocomplete.
+ * literals in autocomplete. Values returned by WebAuthn are preserved rather
+ * than interpreted by Mera.
  */
 type PasskeyCredentialTransport = AuthenticatorTransport | (string & {});
 
@@ -40,7 +42,7 @@ type PasskeyCredentialTransport = AuthenticatorTransport | (string & {});
 type PasskeyCredentialMetadata = {
   /** Credential ID encoded as canonical unpadded base64url. */
   readonly credentialId: string;
-  /** Authenticator transports reported by the browser, when available. */
+  /** Opaque authenticator transport hints reported by the browser, when available. */
   readonly transports?: readonly PasskeyCredentialTransport[];
 };
 

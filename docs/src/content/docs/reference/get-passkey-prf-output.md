@@ -35,7 +35,7 @@ Relying party ID for the [WebAuthn](https://www.w3.org/TR/webauthn-3/) [assertio
 - Type: `PasskeyCredentialMetadata`
 - Optional; when omitted, WebAuthn may choose any discoverable credential for the relying party
 
-Credential metadata that restricts the assertion to one passkey: a `credentialId` in canonical unpadded base64url, plus the `transports` reported when it was created. An empty `credentialId` is rejected rather than passed through, because WebAuthn would treat it as no restriction at all and silently widen the assertion to any discoverable passkey.
+Credential metadata that restricts the assertion to one passkey: a `credentialId` in canonical unpadded base64url, plus the opaque `transports` reported when it was created. Mera passes transport values to WebAuthn unchanged, including values it does not recognize. An empty `credentialId` is rejected rather than passed through, because WebAuthn would treat it as no restriction at all and silently widen the assertion to any discoverable passkey.
 
 ### options.prfSalt
 

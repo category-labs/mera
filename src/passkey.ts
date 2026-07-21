@@ -400,8 +400,8 @@ async function createPasskeyWithPrfOutput({
 }
 
 /**
- * Builds credential metadata, copying `transports` so the result never aliases
- * a caller-owned array.
+ * Builds credential metadata, copying opaque `transports` without filtering so
+ * the result never aliases a caller-owned array or drops future values.
  */
 function toCredentialMetadata(
   credentialId: string,

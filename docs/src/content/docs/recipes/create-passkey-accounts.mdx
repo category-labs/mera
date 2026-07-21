@@ -44,7 +44,7 @@ localStorage.setItem(
 );
 ```
 
-`transports` is optional and only a hint: the browser uses it to reach the authenticator directly (a platform prompt for a platform passkey, a QR flow for a phone) instead of offering every option. Sign-in works the same without it.
+`transports` contains opaque browser routing hints. Store the array exactly as returned and pass it back unchanged: removing or filtering values can degrade the browser's routing and may prevent it from reaching the credential. The field may be absent when the browser does not expose transport metadata.
 
 A fresh device has no record; sign-in falls back to a discoverable ceremony, and the synced passkey still produces the same accounts.
 

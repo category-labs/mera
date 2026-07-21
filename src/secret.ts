@@ -389,7 +389,7 @@ type DecryptSecretVaultOptions = {
  * `prfOutput` is copied before async cryptographic work starts.
  *
  * @param options - Vault and PRF output; fields are documented on {@link DecryptSecretVaultOptions}.
- * @returns The decrypted secret bytes, exactly as passed to `createSecretVault`. The returned buffer is a fresh allocation; the library keeps no reference to it.
+ * @returns The decrypted secret bytes, exactly as passed to `createSecretVault`. The returned buffer is a fresh allocation.
  * @throws MeraError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url (already validated for vaults from `parseSecretVault`).
  * @throws MeraError with code `DECRYPT_FAILED` when authentication fails.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
@@ -525,13 +525,13 @@ type DecryptSecretVaultWithPasskeyOptions = GetSecretVaultPrfOutputOptions;
  * Performs the passkey assertion for a vault and decrypts its secret.
  *
  * @param options - Relying party and parsed vault; fields are documented on {@link DecryptSecretVaultWithPasskeyOptions}.
- * @returns The decrypted secret bytes. The returned buffer is a fresh allocation owned by the caller.
+ * @returns The decrypted secret bytes. The returned buffer is a fresh allocation.
  * @remarks
  * Invokes `navigator.credentials.get()` and shows one user-verification
  * prompt. The assertion is restricted to the credential stored in the vault.
  *
  * The internal PRF output is zeroed before the function finishes, even when
- * decryption fails. The returned secret's lifetime belongs to the caller.
+ * decryption fails.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when the vault contains an invalid credential ID, PRF salt, nonce, or ciphertext.
  * @throws MeraError with code `DECRYPT_FAILED` when authentication fails.

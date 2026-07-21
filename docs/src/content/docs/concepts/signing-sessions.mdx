@@ -17,7 +17,7 @@ Because a session never contacts an authenticator, signing never prompts: the on
 
 ## The lifecycle
 
-Construction copies the key into a session-owned snapshot. Locking zeroes the session's copy and is permanent. A locked session throws on signing, and new signatures require a new session. An unlock path would mean the key still existed somewhere after `lock()`.
+Construction copies the key into a session-owned snapshot. Locking zeroes the session's copy and is permanent. A locked session throws on signing, and new signatures require a new session. An unlock path would mean the key still existed somewhere after `lock()`. The key's lifetime is visible in the code: it spans the line that creates the session and the line that locks it.
 
 Sessions also support `using` declarations: disposal calls `lock()` when the scope exits, so a session can be bound to a block instead of a manual call.
 
@@ -34,10 +34,6 @@ After `lock()`, the next signature needs fresh key material, and both sources (r
 A high-frequency trading app keeps one session for the active burst of work and locks it when the burst ends.
 
 Apps that sign occasionally are better served by holding no session at all: create one just to read the public key, lock it, zero the private key, and identify the account by its address. The next signature then starts with a fresh ceremony.
-
-## Why sessions exist
-
-A signing function that took the key as an argument on every call would spread copies across every caller and make zeroing each one the app's job. The session shape keeps the key in one place with one owner, and it makes key lifetime visible in the code: the lifetime spans the line that creates the session and the line that locks it.
 
 ## See also
 

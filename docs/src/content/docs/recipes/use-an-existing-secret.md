@@ -68,7 +68,7 @@ async function unlockPhrase(): Promise<string> {
 }
 ```
 
-`parseSecretVault` is the boundary for the untrusted stored JSON. The decrypted buffer is a fresh allocation.
+`parseSecretVault` is the boundary for the untrusted stored JSON.
 
 ## Derive signing sessions
 

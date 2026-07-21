@@ -35,7 +35,7 @@ try {
 }
 ```
 
-`isMeraError` is a type guard that returns `true` when the value is a `MeraError` instance, narrowing the value so `code` can be branched on.
+`isMeraError` is a type guard: it narrows a caught value so `code` can be branched on.
 
 ## Codes
 

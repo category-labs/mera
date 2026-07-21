@@ -5,7 +5,7 @@ description: How a session owns its private key, why signing never prompts, and 
 
 import SessionLifecycle from "../../../assets/diagrams/session-lifecycle.svg";
 
-A signing session holds one private key and signs with it until it is locked. It is the last step in mera's flow: a ceremony, one [WebAuthn](https://www.w3.org/TR/webauthn-3/) call with a user-verification prompt, produces the 32-byte [PRF output](/concepts/passkeys-and-prf/). The app turns that output into a private key, and the session does the signing.
+A signing session holds one private key and signs with it until it is locked. It is the last step in mera's flow: a passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) produces the 32-byte PRF output. The app turns that output into a private key, and the session does the signing.
 
 Two constructors exist, one per [signature scheme](/concepts/entropy-keys-and-accounts/). [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) signs 32-byte digests. A digest is the fixed-length hash of the content to sign. [createEd25519SigningSession](/reference/create-ed25519-signing-session/) signs arbitrary-length messages. The custody model is the same for both.
 
@@ -29,7 +29,7 @@ Between construction and lock, a compromised runtime can request signatures with
 
 ## How long to keep a session
 
-Unless the app kept the key somewhere else, fresh key material means another passkey ceremony: reproducing a derived key and decrypting a vault both start with one, so after `lock()` the next signature costs one more user-verification prompt. Session lifetime is a trade-off between that prompt and the open window.
+After `lock()`, the next signature needs fresh key material, and both sources, reproducing a derived key and decrypting a vault, start with a ceremony and its prompt. Session lifetime is a trade-off between that prompt and the open window.
 
 A high-frequency trading app keeps one session for the active burst of work and locks it when the burst ends.
 

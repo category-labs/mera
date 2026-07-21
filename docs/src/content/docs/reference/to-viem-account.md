@@ -94,11 +94,10 @@ Signs a 32-byte hash directly, with no additional hashing, and resolves to the 6
 
 ## Notes
 
-Signatures are low-S (the signature's `s` value lies in the lower half of the curve order), which EVM chains require since [EIP-2](https://eips.ethereum.org/EIPS/eip-2); `signDigest` enforces this.
+Signatures are [low-S](/reference/create-secp256k1-signing-session/#signdigestdigest32), which EVM chains require since [EIP-2](https://eips.ethereum.org/EIPS/eip-2); `signDigest` enforces this.
 
 ## See also
 
 - [Send a transaction with viem](/recipes/send-a-transaction-with-viem/): the recipe built on this adapter.
 - [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/): produces the session this adapter consumes.
 - [Signing sessions](/concepts/signing-sessions/): the custody model and lifecycle.
-

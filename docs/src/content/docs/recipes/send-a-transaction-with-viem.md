@@ -5,7 +5,7 @@ description: Sign in with a passkey, derive the first EVM account, and send a tr
 
 This recipe turns a passkey sign-in into a sent transaction. Prerequisites: `@category-labs/mera`, `viem`, `@scure/bip32`, and `@scure/bip39` installed, a [PRF](/concepts/passkeys-and-prf/)-capable authenticator ([authenticator support](/authenticator-support/)), an existing passkey ([Create passkey accounts](/recipes/create-passkey-accounts/) covers the first visit), and test funds on the sending address.
 
-[viem](https://viem.sh) is a TypeScript client library for EVM chains (chains that run the Ethereum Virtual Machine). [toViemAccount](/reference/to-viem-account/) adapts a [signing session](/concepts/signing-sessions/) into the account shape viem accepts, so viem signs and broadcasts while the key stays in the session. Derivation and client setup are app-owned; mera provides the ceremony, the session, and the adapter.
+[viem](https://viem.sh) is a TypeScript client library for EVM chains (chains that run the Ethereum Virtual Machine). [toViemAccount](/reference/to-viem-account/) adapts a [signing session](/concepts/signing-sessions/) into the account shape viem accepts, so viem signs and broadcasts while the key stays in the session.
 
 ## Sign in
 
@@ -17,7 +17,7 @@ const rpId = location.hostname;
 const { prfOutput } = await getPasskeyPrfOutput({ rpId });
 ```
 
-The call runs one ceremony with one user-verification prompt, the only prompt in this recipe. Without `credential`, the browser offers every discoverable passkey for the domain. [Create passkey accounts](/recipes/create-passkey-accounts/) shows pinning the stored credential ID.
+The call runs one ceremony with one user-verification prompt, the only prompt in this recipe. [Create passkey accounts](/recipes/create-passkey-accounts/) shows pinning the stored credential ID so the browser does not offer every discoverable passkey for the domain.
 
 ## Derive the key
 
@@ -74,7 +74,7 @@ const hash = await client.sendTransaction({
 session.lock();
 ```
 
-`http()` with no URL uses the chain's default public RPC endpoint. RPC, remote procedure call, is the HTTP API a chain node exposes for queries and transactions. Production apps pass a dedicated RPC URL.
+`http()` with no URL uses the chain's default public RPC endpoint. Production apps pass a dedicated RPC URL.
 
 `sendTransaction` fills the missing transaction fields from the RPC, signs through the session, broadcasts, and resolves to the transaction hash. Confirmation is a separate query. viem's `waitForTransactionReceipt` on a public client covers it.
 

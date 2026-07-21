@@ -7,7 +7,7 @@ import FirstVsReturning from "../../../assets/diagrams/first-vs-returning.svg";
 
 This recipe builds [passkey accounts](/concepts/passkey-accounts/), extending [Getting started](/getting-started/) with numbered EVM (Ethereum Virtual Machine) and Solana accounts, credential pinning, one passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) per session, and locking. It requires `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a [PRF](/concepts/passkeys-and-prf/)-capable authenticator ([authenticator support](/authenticator-support/)).
 
-Derivation and storage are app-owned; mera provides the ceremonies and signing sessions. Seeds, derivation paths, and phrases are introduced in [Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/).
+Seeds, derivation paths, and phrases are introduced in [Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/).
 
 <FirstVsReturning />
 
@@ -44,7 +44,7 @@ localStorage.setItem(
 );
 ```
 
-`transports` is optional and only a hint: the browser uses it to reach the authenticator directly (a platform prompt for a platform passkey, a QR flow for a phone) instead of offering every option. Sign-in works the same without it.
+`transports` is optional and only a hint: the browser uses it to reach the authenticator directly (a platform prompt for a platform passkey, a QR flow for a phone) instead of offering every option.
 
 A fresh device has no record, so sign-in falls back to a discoverable ceremony and the synced passkey still produces the same accounts.
 

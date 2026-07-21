@@ -35,7 +35,7 @@ Passed to a [key-derivation scheme](/concepts/entropy-keys-and-accounts/), the o
 
 A ceremony is one WebAuthn call and one user-verification prompt. A ceremony either creates a credential or runs an assertion, the call that uses an existing credential. In both, the authenticator proves possession of the key pair and can evaluate the PRF. mera runs both kinds:
 
-- [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) makes the credential and returns the PRF output: one prompt when the authenticator evaluates PRF at create time, two when it needs a follow-up assertion.
+- [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) makes the credential and returns the PRF output.
 - [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) asserts with an existing credential and returns the PRF output.
 
 Signing itself never prompts: it runs in a [signing session](/concepts/signing-sessions/) built from a ceremony's output.

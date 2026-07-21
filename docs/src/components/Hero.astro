@@ -3,13 +3,15 @@
 // pitch, install command, numbered features, actions, and the live demo.
 // The title, tagline, and action buttons come from the page frontmatter; the
 // rest of the landing copy lives here.
-import { LinkButton } from "@astrojs/starlight/components";
+import { Code, LinkButton } from "@astrojs/starlight/components";
 import { withBasePath } from "../base-path";
 import DemoEmbed from "./DemoEmbed.astro";
 import LegalLinks from "./LegalLinks.astro";
 
 const { data } = Astro.locals.starlightRoute.entry;
 const { tagline, actions = [] } = data.hero || {};
+
+const installCommand = "npm install @category-labs/mera";
 
 const features = [
   {
@@ -41,9 +43,9 @@ const features = [
       {tagline && <p class="tagline" set:html={tagline} />}
     </header>
 
-    <figure class="code-frame">
-      <pre><code><span class="prompt">&gt;</span> npm install @category-labs/mera</code></pre>
-    </figure>
+    <div class="code-frame">
+      <Code code={installCommand} lang="sh" frame="none" />
+    </div>
 
     <ol class="features">
       {
@@ -164,25 +166,17 @@ const features = [
     line-height: 1.12;
   }
 
+  /* Restyle the embedded code block through Expressive Code's documented
+     style-setting variables, which inherit into its rendered markup. */
   .code-frame {
     grid-area: code;
-    margin: 0;
-    border: 1px solid var(--sl-color-hairline);
-    border-radius: 6px;
-    background: var(--sl-color-bg-inline-code);
-    font-family: var(--sl-font-mono);
-    font-size: 0.85rem;
-    line-height: 1.6;
-  }
-
-  .code-frame pre {
-    margin: 0;
-    padding: 0.7rem 1rem;
-    overflow-x: auto;
-  }
-
-  .prompt {
-    color: var(--sl-color-gray-3);
+    --ec-brdCol: var(--sl-color-hairline);
+    --ec-brdRad: 6px;
+    --ec-codeBg: var(--sl-color-bg-inline-code);
+    --ec-codeFontSize: 0.85rem;
+    --ec-codeLineHt: 1.6;
+    --ec-codePadBlk: 0.7rem;
+    --ec-codePadInl: 1rem;
   }
 
   .demo-column {
@@ -346,11 +340,9 @@ const features = [
     }
 
     .code-frame {
-      font-size: 0.8rem;
-    }
-
-    .code-frame pre {
-      padding: 0.55rem 0.9rem;
+      --ec-codeFontSize: 0.8rem;
+      --ec-codePadBlk: 0.55rem;
+      --ec-codePadInl: 0.9rem;
     }
 
     .features li {

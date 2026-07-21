@@ -250,7 +250,7 @@ type CreateSecretVaultWithExistingPasskeyOptions = Omit<
   secret: Uint8Array;
 };
 
-/** Copies and validates a secret before a WebAuthn ceremony can start. */
+/** Copies and validates a secret before async ceremony or crypto work starts. */
 function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
   if (secret.length === 0) {
     throw new MeraError("INPUT_INVALID", "secret must not be empty");

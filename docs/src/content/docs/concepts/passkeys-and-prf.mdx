@@ -39,7 +39,7 @@ A ceremony is one WebAuthn call and one user-verification prompt. A ceremony eit
 - [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) asserts with an existing credential and returns the PRF output.
 - [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) chains the two: one prompt when the authenticator evaluates PRF at create time, two when it needs the follow-up assertion.
 
-Signing itself never prompts; it runs in a [signing session](/concepts/signing-sessions/) built from a ceremony's output.
+Signing itself never prompts: it runs in a [signing session](/concepts/signing-sessions/) built from a ceremony's output.
 
 ## See also
 

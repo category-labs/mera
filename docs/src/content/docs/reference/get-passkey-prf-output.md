@@ -64,7 +64,7 @@ WebAuthn timeout in milliseconds.
 
 ## Notes
 
-The assertion requires user verification, and the requirement is not configurable; [Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism.
+The assertion requires user verification, and the requirement is not configurable ([Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism).
 
 The WebAuthn challenge is generated internally.
 

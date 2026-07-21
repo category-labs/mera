@@ -377,13 +377,10 @@ async function createPasskeyWithPrfOutput({
     prfSalt: prfSaltCopy,
   });
 
-  const credentialMetadata = toCredentialMetadata(
-    credential.credentialId,
-    credential.transports,
-  );
+  const { prfOutput: createTimePrfOutput, ...credentialMetadata } = credential;
 
   const prfOutput =
-    credential.prfOutput ??
+    createTimePrfOutput ??
     (
       await getPasskeyPrfOutput({
         rpId: rp.id,

@@ -7,7 +7,7 @@ import TrustBoundary from "../../../assets/diagrams/trust-boundary.svg";
 
 mera runs [passkey ceremonies](/concepts/passkeys-and-prf/#ceremonies-and-prompts), returns [entropy](/concepts/entropy-keys-and-accounts/) to the app, and holds signing keys in [lockable sessions](/concepts/signing-sessions/). All of it runs in the page, with software keys. The guarantees match a wallet app holding an imported seed phrase in the page.
 
-- Any script in the page can read the [PRF output](/concepts/passkeys-and-prf/) and every key derived from it, and can sign with an unlocked session until `session.lock()`. An injected script, a malicious dependency, and a browser extension with page access are all inside this boundary. Locking sessions when idle and keeping derivation windows short shorten the exposure.
+- Any script in the page can read the [PRF output](/concepts/passkeys-and-prf/) and every key derived from it, and can sign with an unlocked session until `session.lock()`. An injected script, a malicious dependency, and a browser extension with page access are all inside this boundary. Locking sessions when idle and zeroing key material promptly shorten the exposure.
 - The passkey's own private key never leaves the authenticator. The PRF output does leave it, and every derived key is an ordinary value in page memory while in use.
 - Losing the passkey without a prior export loses the accounts derived from it. [Passkey accounts](/concepts/passkey-accounts/#losing-the-passkey) lists the ways a passkey is lost.
 - A passkey works only under the rpId (the relying party domain) it was created for: after a domain migration, passkey accounts can no longer be reproduced and vaults can no longer be decrypted. Accounts need an export path before any planned migration.

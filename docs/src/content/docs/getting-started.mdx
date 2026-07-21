@@ -28,7 +28,7 @@ npm install @scure/bip32 @scure/bip39
 
 ## Create a passkey
 
-`createPasskeyWithPrfOutput` creates a [discoverable](/concepts/passkeys-and-prf/) passkey and evaluates its PRF in one call.
+`createPasskeyWithPrfOutput` creates a [discoverable](/concepts/passkeys-and-prf/) passkey and evaluates its PRF in one call. The `rpId` is the relying party ID, the domain the passkey is bound to.
 
 ```ts
 import { createPasskeyWithPrfOutput } from "@category-labs/mera";
@@ -43,7 +43,7 @@ const { prfOutput } = await createPasskeyWithPrfOutput({
 
 The call prompts once, or twice when the authenticator needs a follow-up [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) to evaluate PRF.
 
-mera uses its [default salt](/reference/get-passkey-prf-output/) for this call, so a later sign-in reproduces the same 32 bytes. The `rpId` is the relying party ID, the domain the passkey is bound to.
+mera uses its [default salt](/reference/get-passkey-prf-output/) for this call, so a later sign-in reproduces the same 32 bytes.
 
 ## Derive an account
 

@@ -68,16 +68,12 @@ Calls `lock`, so a `using` declaration locks the session when its scope exits:
 } // locked here
 ```
 
-Sessions bound with `const` or `let` are unaffected; disposal runs only where a caller opts in with `using`.
-
 ## Errors
 
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `privateKey` is not a valid secp256k1 scalar, or `digest32` is not 32 bytes.
 - [`SESSION_LOCKED`](/reference/errors/#session_locked): `signDigest` was called after `lock`.
 
 ## Notes
-
-Signing needs no passkey ceremony and shows no prompt; the session signs as often as the app asks until it is locked.
 
 The digest is read before `signDigest` returns; mutating the buffer after the call cannot change what was signed.
 

@@ -59,7 +59,7 @@ Zeroes the session-owned private-key copy and permanently locks the session; lat
 
 ### [Symbol.dispose]()
 
-Calls `lock`, so a `using` declaration locks the session when its scope exits. Sessions bound with `const` or `let` are unaffected; disposal runs only where a caller opts in with `using`.
+Calls `lock`, so a `using` declaration locks the session when its scope exits.
 
 ## Errors
 
@@ -67,8 +67,6 @@ Calls `lock`, so a `using` declaration locks the session when its scope exits. S
 - [`SESSION_LOCKED`](/reference/errors/#session_locked): `signMessage` was called after `lock`.
 
 ## Notes
-
-Signing needs no passkey ceremony and shows no prompt; the session signs as often as the app asks until it is locked.
 
 The message is read before `signMessage` returns; mutating the buffer after the call cannot change what was signed.
 

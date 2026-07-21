@@ -64,13 +64,9 @@ WebAuthn timeout in milliseconds.
 
 ## Notes
 
-The PRF output is a deterministic function of the credential, `rpId`, and salt. The same inputs reproduce the same 32 bytes, and a different salt yields an unrelated output. The default salt is permanently the fixed v1 value.
-
-The assertion requires user verification, and the requirement is not configurable: the PRF extension evaluates only the credential's user-verified PRF, so a `userVerification` setting could neither change the output nor skip the check. [Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism.
+The assertion requires user verification, and the requirement is not configurable; [Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism.
 
 The WebAuthn challenge is generated internally. The raw assertion response is not returned.
-
-WebAuthn availability is checked before Web Crypto, so an environment missing both throws [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed).
 
 ## See also
 

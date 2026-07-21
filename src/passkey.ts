@@ -110,8 +110,7 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * @returns Credential metadata, plus the first PRF output when `prfSalt` was provided and evaluated during creation.
  * @remarks
  * Invokes `navigator.credentials.create()`, which may show browser or
- * authenticator UI. WebAuthn availability is checked before Web Crypto, so an
- * environment missing both throws `PASSKEY_OPERATION_FAILED`.
+ * authenticator UI.
  *
  * The WebAuthn challenge is generated internally. The raw attestation response
  * is not returned.
@@ -120,10 +119,8 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * attestation `"none"`, a required resident key, and required user
  * verification. User verification is the authenticator's local check; the
  * gesture depends on the platform (a biometric, a device PIN, or a password).
- * The requirement is not configurable: the PRF extension evaluates only the
- * credential's user-verified PRF, so a `userVerification` setting could
- * neither change the PRF output nor remove the check ({@link
- * getPasskeyPrfOutput} documents the authenticator mechanism).
+ * The requirement is not configurable ({@link getPasskeyPrfOutput} documents
+ * the authenticator mechanism).
  *
  * A `PRF_UNAVAILABLE` failure happens after the creation ceremony has
  * completed: the passkey exists on the authenticator, but the thrown error
@@ -227,8 +224,7 @@ async function createPasskey({
  * @returns The selected credential ID and first WebAuthn PRF output.
  * @remarks
  * Invokes `navigator.credentials.get()`, which may show browser or
- * authenticator UI. WebAuthn availability is checked before Web Crypto, so an
- * environment missing both throws `PASSKEY_OPERATION_FAILED`.
+ * authenticator UI.
  *
  * The WebAuthn challenge is generated internally. The raw assertion response is
  * not returned.

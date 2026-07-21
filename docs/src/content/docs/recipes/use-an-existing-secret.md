@@ -3,7 +3,7 @@ title: Encrypt an existing secret with a passkey
 description: Encrypt an existing secret into a passkey-protected vault and unlock it later.
 ---
 
-A [secret vault](/concepts/secret-vaults/) encrypts one [recovery phrase](/concepts/entropy-keys-and-accounts/#seed-phrases), private key, or other byte string behind a passkey; mera never interprets it. The vault is the pattern for secrets that predate the passkey. This recipe validates a phrase, stores its vault, and decrypts it with explicit zeroing. It requires `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
+A [secret vault](/concepts/secret-vaults/) encrypts one [recovery phrase](/concepts/entropy-keys-and-accounts/#seed-phrases), private key, or other byte string behind a passkey. The vault is the pattern for secrets that predate the passkey. This recipe validates a phrase, stores its vault, and decrypts it with explicit zeroing. It requires `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
 
 The surrounding code is app-owned; mera provides the passkey ceremonies and vault functions.
 
@@ -44,7 +44,7 @@ try {
 }
 ```
 
-The function copies the secret before the passkey prompt and zeroes its internal secret and PRF output before it finishes, even when it fails. The [PRF output](/concepts/passkeys-and-prf/) keys the encryption. The `finally` zeroes the caller-owned encoded phrase. A private key is encrypted the same way: pass its raw bytes as `secret` instead of encoded text. The [vault format](/reference/secret-vault-format/) stores everything needed for the later ceremony.
+The [PRF output](/concepts/passkeys-and-prf/) keys the encryption. The `finally` zeroes the caller-owned encoded phrase. A private key is encrypted the same way: pass its raw bytes as `secret` instead of encoded text. The [vault format](/reference/secret-vault-format/) stores everything needed for the later ceremony.
 
 ## Unlock
 
@@ -70,7 +70,7 @@ async function unlockPhrase(): Promise<string> {
 }
 ```
 
-`parseSecretVault` is the boundary for the untrusted stored JSON. The decrypt function owns and zeroes the transient PRF output. The decrypted buffer is a fresh allocation, so the `finally` zeroes it after decoding.
+`parseSecretVault` is the boundary for the untrusted stored JSON. The decrypted buffer is a fresh allocation, so the `finally` zeroes it after decoding.
 
 ## Derive signing sessions
 

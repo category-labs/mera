@@ -79,13 +79,11 @@ WebAuthn timeout in milliseconds.
 
 ## Notes
 
-The credential is requested with fixed parameters: ES256 or RS256 key types, attestation `"none"` (no statement about the authenticator's make is requested), a required resident key, and required user verification. Resident key is the WebAuthn term for a [discoverable](/concepts/passkeys-and-prf/) credential. The user-verification requirement is not configurable: the PRF extension evaluates only the credential's user-verified PRF, so a `userVerification` setting could neither change the PRF output nor remove the check. [Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism.
+The credential is requested with fixed parameters: ES256 or RS256 key types, attestation `"none"` (no statement about the authenticator's make is requested), a required resident key, and required user verification. Resident key is the WebAuthn term for a [discoverable](/concepts/passkeys-and-prf/) credential. The user-verification requirement is not configurable; [Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism.
 
 The WebAuthn challenge is generated internally. The raw attestation response is not returned.
 
 A [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable) failure happens after the creation ceremony has completed: the passkey exists on the authenticator and appears in its passkey list, but the thrown error does not carry its metadata.
-
-WebAuthn availability is checked before Web Crypto, so an environment missing both throws [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed).
 
 ## See also
 

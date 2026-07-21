@@ -3,7 +3,7 @@ title: Passkey accounts
 description: Accounts derived from a passkey's PRF output, with no stored secret.
 ---
 
-A passkey account is a blockchain account whose keys derive from a passkey's PRF output, the 32 secret bytes a passkey returns deterministically ([Passkeys and PRF](/concepts/passkeys-and-prf/) explains the mechanism). No secret is stored anywhere: each ceremony, one [WebAuthn](https://www.w3.org/TR/webauthn-3/) call with a user-verification prompt, recomputes the same accounts. This is the default way to use mera.
+A passkey account is a blockchain account whose keys derive from a passkey's PRF output, the 32 secret bytes a passkey returns deterministically ([Passkeys and PRF](/concepts/passkeys-and-prf/) explains the mechanism). Each ceremony, one [WebAuthn](https://www.w3.org/TR/webauthn-3/) call with a user-verification prompt, recomputes the same accounts. This is the default way to use mera.
 
 ## One salt, one stable output
 

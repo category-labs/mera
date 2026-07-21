@@ -49,7 +49,7 @@ Web Crypto is unavailable. In practice this means the page is running outside a 
 
 ### PRF_UNAVAILABLE
 
-The authenticator did not enable PRF, or did not return a usable 32-byte PRF output. On the create path this fires after the creation ceremony has completed, so the passkey exists on the authenticator even though the error carries no metadata ([createPasskey](/reference/create-passkey/) documents the create path). [Authenticator support](/authenticator-support/) lists tested compatible stacks.
+The authenticator did not enable PRF, or did not return a usable 32-byte PRF output. On the create path the passkey may already exist; [createPasskey](/reference/create-passkey/) documents that behavior. [Authenticator support](/authenticator-support/) lists tested compatible stacks.
 
 ### SESSION_LOCKED
 

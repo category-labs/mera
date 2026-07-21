@@ -5,7 +5,9 @@ description: Install the library, derive an account, and make a first signature.
 
 import GettingStartedOverview from "../../assets/diagrams/getting-started-overview.svg";
 
-A passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) is one call to [WebAuthn](https://www.w3.org/TR/webauthn-3/), the browser standard for signing in with key pairs instead of passwords, and shows one user-verification prompt. Through the [PRF extension](/concepts/passkeys-and-prf/), a ceremony returns 32 secret bytes, which the app uses as [entropy](/concepts/entropy-keys-and-accounts/) to derive accounts. A [signing session](/concepts/signing-sessions/) holds one derived private key and signs, without further prompts, until it is locked. Everything mera returns lives in the page's JavaScript memory ([security model](/concepts/security-model/)).
+A passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) shows one user-verification prompt and returns 32 secret bytes through the [PRF extension](/concepts/passkeys-and-prf/). The app uses those bytes as [entropy](/concepts/entropy-keys-and-accounts/) to derive accounts, and a [signing session](/concepts/signing-sessions/) holds one derived private key and signs, without further prompts, until it is locked. Everything mera returns lives in the page's JavaScript memory ([security model](/concepts/security-model/)).
+
+<GettingStartedOverview />
 
 Prerequisites:
 
@@ -41,19 +43,17 @@ const { prfOutput } = await createPasskeyWithPrfOutput({
 
 The call prompts once, or twice when the authenticator needs a follow-up [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) to evaluate PRF.
 
-mera uses its [default salt](/reference/get-passkey-prf-output/) for this call, so a later sign-in reproduces the same 32 bytes. The `rpId` is the relying party ID, the domain the passkey is bound to. The result also carries the credential ID. [Create passkey accounts](/recipes/create-passkey-accounts/) stores it to pin later sign-ins.
+mera uses its [default salt](/reference/get-passkey-prf-output/) for this call, so a later sign-in reproduces the same 32 bytes. The `rpId` is the relying party ID, the domain the passkey is bound to.
 
 ## Derive an account
 
-The PRF output is entropy, the root of every account that follows ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)). This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) to a phrase and a [seed](/concepts/entropy-keys-and-accounts/#deterministic-derivation), then derives keys with [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki), so a wallet app that follows both standards can import the account.
+The PRF output is entropy, the root of every account that follows ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/)). This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) to a phrase and a [seed](/concepts/entropy-keys-and-accounts/#deterministic-derivation), then derives keys with [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki).
 
 ```ts
 import { HDKey } from "@scure/bip32";
 import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 
-// App-owned derivation: the PRF output becomes BIP-39 entropy, so the same
-// phrase imported into a standard wallet app reproduces the same account.
 const mnemonic = entropyToMnemonic(prfOutput, wordlist);
 const seed = mnemonicToSeedSync(mnemonic);
 const node = HDKey.fromMasterSeed(seed).derive("m/44'/60'/0'/0/0");
@@ -96,11 +96,7 @@ const { prfOutput } = await getPasskeyPrfOutput({
 });
 ```
 
-Without `credential`, the browser offers any discoverable passkey it holds for the relying party. Apps with returning users pin the stored credential ID instead.
-
-## From passkey to signature
-
-<GettingStartedOverview />
+Without `credential`, the browser offers any discoverable passkey it holds for the relying party. [Create passkey accounts](/recipes/create-passkey-accounts/) stores the credential ID at create time and pins later sign-ins to it.
 
 ## Where next
 

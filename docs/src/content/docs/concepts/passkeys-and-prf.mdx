@@ -7,7 +7,7 @@ import PrfFunction from "../../../assets/diagrams/prf-function.svg";
 
 A passkey is a discoverable WebAuthn credential. [WebAuthn](https://www.w3.org/TR/webauthn-3/) is the browser standard for signing in with key pairs instead of passwords. A credential is one such key pair, created at a website's request by an authenticator: a phone, a password manager, or a hardware key. The private half never leaves the authenticator. Discoverable means the authenticator finds the credential for a domain on its own, so signing in needs no username and no stored identifier.
 
-**Passkeys are bound to a relying party ID.** The `rpId` is a domain, and a credential created under one rpId cannot be used under another: after a domain migration, the old credential and everything derived from it are unreachable. The [security model](/concepts/security-model/) covers migrations in depth.
+**Passkeys are bound to a relying party ID.** The `rpId` is a domain, and a credential created under one rpId cannot be used under another: after a domain migration, the old credential and everything derived from it are unreachable. The [security model](/concepts/security-model/) covers migrations.
 
 **Passkeys sync.** Platform authenticators, the credential stores built into an operating system or a password manager, replicate credentials across a person's devices: iCloud Keychain across Apple devices, Google Password Manager across Android and Chrome, 1Password wherever it runs. Everything derived from the credential follows it to those devices.
 
@@ -27,13 +27,13 @@ PRF output is determined by the credential, relying party ID, and salt. Those in
 
 ## Using the output
 
-The output is suitable as the root secret for accounts. It is stable wherever the passkey syncs, it appears only after user verification, and it never needs to be stored: the authenticator re-evaluates it on each ceremony. The output, unlike the credential's private key, leaves the authenticator and returns to the page ([security model](/concepts/security-model/)).
+The output appears only after user verification, and it never needs to be stored: the authenticator re-evaluates it on each ceremony. The output, unlike the credential's private key, leaves the authenticator and returns to the page ([security model](/concepts/security-model/)).
 
 Passed to a [key-derivation scheme](/concepts/entropy-keys-and-accounts/), the output produces a hierarchy of accounts. Used as [key material](/concepts/entropy-keys-and-accounts/#deterministic-derivation), it decrypts a vault. mera returns the output and does nothing else with it. [Passkey accounts](/concepts/passkey-accounts/) is the default pattern built on the first path; [secret vaults](/concepts/secret-vaults/) cover the second, for secrets that already exist.
 
 ## Ceremonies and prompts
 
-A ceremony is one WebAuthn call and one user-verification prompt. A ceremony either creates a credential or runs an assertion, the call that uses an existing credential. In both, the authenticator proves possession of the key pair and can evaluate the PRF. mera runs both kinds:
+A ceremony is one WebAuthn call and one user-verification prompt. A ceremony either creates a credential or runs an assertion, the call that uses an existing credential. Either kind can evaluate the PRF. mera runs both:
 
 - [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) makes the credential and returns the PRF output.
 - [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) asserts with an existing credential and returns the PRF output.

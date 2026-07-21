@@ -69,4 +69,4 @@ Calls `lock`, so a `using` declaration locks the session when its scope exits.
 ## See also
 
 - [getSolanaAddress](/reference/get-solana-address/): the address for `session.publicKey`.
-- [Signing sessions](/concepts/signing-sessions/): the custody model, the lifecycle, and what an active session exposes.
+- [Signing sessions](/concepts/signing-sessions/): how a session owns the key, the lifecycle, and what an active session exposes.

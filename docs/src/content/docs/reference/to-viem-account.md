@@ -100,4 +100,4 @@ Signatures are [low-S](/reference/create-secp256k1-signing-session/#signdigestdi
 
 - [Send a transaction with viem](/recipes/send-a-transaction-with-viem/): the recipe built on this adapter.
 - [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/): produces the session this adapter consumes.
-- [Signing sessions](/concepts/signing-sessions/): the custody model and lifecycle.
+- [Signing sessions](/concepts/signing-sessions/): how a session owns the key, and the lifecycle.

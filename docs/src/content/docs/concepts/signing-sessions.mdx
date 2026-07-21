@@ -5,15 +5,15 @@ description: How a session owns its private key, why signing never prompts, and 
 
 import SessionLifecycle from "../../../assets/diagrams/session-lifecycle.svg";
 
-A signing session holds one private key and signs with it until it is locked. It is the last step in mera's flow: a passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) produces the 32-byte PRF output. The app turns that output into a private key, and the session does the signing.
+A signing session holds one private key and signs with it until it is locked.
 
-Two constructors exist, one per [signature scheme](/concepts/entropy-keys-and-accounts/). [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) signs 32-byte digests. A digest is the fixed-length hash of the content to sign. [createEd25519SigningSession](/reference/create-ed25519-signing-session/) signs arbitrary-length messages. The custody model is the same for both.
+Two constructors exist, one per [signature scheme](/concepts/entropy-keys-and-accounts/). [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) signs 32-byte digests. A digest is the fixed-length hash of the content to sign. [createEd25519SigningSession](/reference/create-ed25519-signing-session/) signs arbitrary-length messages. Both hold and destroy the key the same way.
 
 ## Independent of passkeys
 
 A session's input is a raw private key, derived from PRF output, decrypted from a vault, or imported from elsewhere. The step in between, turning 32 bytes of [entropy](/concepts/entropy-keys-and-accounts/) into a chain-specific private key, is app-owned by design. [Passkey accounts](/concepts/passkey-accounts/) and [secret vaults](/concepts/secret-vaults/) describe the two sources of [key material](/concepts/entropy-keys-and-accounts/#deterministic-derivation).
 
-Because a session never contacts an authenticator, signing never prompts: the one user-verification prompt happened in the ceremony that produced the entropy, and it covers any number of signatures.
+Because a session never contacts an authenticator, signing never prompts: the one user-verification prompt happened in the [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) that produced the entropy, and it covers any number of signatures.
 
 ## The lifecycle
 
@@ -33,7 +33,7 @@ After `lock()`, the next signature needs fresh key material, and both sources (r
 
 A high-frequency trading app keeps one session for the active burst of work and locks it when the burst ends.
 
-Apps that sign occasionally are better served by holding no session at all: derive the public key, identify the account by its address, and zero the private key right away. The next signature then starts with a fresh ceremony.
+Apps that sign occasionally are better served by holding no session at all: create one just to read the public key, lock it, zero the private key, and identify the account by its address. The next signature then starts with a fresh ceremony.
 
 ## Why sessions exist
 

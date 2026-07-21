@@ -17,7 +17,7 @@ const rpId = location.hostname;
 const { prfOutput } = await getPasskeyPrfOutput({ rpId });
 ```
 
-The call runs one ceremony with one user-verification prompt, the only prompt in this recipe. [Create passkey accounts](/recipes/create-passkey-accounts/) shows pinning the stored credential ID so the browser does not offer every discoverable passkey for the domain.
+The call runs one ceremony, the only prompt in this recipe. [Create passkey accounts](/recipes/create-passkey-accounts/) shows pinning the stored credential ID so the browser does not offer every discoverable passkey for the domain.
 
 ## Derive the key
 
@@ -50,8 +50,6 @@ seed.fill(0);
 
 const account = toViemAccount(session);
 ```
-
-The returned account signs transactions, messages, and typed data through `session.signDigest`. The [toViemAccount reference](/reference/to-viem-account/) documents each method.
 
 ## Send the transaction
 
@@ -88,4 +86,4 @@ session.lock();
 
 - [toViemAccount](/reference/to-viem-account/): every signing method the account implements, and the adapter contract.
 - [Create passkey accounts](/recipes/create-passkey-accounts/): the first visit, credential pinning, and numbered accounts.
-- [Signing sessions](/concepts/signing-sessions/): the custody model and how long to hold a session.
+- [Signing sessions](/concepts/signing-sessions/): how a session owns the key and how long to hold one.

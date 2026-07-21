@@ -3,7 +3,7 @@ title: API reference
 description: The exported functions, the vault storage format, and the error codes.
 ---
 
-Each exported function has its own page. Types are documented on the pages of the functions that produce or accept them.
+Types are documented on the pages of the functions that produce or accept them.
 
 ## Passkeys
 

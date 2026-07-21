@@ -67,7 +67,7 @@ WebAuthn timeout in milliseconds, applied to each ceremony.
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not enable PRF or return a usable 32-byte output.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `secret` is empty, or the provided `user.id` length is outside 1 to 64 bytes.
-- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): Web Crypto is unavailable.
+- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the page is not in a secure context, or the runtime lacks Web Crypto.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## Notes

@@ -3,7 +3,7 @@ title: decryptSecretVaultWithPasskey
 description: Performs a passkey assertion and decrypts one secret vault.
 ---
 
-Performs the passkey [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) for a parsed vault and decrypts its secret. Runs one `navigator.credentials.get()` ceremony and shows one user-verification prompt.
+Performs the passkey [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) for a parsed vault and decrypts its secret. Runs one `navigator.credentials.get()` ceremony.
 
 ## Import
 
@@ -58,14 +58,14 @@ WebAuthn timeout in milliseconds.
 
 ## Returns
 
-`Promise<Uint8Array>`: the decrypted secret bytes as a fresh allocation. The library keeps no reference to this buffer; the caller controls its lifetime.
+`Promise<Uint8Array>`: the decrypted secret bytes as a fresh allocation. The library keeps no reference to this buffer.
 
 ## Errors
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not return a usable 32-byte PRF output.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): the vault contains an invalid credential ID, PRF salt, nonce, or ciphertext.
 - [`DECRYPT_FAILED`](/reference/errors/#decrypt_failed): [AES-GCM](/concepts/secret-vaults/#how-a-vault-works) authentication failed because the PRF output was wrong or the vault was modified.
-- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): Web Crypto is unavailable.
+- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the page is not in a secure context, or the runtime lacks Web Crypto.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## Notes

@@ -3,7 +3,7 @@ title: createSecretVaultWithNewPasskey
 description: Creates a passkey and encrypts one secret into a vault with a fresh random salt.
 ---
 
-Creates a passkey and encrypts one secret into a vault. Runs one `navigator.credentials.create()` ceremony and may run a fallback `navigator.credentials.get()` ceremony, so it may show one or two browser prompts.
+Creates a passkey and encrypts one secret into a vault. Runs one `navigator.credentials.create()` ceremony and may run a fallback `navigator.credentials.get()` ceremony, so it shows one or two user-verification prompts.
 
 ## Import
 

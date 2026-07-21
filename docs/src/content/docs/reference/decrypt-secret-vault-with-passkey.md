@@ -3,7 +3,7 @@ title: decryptSecretVaultWithPasskey
 description: Performs a passkey assertion and decrypts one secret vault.
 ---
 
-Performs the passkey [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) for a parsed vault and decrypts its secret. Runs one `navigator.credentials.get()` ceremony, which may show browser or authenticator UI.
+Performs the passkey [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) for a parsed vault and decrypts its secret. Runs one `navigator.credentials.get()` ceremony and shows one user-verification prompt.
 
 ## Import
 
@@ -72,7 +72,7 @@ WebAuthn timeout in milliseconds.
 
 The vault is copied before the assertion starts, so post-call mutation changes neither the credential restriction nor the ciphertext being decrypted. The transient PRF output is zeroed before the function finishes, even when decryption fails.
 
-The WebAuthn challenge is generated internally, and the raw assertion response is not returned.
+The WebAuthn challenge is generated internally.
 
 ## See also
 

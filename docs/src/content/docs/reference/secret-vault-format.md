@@ -52,8 +52,5 @@ The credential ID and salt are stored but not authenticated: neither is supplied
 
 ## See also
 
-- [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/) and [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/): workflow functions that produce this format.
-- [decryptSecretVaultWithPasskey](/reference/decrypt-secret-vault-with-passkey/): the workflow function that performs the assertion and decryption.
-- [createSecretVault](/reference/create-secret-vault/), [getSecretVaultPrfOutput](/reference/get-secret-vault-prf-output/), and [decryptSecretVault](/reference/decrypt-secret-vault/): low-level primitives for the same format.
 - [parseSecretVault](/reference/parse-secret-vault/): the validation boundary for stored JSON.
 - [Secret vaults](/concepts/secret-vaults/): where the vault fits.

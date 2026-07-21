@@ -365,8 +365,7 @@ async function getPasskeyPrfOutput({
  * `sha256("mera.prf.salt.v1")`. This default will not change across
  * library versions.
  *
- * `prfSalt` is copied before async WebAuthn work starts; post-call mutation of
- * an explicit input does not change the fallback ceremony or returned salt.
+ * `prfSalt` is copied before async WebAuthn work starts.
  *
  * Any failure after the creation ceremony completes leaves the passkey on the
  * authenticator, but the thrown error does not carry its metadata.

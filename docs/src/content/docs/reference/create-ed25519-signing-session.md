@@ -1,9 +1,9 @@
 ---
 title: createEd25519SigningSession
-description: Creates an explicitly lockable signing session from an Ed25519 private key.
+description: Creates a lockable signing session from an Ed25519 private key.
 ---
 
-Creates an explicitly lockable signing session from an Ed25519 private key.
+Creates a lockable signing session from an Ed25519 private key.
 
 ## Import
 
@@ -68,7 +68,7 @@ Calls `lock`, so a `using` declaration locks the session when its scope exits.
 
 ## Notes
 
-The message is read before `signMessage` returns; mutating the buffer after the call cannot change what was signed.
+The message is read before `signMessage` returns.
 
 ## See also
 

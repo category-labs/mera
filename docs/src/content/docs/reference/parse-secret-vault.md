@@ -3,7 +3,7 @@ title: parseSecretVault
 description: Parses and validates untrusted secret-vault JSON or objects.
 ---
 
-Parses and validates untrusted secret-vault JSON or objects.
+Parses and validates untrusted secret-vault JSON or objects. It is the boundary between stored vault data and the typed `PasskeySecretVault` the other vault functions accept.
 
 ## Import
 

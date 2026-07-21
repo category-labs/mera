@@ -22,7 +22,7 @@ if (!validateMnemonic(phrase, wordlist)) {
 
 ## Create and persist the vault
 
-`createSecretVaultWithNewPasskey` generates a fresh 32-byte [salt](/concepts/passkeys-and-prf/#the-prf-extension) per vault ([one output, one purpose](/concepts/security-model/)), creates the passkey, and encrypts the secret. The salt and credential metadata are stored in the returned vault.
+`createSecretVaultWithNewPasskey` generates a fresh 32-byte [salt](/concepts/passkeys-and-prf/#the-prf-extension) per vault ([one output, one purpose](/concepts/security-model/)), creates the passkey, and encrypts the secret. The salt and credential metadata are stored in the returned vault ([vault format](/reference/secret-vault-format/)).
 
 ```ts
 import { createSecretVaultWithNewPasskey } from "@category-labs/mera";
@@ -42,7 +42,7 @@ try {
 }
 ```
 
-The [PRF output](/concepts/passkeys-and-prf/) keys the encryption. The `finally` zeroes the caller-owned encoded phrase. A private key is encrypted the same way: pass its raw bytes as `secret` instead of encoded text. The [vault format](/reference/secret-vault-format/) stores everything needed for the later ceremony.
+The [PRF output](/concepts/passkeys-and-prf/) keys the encryption. The `finally` zeroes the caller-owned encoded phrase. A private key is encrypted the same way: pass its raw bytes as `secret` instead of encoded text.
 
 ## Unlock
 

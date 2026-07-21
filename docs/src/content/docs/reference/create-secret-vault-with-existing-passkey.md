@@ -67,7 +67,7 @@ WebAuthn timeout in milliseconds.
 
 ## Returns
 
-`Promise<PasskeySecretVault>`: a JSON-safe vault containing the selected credential metadata, generated PRF salt, nonce, and ciphertext. The [secret vault format](/reference/secret-vault-format/) page documents every field.
+`Promise<PasskeySecretVault>`: a JSON-safe vault containing the selected credential metadata, the fresh random 32-byte PRF salt, nonce, and ciphertext. The [secret vault format](/reference/secret-vault-format/) page documents every field.
 
 ## Errors
 
@@ -78,7 +78,7 @@ WebAuthn timeout in milliseconds.
 
 ## Notes
 
-A fresh random 32-byte PRF salt is generated for each call and stored in the vault. The secret and supplied credential metadata are copied before the ceremony begins. Internal secret and PRF-output copies are zeroed before the function finishes, even when it fails.
+The secret and supplied credential metadata are copied before the ceremony begins. Internal secret and PRF-output copies are zeroed before the function finishes, even when it fails.
 
 ## See also
 

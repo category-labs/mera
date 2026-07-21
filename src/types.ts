@@ -60,8 +60,8 @@ type CreatePasskeyResult = PasskeyCredentialMetadata & {
 /**
  * Result of creating a passkey together with its first PRF output.
  *
- * `prfSalt` is the salt WebAuthn evaluated. It is returned for explicit
- * low-level composition and protocol interoperability.
+ * `prfSalt` is the salt WebAuthn evaluated. It is returned for protocol
+ * interoperability.
  */
 type CreatePasskeyWithPrfOutputResult = PasskeyCredentialMetadata & {
   /** PRF salt that was evaluated. Always 32 bytes and never aliases the caller input. */
@@ -96,7 +96,7 @@ type Secp256k1Signature = {
   readonly recovery: 0 | 1;
 };
 
-/** Inputs for creating an explicitly lockable curve signing session. */
+/** Inputs for creating a lockable curve signing session. */
 type CreateSigningSessionOptions = {
   /**
    * Curve private key. Must be exactly 32 bytes; secp256k1 must also be a valid scalar.
@@ -127,7 +127,7 @@ type Secp256k1SigningSession = LockableSession & {
   /**
    * Signs a 32-byte digest without prehashing it.
    *
-   * @param digest32 - Exactly 32 bytes to sign; read before the call returns, so later mutation cannot change what is signed.
+   * @param digest32 - Exactly 32 bytes to sign; read before the call returns.
    * @returns A compact secp256k1 ECDSA signature with its recovery ID.
    * @throws MeraError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
    * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
@@ -142,7 +142,7 @@ type Ed25519SigningSession = LockableSession & {
   /**
    * Signs an arbitrary-length message with Ed25519.
    *
-   * @param message - Message bytes to sign; read before the call returns, so later mutation cannot change what is signed. Hashing happens inside Ed25519 itself.
+   * @param message - Message bytes to sign; read before the call returns. Hashing happens inside Ed25519 itself.
    * @returns A 64-byte Ed25519 signature (`R || s`).
    * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
    */

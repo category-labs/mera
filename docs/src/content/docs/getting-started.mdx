@@ -5,7 +5,7 @@ description: Install the library, derive an account, and make a first signature.
 
 import GettingStartedOverview from "../../assets/diagrams/getting-started-overview.svg";
 
-A passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) is one call to [WebAuthn](https://www.w3.org/TR/webauthn-3/), the browser standard for signing in with key pairs instead of passwords, and shows one user-verification prompt. Through the [PRF extension](/concepts/passkeys-and-prf/), a ceremony returns 32 secret bytes, which the app uses as [entropy](/concepts/entropy-keys-and-accounts/) to derive accounts. A [signing session](/concepts/signing-sessions/) holds one derived private key and signs, without further prompts, until it is locked. Everything mera returns lives in the page's JavaScript memory. The [security model](/concepts/security-model/) states what that trusts.
+A passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) is one call to [WebAuthn](https://www.w3.org/TR/webauthn-3/), the browser standard for signing in with key pairs instead of passwords, and shows one user-verification prompt. Through the [PRF extension](/concepts/passkeys-and-prf/), a ceremony returns 32 secret bytes, which the app uses as [entropy](/concepts/entropy-keys-and-accounts/) to derive accounts. A [signing session](/concepts/signing-sessions/) holds one derived private key and signs, without further prompts, until it is locked. Everything mera returns lives in the page's JavaScript memory ([security model](/concepts/security-model/)).
 
 Prerequisites:
 
@@ -26,7 +26,7 @@ npm install @scure/bip32 @scure/bip39
 
 ## Create a passkey
 
-`createPasskeyWithPrfOutput` creates a [discoverable](/concepts/passkeys-and-prf/) passkey and evaluates its PRF in one call. The salt is a 32-byte input that acts as a namespace. For one passkey and salt, the returned 32 bytes are always the same.
+`createPasskeyWithPrfOutput` creates a [discoverable](/concepts/passkeys-and-prf/) passkey and evaluates its PRF in one call. The salt is a 32-byte input that acts as a namespace.
 
 ```ts
 import { createPasskeyWithPrfOutput } from "@category-labs/mera";
@@ -101,8 +101,6 @@ Without `credential`, the browser offers any discoverable passkey it holds for t
 ## From passkey to signature
 
 <GettingStartedOverview />
-
-Each sign-in repeats this pipeline: the same passkey and salt return the same 32 bytes, and no secret is stored anywhere.
 
 ## Where next
 

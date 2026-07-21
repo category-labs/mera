@@ -21,7 +21,7 @@ The call runs one ceremony with one user-verification prompt, the only prompt in
 
 ## Derive the key
 
-The seed comes from the same mapping [Create passkey accounts](/recipes/create-passkey-accounts/) uses: the PRF output becomes [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) entropy, the seed feeds [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki), and `m/44'/60'/0'/0/0` is the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) Ethereum path ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/) introduces the standards). Matching that recipe exactly means both flows reach the same address.
+The seed comes from the same mapping [Create passkey accounts](/recipes/create-passkey-accounts/) uses: the PRF output becomes [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) entropy, the seed feeds [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki), and `m/44'/60'/0'/0/0` is the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) Ethereum path ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/) introduces the standards).
 
 ```ts
 import { HDKey } from "@scure/bip32";
@@ -37,7 +37,7 @@ if (node.privateKey === null) throw new Error("derivation produced no key");
 
 ## Create the viem account
 
-`toViemAccount` lives in the `@category-labs/mera/viem` entry point, which requires the optional `viem` peer dependency. The root entry point does not use viem.
+`toViemAccount` lives in the `@category-labs/mera/viem` entry point, which requires the optional `viem` peer dependency.
 
 ```ts
 import { createSecp256k1SigningSession } from "@category-labs/mera";
@@ -74,7 +74,7 @@ const hash = await client.sendTransaction({
 session.lock();
 ```
 
-`sepolia` is Ethereum's Sepolia test network. `http()` with no URL uses the chain's default public RPC endpoint. RPC, remote procedure call, is the HTTP API a chain node exposes for queries and transactions. Production apps pass a dedicated RPC URL. Signing shows no passkey prompt: the one prompt happened at sign-in, and the session covers every signature until it is locked.
+`sepolia` is Ethereum's Sepolia test network. `http()` with no URL uses the chain's default public RPC endpoint. RPC, remote procedure call, is the HTTP API a chain node exposes for queries and transactions. Production apps pass a dedicated RPC URL.
 
 `sendTransaction` fills the missing transaction fields from the RPC, signs through the session, broadcasts, and resolves to the transaction hash. Confirmation is a separate query. viem's `waitForTransactionReceipt` on a public client covers it.
 

@@ -31,7 +31,7 @@ Between construction and lock, a compromised runtime can request signatures with
 
 Unless the app kept the key somewhere else, fresh key material means another passkey ceremony: reproducing a derived key and decrypting a vault both start with one, so after `lock()` the next signature costs one more user-verification prompt. Session lifetime is a trade-off between that prompt and the open window.
 
-Frequent signing justifies a held session. A high-frequency trading app that ran a fresh ceremony per order would prompt constantly, so it keeps one session for the active burst of work and locks it when the burst ends.
+A high-frequency trading app keeps one session for the active burst of work and locks it when the burst ends.
 
 Apps that sign occasionally are better served by holding no session at all: derive the public key, identify the account by its address, and zero the private key right away. The next signature then starts with a fresh ceremony.
 

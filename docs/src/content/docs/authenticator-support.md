@@ -31,7 +31,7 @@ In the table, `✓` means a live PRF create + get cycle has been confirmed end-t
 
 On desktop Chrome, only passkeys saved to Google Password Manager carry PRF. The local profile authenticator lacks [`hmac-secret`](https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html#sctn-hmac-secret-extension), the [CTAP](https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html) primitive behind PRF.
 
-Chrome may create the passkey in the local profile instead of Google Password Manager when its "Offer to save passwords and passkeys" setting is off, or when a third-party password-manager extension intercepts WebAuthn and relays the browser fallback [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts). Either way the passkey exists but returns no PRF output, so mera cannot use it. [createPasskey](/reference/create-passkey/) fails only after the creation ceremony has completed, so the unusable passkey stays in the authenticator's passkey list.
+Chrome may create the passkey in the local profile instead of Google Password Manager when its "Offer to save passwords and passkeys" setting is off, or when a third-party password-manager extension intercepts WebAuthn and relays the browser fallback [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts). Either way the passkey exists but returns no PRF output, so mera cannot use it: [createPasskey](/reference/create-passkey/) fails, and the unusable passkey stays in the authenticator's passkey list.
 
 ## See also
 

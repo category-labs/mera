@@ -17,7 +17,6 @@ import { getDeterministicPrfSaltV1 } from "@category-labs/mera";
 
 ```ts
 const prfSalt = getDeterministicPrfSaltV1();
-// 32 bytes, identical on every call and every mera version.
 ```
 
 ## Parameters

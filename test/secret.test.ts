@@ -321,7 +321,7 @@ test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavaila
   });
 });
 
-test("secret vault AAD is independent of credential metadata and PRF salt", async () => {
+test("secret vault encryption is independent of credential metadata and PRF salt", async () => {
   const vault = await createTestVault();
   const edited = parseSecretVault({
     ...vault,

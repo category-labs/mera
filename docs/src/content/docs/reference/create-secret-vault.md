@@ -5,7 +5,7 @@ description: Encrypts an arbitrary secret into a passkey-protected vault.
 
 Encrypts an arbitrary secret into a passkey-protected vault from explicit credential, salt, and PRF material. This is the low-level encryption primitive; secret-vault workflow functions own the ceremony and random salt.
 
-An AES-256-GCM encryption key is derived from the PRF output with fixed HKDF-SHA-256 info (`mera.v1.encrypt.secret`), which separates it from any other key derived from the same output. The secret is encrypted under fixed additional authenticated data.
+An AES-256-GCM encryption key is derived from the PRF output with fixed HKDF-SHA-256 info (`mera.v1.encrypt.secret`), which separates it from any other key derived from the same output.
 
 ## Import
 

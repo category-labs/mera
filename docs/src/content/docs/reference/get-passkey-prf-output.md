@@ -3,7 +3,7 @@ title: getPasskeyPrfOutput
 description: Requests a passkey PRF evaluation and returns the output.
 ---
 
-Requests a passkey PRF evaluation and returns the output. Runs one `navigator.credentials.get()` ceremony, which may show browser or authenticator UI.
+Requests a passkey PRF evaluation and returns the output. Runs one `navigator.credentials.get()` ceremony and shows one user-verification prompt.
 
 ## Import
 
@@ -66,7 +66,7 @@ WebAuthn timeout in milliseconds.
 
 The assertion requires user verification, and the requirement is not configurable; [Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism.
 
-The WebAuthn challenge is generated internally. The raw assertion response is not returned.
+The WebAuthn challenge is generated internally.
 
 ## See also
 

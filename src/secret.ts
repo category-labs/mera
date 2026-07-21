@@ -273,10 +273,9 @@ function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
  * @param options - Passkey creation inputs and secret bytes; fields are documented on {@link CreateSecretVaultWithNewPasskeyOptions}.
  * @returns A JSON-safe secret vault containing the new credential metadata.
  * @remarks
- * Invokes `navigator.credentials.create()`, which may show browser or
- * authenticator UI. On authenticators that do not evaluate PRF during
- * creation, also invokes `navigator.credentials.get()`, which means a second
- * browser prompt.
+ * Invokes `navigator.credentials.create()` and shows one user-verification
+ * prompt. On authenticators that do not evaluate PRF during creation, also
+ * invokes `navigator.credentials.get()`, which shows a second.
  *
  * `secret` is copied and validated before either ceremony starts. Post-call
  * mutation does not change the encrypted secret. The internal secret and PRF
@@ -322,9 +321,9 @@ async function createSecretVaultWithNewPasskey({
  * @param options - Passkey assertion inputs and secret bytes; fields are documented on {@link CreateSecretVaultWithExistingPasskeyOptions}.
  * @returns A JSON-safe secret vault containing the selected credential metadata.
  * @remarks
- * Invokes `navigator.credentials.get()`, which may show browser or
- * authenticator UI. When `credential` is omitted, WebAuthn may choose any
- * discoverable credential for the relying party.
+ * Invokes `navigator.credentials.get()` and shows one user-verification
+ * prompt. When `credential` is omitted, WebAuthn may choose any discoverable
+ * credential for the relying party.
  *
  * A fresh random PRF salt is generated internally and stored in the returned
  * vault. `secret` and `credential` are copied before the ceremony starts, so
@@ -499,11 +498,10 @@ type GetSecretVaultPrfOutputOptions = {
  * @param options - Secret-vault PRF inputs; fields are documented on {@link GetSecretVaultPrfOutputOptions}.
  * @returns The selected credential ID and first WebAuthn PRF output.
  * @remarks
- * Invokes `navigator.credentials.get()`, which may show browser or
- * authenticator UI.
+ * Invokes `navigator.credentials.get()` and shows one user-verification
+ * prompt.
  *
- * The WebAuthn challenge is generated internally and the raw assertion
- * response is not returned.
+ * The WebAuthn challenge is generated internally.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when the vault's `prfSalt` is not canonical base64url or does not decode to 32 bytes, or `credentialId` is empty or not canonical base64url (already validated for vaults from `parseSecretVault`).
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
@@ -531,9 +529,8 @@ type DecryptSecretVaultWithPasskeyOptions = GetSecretVaultPrfOutputOptions;
  * @param options - Relying party and parsed vault; fields are documented on {@link DecryptSecretVaultWithPasskeyOptions}.
  * @returns The decrypted secret bytes. The returned buffer is a fresh allocation owned by the caller.
  * @remarks
- * Invokes `navigator.credentials.get()`, which may show browser or
- * authenticator UI. The assertion is restricted to the credential stored in
- * the vault.
+ * Invokes `navigator.credentials.get()` and shows one user-verification
+ * prompt. The assertion is restricted to the credential stored in the vault.
  *
  * The internal PRF output is zeroed before the function finishes, even when
  * decryption fails. The returned secret's lifetime belongs to the caller.

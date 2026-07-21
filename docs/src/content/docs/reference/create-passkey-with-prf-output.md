@@ -3,7 +3,7 @@ title: createPasskeyWithPrfOutput
 description: Creates a passkey and returns its deterministic PRF output in one call.
 ---
 
-Creates a passkey and returns its [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF output. It runs [createPasskey](/reference/create-passkey/)'s creation ceremony, which may show browser or authenticator UI; when that ceremony returns no `prfOutput`, it runs [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt, which may show a second prompt.
+Creates a passkey and returns its [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF output. It runs [createPasskey](/reference/create-passkey/)'s creation ceremony and shows one user-verification prompt; when that ceremony returns no `prfOutput`, it runs [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt, which shows a second.
 
 ## Import
 
@@ -79,7 +79,7 @@ WebAuthn timeout in milliseconds, applied to each ceremony.
 
 ## Notes
 
-WebAuthn challenges are generated internally. Raw attestation and assertion responses are not returned.
+WebAuthn challenges are generated internally.
 
 If the fallback ceremony fails, the passkey from the completed creation ceremony still exists on the authenticator, but the thrown error does not carry its metadata.
 

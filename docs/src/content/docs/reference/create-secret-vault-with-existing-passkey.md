@@ -3,7 +3,7 @@ title: createSecretVaultWithExistingPasskey
 description: Encrypts one secret into a vault using an existing passkey and a fresh random salt.
 ---
 
-Evaluates an existing passkey and encrypts one secret into a vault. Runs one `navigator.credentials.get()` ceremony, which may show browser or authenticator UI.
+Evaluates an existing passkey and encrypts one secret into a vault. Runs one `navigator.credentials.get()` ceremony and shows one user-verification prompt.
 
 ## Import
 

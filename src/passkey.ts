@@ -109,11 +109,10 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyOptions}.
  * @returns Credential metadata, plus the first PRF output when `prfSalt` was provided and evaluated during creation.
  * @remarks
- * Invokes `navigator.credentials.create()`, which may show browser or
- * authenticator UI.
+ * Invokes `navigator.credentials.create()` and shows one user-verification
+ * prompt.
  *
- * The WebAuthn challenge is generated internally. The raw attestation response
- * is not returned.
+ * The WebAuthn challenge is generated internally.
  *
  * The credential is requested with fixed parameters: ES256 or RS256 key types,
  * attestation `"none"`, a required resident key, and required user
@@ -223,11 +222,10 @@ async function createPasskey({
  * @param options - Passkey PRF request inputs; fields are documented on {@link GetPasskeyPrfOutputOptions}.
  * @returns The selected credential ID and first WebAuthn PRF output.
  * @remarks
- * Invokes `navigator.credentials.get()`, which may show browser or
- * authenticator UI.
+ * Invokes `navigator.credentials.get()` and shows one user-verification
+ * prompt.
  *
- * The WebAuthn challenge is generated internally. The raw assertion response is
- * not returned.
+ * The WebAuthn challenge is generated internally.
  *
  * When `prfSalt` is omitted, the value returned by {@link
  * getDeterministicPrfSaltV1} is used. This default is stable across library
@@ -337,12 +335,11 @@ async function getPasskeyPrfOutput({
  * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyWithPrfOutputOptions}.
  * @returns Credential metadata and the first PRF output.
  * @remarks
- * Invokes `navigator.credentials.create()`. On authenticators that do not
- * evaluate PRF during creation, also invokes `navigator.credentials.get()`,
- * which means a second browser prompt.
+ * Invokes `navigator.credentials.create()` and shows one user-verification
+ * prompt. On authenticators that do not evaluate PRF during creation, also
+ * invokes `navigator.credentials.get()`, which shows a second.
  *
- * WebAuthn challenges are generated internally. Raw attestation and assertion
- * responses are not returned.
+ * WebAuthn challenges are generated internally.
  *
  * When `prfSalt` is omitted, the value returned by {@link
  * getDeterministicPrfSaltV1} is used. This default is stable across library

@@ -184,6 +184,23 @@ async function createSecretVault({
   credential,
   secret,
 }: CreateSecretVaultOptions): Promise<PasskeySecretVault> {
+  const secretCopy = copyNonEmptySecret(secret);
+
+  try {
+    return await createSecretVaultFromSecretCopy({
+      credential,
+      secret: secretCopy,
+    });
+  } finally {
+    secretCopy.fill(0);
+  }
+}
+
+/** Encrypts a non-empty secret snapshot that its caller owns and zeroes. */
+async function createSecretVaultFromSecretCopy({
+  credential,
+  secret,
+}: CreateSecretVaultOptions): Promise<PasskeySecretVault> {
   const { credentialId, transports, prfSalt, prfOutput } = credential;
 
   base64UrlDecode(credentialId, {
@@ -195,33 +212,24 @@ async function createSecretVault({
     throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
   }
 
-  if (secret.length === 0) {
-    throw new MeraError("INPUT_INVALID", "secret must not be empty");
-  }
-
   const prfSaltCopy = copyBytes(prfSalt);
-  const secretCopy = copyBytes(secret);
 
-  try {
-    // The copy guarantee for prfOutput is provided by hkdfSha256AesGcmKey,
-    // which snapshots it synchronously before its first await.
-    const encryptionKey = await deriveEncryptionKey(prfOutput);
-    const encrypted = await aesGcmEncrypt({
-      plaintext: secretCopy,
-      encryptionKey,
-      aad: SECRET_AAD,
-    });
+  // The copy guarantee for prfOutput is provided by hkdfSha256AesGcmKey,
+  // which snapshots it synchronously before its first await.
+  const encryptionKey = await deriveEncryptionKey(prfOutput);
+  const encrypted = await aesGcmEncrypt({
+    plaintext: secret,
+    encryptionKey,
+    aad: SECRET_AAD,
+  });
 
-    return {
-      version: 1,
-      credential: toCredentialMetadata(credentialId, transports),
-      prfSalt: base64UrlEncode(prfSaltCopy),
-      nonce: base64UrlEncode(encrypted.nonce),
-      ciphertext: base64UrlEncode(encrypted.ciphertext),
-    };
-  } finally {
-    secretCopy.fill(0);
-  }
+  return {
+    version: 1,
+    credential: toCredentialMetadata(credentialId, transports),
+    prfSalt: base64UrlEncode(prfSaltCopy),
+    nonce: base64UrlEncode(encrypted.nonce),
+    ciphertext: base64UrlEncode(encrypted.ciphertext),
+  };
 }
 
 /** Inputs for creating a secret vault together with a new passkey. */
@@ -266,9 +274,9 @@ function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
  * creation, also invokes `navigator.credentials.get()`, which means a second
  * browser prompt.
  *
- * `secret` is copied and validated before either ceremony starts. Post-call
- * mutation does not change the encrypted secret. The internal secret and PRF
- * output are zeroed before the function finishes, even when it fails.
+ * `secret` is copied once and validated before either ceremony starts.
+ * Post-call mutation does not change the encrypted secret. The internal secret
+ * and PRF output are zeroed before the function finishes, even when it fails.
  *
  * If the fallback ceremony or vault encryption fails, the passkey from the
  * completed creation ceremony still exists on the authenticator, but the
@@ -296,7 +304,10 @@ async function createSecretVaultWithNewPasskey({
     });
     prfOutput = credential.prfOutput;
 
-    return await createSecretVault({ credential, secret: secretCopy });
+    return await createSecretVaultFromSecretCopy({
+      credential,
+      secret: secretCopy,
+    });
   } finally {
     secretCopy.fill(0);
     prfOutput?.fill(0);
@@ -315,9 +326,10 @@ async function createSecretVaultWithNewPasskey({
  * discoverable credential for the relying party.
  *
  * A fresh random PRF salt is generated internally and stored in the returned
- * vault. `secret` and `credential` are copied before the ceremony starts, so
- * post-call mutation does not change the operation. The internal secret and
- * PRF output are zeroed before the function finishes, even when it fails.
+ * vault. `secret` is copied once, and `credential` is copied before the
+ * ceremony starts, so post-call mutation does not change the operation. The
+ * internal secret and PRF output are zeroed before the function finishes, even
+ * when it fails.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when `secret` is empty, or `credential.credentialId` is empty or not canonical base64url.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
@@ -346,7 +358,7 @@ async function createSecretVaultWithExistingPasskey({
     });
     prfOutput = evaluated.prfOutput;
 
-    return await createSecretVault({
+    return await createSecretVaultFromSecretCopy({
       credential: {
         credentialId: evaluated.credentialId,
         ...(credentialCopy?.credentialId === evaluated.credentialId &&

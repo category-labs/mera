@@ -78,7 +78,7 @@ WebAuthn timeout in milliseconds.
 
 ## Notes
 
-A fresh random 32-byte PRF salt is generated for each call and stored in the vault. The secret and supplied credential metadata are copied before the ceremony begins. Internal secret and PRF-output copies are zeroed before the function finishes, even when it fails.
+A fresh random 32-byte PRF salt is generated for each call and stored in the vault. The secret is copied once, and supplied credential metadata is copied before the ceremony begins. The internal secret and PRF output are zeroed before the function finishes, even when it fails.
 
 ## See also
 

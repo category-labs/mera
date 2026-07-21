@@ -31,12 +31,6 @@ None.
 
 None.
 
-## Notes
-
-The salt encodes no account selection: choosing account 0 versus account 7 happens in the derivation scheme the app applies to the PRF output.
-
-This salt belongs to passkey-account flows. The secret-vault creation functions generate and store 32 fresh random bytes for each vault ([one output, one purpose](/concepts/security-model/)).
-
 ## See also
 
 - [getPasskeyPrfOutput](/reference/get-passkey-prf-output/): evaluate a passkey with this default or an explicit salt.

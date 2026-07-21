@@ -218,8 +218,6 @@ async function createSecretVault({
   const secretCopy = copyBytes(secret);
 
   try {
-    // The copy guarantee for prfOutput is provided by deriveEncryptionKey,
-    // which snapshots it synchronously before its first await.
     const encryptionKey = await deriveEncryptionKey(prfOutput);
     const encrypted = await aesGcmEncrypt({
       plaintext: secretCopy,
@@ -403,8 +401,6 @@ async function decryptSecretVault({
   vault,
   prfOutput,
 }: DecryptSecretVaultOptions): Promise<Uint8Array<ArrayBuffer>> {
-  // The copy guarantee documented above is provided by deriveEncryptionKey,
-  // which snapshots prfOutput synchronously before its first await.
   const encryptionKey = await deriveEncryptionKey(prfOutput);
 
   return aesGcmDecrypt({

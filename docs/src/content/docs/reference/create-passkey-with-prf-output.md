@@ -3,7 +3,7 @@ title: createPasskeyWithPrfOutput
 description: Creates a passkey and returns its deterministic PRF output in one call.
 ---
 
-Creates a passkey and returns its [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF output. It runs [createPasskey](/reference/create-passkey/)'s creation ceremony and shows one user-verification prompt; when that ceremony returns no `prfOutput`, it runs [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt, which shows a second.
+Creates a [discoverable](/concepts/passkeys-and-prf/), user-verified passkey with the [WebAuthn](https://www.w3.org/TR/webauthn-3/) PRF extension enabled and returns its PRF output. It runs one creation ceremony and shows one user-verification prompt; when the authenticator does not evaluate the PRF at create time, it runs [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) with the same salt, which shows a second.
 
 ## Import
 
@@ -50,7 +50,7 @@ Human-readable display name for the authenticator UI.
 - Type: `Uint8Array`
 - Optional; a fresh 32-byte random handle is generated per call when omitted
 
-User handle stored with the discoverable credential. Must be 1 to 64 bytes when provided, the same constraint as on [createPasskey](/reference/create-passkey/#optionsuserid). Copied before use.
+User handle stored with the discoverable credential. Must be 1 to 64 bytes when provided (WebAuthn's user-handle limit). The generated handle is not correlated with an app account, so repeated calls do not share a stable user handle. Copied before use.
 
 ### options.prfSalt
 
@@ -79,12 +79,13 @@ WebAuthn timeout in milliseconds, applied to each ceremony.
 
 ## Notes
 
+The credential is requested with fixed parameters: ES256 or RS256 key types, attestation `"none"` (no statement about the authenticator's make is requested), a required resident key, and required user verification. Resident key is the WebAuthn term for a [discoverable](/concepts/passkeys-and-prf/) credential. The user-verification requirement is not configurable ([Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism).
+
 WebAuthn challenges are generated internally.
 
-If the fallback ceremony fails, the passkey from the completed creation ceremony still exists on the authenticator, but the thrown error does not carry its metadata.
+Any failure after the creation ceremony completes leaves the passkey on the authenticator: it appears in the authenticator's passkey list, but the thrown error does not carry its metadata.
 
 ## See also
 
-- [createSecretVault](/reference/create-secret-vault/): low-level vault encryption with explicit PRF material.
 - [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/): create a passkey and vault with a fresh random salt.
 - [Getting started](/getting-started/): the passkey-account flow built on this call.

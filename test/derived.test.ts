@@ -1,6 +1,6 @@
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
-import { getDeterministicPrfSaltV1 } from "../dist/index.js";
+import { getDeterministicPrfSaltV1 } from "../dist/derived.js";
 
 test("returns the fixed v1 deterministic PRF salt", () => {
   const salt = getDeterministicPrfSaltV1();

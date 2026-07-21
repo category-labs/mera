@@ -38,7 +38,7 @@ A secp256k1 public key, compressed (33 bytes) or uncompressed (65 bytes). Normal
 
 ## Returns
 
-An `EvmAddress`: the EIP-55 mixed-case checksummed address as a `0x`-prefixed string. `EvmAddress` is the structural type `` `0x${string}` ``; [isEvmAddress](/reference/is-evm-address/) is the authoritative runtime check for strings from elsewhere.
+An `EvmAddress`: the EIP-55 mixed-case checksummed address as a `0x`-prefixed string. `EvmAddress` is the structural type `` `0x${string}` ``.
 
 ## Errors
 
@@ -47,4 +47,3 @@ An `EvmAddress`: the EIP-55 mixed-case checksummed address as a `0x`-prefixed st
 ## See also
 
 - [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/): the session whose `publicKey` this typically receives.
-- [isEvmAddress](/reference/is-evm-address/)

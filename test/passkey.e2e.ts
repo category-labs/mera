@@ -41,7 +41,7 @@ test("creates a PRF-capable passkey and returns stable PRF output", async ({
       const mera = await import("@category-labs/mera");
       const salt = new Uint8Array(32).fill(5);
       const otherSalt = new Uint8Array(32).fill(6);
-      const credential = await mera.createPasskey({
+      const credential = await mera.createPasskeyWithPrfOutput({
         rp: { id: "localhost", name: "Mera Test" },
         user: {
           id: crypto.getRandomValues(new Uint8Array(32)),
@@ -69,9 +69,8 @@ test("creates a PRF-capable passkey and returns stable PRF output", async ({
 
       return {
         credentialId: credential.credentialId,
-        atCreate: credential.prfOutput
-          ? Array.from(credential.prfOutput)
-          : null,
+        returnedSalt: Array.from(credential.prfSalt),
+        initial: Array.from(credential.prfOutput),
         second: Array.from(second.prfOutput),
         discoveredCredentialId: discovered.credentialId,
         discovered: Array.from(discovered.prfOutput),
@@ -80,12 +79,12 @@ test("creates a PRF-capable passkey and returns stable PRF output", async ({
     });
 
     expect(result.credentialId).toMatch(/^[A-Za-z0-9_-]+$/u);
-    expect(result.atCreate).not.toBeNull();
-    expect(result.atCreate).toHaveLength(32);
-    expect(result.atCreate).toEqual(result.second);
+    expect(result.returnedSalt).toEqual(new Array(32).fill(5));
+    expect(result.initial).toHaveLength(32);
+    expect(result.initial).toEqual(result.second);
     expect(result.discoveredCredentialId).toBe(result.credentialId);
     expect(result.discovered).toEqual(result.second);
-    expect(result.atCreate).not.toEqual(result.other);
+    expect(result.initial).not.toEqual(result.other);
   });
 });
 
@@ -110,9 +109,16 @@ test("PRF output helpers use the deterministic v1 salt by default", async ({
         credential: created,
       });
 
+      const documentedSalt = new Uint8Array(
+        await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode("mera.v1.deterministic.prf"),
+        ),
+      );
+
       return {
         credentialId: created.credentialId,
-        expectedSalt: Array.from(mera.getDeterministicPrfSaltV1()),
+        expectedSalt: Array.from(documentedSalt),
         prfSalt: Array.from(created.prfSalt),
         prfOutput: Array.from(created.prfOutput),
         repeated: Array.from(repeated.prfOutput),

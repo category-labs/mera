@@ -38,7 +38,7 @@ A 32-byte Ed25519 public key.
 
 ## Returns
 
-A `SolanaAddress`. The type is a nominal brand over `string`: base58 has no structural shape TypeScript could check the way `0x${string}` covers EVM addresses, so values of this type are minted only by this function and by [isSolanaAddress](/reference/is-solana-address/). At runtime the value is a plain string.
+A `SolanaAddress`. The type is a nominal brand over `string`: base58 has no structural shape TypeScript could check the way `0x${string}` covers EVM addresses, so values of this type are minted only by this function. At runtime the value is a plain string.
 
 ## Errors
 
@@ -47,4 +47,3 @@ A `SolanaAddress`. The type is a nominal brand over `string`: base58 has no stru
 ## See also
 
 - [createEd25519SigningSession](/reference/create-ed25519-signing-session/): the session whose `publicKey` this typically receives.
-- [isSolanaAddress](/reference/is-solana-address/)

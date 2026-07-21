@@ -21,7 +21,7 @@ The requirement is not configurable. PRF is built on the [`hmac-secret`](https:/
 
 The [PRF extension](https://www.w3.org/TR/webauthn-3/#prf-extension) gives each credential a pseudorandom function: a function whose output looks random but is fully determined by its inputs. The caller passes a 32-byte salt with the ceremony and the authenticator returns 32 bytes.
 
-PRF output is determined by the credential, relying party ID, and salt. Those inputs produce the same 32 bytes on every synced device; a different salt produces unrelated output. Salts act as namespaces, which is why passkey accounts share one [fixed salt](/reference/get-deterministic-prf-salt-v1/) while each secret vault gets a fresh random one.
+PRF output is determined by the credential, relying party ID, and salt. Those inputs produce the same 32 bytes on every synced device; a different salt produces unrelated output. Salts act as namespaces, which is why passkey accounts share one [fixed salt](/reference/get-passkey-prf-output/) while each secret vault gets a fresh random one.
 
 <PrfFunction />
 
@@ -33,11 +33,10 @@ Passed to a [key-derivation scheme](/concepts/entropy-keys-and-accounts/), the o
 
 ## Ceremonies and prompts
 
-A ceremony is one WebAuthn call and one user-verification prompt. A ceremony either creates a credential or runs an assertion, the call that uses an existing credential. In both, the authenticator proves possession of the key pair and can evaluate the PRF. mera runs three kinds:
+A ceremony is one WebAuthn call and one user-verification prompt. A ceremony either creates a credential or runs an assertion, the call that uses an existing credential. In both, the authenticator proves possession of the key pair and can evaluate the PRF. mera runs both kinds:
 
-- [createPasskey](/reference/create-passkey/) makes the credential, and can evaluate the PRF in the same ceremony when the authenticator supports it.
+- [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) makes the credential and returns the PRF output: one prompt when the authenticator evaluates PRF at create time, two when it needs a follow-up assertion.
 - [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) asserts with an existing credential and returns the PRF output.
-- [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) chains the two: one prompt when the authenticator evaluates PRF at create time, two when it needs the follow-up assertion.
 
 Signing itself never prompts: it runs in a [signing session](/concepts/signing-sessions/) built from a ceremony's output.
 

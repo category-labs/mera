@@ -11,7 +11,7 @@ mera runs [passkey ceremonies](/concepts/passkeys-and-prf/#ceremonies-and-prompt
 - The passkey's own private key never leaves the authenticator. The PRF output does leave it, and every derived key is an ordinary value in page memory while in use.
 - Losing the passkey without a prior export loses the accounts derived from it. [Passkey accounts](/concepts/passkey-accounts/#losing-the-passkey) lists the ways a passkey is lost.
 - A passkey works only under the rpId (the relying party domain) it was created for: after a domain migration, passkey accounts can no longer be reproduced and vaults can no longer be decrypted. Accounts need an export path before any planned migration.
-- Secrets encrypted with one reused PRF output share an encryption key, and exposing that key exposes them all. The secret-vault workflow functions generate a fresh random 32-byte salt per secret; on the low-level path, [createSecretVault](/reference/create-secret-vault/) leaves the fresh salt to the caller.
+- Secrets encrypted with one reused PRF output share an encryption key, and exposing that key exposes them all. The secret-vault functions generate a fresh random 32-byte salt per secret.
 - The only runtime dependencies are `@noble/*` and `@scure/*`, well-known audited cryptography libraries.
 
 <TrustBoundary />

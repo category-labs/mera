@@ -156,8 +156,6 @@ export default defineConfig({
               items: [
                 "reference/create-passkey-with-prf-output",
                 "reference/get-passkey-prf-output",
-                "reference/create-passkey",
-                "reference/get-deterministic-prf-salt-v1",
               ],
             },
             {
@@ -174,9 +172,6 @@ export default defineConfig({
                 "reference/create-secret-vault-with-new-passkey",
                 "reference/create-secret-vault-with-existing-passkey",
                 "reference/decrypt-secret-vault-with-passkey",
-                "reference/create-secret-vault",
-                "reference/get-secret-vault-prf-output",
-                "reference/decrypt-secret-vault",
                 "reference/parse-secret-vault",
                 "reference/secret-vault-format",
               ],
@@ -185,9 +180,7 @@ export default defineConfig({
               label: "Addresses",
               items: [
                 "reference/get-evm-address",
-                "reference/is-evm-address",
                 "reference/get-solana-address",
-                "reference/is-solana-address",
               ],
             },
             { label: "Errors", slug: "reference/errors" },

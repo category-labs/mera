@@ -16,27 +16,6 @@ function getEvmAddress(publicKey: Uint8Array): EvmAddress {
   return toChecksumAddress(bytesToHex(addressBytes));
 }
 
-/**
- * Returns true when a string is a 20-byte `0x`-prefixed EVM address.
- *
- * All-lowercase and all-uppercase hex bodies are accepted as-is (no checksum
- * to verify). Mixed-case inputs are validated against EIP-55: an inconsistent
- * mixed-case address (a typo or a tampered string) is rejected.
- *
- * @param value - String to check.
- * @returns `true` when `value` is a 20-byte `0x`-prefixed EVM address with a valid (or absent) EIP-55 checksum.
- */
-function isEvmAddress(value: string): value is EvmAddress {
-  if (!/^0x[0-9a-fA-F]{40}$/u.test(value)) {
-    return false;
-  }
-  const body = value.slice(2);
-  if (body === body.toLowerCase() || body === body.toUpperCase()) {
-    return true;
-  }
-  return toChecksumAddress(body.toLowerCase()) === value;
-}
-
 // EIP-55: each lowercase hex nibble is uppercased iff the corresponding nibble
 // of keccak256(lowercase-hex-without-0x) is >= 8. Precondition: lowercaseHex is
 // already lowercase; mixed-case input would produce a wrong checksum.
@@ -54,4 +33,4 @@ function toChecksumAddress(lowercaseHex: string): EvmAddress {
   return `0x${body}`;
 }
 
-export { getEvmAddress, isEvmAddress };
+export { getEvmAddress };

@@ -66,10 +66,6 @@ Calls `lock`, so a `using` declaration locks the session when its scope exits.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `privateKey` is not 32 bytes.
 - [`SESSION_LOCKED`](/reference/errors/#session_locked): `signMessage` was called after `lock`.
 
-## Notes
-
-The message is read before `signMessage` returns.
-
 ## See also
 
 - [getSolanaAddress](/reference/get-solana-address/): the address for `session.publicKey`.

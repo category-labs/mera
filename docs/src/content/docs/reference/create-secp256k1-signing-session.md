@@ -75,8 +75,6 @@ Calls `lock`, so a `using` declaration locks the session when its scope exits:
 
 ## Notes
 
-The digest is read before `signDigest` returns.
-
 The recovery ID is declared `0 | 1`. Values 2 and 3 exist in ECDSA, the signature algorithm secp256k1 uses, but require the signature's `r` to reach the curve order, which happens with probability around 2^-127; if it ever did, the call would throw [`INPUT_INVALID`](/reference/errors/#input_invalid) rather than return a signature that cannot be address-recovered.
 
 ## See also

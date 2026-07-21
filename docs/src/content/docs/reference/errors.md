@@ -57,7 +57,7 @@ A signing call was made after the session's `lock()`. Locking is permanent; new 
 
 ### DECRYPT_FAILED
 
-[AES-GCM](/concepts/secret-vaults/#how-a-vault-works) authentication failed while decrypting a vault: wrong key material, or tampered ciphertext or [additional authenticated data](/reference/secret-vault-format/#what-is-deliberately-absent). The two cases are indistinguishable by design; GCM authenticates before it decrypts.
+[AES-GCM](/concepts/secret-vaults/#how-a-vault-works) authentication failed while decrypting a vault: wrong key material or a tampered nonce/ciphertext pair. The two cases are indistinguishable by design; GCM authenticates before it decrypts.
 
 ### INPUT_INVALID
 

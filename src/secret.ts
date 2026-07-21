@@ -31,12 +31,9 @@ const NONCE_LENGTH = 12;
 // any authentic ciphertext is at least this long.
 const GCM_TAG_LENGTH = 16;
 
-// HKDF info and AAD for the secret vault. The HKDF info keeps the encryption key
-// distinct from any other key derived from the same PRF output. The AAD is a
-// fixed constant: vault fields such as the credential ID and PRF salt are
-// deliberately not bound; see the Security remark on createSecretVault.
+// HKDF info keeps the encryption key distinct from any other key derived from
+// the same PRF output.
 const SECRET_ENCRYPTION_INFO = utf8ToBytes("mera.v1.encrypt.secret");
-const SECRET_AAD = utf8ToBytes("mera.v1.secret.aad");
 
 /** AES-GCM encrypted bytes. */
 type EncryptedBytes = {
@@ -62,11 +59,9 @@ async function deriveEncryptionKey(prfOutput: Uint8Array): Promise<CryptoKey> {
 async function aesGcmEncrypt({
   plaintext,
   encryptionKey,
-  aad,
 }: {
   plaintext: Uint8Array;
   encryptionKey: CryptoKey;
-  aad: Uint8Array;
 }): Promise<EncryptedBytes> {
   const iv = randomBytes(NONCE_LENGTH);
 
@@ -74,7 +69,6 @@ async function aesGcmEncrypt({
     {
       name: "AES-GCM",
       iv: asArrayBuffer(iv),
-      additionalData: asArrayBuffer(aad),
     },
     encryptionKey,
     asArrayBuffer(plaintext),
@@ -86,23 +80,20 @@ async function aesGcmEncrypt({
   };
 }
 
-// AES-256-GCM decrypt. Authentication failures (wrong key, tampered ciphertext
-// or AAD) surface as DECRYPT_FAILED. The returned bytes are not interpreted.
+// AES-256-GCM decrypt. Authentication failures from a wrong key or tampered
+// nonce/ciphertext surface as DECRYPT_FAILED. The returned bytes are not interpreted.
 async function aesGcmDecrypt({
   encrypted,
   encryptionKey,
-  aad,
 }: {
   encrypted: EncryptedBytes;
   encryptionKey: CryptoKey;
-  aad: Uint8Array;
 }): Promise<Uint8Array<ArrayBuffer>> {
   try {
     const plaintext = await getCrypto().subtle.decrypt(
       {
         name: "AES-GCM",
         iv: asArrayBuffer(encrypted.nonce),
-        additionalData: asArrayBuffer(aad),
       },
       encryptionKey,
       asArrayBuffer(encrypted.ciphertext),
@@ -164,8 +155,7 @@ type CreateSecretVaultOptions = {
  *
  * An AES-256-GCM encryption key is derived from the PRF output with fixed
  * HKDF info (`mera.v1.encrypt.secret`), which separates it from other keys
- * derived from the same PRF output. The secret is encrypted under fixed
- * additional authenticated data (AAD).
+ * derived from the same PRF output.
  *
  * @remarks
  * The input byte buffers are copied before async cryptographic work starts;
@@ -209,7 +199,6 @@ async function createSecretVault({
     const encrypted = await aesGcmEncrypt({
       plaintext: secretCopy,
       encryptionKey,
-      aad: SECRET_AAD,
     });
 
     return {
@@ -399,7 +388,6 @@ async function decryptSecretVault({
       ciphertext: base64UrlDecode(vault.ciphertext),
     },
     encryptionKey,
-    aad: SECRET_AAD,
   });
 }
 

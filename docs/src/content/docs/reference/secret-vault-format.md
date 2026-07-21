@@ -48,7 +48,7 @@ The AES-GCM ciphertext including its 16-byte authentication tag, the value decry
 
 The encryption key and the PRF output are never stored; both exist only transiently in memory. The rpId is also absent: the vault does not record which relying party it belongs to, and the unlock assertion supplies it.
 
-The credential ID and salt are stored but not authenticated: the AES-GCM additional authenticated data is the fixed constant `mera.v1.secret.aad`, so a vault is cryptographically bound to its PRF output only. This is why each secret needs a fresh salt: vaults that share a PRF output share an encryption key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored JSON.
+The credential ID and salt are stored but not authenticated: neither is supplied as AES-GCM additional authenticated data, so a vault is cryptographically bound to its PRF output only. This is why each secret needs a fresh salt: vaults that share a PRF output share an encryption key, and their nonce/ciphertext pairs become interchangeable to anyone who can rewrite stored JSON.
 
 ## Portability
 

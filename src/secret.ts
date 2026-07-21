@@ -200,11 +200,12 @@ async function createSecretVault({
   }
 
   const prfSaltCopy = copyBytes(prfSalt);
-  const prfOutputCopy = copyBytes(prfOutput);
   const secretCopy = copyBytes(secret);
 
   try {
-    const encryptionKey = await deriveEncryptionKey(prfOutputCopy);
+    // The copy guarantee for prfOutput is provided by hkdfSha256AesGcmKey,
+    // which snapshots it synchronously before its first await.
+    const encryptionKey = await deriveEncryptionKey(prfOutput);
     const encrypted = await aesGcmEncrypt({
       plaintext: secretCopy,
       encryptionKey,
@@ -219,7 +220,6 @@ async function createSecretVault({
       ciphertext: base64UrlEncode(encrypted.ciphertext),
     };
   } finally {
-    prfOutputCopy.fill(0);
     secretCopy.fill(0);
   }
 }

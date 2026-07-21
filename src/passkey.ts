@@ -261,12 +261,13 @@ async function getPasskeyPrfOutput({
   try {
     assertCredentialApiAvailable();
 
-    const prfSaltCopy = copyBytes(prfSalt ?? getDeterministicPrfSaltV1());
-    if (prfSaltCopy.length !== 32) {
+    if (prfSalt !== undefined && prfSalt.length !== 32) {
       throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
     }
 
-    const prf = { eval: { first: asArrayBuffer(prfSaltCopy) } };
+    const prf = {
+      eval: { first: asArrayBuffer(prfSalt ?? getDeterministicPrfSaltV1()) },
+    };
 
     const publicKey: PublicKeyCredentialRequestOptions = {
       rpId,
@@ -368,7 +369,8 @@ async function createPasskeyWithPrfOutput({
   timeout,
   prfSalt,
 }: CreatePasskeyWithPrfOutputOptions): Promise<CreatePasskeyWithPrfOutputResult> {
-  const prfSaltCopy = copyBytes(prfSalt ?? getDeterministicPrfSaltV1());
+  const prfSaltCopy =
+    prfSalt === undefined ? getDeterministicPrfSaltV1() : copyBytes(prfSalt);
 
   const credential = await createPasskey({
     rp,

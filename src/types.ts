@@ -127,7 +127,7 @@ type Secp256k1SigningSession = LockableSession & {
   /**
    * Signs a 32-byte digest without prehashing it.
    *
-   * @param digest32 - Exactly 32 bytes to sign; read before the call returns.
+   * @param digest32 - Exactly 32 bytes to sign.
    * @returns A compact secp256k1 ECDSA signature with its recovery ID.
    * @throws MeraError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
    * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
@@ -142,7 +142,7 @@ type Ed25519SigningSession = LockableSession & {
   /**
    * Signs an arbitrary-length message with Ed25519.
    *
-   * @param message - Message bytes to sign; read before the call returns. Hashing happens inside Ed25519 itself.
+   * @param message - Message bytes to sign. Hashing happens inside Ed25519 itself.
    * @returns A 64-byte Ed25519 signature (`R || s`).
    * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
    */

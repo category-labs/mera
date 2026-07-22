@@ -8,13 +8,13 @@ The reader is a strong software engineer who may know none of blockchain, crypto
 
 Define every complex concept or acronym on first mention in a page: one to three sentences, tied to the step the reader is in, linking the owning page for depth. Later mentions on the same page reuse the short name without re-explaining. The foundations concept page (`concepts/entropy-keys-and-accounts`) owns the blockchain background; glosses elsewhere link there rather than re-teaching it.
 
-Reference pages are exempt: they state facts and link to the page that teaches.
+Reference pages are exempt: they state facts and link to the page that teaches. Getting started is exempt in the other direction: it links the owning concept page instead of defining inline.
 
 ## Information architecture
 
 The site follows the Diátaxis split (<https://diataxis.fr/>): each page does one job.
 
-- **Getting started** teaches one first success, end to end. It may explain just enough to keep the reader moving, nothing more.
+- **Getting started** teaches one first success, end to end. Its lead states what the reader will do, not how the mechanism works. Each step links the owning page instead of explaining; a detail the reader does not need for the next step is a link, not a sentence.
 - **Concepts** explain how something works and why it is designed that way. No step-by-step instructions.
 - **Recipes** solve one task each. A recipe assumes a competent reader with a goal, states its prerequisites, and gets to the point.
 - **Reference** states facts about the public API, one exported function per page. Keep instructions, opinions, and long explanations out of it; link to them instead.
@@ -59,7 +59,7 @@ The bar is simple, concise, and detailed at once: detail survives the cut, fille
 - Passkey accounts are the default path; secret vaults are the advanced option for secrets that predate the passkey. Never present the two as coequal alternatives.
 - Word choice fits technical documentation. Plain nouns over narrative or dramatic ones: "trade-offs", never "stories"; "complication", never "trap". A word that belongs in a blog headline gets replaced.
 - Plain verbs over idioms: "use a vault", never "reach for a vault". An idiom a non-native reader would pause on gets replaced with the literal verb.
-- Calm explanation, no marketing. If a sentence would fit in a product brochure, rewrite it.
+- Calm explanation, no marketing. If a sentence would fit in a product brochure, rewrite it. An accurate behavior claim can still be marketing: if it exists to impress rather than to move the reader forward, cut it and let the owning page state the behavior.
 - Named wallet apps are examples, never an exhaustive list.
 - Prefer a concrete statement over an abstract one. "The salt is 32 bytes" beats "the salt has a fixed size".
 - Neutral possessives: "the passkey", "the secret". Avoid "your passkey".
@@ -77,14 +77,20 @@ The bar is simple, concise, and detailed at once: detail survives the cut, fille
 - Short paragraphs, but not a wall of one-liners.
 - Banned vocabulary: seamless, robust, powerful, effortless, simply, leverage, unlock (as praise; unlocking a vault is fine), delve, game-changer.
 
+## Diagrams
+
+- A node carries the step name. An ownership row (mera, the app) is allowed when the library/app boundary matters.
+- No subtitle text that restates the surrounding prose or a concept page; the diagram shows the shape, the text explains.
+- The `<title>` element describes the whole diagram in sentences for screen readers.
+
 ## Accuracy
 
 - Every claim must be checkable against the JSDoc, implementation, or tests.
 - Implementation details live only on the page that owns them: error codes and library internals on the reference, demo internals (derivation schemes, storage, UI) in the recipes that adapt its code. Every other page links to the owning page instead of restating the detail, so a demo or library change touches one page.
 - Examples import only the public API plus explicitly declared app-side dependencies.
 - Examples define every identifier they use. Values the app supplies enter through a placeholder with realistic shape and provenance: `crypto.getRandomValues(new Uint8Array(32))` for key material, `new TextEncoder().encode(...)` for secret text, a literal for addresses and rpIds. Never use an all-zero buffer where the library validates the value; an all-zero secp256k1 key throws.
-- A placeholder value carries its meaning in a descriptive variable name (`recipient`, `privateKey`), not in a comment. A comment that restates the variable name is deleted; provenance worth stating moves to prose.
-- Security-sensitive behavior is stated plainly on the page where the risk is acted on: key material lifetimes, zeroing, nonce handling, prompt counts, and what the library cannot protect against.
+- A value carries its meaning in a descriptive variable name (`recipient`, `privateKey`), not in a comment and not in prose after the block. A literal worth explaining becomes a named variable. A comment that restates the variable name is deleted; provenance worth stating moves to prose.
+- Security-sensitive behavior (key material lifetimes, zeroing, nonce handling, prompt counts, what the library cannot protect against) is stated plainly on the concept and reference pages that own it, and in a recipe at the step that acts on the risk. Getting started links to it instead of restating.
 - Support claims are date-stamped. The authenticator matrix lives on the authenticator-support page and is maintained there only.
 
 ## Mechanics

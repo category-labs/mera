@@ -64,16 +64,15 @@ const record =
 localStorage.setItem("app.derivedCredential", JSON.stringify(record));
 ```
 
-## Hold a seed for the session
+## Create a seed from the PRF output
 
-Turn the PRF output into a [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed once, zero the output, and keep the seed in memory for the session: every account below derives from it without another ceremony.
+Turn the PRF output into a [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed.
 
 ```ts
 import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 
 const seed = mnemonicToSeedSync(entropyToMnemonic(prfOutput, wordlist));
-prfOutput.fill(0);
 ```
 
 ## Derive numbered accounts
@@ -98,7 +97,7 @@ function deriveEvmAccount(seed: Uint8Array, index: number) {
 }
 ```
 
-Solana uses [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md), the [Ed25519](/concepts/entropy-keys-and-accounts/) counterpart of BIP-32, and its derivation is a short chain of HMAC (keyed hash) calls:
+Solana uses [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md), the Ed25519 counterpart of BIP-32, and its derivation is a short chain of HMAC (keyed hash) calls:
 
 ```ts
 import {
@@ -142,12 +141,6 @@ const accounts = [deriveEvmAccount(seed, 0), deriveSolanaAccount(seed, 0)];
 for (const account of accounts) {
   account.session.lock();
 }
-seed.fill(0);
 ```
 
-Sessions zero their own key copies on `lock()`. The seed is the app's buffer, so zeroing it is the app's job.
-
-## Pitfalls
-
-- **Do not change the derivation after launch.** Changing the mnemonic mapping or either path changes every account address.
-- **Accounts reproduce only under the same [rpId](/concepts/passkeys-and-prf/)**, the domain the passkey is bound to. A domain migration leaves them unreachable, with no error until someone tries to sign in. Give accounts an export path first. The phrase to show is `entropyToMnemonic` over the PRF output from a fresh sign-in ceremony, the same mapping the seed step uses ([Passkey accounts](/concepts/passkey-accounts/)).
+Locking zeroes private keys owned by the session.

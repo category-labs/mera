@@ -1,8 +1,8 @@
 <svg
   xmlns="http://www.w3.org/2000/svg"
-  viewBox="200 0 440 476"
+  viewBox="200 0 440 432"
   width="440"
-  height="476"
+  height="432"
   role="img"
   class="mera-diagram"
 >
@@ -28,21 +28,13 @@
   </defs>
 
   <rect class="d-secret" x="220" y="24" width="200" height="56" rx="8" />
-  <text x="320" y="48" text-anchor="middle">Private key</text>
-  <text x="320" y="67" text-anchor="middle" class="d-sub">
-    derived, decrypted, or imported
-  </text>
+  <text x="320" y="57" text-anchor="middle">Private key</text>
 
   <path class="d-edge" d="M320 80 V164" marker-end="url(#sl-arrow)" />
-  <text x="332" y="121" class="d-sub">
-    creating the session consumes the key
-  </text>
+  <text x="332" y="126" class="d-sub">create the session</text>
 
   <rect class="d-secret" x="220" y="168" width="200" height="64" rx="16" />
-  <text x="320" y="194" text-anchor="middle">Unlocked</text>
-  <text x="320" y="213" text-anchor="middle" class="d-sub">
-    holds the only copy of the key
-  </text>
+  <text x="320" y="205" text-anchor="middle">Unlocked</text>
 
   <path
     class="d-edge"
@@ -52,16 +44,8 @@
   <text x="490" y="203" class="d-sub">signs on request</text>
 
   <path class="d-edge" d="M320 232 V344" marker-end="url(#sl-arrow)" />
-  <text x="332" y="280" class="d-mono">lock()</text>
-  <text x="332" y="298" class="d-sub">zeroes the session's key copy</text>
+  <text x="332" y="292" class="d-mono">lock()</text>
 
   <rect class="d-node" x="220" y="348" width="200" height="64" rx="16" />
-  <text x="320" y="374" text-anchor="middle">Locked</text>
-  <text x="320" y="393" text-anchor="middle" class="d-sub">
-    permanent; there is no unlock
-  </text>
-
-  <text x="420" y="456" text-anchor="middle" class="d-note">
-    A new signature needs a new session.
-  </text>
+  <text x="320" y="385" text-anchor="middle">Locked</text>
 </svg>

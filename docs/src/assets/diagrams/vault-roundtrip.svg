@@ -1,8 +1,8 @@
 <svg
   xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 680 500"
+  viewBox="0 0 680 468"
   width="680"
-  height="500"
+  height="468"
   role="img"
   class="mera-diagram"
 >
@@ -30,49 +30,27 @@
   </defs>
 
   <rect class="d-secret" x="60" y="24" width="240" height="56" rx="8" />
-  <text x="180" y="48" text-anchor="middle">Secret</text>
-  <text x="180" y="67" text-anchor="middle" class="d-sub">
-    a phrase, a key, any bytes
-  </text>
+  <text x="180" y="57" text-anchor="middle">Secret</text>
 
   <path class="d-edge" d="M180 80 V140" marker-end="url(#vr-arrow)" />
 
   <rect class="d-node" x="60" y="144" width="240" height="56" rx="8" />
-  <text x="180" y="168" text-anchor="middle">AES-256-GCM</text>
-  <text x="180" y="187" text-anchor="middle" class="d-sub">
-    authenticated encryption
-  </text>
+  <text x="180" y="177" text-anchor="middle">AES-256-GCM</text>
 
   <rect class="d-node" x="380" y="144" width="260" height="56" rx="8" />
-  <text x="510" y="168" text-anchor="middle">Passkey ceremony</text>
-  <text x="510" y="187" text-anchor="middle" class="d-sub">
-    a fresh random salt per secret
-  </text>
+  <text x="510" y="177" text-anchor="middle">Passkey ceremony</text>
 
   <path class="d-edge" d="M380 172 H308" marker-end="url(#vr-arrow)" />
-  <text x="344" y="162" text-anchor="middle" class="d-sub">PRF output</text>
-  <text x="344" y="188" text-anchor="middle" class="d-sub">32 bytes</text>
+  <text x="344" y="164" text-anchor="middle" class="d-sub">PRF output</text>
 
   <path class="d-edge" d="M180 200 V260" marker-end="url(#vr-arrow)" />
-  <text x="192" y="234" class="d-sub">the salt is stored in the vault</text>
 
   <rect class="d-node" x="60" y="264" width="240" height="64" rx="8" />
-  <text x="180" y="290" text-anchor="middle">Vault JSON</text>
-  <text x="180" y="309" text-anchor="middle" class="d-sub">
-    localStorage, a backend, a sync service
-  </text>
+  <text x="180" y="301" text-anchor="middle">Vault JSON</text>
 
   <path class="d-edge" d="M180 328 V388" marker-end="url(#vr-arrow)" />
-  <text x="192" y="352" class="d-sub">unlock: the same ceremony with the</text>
-  <text x="192" y="370" class="d-sub">stored salt reproduces the key</text>
+  <text x="192" y="362" class="d-sub">unlock</text>
 
   <rect class="d-secret" x="60" y="392" width="240" height="56" rx="8" />
-  <text x="180" y="416" text-anchor="middle">Secret</text>
-  <text x="180" y="435" text-anchor="middle" class="d-sub">
-    only the ceremony recovers it
-  </text>
-
-  <text x="340" y="488" text-anchor="middle" class="d-note">
-    Tampering with the stored bytes makes decryption fail.
-  </text>
+  <text x="180" y="425" text-anchor="middle">Secret</text>
 </svg>

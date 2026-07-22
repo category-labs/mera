@@ -30,7 +30,7 @@
   </defs>
 
   <!-- first visit -->
-  <rect class="d-zone" x="24" y="24" width="296" height="246" rx="10" />
+  <rect class="d-zone" x="24" y="24" width="296" height="216" rx="10" />
   <text x="38" y="46" class="d-sub">first visit</text>
 
   <rect class="d-node" x="48" y="56" width="248" height="56" rx="8" />
@@ -41,19 +41,13 @@
 
   <path class="d-edge" d="M172 112 V156" marker-end="url(#fr-arrow)" />
 
-  <rect class="d-node" x="48" y="160" width="248" height="80" rx="8" />
-  <text x="172" y="184" text-anchor="middle">Credential metadata</text>
-  <text x="172" y="203" text-anchor="middle" class="d-sub">
-    credentialId and transports
-  </text>
-  <text x="172" y="221" text-anchor="middle" class="d-sub">
-    no key material
-  </text>
+  <rect class="d-node" x="48" y="160" width="248" height="56" rx="8" />
+  <text x="172" y="193" text-anchor="middle">Credential metadata</text>
 
   <!-- the stored record feeds the later sign-in -->
   <path
     class="d-edge d-dashed"
-    d="M296 200 L378 92"
+    d="M296 188 L378 92"
     marker-end="url(#fr-arrow)"
   />
 
@@ -70,26 +64,19 @@
   <path class="d-edge" d="M508 112 V156" marker-end="url(#fr-arrow)" />
 
   <rect class="d-secret" x="384" y="160" width="248" height="56" rx="8" />
-  <text x="508" y="184" text-anchor="middle">PRF output</text>
-  <text x="508" y="203" text-anchor="middle" class="d-sub">32 bytes</text>
+  <text x="508" y="193" text-anchor="middle">PRF output</text>
 
   <path class="d-edge" d="M508 216 V260" marker-end="url(#fr-arrow)" />
   <text x="520" y="242" class="d-sub">BIP-39</text>
 
   <rect class="d-secret" x="384" y="264" width="248" height="56" rx="8" />
-  <text x="508" y="288" text-anchor="middle">Seed</text>
-  <text x="508" y="307" text-anchor="middle" class="d-sub">
-    held in memory for the session
-  </text>
+  <text x="508" y="297" text-anchor="middle">Seed</text>
 
   <path class="d-edge" d="M508 320 V364" marker-end="url(#fr-arrow)" />
-  <text x="520" y="346" class="d-sub">HD derivation by index</text>
+  <text x="520" y="346" class="d-sub">derivation by index</text>
 
   <rect class="d-secret" x="384" y="368" width="248" height="64" rx="8" />
-  <text x="508" y="394" text-anchor="middle">Signing sessions</text>
-  <text x="508" y="413" text-anchor="middle" class="d-sub">
-    EVM and Solana, numbered by index
-  </text>
+  <text x="508" y="405" text-anchor="middle">Signing sessions</text>
 
   <path class="d-edge" d="M508 432 V476" marker-end="url(#fr-arrow)" />
   <text x="520" y="458" class="d-mono">lock()</text>

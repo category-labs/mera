@@ -12,19 +12,18 @@ import type { EvmAddress } from "../types.js";
  */
 function getEvmAddress(publicKey: Uint8Array): EvmAddress {
   const uncompressed = normalizeSecp256k1PublicKey(publicKey);
-  const addressBytes = keccak_256(uncompressed.slice(1)).slice(-20);
+  const addressBytes = keccak_256(uncompressed.subarray(1)).slice(-20);
   return toChecksumAddress(bytesToHex(addressBytes));
 }
 
 // EIP-55: each lowercase hex nibble is uppercased iff the corresponding nibble
 // of keccak256(lowercase-hex-without-0x) is >= 8. Precondition: lowercaseHex is
-// already lowercase; mixed-case input would produce a wrong checksum.
+// the 20-byte address as 40 lowercase hex chars; mixed case would produce a
+// wrong checksum.
 function toChecksumAddress(lowercaseHex: string): EvmAddress {
   const hash = keccak_256(utf8ToBytes(lowercaseHex));
   let body = "";
-  for (const [i, hashByte] of hash
-    .subarray(0, lowercaseHex.length / 2)
-    .entries()) {
+  for (const [i, hashByte] of hash.subarray(0, 20).entries()) {
     const high = lowercaseHex.charAt(i * 2);
     const low = lowercaseHex.charAt(i * 2 + 1);
     body += hashByte >> 4 >= 8 ? high.toUpperCase() : high;

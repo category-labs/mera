@@ -5,7 +5,6 @@ description: Create numbered EVM and Solana accounts from one passkey ceremony, 
 
 import FirstVsReturning from "../../../assets/diagrams/first-vs-returning.svg";
 
-This recipe builds [passkey accounts](/concepts/passkey-accounts/), extending [Getting started](/getting-started/): numbered [EVM](/concepts/entropy-keys-and-accounts/) and Solana accounts, credential pinning, one passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) per session, and locking.
 
 Prerequisites:
 
@@ -26,11 +25,9 @@ const created = await createPasskeyWithPrfOutput({
   user: { name: "account@example.com", displayName: "Example account" },
 });
 
-// The seed comes from the sign-in ceremony below; this output is unused.
-created.prfOutput.fill(0);
 ```
 
-`user.id` is left to its default, a fresh 32-byte random handle, so every create call makes a distinct, parallel passkey.
+Every call creates a new passkey.
 
 ## Remember the credential
 
@@ -47,8 +44,6 @@ localStorage.setItem(
 ```
 
 `transports` is optional and only a hint: the browser uses it to reach the authenticator directly (a platform prompt for a platform passkey, a QR flow for a phone) instead of offering every option.
-
-A fresh device has no record, so sign-in falls back to a discoverable ceremony and the synced passkey still produces the same accounts.
 
 ## Sign in
 

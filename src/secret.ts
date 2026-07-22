@@ -465,9 +465,6 @@ type DecryptSecretVaultWithPasskeyOptions = {
  * Invokes `navigator.credentials.get()` and shows one user-verification
  * prompt. The assertion is restricted to the credential stored in the vault.
  *
- * The vault is validated with {@link parseSecretVault} and copied before the
- * assertion starts, so a malformed vault fails before any prompt.
- *
  * The internal PRF output is zeroed before the function finishes, even when
  * decryption fails.
  * @throws MeraError with code `VAULT_FORMAT_INVALID` when the vault's required structure, version, or encoded data is invalid.

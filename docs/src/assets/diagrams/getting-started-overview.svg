@@ -27,31 +27,25 @@
   </defs>
 
   <rect class="d-node" x="4" y="16" width="136" height="56" rx="8" />
-  <text x="72" y="40" text-anchor="middle">Sign in</text>
-  <text x="72" y="59" text-anchor="middle" class="d-sub">passkey ceremony</text>
+  <text x="72" y="49" text-anchor="middle">Sign in</text>
   <text x="72" y="92" text-anchor="middle" class="d-sub">mera</text>
 
   <path class="d-edge" d="M140 44 H160" marker-end="url(#gs-arrow)" />
 
   <rect class="d-secret" x="164" y="16" width="136" height="56" rx="8" />
-  <text x="232" y="40" text-anchor="middle">32 secret bytes</text>
-  <text x="232" y="59" text-anchor="middle" class="d-sub">
-    same every sign-in
-  </text>
+  <text x="232" y="49" text-anchor="middle">32 secret bytes</text>
   <text x="232" y="92" text-anchor="middle" class="d-sub">mera</text>
 
   <path class="d-edge" d="M300 44 H320" marker-end="url(#gs-arrow)" />
 
   <rect class="d-secret" x="324" y="16" width="136" height="56" rx="8" />
-  <text x="392" y="40" text-anchor="middle">Derive a key</text>
-  <text x="392" y="59" text-anchor="middle" class="d-sub">any scheme</text>
+  <text x="392" y="49" text-anchor="middle">Derive a key</text>
   <text x="392" y="92" text-anchor="middle" class="d-sub">the app</text>
 
   <path class="d-edge" d="M460 44 H480" marker-end="url(#gs-arrow)" />
 
   <rect class="d-secret" x="484" y="16" width="136" height="56" rx="8" />
-  <text x="552" y="40" text-anchor="middle">Signing session</text>
-  <text x="552" y="59" text-anchor="middle" class="d-sub">holds the key</text>
+  <text x="552" y="49" text-anchor="middle">Signing session</text>
   <text x="552" y="92" text-anchor="middle" class="d-sub">mera</text>
 
   <path class="d-edge" d="M620 44 H640" marker-end="url(#gs-arrow)" />

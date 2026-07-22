@@ -176,8 +176,9 @@ type CreateSecretVaultOptions = {
  * vaults encrypted with one reused PRF output share an encryption key, so the
  * orchestrators use a fresh salt for each secret.
  *
- * Internal building block: inputs are validated and owned by the caller, so
- * nothing is copied or zeroed here.
+ * Internal building block: inputs arrive validated and caller-owned. Byte
+ * inputs are read in place and never zeroed here; the orchestrators own the
+ * pre-ceremony snapshots and the zeroing.
  *
  * @returns A JSON-safe secret vault.
  * @throws MeraError with code `INPUT_INVALID` when the PRF output is not 32 bytes.

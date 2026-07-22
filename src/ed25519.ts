@@ -50,4 +50,4 @@ function createEd25519SigningSession({
   };
 }
 
-export { createEd25519SigningSession, getEd25519PublicKey };
+export { createEd25519SigningSession };

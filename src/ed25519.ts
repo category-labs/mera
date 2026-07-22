@@ -7,12 +7,9 @@ import type {
 } from "./types.js";
 
 /**
- * Derives the 32-byte Ed25519 public key for a 32-byte Ed25519 private key.
+ * Derives the Ed25519 public key for a 32-byte private key (the seed).
  *
- * @param privateKey - A 32-byte Ed25519 private key (the seed).
- * @returns The 32-byte Ed25519 public key.
  * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not 32 bytes.
- * @internal
  */
 function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array<ArrayBuffer> {
   if (privateKey.length !== 32) {
@@ -28,7 +25,7 @@ function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array<ArrayBuffer> {
 /**
  * Creates a signing session from an Ed25519 private key.
  *
- * @param options - Signing session inputs; fields are documented on {@link CreateSigningSessionOptions}.
+ * @param options - Signing session inputs.
  * @returns A live Ed25519 signing session.
  * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not 32 bytes.
  */

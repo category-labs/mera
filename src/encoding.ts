@@ -3,8 +3,8 @@ import { MeraError, type MeraErrorCode } from "./errors.js";
 
 /**
  * Copies bytes into a standalone `Uint8Array`.
- * @param value - Bytes to copy.
- * @returns A new `Uint8Array` with the same bytes as `value`.
+ *
+ * @internal
  */
 function copyBytes(value: Uint8Array): Uint8Array<ArrayBuffer> {
   return new Uint8Array(value);
@@ -13,8 +13,7 @@ function copyBytes(value: Uint8Array): Uint8Array<ArrayBuffer> {
 /**
  * Copies bytes into a standalone `ArrayBuffer` for Web APIs.
  *
- * @param value - Bytes to copy.
- * @returns A new `ArrayBuffer` with the same bytes as `value`.
+ * @internal
  */
 function asArrayBuffer(value: Uint8Array): ArrayBuffer {
   const output = new ArrayBuffer(value.byteLength);
@@ -25,8 +24,7 @@ function asArrayBuffer(value: Uint8Array): ArrayBuffer {
 /**
  * Encodes bytes as canonical unpadded base64url.
  *
- * @param value - Bytes to encode.
- * @returns Canonical unpadded base64url text.
+ * @internal
  */
 function base64UrlEncode(value: Uint8Array): string {
   return base64urlnopad.encode(value);
@@ -43,6 +41,7 @@ function base64UrlEncode(value: Uint8Array): string {
  * @param options.minByteLength - Minimum decoded length in bytes.
  * @returns Decoded bytes.
  * @throws MeraError with `options.code` when `value` uses invalid characters, invalid length, or non-canonical padding, or the decoded bytes violate `options.byteLength` or `options.minByteLength`.
+ * @internal
  */
 function base64UrlDecode(
   value: string,

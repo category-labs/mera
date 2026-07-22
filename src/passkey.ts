@@ -17,22 +17,22 @@ import { randomBytes } from "./webcrypto.js";
 
 const DEFAULT_PRF_SALT = sha256(utf8ToBytes("mera.prf.salt.v1"));
 
-/** Inputs for creating a discoverable, user-verified passkey and obtaining its first WebAuthn PRF output in one call. */
+/** Inputs for creating a passkey and obtaining its first WebAuthn PRF output. */
 type CreatePasskeyWithPrfOutputOptions = {
   /**
    * Relying party identity passed to WebAuthn. `id` is required so the
    * fallback assertion can target the same relying party.
    */
   rp: PublicKeyCredentialRpEntity & { id: string };
-  /** User identity passed to WebAuthn. `id` is copied before use. */
+  /**
+   * User identity passed to WebAuthn. `id` is copied before async WebAuthn
+   * work starts.
+   */
   user: {
     /**
-     * User handle for the relying party. Must be 1 to 64 bytes when provided
-     * (WebAuthn's user-handle limit).
-     *
-     * This value is stored as the WebAuthn user handle for the discoverable
-     * credential. When omitted, a fresh 32-byte random handle is generated for
-     * each call. The generated handle is not correlated with an app account.
+     * User handle stored for the discoverable credential. Must be 1 to 64
+     * bytes when provided (WebAuthn's user-handle limit). When omitted, a
+     * fresh 32-byte random handle is generated for each call.
      */
     id?: Uint8Array;
     /** User name displayed or stored by the authenticator. */
@@ -44,7 +44,8 @@ type CreatePasskeyWithPrfOutputOptions = {
   timeout?: number;
   /**
    * 32-byte PRF salt evaluated during creation, or by the fallback assertion.
-   * Defaults to Mera's fixed salt. Copied before use.
+   * Defaults to the fixed salt documented on {@link getPasskeyPrfOutput}.
+   * Copied before async WebAuthn work starts.
    */
   prfSalt?: Uint8Array;
 };
@@ -53,11 +54,15 @@ type CreatePasskeyWithPrfOutputOptions = {
 type GetPasskeyPrfOutputOptions = {
   /** Relying party ID for the WebAuthn assertion. */
   rpId: string;
-  /** Credential metadata to restrict the assertion to one passkey. */
+  /**
+   * Credential metadata to restrict the assertion to one passkey. When
+   * omitted, WebAuthn may choose any discoverable credential for the relying
+   * party.
+   */
   credential?: PasskeyCredentialMetadata;
   /**
-   * PRF salt as 32 raw bytes. Defaults to Mera's fixed salt.
-   * Copied before use.
+   * PRF salt as 32 raw bytes. Defaults to the fixed salt documented on
+   * {@link getPasskeyPrfOutput}. Copied before async WebAuthn work starts.
    */
   prfSalt?: Uint8Array;
   /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
@@ -79,30 +84,21 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
 
 /**
  * Creates a discoverable, user-verified passkey that requires WebAuthn PRF
- * support, and returns the first PRF output, falling back to
- * {@link getPasskeyPrfOutput} with the same salt only when the authenticator
- * does not evaluate PRF at create time.
+ * support and returns the first PRF output.
  *
- * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyWithPrfOutputOptions}.
+ * @param options - Passkey creation inputs.
  * @returns Credential metadata and the first PRF output.
  * @remarks
  * Invokes `navigator.credentials.create()` and shows one user-verification
- * prompt. On authenticators that do not evaluate PRF during creation, also
- * invokes `navigator.credentials.get()`, which shows a second.
+ * prompt. On authenticators that do not evaluate PRF during creation, a
+ * fallback `navigator.credentials.get()` evaluates the same salt and shows a
+ * second prompt.
  *
  * WebAuthn challenges are generated internally.
  *
  * The credential is requested with fixed parameters: ES256 or RS256 key types,
  * attestation `"none"`, a required resident key, and required user
- * verification. User verification is the authenticator's local check; the
- * gesture depends on the platform (a biometric, a device PIN, or a password).
- * The requirement is not configurable ({@link getPasskeyPrfOutput} documents
- * the authenticator mechanism).
- *
- * When `prfSalt` is omitted, the default salt is used;
- * {@link getPasskeyPrfOutput} documents its value and stability.
- *
- * `prfSalt` is copied before async WebAuthn work starts.
+ * verification ({@link getPasskeyPrfOutput} explains the requirement).
  *
  * Any failure after the creation ceremony completes leaves the passkey on the
  * authenticator, but the thrown error does not carry its metadata.
@@ -207,9 +203,7 @@ async function createPasskeyWithPrfOutput({
 /**
  * Requests a passkey PRF evaluation and returns the first output.
  *
- * When `credential` is omitted, WebAuthn may choose any discoverable credential for the relying party.
- *
- * @param options - Passkey PRF request inputs; fields are documented on {@link GetPasskeyPrfOutputOptions}.
+ * @param options - Passkey PRF request inputs.
  * @returns The selected credential ID and first WebAuthn PRF output.
  * @remarks
  * Invokes `navigator.credentials.get()` and shows one user-verification
@@ -217,18 +211,18 @@ async function createPasskeyWithPrfOutput({
  *
  * The WebAuthn challenge is generated internally.
  *
- * When `prfSalt` is omitted, the default salt is used:
- * `sha256("mera.prf.salt.v1")`. This default will not change across
+ * The default salt is `sha256("mera.prf.salt.v1")` and will not change across
  * library versions. The PRF output is a deterministic function of the
- * credential, `rpId`, and salt: the same three inputs reproduce the same
- * output, and a different salt yields an unrelated output.
+ * credential, `rpId`, and salt; a different salt yields an unrelated output.
  *
  * The assertion requires user verification, and the requirement is not
- * configurable. Authenticators built on CTAP's `hmac-secret` keep two PRFs
- * per credential, one for user-verified requests and one for the rest;
- * WebAuthn exposes only the user-verified PRF and overrides a weaker
- * `userVerification` setting when evaluating it, so a configurable setting
- * could neither change the PRF output nor skip the check.
+ * configurable. User verification is the authenticator's local check; the
+ * gesture depends on the platform (a biometric, a device PIN, or a password).
+ * Authenticators built on CTAP's `hmac-secret` keep two PRFs per credential,
+ * one for user-verified requests and one for the rest; WebAuthn exposes only
+ * the user-verified PRF and overrides a weaker `userVerification` setting
+ * when evaluating it, so a configurable setting could neither change the PRF
+ * output nor skip the check.
  * @see {@link https://www.w3.org/TR/webauthn-3/#prf-extension | WebAuthn: the PRF extension}
  * @see {@link https://www.w3.org/TR/webauthn-3/#enumdef-userverificationrequirement | WebAuthn: UserVerificationRequirement}
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
@@ -321,8 +315,9 @@ async function getPasskeyPrfOutput({
 }
 
 /**
- * Builds credential metadata, copying `transports` so the result never aliases
- * a caller-owned array.
+ * Builds credential metadata with a copied `transports` array.
+ *
+ * @internal
  */
 function toCredentialMetadata(
   credentialId: string,
@@ -335,8 +330,6 @@ function toCredentialMetadata(
 }
 
 /**
- * Asserts that the WebAuthn credential API is available.
- *
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable.
  */
 function assertCredentialApiAvailable(): void {
@@ -348,8 +341,6 @@ function assertCredentialApiAvailable(): void {
 /**
  * Narrows a WebAuthn result to a public-key credential with extension results.
  *
- * @param credential - Credential returned by WebAuthn.
- * @returns The credential narrowed to the PRF-aware public-key credential shape.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn returned no usable public-key credential.
  */
 function assertPublicKeyCredential(
@@ -380,7 +371,7 @@ function assertPublicKeyCredential(
  * Authenticators surface PRF output inconsistently: most return an `ArrayBuffer`,
  * some return an `ArrayBufferView`, and others (notably the 1Password browser
  * extension) return a plain array of byte values. This normalizes all of them
- * into a fresh `Uint8Array` that never aliases the input.
+ * into a fresh `Uint8Array`.
  *
  * The typed forms are already constrained to bytes. A plain array-like is not,
  * so each element is validated as an integer in [0, 255] while it is copied; a
@@ -390,7 +381,6 @@ function assertPublicKeyCredential(
  * @throws MeraError with code `PRF_UNAVAILABLE` when the output is not exactly
  * 32 bytes, or a plain array-like contains a value that is not an integer in
  * [0, 255].
- * @internal
  */
 function copyPrfOutput(
   value: BufferSource | ArrayLike<number>,

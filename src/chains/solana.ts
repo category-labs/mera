@@ -15,7 +15,7 @@ function getSolanaAddress(publicKey: Uint8Array): SolanaAddress {
   }
 
   // Mints the SolanaAddress brand: encoding 32 validated bytes is what the
-  // brand asserts, and a nominal brand cannot be produced without an assertion.
+  // brand asserts.
   return base58.encode(publicKey) as SolanaAddress;
 }
 

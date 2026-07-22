@@ -7,7 +7,10 @@ import SessionLifecycle from "../../../assets/diagrams/session-lifecycle.svg";
 
 A signing session holds a private key and signs with it until it is locked.
 
-Two constructors exist, one per [signature scheme](/concepts/entropy-keys-and-accounts/). [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) signs 32-byte digests. [createEd25519SigningSession](/reference/create-ed25519-signing-session/) signs arbitrary-length messages.
+Two constructors exist, one per [signature scheme](/concepts/entropy-keys-and-accounts/):
+
+- [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/)
+- [createEd25519SigningSession](/reference/create-ed25519-signing-session/)
 
 ## Independent of passkeys
 

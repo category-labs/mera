@@ -1,5 +1,5 @@
 import { secp256k1 } from "@noble/curves/secp256k1.js";
-import { hexToBytes } from "@noble/hashes/utils.js";
+import { bytesToHex, hexToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
 import { createSecp256k1SigningSession, getEvmAddress } from "../dist/index.js";
 import { expectError } from "./helpers.js";
@@ -16,6 +16,10 @@ test("signs 32-byte digests and locks the session", async () => {
 
   expect(buffer).toEqual(PRIVATE_KEY_ONE);
 
+  // Private key one's public key is the secp256k1 generator point.
+  expect(bytesToHex(session.publicKey)).toBe(
+    "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8",
+  );
   expect(getEvmAddress(session.publicKey)).toBe(
     "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
   );
@@ -53,6 +57,12 @@ test("rejects an invalid scalar and leaves the caller's buffer unmodified", () =
   );
 
   expect(buffer).toEqual(new Uint8Array(32).fill(0xff));
+
+  // Zero is a valid length but not a valid scalar.
+  expectError(
+    () => createSecp256k1SigningSession({ privateKey: new Uint8Array(32) }),
+    "INPUT_INVALID",
+  );
 });
 
 test("a using declaration locks the session when its scope exits", async () => {

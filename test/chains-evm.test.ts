@@ -1,18 +1,17 @@
 import { hexToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
 import { getEvmAddress } from "../dist/index.js";
-import { getSecp256k1PublicKey } from "../dist/secp256k1.js";
 import { expectError } from "./helpers.js";
 
-const PRIVATE_KEY_ONE = hexToBytes(
-  "0000000000000000000000000000000000000000000000000000000000000001",
-);
 const ADDRESS_ONE = "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf";
 
-test("derives the EIP-55 checksummed EVM address for private key one", () => {
-  const address = getEvmAddress(getSecp256k1PublicKey(PRIVATE_KEY_ONE));
+test("derives the EIP-55 checksummed EVM address from an uncompressed public key", () => {
+  // Uncompressed form of private key one's public key (the secp256k1 generator).
+  const uncompressedPublicKey = hexToBytes(
+    "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8",
+  );
 
-  expect(address).toBe(ADDRESS_ONE);
+  expect(getEvmAddress(uncompressedPublicKey)).toBe(ADDRESS_ONE);
 });
 
 test("derives the same EVM address from a compressed public key", () => {

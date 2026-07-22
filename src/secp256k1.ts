@@ -106,8 +106,4 @@ function createSecp256k1SigningSession({
   };
 }
 
-export {
-  createSecp256k1SigningSession,
-  getSecp256k1PublicKey,
-  normalizeSecp256k1PublicKey,
-};
+export { createSecp256k1SigningSession, normalizeSecp256k1PublicKey };

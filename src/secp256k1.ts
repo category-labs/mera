@@ -81,14 +81,10 @@ function createSecp256k1SigningSession({
       // noble's "recovered" format is 65 bytes: the recovery ID, then r || s.
       const recovery = signature[0];
 
-      // A recovery ID of 2 or 3 requires the signature's r to be at least the
-      // curve order, which happens with probability about 2^-127, never in
-      // practice. Such a signature cannot be address-recovered from `r` and a
-      // parity bit alone, so fail loudly instead of returning an unusable
-      // recovery ID. The check also narrows the byte to the declared `0 | 1`.
-      // INPUT_INVALID is a stretch (the recovery ID is not caller-supplied),
-      // but a range constraint failed at a public boundary and the event is
-      // unreachable in practice, so it does not warrant its own code.
+      // A recovery ID of 2 or 3 requires r >= the curve order (probability
+      // about 2^-127) and cannot be address-recovered from a parity bit, so
+      // fail loudly instead of returning an unusable ID. The check also
+      // narrows the byte to the declared `0 | 1`.
       if (recovery !== 0 && recovery !== 1) {
         throw new MeraError(
           "INPUT_INVALID",

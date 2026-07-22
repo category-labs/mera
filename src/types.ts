@@ -114,8 +114,7 @@ type LockableSession = {
   lock(): void;
   /**
    * Calls `lock`, so a `using` declaration locks the session when its scope
-   * exits. Sessions bound with `const` or `let` are unaffected; disposal runs
-   * only where a caller opts in with `using`.
+   * exits.
    */
   [Symbol.dispose](): void;
 };

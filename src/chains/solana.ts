@@ -2,8 +2,6 @@ import { base58 } from "@scure/base";
 import { MeraError } from "../errors.js";
 import type { SolanaAddress } from "../types.js";
 
-const ED25519_PUBLIC_KEY_LENGTH = 32;
-
 /**
  * Derives the base58-encoded Solana address for an Ed25519 public key.
  *
@@ -12,7 +10,7 @@ const ED25519_PUBLIC_KEY_LENGTH = 32;
  * @throws MeraError with code `INPUT_INVALID` when `publicKey` is not 32 bytes.
  */
 function getSolanaAddress(publicKey: Uint8Array): SolanaAddress {
-  if (publicKey.length !== ED25519_PUBLIC_KEY_LENGTH) {
+  if (publicKey.length !== 32) {
     throw new MeraError("INPUT_INVALID", "Ed25519 public key must be 32 bytes");
   }
 

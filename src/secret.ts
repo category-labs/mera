@@ -25,21 +25,13 @@ import { getCrypto, randomBytes } from "./webcrypto.js";
 const PRF_SALT_LENGTH = 32;
 const NONCE_LENGTH = 12;
 // AES-256-GCM authentication tag length in bytes (WebCrypto's 128-bit default,
-// since aesGcmEncrypt does not set tagLength). Ciphertext carries its tag, so
-// any authentic ciphertext is at least this long.
+// since createSecretVault does not set tagLength). Ciphertext carries its tag,
+// so any authentic ciphertext is at least this long.
 const GCM_TAG_LENGTH = 16;
 
 // HKDF info keeps the encryption key distinct from any other key derived from
 // the same PRF output.
 const SECRET_ENCRYPTION_INFO = utf8ToBytes("mera.v1.encrypt.secret");
-
-/** AES-GCM encrypted bytes. */
-type EncryptedBytes = {
-  /** AES-GCM nonce. Secret vaults require 12 bytes. */
-  nonce: Uint8Array;
-  /** AES-GCM ciphertext including the authentication tag. */
-  ciphertext: Uint8Array;
-};
 
 // Derives the non-extractable AES-256-GCM vault key with HKDF-SHA-256. The
 // fixed info domain-separates this key from other uses of the same PRF output.
@@ -74,59 +66,6 @@ async function deriveEncryptionKey(prfOutput: Uint8Array): Promise<CryptoKey> {
     false,
     ["encrypt", "decrypt"],
   );
-}
-
-// AES-256-GCM encrypt. subtle.encrypt copies its inputs synchronously and the
-// caller owns the plaintext, so this helper has nothing of its own to zero.
-// GCM nonces are generated internally so callers cannot accidentally reuse one.
-async function aesGcmEncrypt({
-  plaintext,
-  encryptionKey,
-}: {
-  plaintext: Uint8Array;
-  encryptionKey: CryptoKey;
-}): Promise<EncryptedBytes> {
-  const iv = randomBytes(NONCE_LENGTH);
-
-  const ciphertext = await getCrypto().subtle.encrypt(
-    {
-      name: "AES-GCM",
-      iv: asArrayBuffer(iv),
-    },
-    encryptionKey,
-    asArrayBuffer(plaintext),
-  );
-
-  return {
-    nonce: iv,
-    ciphertext: new Uint8Array(ciphertext),
-  };
-}
-
-// AES-256-GCM decrypt. Authentication failures from a wrong key or tampered
-// nonce/ciphertext surface as DECRYPT_FAILED.
-async function aesGcmDecrypt({
-  encrypted,
-  encryptionKey,
-}: {
-  encrypted: EncryptedBytes;
-  encryptionKey: CryptoKey;
-}): Promise<Uint8Array<ArrayBuffer>> {
-  try {
-    const plaintext = await getCrypto().subtle.decrypt(
-      {
-        name: "AES-GCM",
-        iv: asArrayBuffer(encrypted.nonce),
-      },
-      encryptionKey,
-      asArrayBuffer(encrypted.ciphertext),
-    );
-    return new Uint8Array(plaintext);
-  } catch (error) {
-    throw new MeraError("DECRYPT_FAILED", "Unable to decrypt ciphertext", {
-      cause: error,
-    });
-  }
 }
 
 function parseJsonVault(value: string): unknown {
@@ -190,7 +129,18 @@ async function createSecretVault({
   secret,
 }: CreateSecretVaultOptions): Promise<PasskeySecretVault> {
   const encryptionKey = await deriveEncryptionKey(credential.prfOutput);
-  const encrypted = await aesGcmEncrypt({ plaintext: secret, encryptionKey });
+
+  // subtle.encrypt copies its inputs synchronously; the GCM nonce is generated
+  // internally so callers cannot accidentally reuse one.
+  const nonce = randomBytes(NONCE_LENGTH);
+  const ciphertext = await getCrypto().subtle.encrypt(
+    {
+      name: "AES-GCM",
+      iv: asArrayBuffer(nonce),
+    },
+    encryptionKey,
+    asArrayBuffer(secret),
+  );
 
   return {
     version: 1,
@@ -199,8 +149,8 @@ async function createSecretVault({
       credential.transports,
     ),
     prfSalt: base64UrlEncode(credential.prfSalt),
-    nonce: base64UrlEncode(encrypted.nonce),
-    ciphertext: base64UrlEncode(encrypted.ciphertext),
+    nonce: base64UrlEncode(nonce),
+    ciphertext: base64UrlEncode(new Uint8Array(ciphertext)),
   };
 }
 
@@ -368,14 +318,28 @@ async function decryptSecretVault({
   prfOutput,
 }: DecryptSecretVaultOptions): Promise<Uint8Array<ArrayBuffer>> {
   const encryptionKey = await deriveEncryptionKey(prfOutput);
+  const nonce = base64UrlDecode(vault.nonce);
+  const ciphertext = base64UrlDecode(vault.ciphertext);
 
-  return aesGcmDecrypt({
-    encrypted: {
-      nonce: base64UrlDecode(vault.nonce),
-      ciphertext: base64UrlDecode(vault.ciphertext),
-    },
-    encryptionKey,
-  });
+  // Only the decrypt call sits in the try: its catch maps every failure to
+  // DECRYPT_FAILED, so getCrypto's CRYPTO_UNAVAILABLE must be raised first.
+  const crypto = getCrypto();
+
+  try {
+    const plaintext = await crypto.subtle.decrypt(
+      {
+        name: "AES-GCM",
+        iv: asArrayBuffer(nonce),
+      },
+      encryptionKey,
+      asArrayBuffer(ciphertext),
+    );
+    return new Uint8Array(plaintext);
+  } catch (error) {
+    throw new MeraError("DECRYPT_FAILED", "Unable to decrypt ciphertext", {
+      cause: error,
+    });
+  }
 }
 
 /**
@@ -494,10 +458,8 @@ async function decryptSecretVaultWithPasskey({
 }
 
 export type {
-  CreateSecretVaultOptions,
   CreateSecretVaultWithExistingPasskeyOptions,
   CreateSecretVaultWithNewPasskeyOptions,
-  DecryptSecretVaultOptions,
   DecryptSecretVaultWithPasskeyOptions,
 };
 export {

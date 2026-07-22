@@ -55,4 +55,10 @@ async function unlockPhrase(): Promise<string> {
 
 `parseSecretVault` is the boundary for the untrusted stored JSON.
 
+## See also
+
+- [Secret vaults](/concepts/secret-vaults/): how a vault works and when to use one.
+- [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/): encrypt another secret with the same passkey.
+- [Secret vault format](/reference/secret-vault-format/): the stored JSON, field by field.
+
 

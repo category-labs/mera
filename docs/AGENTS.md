@@ -4,17 +4,21 @@ Guidance for authoring content in this site (`src/content/docs/`). [site/WRITING
 
 ## Audience
 
-The reader is a strong software engineer who may know none of blockchain, cryptography, or WebAuthn. Build explanations bottom-up: start from concrete pieces the reader can hold ("32 random bytes", "a 12-word phrase"), then assemble them into the larger mechanism.
+The reader is a strong software engineer who may know none of blockchain, cryptography, or WebAuthn. On the page that owns a concept, build the explanation bottom-up: start from concrete pieces the reader can hold ("32 random bytes", "a 12-word phrase"), then assemble them into the larger mechanism.
 
-Define every complex concept or acronym on first mention in a page: one to three sentences, tied to the step the reader is in, linking the owning page for depth. Later mentions on the same page reuse the short name without re-explaining. The foundations concept page (`concepts/entropy-keys-and-accounts`) owns the blockchain background; glosses elsewhere link there rather than re-teaching it.
+## Concept ownership
 
-Reference pages are exempt: they state facts and link to the page that teaches. Getting started and recipes are exempt in the other direction: they link the owning concept page instead of defining inline.
+Each concept is taught on exactly one page. The foundations page (`concepts/entropy-keys-and-accounts`) owns the blockchain background, each concept page owns its title subject, and each reference page owns the exact behavior of its function.
+
+Every other page uses the term plainly and does not define it. A definition repeated at each mention is noise for the reader who knows the term and a detour for the one who does not. When a sentence cannot stand without the meaning, add a gloss of a few words at most ("the rpId, the domain the passkey is bound to").
+
+Link a term inline only when the reader needs the owning page to finish the current step. Otherwise the owning page belongs under "See also". Material that outgrows a gloss moves to the owning page.
 
 ## Information architecture
 
 The site follows the Diátaxis split (<https://diataxis.fr/>): each page does one job.
 
-- **Getting started** teaches one first success, end to end. Its lead states what the reader will do, not how the mechanism works. Each step links the owning page instead of explaining; a detail the reader does not need for the next step is a link, not a sentence.
+- **Getting started** teaches one first success, end to end. Its lead states what the reader will do, not how the mechanism works. Each step states what to do and leaves the mechanism to the owning page; a detail the reader does not need for the next step is cut.
 - **Concepts** explain how something works and why it is designed that way. No step-by-step instructions.
 - **Recipes** solve one task each. A recipe assumes a competent reader with a goal, states its prerequisites, and gets to the point.
 - **Reference** states facts about the public API, one exported function per page. Keep instructions, opinions, and long explanations out of it; link to them instead.
@@ -113,3 +117,4 @@ The bar is simple, concise, and detailed at once: detail survives the cut, fille
 5. No em dash anywhere in the diff.
 6. No banned vocabulary, no "not X, but Y".
 7. "Wallet" appears only next to wallet apps.
+8. No page defines a concept another page owns.

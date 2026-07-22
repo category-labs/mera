@@ -6,15 +6,13 @@ description: How random bytes become a private key, an address, and a reproducib
 import DerivationPipeline from "../../../assets/diagrams/derivation-pipeline.svg";
 import Bip32Tree from "../../../assets/diagrams/bip32-tree.svg";
 
-Readers who know [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) and [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) can skip to [Passkeys and the PRF extension](/concepts/passkeys-and-prf/).
-
 <DerivationPipeline />
 
 ## Keys, signatures, and accounts
 
 Entropy is randomness an attacker cannot predict, and 32 random bytes carry 256 bits of it.
 
-A private key is a 256-bit secret number. A one-way function computes the public key from it, so the public key is safe to share. A signature is computed from a message and a private key and verified with the public key alone. A valid signature proves the key's holder approved that exact message.
+A private key is a 256-bit secret number. A one-way function computes the public key from it, which is safe to share. A signature is computed from a message and a private key and verified with the public key alone. A valid signature proves the key's holder approved that exact message.
 
 A blockchain account is the state a chain tracks for one key pair: a balance and a transaction history. The address is a short encoding of the public key.
 
@@ -22,23 +20,23 @@ mera supports two signature schemes: secp256k1 on Ethereum and other EVM chains 
 
 ## Deterministic derivation
 
-A key-derivation function (KDF) turns one secret into others: the output looks random, and the same input always produces the same output. Because a KDF recomputes its outputs on demand, derived keys need no storage.
+A key-derivation function (KDF) turns one secret into others: the output looks random, but the same input always produces the same output. 
 
-A seed is the byte string a key tree starts from. BIP-32 (secp256k1) and [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md) (Ed25519) extend one seed into a tree of child keys, a scheme called hierarchical deterministic (HD) derivation, and a derivation path such as `m/44'/60'/0'/0/0` names one key in the tree. The same seed and path produce the same key on any machine, so one 32-byte value backs any number of accounts with nothing stored per account.
+A seed is the byte string a key tree starts from. BIP-32 (secp256k1) and [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md) (Ed25519) extend one seed into a tree of child keys, a scheme called hierarchical deterministic (HD) derivation, and a derivation path such as `m/44'/60'/0'/0/0` names one key in the tree. The same seed and path produce the same key, so one 32-byte value backs any number of accounts with nothing stored per account.
 
 <Bip32Tree />
 
-Key material is any secret bytes in this pipeline: root entropy, a seed, a private key. Exposing key material exposes every key derived from it.
+
 
 ## Seed phrases
 
-BIP-39 maps entropy to a phrase of common words and back: 128 bits become 12 words, 256 bits become 24. The phrase is an encoding, adding no security of its own: anyone who reads the phrase can recover the entropy.
+BIP-39 maps entropy to a phrase of common words and back: 128 bits become 12 words, 256 bits become 24.
 
-A wallet app that follows the same standards (MetaMask and Phantom are two) turns an imported phrase back into the same accounts, which gives accounts built this way an exit path independent of any one library.
+A wallet app that follows the same standards turns an imported phrase back into the same accounts.
 
 ## Where mera fits
 
-mera supplies the root: a passkey ceremony returns 32 bytes of PRF output, secret bytes the passkey recomputes deterministically ([Passkeys and PRF](/concepts/passkeys-and-prf/) explains how), and the app uses them as the entropy for this pipeline. Derivation, paths, and phrases are app-owned; the library returns entropy and signs.
+mera supplies the entropy for this pipeline: the PRF output of a passkey ceremony. [Passkey accounts](/concepts/passkey-accounts/) explains the account model built on it.
 
 ## See also
 

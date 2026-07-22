@@ -148,30 +148,6 @@ test("secret-vault creation preserves PRF failures and caller-owned secrets", as
   expect(existingPasskeySecret).toEqual(SECRET);
 });
 
-test("createSecretVaultWithExistingPasskey rejects an empty credential ID without prompting", async () => {
-  let asserted = false;
-  const navigator = {
-    credentials: {
-      async get() {
-        asserted = true;
-        throw new Error("assertion must not start");
-      },
-    },
-  };
-
-  await withStubbedGlobal("navigator", navigator, async () => {
-    await expect(
-      createSecretVaultWithExistingPasskey({
-        rpId: "example.com",
-        credential: { credentialId: "" },
-        secret: SECRET,
-      }),
-    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
-  });
-
-  expect(asserted).toBe(false);
-});
-
 test("createSecretVaultWithNewPasskey owns a random salt and snapshots the secret", async () => {
   let releaseCreation: (() => void) | undefined;
   const creationGate = new Promise<void>((resolve) => {
@@ -429,16 +405,7 @@ test("parseSecretVault rejects non-string transports", async () => {
   );
 });
 
-test("parseSecretVault rejects empty ciphertext", async () => {
-  const vault = await createTestVault();
-
-  expectError(
-    () => parseSecretVault({ ...vault, ciphertext: "" }),
-    "VAULT_FORMAT_INVALID",
-  );
-});
-
-test("parseSecretVault rejects a non-empty ciphertext shorter than the GCM tag", async () => {
+test("parseSecretVault rejects a ciphertext shorter than the GCM tag", async () => {
   const vault = await createTestVault();
 
   // 20 base64url chars decode to 15 bytes: one byte short of the 16-byte

@@ -33,8 +33,7 @@ const GCM_TAG_LENGTH = 16;
 // the same PRF output.
 const SECRET_ENCRYPTION_INFO = utf8ToBytes("mera.v1.encrypt.secret");
 
-// Derives the non-extractable AES-256-GCM vault key with HKDF-SHA-256. The
-// fixed info domain-separates this key from other uses of the same PRF output.
+// Derives the non-extractable AES-256-GCM vault key with HKDF-SHA-256.
 // asArrayBuffer snapshots the output before importKey's first await, preserving
 // the public copy guarantee while the 32-byte check validates the key material.
 async function deriveEncryptionKey(prfOutput: Uint8Array): Promise<CryptoKey> {
@@ -112,12 +111,11 @@ type CreateSecretVaultOptions = {
  * derived from the same PRF output.
  *
  * A vault is bound to its PRF output only, not to the credential ID or salt:
- * vaults encrypted with one reused PRF output share an encryption key, so the
- * orchestrators use a fresh salt for each secret.
+ * vaults encrypted with one reused PRF output share an encryption key, so each
+ * secret needs a fresh salt.
  *
- * Internal building block: inputs arrive validated and caller-owned. Byte
- * inputs are read in place and never zeroed here; the orchestrators own the
- * pre-ceremony snapshots and the zeroing.
+ * Inputs arrive validated and caller-owned. Byte inputs are read in place and
+ * never zeroed here; callers own the pre-ceremony snapshots and the zeroing.
  *
  * @returns A JSON-safe secret vault.
  * @throws MeraError with code `INPUT_INVALID` when the PRF output is not 32 bytes.
@@ -184,20 +182,17 @@ function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
 /**
  * Creates a passkey and encrypts one secret into a vault.
  *
- * A fresh random PRF salt is generated internally and stored in the returned
- * vault. The passkey creation may require a fallback assertion when the
- * authenticator does not evaluate PRF during creation.
- *
- * @param options - Passkey creation inputs and secret bytes; fields are documented on {@link CreateSecretVaultWithNewPasskeyOptions}.
+ * @param options - Passkey creation inputs and secret bytes.
  * @returns A JSON-safe secret vault containing the new credential metadata.
  * @remarks
  * Invokes `navigator.credentials.create()` and shows one user-verification
  * prompt. On authenticators that do not evaluate PRF during creation, also
  * invokes `navigator.credentials.get()`, which shows a second.
  *
- * `secret` is copied and validated before either ceremony starts. The internal
- * secret and PRF output are zeroed before the function finishes, even when it
- * fails.
+ * A fresh random PRF salt is generated internally and stored in the returned
+ * vault. `secret` is copied and validated before either ceremony starts. The
+ * internal secret and PRF output are zeroed before the function finishes, even
+ * when it fails.
  *
  * If the fallback ceremony or vault encryption fails, the passkey from the
  * completed creation ceremony still exists on the authenticator, but the
@@ -233,15 +228,13 @@ async function createSecretVaultWithNewPasskey({
 }
 
 /**
- * Evaluates an existing passkey against a fresh random salt and encrypts one
- * secret into a vault.
+ * Evaluates an existing passkey and encrypts one secret into a vault.
  *
- * @param options - Passkey assertion inputs and secret bytes; fields are documented on {@link CreateSecretVaultWithExistingPasskeyOptions}.
+ * @param options - Passkey assertion inputs and secret bytes.
  * @returns A JSON-safe secret vault containing the selected credential metadata.
  * @remarks
  * Invokes `navigator.credentials.get()` and shows one user-verification
- * prompt. When `credential` is omitted, WebAuthn may choose any discoverable
- * credential for the relying party.
+ * prompt.
  *
  * A fresh random PRF salt is generated internally and stored in the returned
  * vault. `secret` and `credential` are copied before the ceremony starts. The
@@ -294,7 +287,7 @@ async function createSecretVaultWithExistingPasskey({
 
 /** Inputs for decrypting a secret vault. */
 type DecryptSecretVaultOptions = {
-  /** Parsed secret vault. */
+  /** Secret vault to decrypt. */
   vault: PasskeySecretVault;
   /** WebAuthn PRF output for the vault's PRF salt. Must be exactly 32 bytes. */
   prfOutput: Uint8Array;
@@ -303,13 +296,12 @@ type DecryptSecretVaultOptions = {
 /**
  * Decrypts the secret from a secret vault with a PRF output.
  *
- * Internal building block: decoding the vault's `nonce` and `ciphertext`
- * strings here doubles as validation for direct callers that skip
- * `parseSecretVault`.
+ * Decoding the vault's `nonce` and `ciphertext` strings here doubles as
+ * validation for direct callers that skip `parseSecretVault`.
  *
  * @returns The decrypted secret bytes in a fresh allocation.
  * @throws MeraError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url.
- * @throws MeraError with code `DECRYPT_FAILED` when authentication fails.
+ * @throws MeraError with code `DECRYPT_FAILED` when AES-GCM authentication fails.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @internal
  */
@@ -410,11 +402,11 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
   return { version: 1, credential, prfSalt, nonce, ciphertext };
 }
 
-/** Inputs for performing the passkey ceremony and decrypting a secret vault. */
+/** Inputs for decrypting a secret vault with a passkey. */
 type DecryptSecretVaultWithPasskeyOptions = {
   /** Relying party ID for the WebAuthn assertion. */
   rpId: string;
-  /** Parsed secret vault. */
+  /** Secret vault to decrypt. */
   vault: PasskeySecretVault;
   /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
   timeout?: number;
@@ -423,8 +415,8 @@ type DecryptSecretVaultWithPasskeyOptions = {
 /**
  * Performs the passkey assertion for a vault and decrypts its secret.
  *
- * @param options - Relying party and parsed vault; fields are documented on {@link DecryptSecretVaultWithPasskeyOptions}.
- * @returns The decrypted secret bytes. The returned buffer is a fresh allocation.
+ * @param options - Relying party ID and vault.
+ * @returns The decrypted secret bytes in a fresh allocation.
  * @remarks
  * Invokes `navigator.credentials.get()` and shows one user-verification
  * prompt. The assertion is restricted to the credential stored in the vault.
@@ -433,7 +425,7 @@ type DecryptSecretVaultWithPasskeyOptions = {
  * decryption fails.
  * @throws MeraError with code `VAULT_FORMAT_INVALID` when the vault's required structure, version, or encoded data is invalid.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
- * @throws MeraError with code `DECRYPT_FAILED` when authentication fails.
+ * @throws MeraError with code `DECRYPT_FAILED` when AES-GCM authentication fails.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */

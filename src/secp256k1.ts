@@ -10,10 +10,8 @@ import type {
 /**
  * Derives an uncompressed secp256k1 public key from a 32-byte private key.
  *
- * @param privateKey - A 32-byte secp256k1 private key.
  * @returns A 65-byte public key with the `0x04` uncompressed prefix.
  * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not a valid secp256k1 scalar.
- * @internal
  */
 function getSecp256k1PublicKey(
   privateKey: Uint8Array,
@@ -32,7 +30,6 @@ function getSecp256k1PublicKey(
 /**
  * Converts a compressed or uncompressed secp256k1 public key to uncompressed form.
  *
- * @param publicKey - A compressed or uncompressed secp256k1 public key.
  * @returns A 65-byte public key with the `0x04` uncompressed prefix.
  * @throws MeraError with code `INPUT_INVALID` when the key length, prefix, or curve point is invalid.
  * @internal
@@ -52,7 +49,7 @@ function normalizeSecp256k1PublicKey(
 /**
  * Creates a signing session from a secp256k1 private key.
  *
- * @param options - Signing session inputs; fields are documented on {@link CreateSigningSessionOptions}.
+ * @param options - Signing session inputs.
  * @returns A live secp256k1 signing session.
  * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not a valid secp256k1 scalar.
  */

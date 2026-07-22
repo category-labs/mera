@@ -18,19 +18,11 @@ type MeraErrorCode =
   | "INPUT_INVALID"
   | "VAULT_FORMAT_INVALID";
 
-/** Error thrown by this package. `code` is the stable machine-readable category. */
+/** Error thrown by this package. */
 class MeraError extends Error {
-  /** Machine-readable category for the failure. */
+  /** Stable machine-readable category for the failure. */
   readonly code: MeraErrorCode;
 
-  /**
-   * Creates a package error with a stable error code.
-   *
-   * @param code - Machine-readable category for the failure.
-   * @param message - Human-readable error message.
-   * @param options - Optional error construction options.
-   * @param options.cause - Original cause for this error, when available.
-   */
   constructor(
     code: MeraErrorCode,
     message: string,
@@ -42,12 +34,7 @@ class MeraError extends Error {
   }
 }
 
-/**
- * Returns true when an unknown error is a `MeraError`.
- *
- * @param error - Value to check.
- * @returns `true` when `error` is a `MeraError`.
- */
+/** Returns `true` when `error` is a `MeraError`. */
 function isMeraError(error: unknown): error is MeraError {
   return error instanceof MeraError;
 }

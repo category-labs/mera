@@ -13,7 +13,7 @@ import { hashAuthorization } from "viem/utils";
 import { getEvmAddress } from "./chains/evm.js";
 import type { Secp256k1SigningSession } from "./types.js";
 
-/** Options accepted by `toViemAccount`. */
+/** Inputs for `toViemAccount`. */
 type ToViemAccountOptions = {
   /** viem nonce manager forwarded to the account for automatic nonce handling. */
   nonceManager?: NonceManager;
@@ -24,12 +24,12 @@ type ToViemAccountOptions = {
  *
  * Each signing method hashes its input with viem's own hashers and signs the
  * resulting 32-byte digest with `session.signDigest`, so signing never shows a
- * passkey prompt; the WebAuthn ceremony already ran when the session was
- * created. The account's `address` is the EIP-55 checksummed address of the
- * session key, and `publicKey` is the 65-byte uncompressed public key as hex.
+ * passkey prompt. The account's `address` is the EIP-55 checksummed address of
+ * the session key, and `publicKey` is the 65-byte uncompressed public key as
+ * hex.
  *
  * @param session - Live secp256k1 signing session that backs the account.
- * @param options - Adapter inputs; fields are documented on {@link ToViemAccountOptions}.
+ * @param options - Adapter inputs.
  * @returns A viem local account with `source: "mera"` implementing
  * `signTransaction` (honoring a custom `serializer`), `signMessage` (EIP-191),
  * `signTypedData` (EIP-712), `signAuthorization` (EIP-7702), and raw-hash

@@ -12,22 +12,20 @@ declare const brand: unique symbol;
  * Nominal branding helper: tags `T` with a type-only discriminant.
  *
  * The symbol key is never exported, so branded values cannot be produced
- * structurally or read back as a property; only the library functions
- * documented on each branded type mint them. Nothing exists at runtime.
+ * structurally or read back as a property.
  */
 type Brand<T, Name extends string> = T & { readonly [brand]: Name };
 
 /**
  * A base58-encoded 32-byte Solana address.
  *
- * Branded nominal type: base58 has no structural shape the way `EvmAddress`
- * does, so values are produced by `getSolanaAddress`. The brand exists only
- * in the type system; at runtime the value is a plain string.
+ * Branded nominal type minted by `getSolanaAddress`; at runtime the value is
+ * a plain string.
  */
 type SolanaAddress = Brand<string, "SolanaAddress">;
 
 /**
- * WebAuthn authenticator transport metadata, including future browser transport values.
+ * WebAuthn authenticator transport.
  *
  * The `string & {}` arm accepts any string without collapsing the union to
  * plain `string`, so editors keep offering the known `AuthenticatorTransport`
@@ -43,7 +41,7 @@ type PasskeyCredentialMetadata = {
   readonly transports?: readonly PasskeyCredentialTransport[];
 };
 
-/** Result of a successful passkey assertion with the WebAuthn PRF extension. */
+/** Result of a passkey assertion with the WebAuthn PRF extension. */
 type PasskeyPrfResult = {
   /** Credential ID selected by the browser, as canonical unpadded base64url. */
   readonly credentialId: string;
@@ -54,8 +52,7 @@ type PasskeyPrfResult = {
 /** Result of creating a passkey together with its first PRF output. */
 type CreatePasskeyWithPrfOutputResult = PasskeyCredentialMetadata & {
   /**
-   * PRF salt that WebAuthn evaluated, returned for protocol interoperability.
-   * Always 32 bytes and never aliases the caller input.
+   * PRF salt that WebAuthn evaluated. Always 32 bytes, in a fresh allocation.
    */
   readonly prfSalt: Uint8Array<ArrayBuffer>;
   /** First WebAuthn PRF output for `prfSalt`. Always 32 bytes. */
@@ -63,9 +60,8 @@ type CreatePasskeyWithPrfOutputResult = PasskeyCredentialMetadata & {
 };
 
 /**
- * Versioned JSON-safe vault holding one arbitrary secret encrypted behind a passkey.
- *
- * The secret bytes are opaque to the library; callers decide what they mean.
+ * Versioned JSON-safe vault holding one secret encrypted behind a passkey.
+ * The secret bytes are opaque to the library.
  */
 type PasskeySecretVault = {
   /** Secret-vault format version. */
@@ -80,28 +76,30 @@ type PasskeySecretVault = {
   readonly ciphertext: string;
 };
 
-/** secp256k1 ECDSA signature returned by a signing session. */
+/** A secp256k1 ECDSA signature. */
 type Secp256k1Signature = {
   /** Compact 64-byte `r || s` ECDSA signature. */
   readonly compact: Uint8Array<ArrayBuffer>;
-  /** Recovery ID (0 or 1) for the signature. */
+  /** Recovery ID (the y-parity bit). */
   readonly recovery: 0 | 1;
 };
 
 /** Inputs for creating a curve signing session. */
 type CreateSigningSessionOptions = {
   /**
-   * Curve private key. Must be exactly 32 bytes; secp256k1 must also be a valid scalar.
+   * Curve private key. Must be exactly 32 bytes and, for secp256k1, a valid
+   * scalar.
    *
    * Copied into one session-owned snapshot.
    */
   privateKey: Uint8Array;
 };
 
-/** Members shared by every signing session: an explicit end and `using` disposal. */
+/** Members shared by every signing session. */
 type SigningSession = {
   /**
-   * Zeroes the session-owned private-key copy and permanently ends this session; later signing throws `SESSION_ENDED`.
+   * Zeroes the session-owned private-key copy; later signing throws
+   * `SESSION_ENDED`.
    */
   end(): void;
   /**
@@ -113,12 +111,12 @@ type SigningSession = {
 
 /** secp256k1 signing session that can sign 32-byte digests until `end` is called. */
 type Secp256k1SigningSession = SigningSession & {
-  /** Uncompressed secp256k1 public key for the session. */
+  /** 65-byte uncompressed secp256k1 public key for the session. */
   readonly publicKey: Uint8Array<ArrayBuffer>;
   /**
    * Signs a 32-byte digest without prehashing it.
    *
-   * @param digest32 - Exactly 32 bytes to sign.
+   * @param digest32 - The digest to sign.
    * @returns A compact secp256k1 ECDSA signature with its recovery ID.
    * @throws MeraError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
    * @throws MeraError with code `SESSION_ENDED` after `end` has been called.
@@ -131,9 +129,9 @@ type Ed25519SigningSession = SigningSession & {
   /** 32-byte Ed25519 public key for the session. */
   readonly publicKey: Uint8Array<ArrayBuffer>;
   /**
-   * Signs an arbitrary-length message with Ed25519.
+   * Signs an arbitrary-length message.
    *
-   * @param message - Message bytes to sign. Hashing happens inside Ed25519 itself.
+   * @param message - The message to sign; hashing happens inside Ed25519 itself.
    * @returns A 64-byte Ed25519 signature (`R || s`).
    * @throws MeraError with code `SESSION_ENDED` after `end` has been called.
    */

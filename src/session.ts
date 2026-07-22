@@ -1,13 +1,10 @@
 import { copyBytes } from "./encoding.js";
 import { MeraError } from "./errors.js";
 
-/**
- * Session-owned signing key whose lifetime is gated by `end`, paired with the
- * public key derived from it.
- */
+/** Session-owned signing key whose lifetime is gated by `end`. */
 type SigningKey = {
   /**
-   * Returns the live session-owned key for immediate use.
+   * Returns the live session-owned key.
    *
    * @throws MeraError with code `SESSION_ENDED` after `end` has been called.
    */
@@ -19,16 +16,14 @@ type SigningKey = {
 };
 
 /**
- * Copies a private key into a signing key handle and derives its public key.
+ * Copies a private key into one session-owned snapshot and derives its public
+ * key.
  *
- * `privateKey` is copied into one session-owned snapshot. The snapshot is
- * zeroed by `end` or, when `derivePublicKey` throws, before the error is
- * rethrown.
+ * The snapshot is zeroed by `end` or, when `derivePublicKey` throws, before
+ * the error is rethrown.
  *
- * @param privateKey - Private key to copy into the signing key.
  * @param derivePublicKey - Derives the public key from the owned snapshot; a throw doubles as private-key validation.
- * @returns The signing key handle with its derived public key.
- * @throws Rethrows whatever `derivePublicKey` throws.
+ * @internal
  */
 function createSigningKey(
   privateKey: Uint8Array,
@@ -61,10 +56,8 @@ function createSigningKey(
 }
 
 /**
- * Returns the active private key, or throws once the session has ended.
+ * Returns the active private key.
  *
- * @param privateKey - Session-owned private key, or `undefined` after `end`.
- * @returns The live session-owned private key.
  * @throws MeraError with code `SESSION_ENDED` when `privateKey` is undefined.
  */
 function requireActive(

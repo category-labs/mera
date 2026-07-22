@@ -22,16 +22,13 @@ const rpId = location.hostname;
 const phrase =
   "legal winner thank year wave sausage worth useful legal winner thank yellow";
 const secret = new TextEncoder().encode(phrase);
-try {
-  const vault = await createSecretVaultWithNewPasskey({
-    rp: { id: rpId, name: "Example" },
-    user: { name: "account@example.com", displayName: "Example account" },
-    secret,
-  });
-  localStorage.setItem("app.vault", JSON.stringify(vault));
-} finally {
-  secret.fill(0);
-}
+
+const vault = await createSecretVaultWithNewPasskey({
+  rp: { id: rpId, name: "Example" },
+  user: { name: "account@example.com", displayName: "Example account" },
+  secret,
+});
+localStorage.setItem("app.vault", JSON.stringify(vault));
 ```
 
 A private key is encrypted the same way: pass its raw bytes as `secret` instead of encoded text.
@@ -52,17 +49,10 @@ async function unlockPhrase(): Promise<string> {
 
   const vault = parseSecretVault(raw);
   const secret = await decryptSecretVaultWithPasskey({ rpId, vault });
-  try {
-    return new TextDecoder().decode(secret);
-  } finally {
-    secret.fill(0);
-  }
+  return new TextDecoder().decode(secret);
 }
 ```
 
 `parseSecretVault` is the boundary for the untrusted stored JSON.
 
-## Derive signing sessions
-
-The phrase is a standard BIP-39 mnemonic, so key derivation from here is the same derivation passkey accounts use: one seed, then per-index paths. [Create passkey accounts](/recipes/create-passkey-accounts/) has both curves. Pass it `mnemonicToSeedSync(phrase)` instead of a PRF-derived seed and zero the seed after the sessions exist.
 

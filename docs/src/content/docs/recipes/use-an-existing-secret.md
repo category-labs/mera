@@ -3,27 +3,12 @@ title: Encrypt an existing secret with a passkey
 description: Encrypt an existing secret into a passkey-protected vault and unlock it later.
 ---
 
-A [secret vault](/concepts/secret-vaults/) encrypts one [recovery phrase](/concepts/entropy-keys-and-accounts/#seed-phrases), private key, or other byte string behind a passkey. This recipe validates a phrase, stores its vault, and decrypts it with explicit zeroing.
+A [secret vault](/concepts/secret-vaults/) encrypts a [recovery phrase](/concepts/entropy-keys-and-accounts/#seed-phrases), private key, or other byte string behind a passkey. This recipe encrypts a phrase and unlocks it later.
 
 Prerequisites:
 
-- `@category-labs/mera` and `@scure/bip39` installed.
+- `@category-labs/mera` installed.
 - A place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
-
-## Validate the phrase
-
-A real app reads the phrase from a form field. The library never interprets the secret, so validation is app code:
-
-```ts
-import { validateMnemonic } from "@scure/bip39";
-import { wordlist } from "@scure/bip39/wordlists/english.js";
-
-const phrase =
-  "legal winner thank year wave sausage worth useful legal winner thank yellow";
-if (!validateMnemonic(phrase, wordlist)) {
-  throw new Error("Not a valid recovery phrase.");
-}
-```
 
 ## Create and persist the vault
 
@@ -34,6 +19,8 @@ import { createSecretVaultWithNewPasskey } from "@category-labs/mera";
 
 const rpId = location.hostname;
 
+const phrase =
+  "legal winner thank year wave sausage worth useful legal winner thank yellow";
 const secret = new TextEncoder().encode(phrase);
 try {
   const vault = await createSecretVaultWithNewPasskey({
@@ -79,7 +66,3 @@ async function unlockPhrase(): Promise<string> {
 
 The phrase is a standard BIP-39 mnemonic, so key derivation from here is the same derivation passkey accounts use: one seed, then per-index paths. [Create passkey accounts](/recipes/create-passkey-accounts/) has both curves. Pass it `mnemonicToSeedSync(phrase)` instead of a PRF-derived seed and zero the seed after the sessions exist.
 
-## Pitfalls
-
-- **A second secret needs its own ceremony and vault.** [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/) generates the fresh salt and stores it in the new vault.
-- **The vault JSON is the only ciphertext copy.** Losing the storage loses the account unless the person still holds the phrase elsewhere.

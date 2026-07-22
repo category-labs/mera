@@ -1,376 +1,361 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>mera: crypto onboarding with only a passkey on any network</title>
     <meta
       name="description"
       content="How a passkey becomes ordinary private keys with any derivation scheme and any chain, without smart accounts or on-chain infrastructure."
-    />
-    <meta property="og:type" content="article" />
-    <meta property="og:site_name" content="mera" />
+    >
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="mera">
     <meta
       property="og:title"
       content="mera: crypto onboarding with only a passkey on any network"
-    />
+    >
     <meta
       property="og:description"
       content="How a passkey becomes ordinary private keys with any derivation scheme and any chain, without smart accounts or on-chain infrastructure."
-    />
-    <meta property="og:image" content="/og.png" />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="The post title above mera's embedded demo wallet app" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="/og.png" />
-    <meta name="theme-color" content="#fcfcfa" />
+    >
+    <meta property="og:image" content="/og.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta
+      property="og:image:alt"
+      content="The post title above mera's embedded demo wallet app"
+    >
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="/og.png">
+    <meta name="theme-color" content="#fcfcfa">
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23fcfcfa'/><text x='32' y='47' font-family='Georgia,serif' font-style='italic' font-size='46' text-anchor='middle' fill='%231a1a1a'>m</text></svg>"
-    />
-    <link rel="preconnect" href="https://api.fontshare.com" />
-    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    >
+    <link rel="preconnect" href="https://api.fontshare.com">
+    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
       rel="stylesheet"
       href="https://api.fontshare.com/v2/css?f[]=satoshi@300,301,400,401,500,501,700,701&display=swap"
-    />
+    >
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
-    />
+    >
     <style>
-      :root {
-        --paper: #fcfcfa;
-        --ink: #1a1a1a;
-        --ink-soft: #4a4a4a;
-        --ink-faint: #6e6e6a;
-        --rule: #e4e4e0;
-        --code-bg: #f4f4f1;
-        --underline: #bdbdb6;
-      }
+    :root {
+      --paper: #fcfcfa;
+      --ink: #1a1a1a;
+      --ink-soft: #4a4a4a;
+      --ink-faint: #6e6e6a;
+      --rule: #e4e4e0;
+      --code-bg: #f4f4f1;
+      --underline: #bdbdb6;
+    }
 
-      * {
-        box-sizing: border-box;
-      }
+    * {
+      box-sizing: border-box;
+    }
 
-      html {
-        color-scheme: light;
-      }
+    html {
+      color-scheme: light;
+    }
 
-      body {
-        margin: 0;
-        background: var(--paper);
-        color: var(--ink);
-        font-family:
-          "Satoshi",
-          -apple-system,
-          system-ui,
-          sans-serif;
-        font-size: 1.125rem;
-        line-height: 1.7;
-        -webkit-text-size-adjust: 100%;
-      }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Satoshi", -apple-system, system-ui, sans-serif;
+      font-size: 1.125rem;
+      line-height: 1.7;
+      -webkit-text-size-adjust: 100%;
+    }
 
-      ::selection {
-        background: var(--ink);
-        color: var(--paper);
-      }
+    ::selection {
+      background: var(--ink);
+      color: var(--paper);
+    }
 
-      main {
-        max-width: 42rem;
-        margin-inline: auto;
-        padding: clamp(3rem, 8vh, 5.5rem) 1.25rem 2rem;
-      }
+    main {
+      max-width: 42rem;
+      margin-inline: auto;
+      padding: clamp(3rem, 8vh, 5.5rem) 1.25rem 2rem;
+    }
 
-      h1,
-      h2,
-      h3 {
-        font-family:
-          "Satoshi",
-          -apple-system,
-          system-ui,
-          sans-serif;
-        font-weight: 500;
-        letter-spacing: -0.015em;
-        line-height: 1.2;
-      }
+    h1,
+    h2,
+    h3 {
+      font-family: "Satoshi", -apple-system, system-ui, sans-serif;
+      font-weight: 500;
+      letter-spacing: -0.015em;
+      line-height: 1.2;
+    }
 
-      h1 {
-        font-size: clamp(2.2rem, 4.5vw + 1rem, 2.9rem);
-        line-height: 1.12;
-        letter-spacing: -0.02em;
-        margin: 0;
-        text-wrap: balance;
-      }
+    h1 {
+      font-size: clamp(2.2rem, 4.5vw + 1rem, 2.9rem);
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+      margin: 0;
+      text-wrap: balance;
+    }
 
-      article > header {
-        margin-bottom: 2.4rem;
-      }
+    article > header {
+      margin-bottom: 2.4rem;
+    }
 
-      article > header::after {
-        content: "";
-        display: block;
-        width: 2.5rem;
-        height: 1px;
-        background: var(--ink);
-        margin-top: 1.6rem;
-      }
+    article > header::after {
+      content: "";
+      display: block;
+      width: 2.5rem;
+      height: 1px;
+      background: var(--ink);
+      margin-top: 1.6rem;
+    }
 
-      .dateline {
-        font-family:
-          "Satoshi",
-          -apple-system,
-          system-ui,
-          sans-serif;
-        font-style: italic;
-        font-size: 0.95rem;
-        letter-spacing: 0.04em;
-        color: var(--ink-faint);
-        margin: 0.7rem 0 0;
-      }
+    .dateline {
+      font-family: "Satoshi", -apple-system, system-ui, sans-serif;
+      font-style: italic;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      color: var(--ink-faint);
+      margin: 0.7rem 0 0;
+    }
 
-      h2 {
-        font-size: 1.55rem;
-        margin: 3rem 0 1rem;
-      }
-      h3 {
-        font-size: 1.2rem;
-        font-style: italic;
-        margin: 2.4rem 0 0.8rem;
-      }
+    h2 {
+      font-size: 1.55rem;
+      margin: 3rem 0 1rem;
+    }
+    h3 {
+      font-size: 1.2rem;
+      font-style: italic;
+      margin: 2.4rem 0 0.8rem;
+    }
 
-      p {
-        margin: 0 0 1.3em;
-      }
+    p {
+      margin: 0 0 1.3em;
+    }
 
-      a {
-        color: inherit;
-        text-decoration: underline;
-        text-decoration-color: var(--underline);
-        text-decoration-thickness: 1px;
-        text-underline-offset: 0.16em;
-        transition: text-decoration-color 0.15s ease;
-      }
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-color: var(--underline);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.16em;
+      transition: text-decoration-color 0.15s ease;
+    }
 
-      a:hover {
-        text-decoration-color: var(--ink);
-      }
+    a:hover {
+      text-decoration-color: var(--ink);
+    }
 
-      strong {
-        font-weight: 700;
-      }
+    strong {
+      font-weight: 700;
+    }
 
-      ul {
-        margin: 0 0 1.3em;
-        padding-left: 1.3rem;
-      }
-      li {
-        margin: 0.45rem 0;
-      }
-      li::marker {
-        color: var(--ink-faint);
-      }
+    ul {
+      margin: 0 0 1.3em;
+      padding-left: 1.3rem;
+    }
+    li {
+      margin: 0.45rem 0;
+    }
+    li::marker {
+      color: var(--ink-faint);
+    }
 
-      code {
-        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 0.85em;
-        background: var(--code-bg);
-        padding: 0.1em 0.35em;
-        border-radius: 3px;
-      }
+    code {
+      font-family:
+        "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.85em;
+      background: var(--code-bg);
+      padding: 0.1em 0.35em;
+      border-radius: 3px;
+    }
 
-      pre {
-        background: var(--code-bg);
-        border: 1px solid var(--rule);
-        border-radius: 4px;
-        padding: 1rem 1.25rem;
-        font-size: 0.875rem;
-        line-height: 1.6;
-        overflow-x: auto;
-        margin: 1.6rem 0;
-      }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      padding: 1rem 1.25rem;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 1.6rem 0;
+    }
 
-      pre code {
-        background: none;
-        padding: 0;
-        border-radius: 0;
-        font-size: inherit;
-      }
+    pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      font-size: inherit;
+    }
 
-      /* highlight.js tokens, kept to the paper palette */
-      .hljs-comment {
-        color: var(--ink-faint);
-        font-style: italic;
-      }
-      .hljs-keyword {
-        color: #30527a;
-      }
-      .hljs-string {
-        color: #7a5230;
-      }
-      .hljs-number,
-      .hljs-literal {
-        color: #1f5c4d;
-      }
+    /* highlight.js tokens, kept to the paper palette */
+    .hljs-comment {
+      color: var(--ink-faint);
+      font-style: italic;
+    }
+    .hljs-keyword {
+      color: #30527a;
+    }
+    .hljs-string {
+      color: #7a5230;
+    }
+    .hljs-number,
+    .hljs-literal {
+      color: #1f5c4d;
+    }
 
-      figure {
-        margin: 2.2rem 0;
-      }
+    figure {
+      margin: 2.2rem 0;
+    }
 
-      .scroll-x {
-        overflow-x: auto;
-        margin: 1.6rem 0;
-      }
+    .scroll-x {
+      overflow-x: auto;
+      margin: 1.6rem 0;
+    }
 
-      table {
-        border-collapse: collapse;
-        width: 100%;
-        font-size: 0.95rem;
-        line-height: 1.5;
-      }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
 
-      th,
-      td {
-        text-align: left;
-        padding: 0.55rem 0.9rem 0.55rem 0;
-        vertical-align: top;
-      }
+    th,
+    td {
+      text-align: left;
+      padding: 0.55rem 0.9rem 0.55rem 0;
+      vertical-align: top;
+    }
 
-      thead th,
-      tbody th {
-        font-family:
-          "Satoshi",
-          -apple-system,
-          system-ui,
-          sans-serif;
-        font-style: italic;
-        font-weight: 500;
-        color: var(--ink-soft);
-      }
+    thead th,
+    tbody th {
+      font-family: "Satoshi", -apple-system, system-ui, sans-serif;
+      font-style: italic;
+      font-weight: 500;
+      color: var(--ink-soft);
+    }
 
-      thead th,
-      thead td {
-        border-bottom: 1px solid var(--ink);
-      }
-      tbody th,
-      tbody td {
-        border-bottom: 1px solid var(--rule);
-      }
+    thead th,
+    thead td {
+      border-bottom: 1px solid var(--ink);
+    }
+    tbody th,
+    tbody td {
+      border-bottom: 1px solid var(--rule);
+    }
 
+    .diagram {
+      overflow-x: auto;
+    }
+
+    /* let the diagram bleed past the text measure instead of scrolling */
+    @media (min-width: 45rem) {
       .diagram {
-        overflow-x: auto;
+        margin-inline: -1rem;
+      }
+    }
+
+    .diagram svg {
+      display: block;
+      width: 100%;
+      min-width: 660px;
+      height: auto;
+    }
+
+    .diagram rect {
+      fill: var(--paper);
+      stroke: var(--ink-soft);
+    }
+
+    .diagram text {
+      font-family:
+        "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      fill: var(--ink);
+      text-anchor: middle;
+    }
+
+    .diagram .flow {
+      fill: none;
+      stroke: var(--ink-soft);
+    }
+
+    .demo {
+      margin: 1.8rem 0 0.8rem;
+    }
+
+    .demo iframe {
+      display: block;
+      width: 100%;
+      height: clamp(620px, 85vh, 740px);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      background: #f5f6f8;
+    }
+
+    .demo-note {
+      font-size: 0.95rem;
+      color: var(--ink-soft);
+    }
+
+    .demo-hero {
+      margin-top: 0;
+    }
+    .hero-note {
+      margin-bottom: 2.6rem;
+    }
+
+    #references {
+      border-top: 1px solid var(--rule);
+      padding-top: 2.6rem;
+      margin-top: 3.6rem;
+    }
+
+    .references {
+      font-size: 0.95rem;
+    }
+    .references li {
+      margin: 0.55rem 0;
+    }
+
+    footer {
+      max-width: 42rem;
+      margin-inline: auto;
+      padding: 1rem 1.25rem 3.5rem;
+    }
+
+    footer p {
+      margin: 0;
+      text-align: center;
+      font-family: "Satoshi", -apple-system, system-ui, sans-serif;
+      font-style: italic;
+      font-size: 0.95rem;
+      color: var(--ink-faint);
+    }
+
+    @media (max-width: 480px) {
+      pre {
+        font-size: 0.8rem;
+        padding: 0.9rem 1rem;
+      }
+      table {
+        font-size: 0.875rem;
       }
 
-      /* let the diagram bleed past the text measure instead of scrolling */
-      @media (min-width: 45rem) {
-        .diagram {
-          margin-inline: -1rem;
-        }
-      }
-
-      .diagram svg {
-        display: block;
-        width: 100%;
-        min-width: 660px;
-        height: auto;
-      }
-
-      .diagram rect {
-        fill: var(--paper);
-        stroke: var(--ink-soft);
-      }
-
-      .diagram text {
-        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 12px;
-        fill: var(--ink);
-        text-anchor: middle;
-      }
-
-      .diagram .flow {
-        fill: none;
-        stroke: var(--ink-soft);
-      }
-
+      /* the demo needs ~350px; bleed it to the viewport edges on phones */
       .demo {
-        margin: 1.8rem 0 0.8rem;
+        margin-inline: -1.25rem;
       }
-
       .demo iframe {
-        display: block;
-        width: 100%;
-        height: clamp(620px, 85vh, 740px);
-        border: 1px solid var(--rule);
-        border-radius: 6px;
-        background: #f5f6f8;
+        border-inline: none;
+        border-radius: 0;
       }
-
-      .demo-note {
-        font-size: 0.95rem;
-        color: var(--ink-soft);
-      }
-
-      .demo-hero {
-        margin-top: 0;
-      }
-      .hero-note {
-        margin-bottom: 2.6rem;
-      }
-
-      #references {
-        border-top: 1px solid var(--rule);
-        padding-top: 2.6rem;
-        margin-top: 3.6rem;
-      }
-
-      .references {
-        font-size: 0.95rem;
-      }
-      .references li {
-        margin: 0.55rem 0;
-      }
-
-      footer {
-        max-width: 42rem;
-        margin-inline: auto;
-        padding: 1rem 1.25rem 3.5rem;
-      }
-
-      footer p {
-        margin: 0;
-        text-align: center;
-        font-family:
-          "Satoshi",
-          -apple-system,
-          system-ui,
-          sans-serif;
-        font-style: italic;
-        font-size: 0.95rem;
-        color: var(--ink-faint);
-      }
-
-      @media (max-width: 480px) {
-        pre {
-          font-size: 0.8rem;
-          padding: 0.9rem 1rem;
-        }
-        table {
-          font-size: 0.875rem;
-        }
-
-        /* the demo needs ~350px; bleed it to the viewport edges on phones */
-        .demo {
-          margin-inline: -1.25rem;
-        }
-        .demo iframe {
-          border-inline: none;
-          border-radius: 0;
-        }
-      }
+    }
     </style>
   </head>
   <body>
@@ -394,105 +379,134 @@
         </figure>
 
         <p class="demo-note hero-note">
-          This embedded demo creates an actual passkey in the credential manager. It's scoped to the
-          demo and controls nothing else. If the prompt doesn't appear here,
-          <a href="https://mera-demo.up.railway.app/" target="_blank" rel="noopener"
+          This embedded demo creates an actual passkey in the credential
+          manager. It's scoped to the demo and controls nothing else. If the
+          prompt doesn't appear here,
+          <a
+            href="https://mera-demo.up.railway.app/"
+            target="_blank"
+            rel="noopener"
             >open the demo in a new tab</a
           >.
         </p>
 
         <p>
-          mera is a TypeScript library that lets an app get the same 32 secret bytes from the same
-          passkey each time. The app can use those bytes to derive an ordinary account on any chain,
-          without smart accounts or third-party trust assumptions. mera is powered by the
-          <a href="https://www.w3.org/TR/webauthn-3/#prf-extension">WebAuthn PRF extension</a>, part
-          of the standard behind passkeys and already shipping in mainstream authenticators.
+          mera is a TypeScript library that lets an app get the same 32 secret
+          bytes from the same passkey each time. The app can use those bytes to
+          derive an ordinary account on any chain, without smart accounts or
+          third-party trust assumptions. mera is powered by the
+          <a href="https://www.w3.org/TR/webauthn-3/#prf-extension"
+            >WebAuthn PRF extension</a
+          >, part of the standard behind passkeys and already shipping in
+          mainstream authenticators.
         </p>
 
-        <h2 id="the-current-state-of-crypto-onboarding">The current state of crypto onboarding</h2>
+        <h2 id="the-current-state-of-crypto-onboarding">
+          The current state of crypto onboarding
+        </h2>
 
         <p>
-          Self-custody onboarding (where no one but the user can move the funds) has not changed
-          much in a decade. The app generates a recovery phrase (a
-          <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP-39</a>
-          mnemonic of twelve or twenty-four words) and asks the user to write it down. The scheme
-          works in every wallet app, but its costs land before the app has done anything useful. The
-          first is the flow itself: no ordinary app asks a new user to transcribe those words and
-          re-enter some of them before first use. The second outlasts onboarding. The user is now
-          responsible for backing up a secret that controls all future funds.
-        </p>
-
-        <p>
-          Hosted logins remove the phrase. The user signs in with Google or another login provider;
-          the key is held by a service or split across an MPC network (several servers that jointly
-          sign, none holding the whole key) that signs against a valid login token. Onboarding
-          becomes a login form. The trade-off is a third party in every signature. The key works
-          only while the service exists and the account is in good standing. Without a standard
-          export path, moving the account elsewhere depends on the vendor.
-        </p>
-
-        <h2 id="key-storage-comes-before-product-work">Key storage comes before product work</h2>
-
-        <p>
-          Developers face a version of this too. A payments app, trading app, or game still has to
-          ship the key layer first: generate keys, store them, gate their use, zero them when idle,
-          recover them when a device is lost. All of it has to work before the first feature ships.
-          None of it sets the app apart, and getting it wrong costs user funds.
+          Self-custody onboarding (where no one but the user can move the funds)
+          has not changed much in a decade. The app generates a recovery phrase
+          (a
+          <a
+            href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki"
+            >BIP-39</a
+          >
+          mnemonic of twelve or twenty-four words) and asks the user to write it
+          down. The scheme works in every wallet app, but its costs land before
+          the app has done anything useful. The first is the flow itself: no
+          ordinary app asks a new user to transcribe those words and re-enter
+          some of them before first use. The second outlasts onboarding. The
+          user is now responsible for backing up a secret that controls all
+          future funds.
         </p>
 
         <p>
-          Storage shows the problem quickly because each platform gives a different answer. iOS has
-          the Keychain and the Secure Enclave, Android has the Keystore, and the browser has
-          nothing: localStorage and IndexedDB are readable by any script that runs on the page. Even
-          the mobile secure hardware handles crypto's curves (the different families of key used for
-          signing) unevenly. The Secure Enclave signs
+          Hosted logins remove the phrase. The user signs in with Google or
+          another login provider; the key is held by a service or split across
+          an MPC network (several servers that jointly sign, none holding the
+          whole key) that signs against a valid login token. Onboarding becomes
+          a login form. The trade-off is a third party in every signature. The
+          key works only while the service exists and the account is in good
+          standing. Without a standard export path, moving the account elsewhere
+          depends on the vendor.
+        </p>
+
+        <h2 id="key-storage-comes-before-product-work">
+          Key storage comes before product work
+        </h2>
+
+        <p>
+          Developers face a version of this too. A payments app, trading app, or
+          game still has to ship the key layer first: generate keys, store them,
+          gate their use, zero them when idle, recover them when a device is
+          lost. All of it has to work before the first feature ships. None of it
+          sets the app apart, and getting it wrong costs user funds.
+        </p>
+
+        <p>
+          Storage shows the problem quickly because each platform gives a
+          different answer. iOS has the Keychain and the Secure Enclave, Android
+          has the Keystore, and the browser has nothing: localStorage and
+          IndexedDB are readable by any script that runs on the page. Even the
+          mobile secure hardware handles crypto's curves (the different families
+          of key used for signing) unevenly. The Secure Enclave signs
           <a href="https://csrc.nist.gov/pubs/sp/800/186/final">P-256</a>
-          only, the Keystore's curve support depends on the Android version and the device, and
-          neither signs
-          <a href="https://www.secg.org/sec2-v2.pdf">secp256k1</a>, so the chain key sits encrypted
-          at rest and hot in app memory while signing. A team shipping web, iOS, and Android designs
-          storage three times and onboarding three times, for the same account.
+          only, the Keystore's curve support depends on the Android version and
+          the device, and neither signs
+          <a href="https://www.secg.org/sec2-v2.pdf">secp256k1</a>, so the chain
+          key sits encrypted at rest and hot in app memory while signing. A team
+          shipping web, iOS, and Android designs storage three times and
+          onboarding three times, for the same account.
         </p>
 
         <p>
-          Passkeys seemed to remove both chores. A passkey is a keypair in the device's secure
-          hardware, gated by a biometric, PIN, or password, and synced by the platform. It ships
-          with every phone, laptop, and browser. For the user that means no phrase and no password;
-          for the developer it means generation, storage, gating, and cross-device sync are the
-          platform's job. Crypto adopted passkeys through smart accounts, where the passkey signs
-          and a contract on the chain verifies.
+          Passkeys seemed to remove both chores. A passkey is a keypair in the
+          device's secure hardware, gated by a biometric, PIN, or password, and
+          synced by the platform. It ships with every phone, laptop, and
+          browser. For the user that means no phrase and no password; for the
+          developer it means generation, storage, gating, and cross-device sync
+          are the platform's job. Crypto adopted passkeys through smart
+          accounts, where the passkey signs and a contract on the chain
+          verifies.
         </p>
 
-        <h2 id="why-a-passkey-cant-sign-a-transaction">Why a passkey can't sign a transaction</h2>
+        <h2 id="why-a-passkey-cant-sign-a-transaction">
+          Why a passkey can't sign a transaction
+        </h2>
 
         <p>
           The issue is in
-          <a href="https://www.w3.org/TR/webauthn-3/">WebAuthn</a>'s signing rules. Each passkey
-          lives on an authenticator (a phone, a laptop, or a security key) and is scoped to one
-          site. The private key is never exposed to the site; the server sees only the public key.
-          Every use runs a ceremony: the relying party (the site the passkey belongs to) sends a
-          one-time challenge, the browser passes it to the authenticator, and the authenticator
-          signs after a biometric or PIN check; WebAuthn calls this user verification.
+          <a href="https://www.w3.org/TR/webauthn-3/">WebAuthn</a>'s signing
+          rules. Each passkey lives on an authenticator (a phone, a laptop, or a
+          security key) and is scoped to one site. The private key is never
+          exposed to the site; the server sees only the public key. Every use
+          runs a ceremony: the relying party (the site the passkey belongs to)
+          sends a one-time challenge, the browser passes it to the
+          authenticator, and the authenticator signs after a biometric or PIN
+          check; WebAuthn calls this user verification.
         </p>
 
         <p>
-          What gets signed matters. The authenticator does not accept arbitrary payloads; it signs a
-          fixed structure:
+          What gets signed matters. The authenticator does not accept arbitrary
+          payloads; it signs a fixed structure:
         </p>
 
-        <pre><code>signature = sign(authenticatorData ‖ SHA-256(clientDataJSON))</code></pre>
+        <pre
+        ><code>signature = sign(authenticatorData ‖ SHA-256(clientDataJSON))</code></pre>
 
         <p>
           <a href="https://www.w3.org/TR/webauthn-3/#sctn-authenticator-data"
             ><code>authenticatorData</code></a
           >
-          is the device's statement: a hash of the site's ID, a signature counter, flags such as
-          whether the user was verified.
+          is the device's statement: a hash of the site's ID, a signature
+          counter, flags such as whether the user was verified.
           <a href="https://www.w3.org/TR/webauthn-3/#dictionary-client-data"
             ><code>clientDataJSON</code></a
           >
-          is the browser's statement: the challenge, the origin, the operation type. For a sign-in
-          on <code>account.example.com</code>:
+          is the browser's statement: the challenge, the origin, the operation
+          type. For a sign-in on <code>account.example.com</code>:
         </p>
 
         <pre><code>authenticatorData
@@ -508,61 +522,72 @@ clientDataJSON
   }</code></pre>
 
         <p>
-          This envelope is where WebAuthn's phishing resistance comes from: the browser fills in the
-          origin before page JavaScript sees the result. It is also why an assertion cannot stand in
-          for a signature over an arbitrary 32-byte hash. The app's only input is the challenge: it
-          can put <code>keccak256(rlp(tx))</code>
-          there, but what comes back is a signature over the whole envelope, which no EVM node will
-          accept. The curve is wrong too. Authenticators sign with P-256 in practice, while Ethereum
-          expects secp256k1 and Solana
+          This envelope is where WebAuthn's phishing resistance comes from: the
+          browser fills in the origin before page JavaScript sees the result. It
+          is also why an assertion cannot stand in for a signature over an
+          arbitrary 32-byte hash. The app's only input is the challenge: it can
+          put <code>keccak256(rlp(tx))</code>
+          there, but what comes back is a signature over the whole envelope,
+          which no EVM node will accept. The curve is wrong too. Authenticators
+          sign with P-256 in practice, while Ethereum expects secp256k1 and
+          Solana
           <a href="https://www.rfc-editor.org/rfc/rfc8032">Ed25519</a>.
         </p>
 
         <p>
-          Smart-account designs handle this by making the chain verify the envelope. On EVM chains
-          that means a smart account per user that stores the passkey's public key, and a P-256
-          verifier (a contract, or the
-          <a href="https://github.com/ethereum/RIPs/blob/master/RIPS/rip-7212.md">RIP-7212</a>
-          precompile where the chain provides one natively). A contract cannot start a transaction
-          on its own, so something must submit it: a bundler, the relayer service defined by the
-          smart-account standard
+          Smart-account designs handle this by making the chain verify the
+          envelope. On EVM chains that means a smart account per user that
+          stores the passkey's public key, and a P-256 verifier (a contract, or
+          the
+          <a
+            href="https://github.com/ethereum/RIPs/blob/master/RIPS/rip-7212.md"
+            >RIP-7212</a
+          >
+          precompile where the chain provides one natively). A contract cannot
+          start a transaction on its own, so something must submit it: a
+          bundler, the relayer service defined by the smart-account standard
           <a href="https://eips.ethereum.org/EIPS/eip-4337">ERC-4337</a>
-          (with a paymaster if the app sponsors gas), or an executor account the app runs itself.
-          Solana repeats the whole thing separately: its own P-256 precompile, a smart-account
-          program such as LazorKit (or a third-party key service like Para or Privy), and a
-          different address scheme. Solana uses a separate setup from the EVM side.
+          (with a paymaster if the app sponsors gas), or an executor account the
+          app runs itself. Solana repeats the whole thing separately: its own
+          P-256 precompile, a smart-account program such as LazorKit (or a
+          third-party key service like Para or Privy), and a different address
+          scheme. Solana uses a separate setup from the EVM side.
         </p>
 
         <p>
-          Each account is a contract, so creating one costs a deployment. The address comes from the
-          account contract and its factory;
+          Each account is a contract, so creating one costs a deployment. The
+          address comes from the account contract and its factory;
           <a href="https://eips.ethereum.org/EIPS/eip-1014">CREATE2</a>
-          (which derives a contract's address from its code and a chosen salt, regardless of
-          deployment order) can reproduce it on another chain, but only where the provider's
-          contracts are deployed, so the user's address depends on the provider being present on
-          every chain they use. Switching providers means migrating on-chain, because the
-          verification logic is the provider's contract. The developer pays too: the team has to
-          learn the account implementation's ins and outs, run or rent its infrastructure, and carry
-          that provider as a third-party dependency on every chain the app supports.
+          (which derives a contract's address from its code and a chosen salt,
+          regardless of deployment order) can reproduce it on another chain, but
+          only where the provider's contracts are deployed, so the user's
+          address depends on the provider being present on every chain they use.
+          Switching providers means migrating on-chain, because the verification
+          logic is the provider's contract. The developer pays too: the team has
+          to learn the account implementation's ins and outs, run or rent its
+          infrastructure, and carry that provider as a third-party dependency on
+          every chain the app supports.
         </p>
 
         <h2 id="the-webauthn-prf-extension">The WebAuthn PRF extension</h2>
 
         <p>
-          The PRF extension changes what an application can get out of a ceremony. Alongside the
-          signature, the authenticator exposes a per-credential pseudo-random function (PRF). Feed
-          it an input, get back fixed, unguessable bytes:
+          The PRF extension changes what an application can get out of a
+          ceremony. Alongside the signature, the authenticator exposes a
+          per-credential pseudo-random function (PRF). Feed it an input, get
+          back fixed, unguessable bytes:
         </p>
 
         <pre><code>PRF(secret, salt) → 32 bytes</code></pre>
 
         <p>
-          The secret is minted at passkey creation (FIDO2 calls it CredRandom) and never leaves the
-          authenticator. Each evaluation is one
+          The secret is minted at passkey creation (FIDO2 calls it CredRandom)
+          and never leaves the authenticator. Each evaluation is one
           <a href="https://www.rfc-editor.org/rfc/rfc2104">HMAC-SHA-256</a>
-          keyed by that secret, computed inside the authenticator behind the same user-verification
-          check as the signature. The application passes a salt (an input it chooses) and gets 32
-          bytes back; it never sees the secret. (This is FIDO2's
+          keyed by that secret, computed inside the authenticator behind the
+          same user-verification check as the signature. The application passes
+          a salt (an input it chooses) and gets 32 bytes back; it never sees the
+          secret. (This is FIDO2's
           <a
             href="https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html#sctn-hmac-secret-extension"
             ><code>hmac-secret</code></a
@@ -575,70 +600,85 @@ clientDataJSON
         <ul>
           <li>
             <strong>Deterministic.</strong>
-            The secret is created once per passkey. The same passkey, relying party, and salt return
-            the same 32 bytes.
+            The secret is created once per passkey. The same passkey, relying
+            party, and salt return the same 32 bytes.
           </li>
           <li>
             <strong>Site-scoped.</strong>
-            The secret belongs to the credential, and the credential to one relying party, so a
-            phishing site gets different bytes from a different credential. The browser also hashes
-            a fixed prefix into the salt (<code>SHA-256("WebAuthn PRF" ‖ 0x00 ‖ salt)</code>), so a
-            page can never evaluate the underlying hmac-secret PRF at arbitrary points; WebAuthn's
-            evaluations stay separate from the platform's own uses of it.
+            The secret belongs to the credential, and the credential to one
+            relying party, so a phishing site gets different bytes from a
+            different credential. The browser also hashes a fixed prefix into
+            the salt (<code>SHA-256("WebAuthn PRF" ‖ 0x00 ‖ salt)</code>), so a
+            page can never evaluate the underlying hmac-secret PRF at arbitrary
+            points; WebAuthn's evaluations stay separate from the platform's own
+            uses of it.
           </li>
           <li>
             <strong>Full entropy.</strong>
-            HMAC-SHA-256 output is 32 uniformly distributed bytes (full-strength randomness),
-            directly usable as a seed or a private key.
+            HMAC-SHA-256 output is 32 uniformly distributed bytes (full-strength
+            randomness), directly usable as a seed or a private key.
           </li>
         </ul>
 
         <p>
-          This moves where WebAuthn meets the chain. Instead of teaching each chain to verify
-          WebAuthn envelopes, an application takes user-verified entropy out of the ceremony and
-          derives ordinary keys from it, using whatever key derivation function (KDF) and curve the
-          target chain needs. The chain sees a normal signature from a normal account; everything
-          WebAuthn-specific stays on the client.
+          This moves where WebAuthn meets the chain. Instead of teaching each
+          chain to verify WebAuthn envelopes, an application takes user-verified
+          entropy out of the ceremony and derives ordinary keys from it, using
+          whatever key derivation function (KDF) and curve the target chain
+          needs. The chain sees a normal signature from a normal account;
+          everything WebAuthn-specific stays on the client.
         </p>
 
         <p>
-          PRF ships today in the authenticators bundled with major operating systems and browsers:
-          iCloud Keychain, Google Password Manager, and Windows Password Manager, plus 1Password,
-          with support landing between 2024 and 2026. Security keys needed no new hardware: YubiKeys
-          have supported the underlying hmac-secret since firmware 5.2.3 in 2019, and browsers began
-          exposing it as PRF in 2023, starting with Chrome.
+          PRF ships today in the authenticators bundled with major operating
+          systems and browsers: iCloud Keychain, Google Password Manager, and
+          Windows Password Manager, plus 1Password, with support landing between
+          2024 and 2026. Security keys needed no new hardware: YubiKeys have
+          supported the underlying hmac-secret since firmware 5.2.3 in 2019, and
+          browsers began exposing it as PRF in 2023, starting with Chrome.
         </p>
 
         <h2 id="how-mera-uses-it">How mera uses it</h2>
 
         <p>
-          mera packages this into a few primitives: passkey ceremonies that return PRF output,
-          signing sessions for secp256k1 and Ed25519, address helpers, and an encrypted vault
-          format. The library produces stable, authenticator-bound entropy and signs with keys the
-          application hands it; how entropy becomes keys (the KDF, the paths, the account model)
-          belongs to the application. A session keeps key bytes in memory and zeroes them on
-          <code>session.end()</code>. One ceremony per session is enough: one user-verification
-          check, then any number of signatures.
+          mera packages this into a few primitives: passkey ceremonies that
+          return PRF output, signing sessions for secp256k1 and Ed25519, address
+          helpers, and an encrypted vault format. The library produces stable,
+          authenticator-bound entropy and signs with keys the application hands
+          it; how entropy becomes keys (the KDF, the paths, the account model)
+          belongs to the application. A session keeps key bytes in memory and
+          zeroes them on
+          <code>session.end()</code>. One ceremony per session is enough: one
+          user-verification check, then any number of signatures.
         </p>
 
         <p>
-          There are two ways to use the PRF output: derive the account's keys from it, or use it to
-          encrypt a secret that exists independently of it.
+          There are two ways to use the PRF output: derive the account's keys
+          from it, or use it to encrypt a secret that exists independently of
+          it.
         </p>
 
         <h3 id="passkey-accounts">Passkey accounts</h3>
 
         <p>
-          A passkey account is computed from the passkey. mera's PRF output methods use a fixed v1
-          salt by default, so the same passkey yields the same account. The application runs the
-          passkey-derived bytes through its derivation scheme of choice; mera's demo wallet app
-          feeds them into BIP-39 and derives keys with
-          <a href="https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki">BIP-32</a>
+          A passkey account is computed from the passkey. mera's PRF output
+          methods use a fixed v1 salt by default, so the same passkey yields the
+          same account. The application runs the passkey-derived bytes through
+          its derivation scheme of choice; mera's demo wallet app feeds them
+          into BIP-39 and derives keys with
+          <a
+            href="https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki"
+            >BIP-32</a
+          >
           for secp256k1 and
-          <a href="https://github.com/satoshilabs/slips/blob/master/slip-0010.md">SLIP-0010</a>
-          for Ed25519, with further accounts coming from HD paths, the standard hierarchy wallet
-          apps use for multiple accounts. Leaving derivation out of the library is deliberate: these
-          schemes already have stable, audited implementations, and mera does not ship another.
+          <a
+            href="https://github.com/satoshilabs/slips/blob/master/slip-0010.md"
+            >SLIP-0010</a
+          >
+          for Ed25519, with further accounts coming from HD paths, the standard
+          hierarchy wallet apps use for multiple accounts. Leaving derivation
+          out of the library is deliberate: these schemes already have stable,
+          audited implementations, and mera does not ship another.
         </p>
 
         <figure class="diagram">
@@ -648,7 +688,9 @@ clientDataJSON
             aria-label="Flow diagram: a passkey produces 32 bytes of PRF output, which feeds app-owned derivation; from there a secp256k1 key goes through a signing session to an EVM address, and an Ed25519 key goes through a signing session to a Solana address."
             xmlns="http://www.w3.org/2000/svg"
           >
-            <title>One passkey ceremony, app-owned derivation, two chains</title>
+            <title>
+              One passkey ceremony, app-owned derivation, two chains
+            </title>
             <defs>
               <marker
                 id="arr"
@@ -664,28 +706,78 @@ clientDataJSON
             </defs>
             <rect x="2" y="73" width="70" height="30" rx="3" />
             <text x="37" y="92">passkey</text>
-            <line class="flow" x1="72" y1="88" x2="90" y2="88" marker-end="url(#arr)" />
+            <line
+              class="flow"
+              x1="72"
+              y1="88"
+              x2="90"
+              y2="88"
+              marker-end="url(#arr)"
+            />
             <rect x="92" y="66" width="90" height="44" rx="3" />
             <text x="137" y="84">PRF output</text>
             <text x="137" y="100">32 bytes</text>
-            <line class="flow" x1="182" y1="88" x2="200" y2="88" marker-end="url(#arr)" />
+            <line
+              class="flow"
+              x1="182"
+              y1="88"
+              x2="200"
+              y2="88"
+              marker-end="url(#arr)"
+            />
             <rect x="202" y="66" width="90" height="44" rx="3" />
             <text x="247" y="84">app-owned</text>
             <text x="247" y="100">derivation</text>
-            <path class="flow" d="M292 88 C 305 88, 305 36, 320 36" marker-end="url(#arr)" />
-            <path class="flow" d="M292 88 C 305 88, 305 140, 320 140" marker-end="url(#arr)" />
+            <path
+              class="flow"
+              d="M292 88 C 305 88, 305 36, 320 36"
+              marker-end="url(#arr)"
+            />
+            <path
+              class="flow"
+              d="M292 88 C 305 88, 305 140, 320 140"
+              marker-end="url(#arr)"
+            />
             <rect x="322" y="21" width="112" height="30" rx="3" />
             <text x="378" y="40">secp256k1 key</text>
             <rect x="322" y="125" width="112" height="30" rx="3" />
             <text x="378" y="144">Ed25519 key</text>
-            <line class="flow" x1="434" y1="36" x2="452" y2="36" marker-end="url(#arr)" />
-            <line class="flow" x1="434" y1="140" x2="452" y2="140" marker-end="url(#arr)" />
+            <line
+              class="flow"
+              x1="434"
+              y1="36"
+              x2="452"
+              y2="36"
+              marker-end="url(#arr)"
+            />
+            <line
+              class="flow"
+              x1="434"
+              y1="140"
+              x2="452"
+              y2="140"
+              marker-end="url(#arr)"
+            />
             <rect x="454" y="21" width="122" height="30" rx="3" />
             <text x="515" y="40">signing session</text>
             <rect x="454" y="125" width="122" height="30" rx="3" />
             <text x="515" y="144">signing session</text>
-            <line class="flow" x1="576" y1="36" x2="594" y2="36" marker-end="url(#arr)" />
-            <line class="flow" x1="576" y1="140" x2="594" y2="140" marker-end="url(#arr)" />
+            <line
+              class="flow"
+              x1="576"
+              y1="36"
+              x2="594"
+              y2="36"
+              marker-end="url(#arr)"
+            />
+            <line
+              class="flow"
+              x1="576"
+              y1="140"
+              x2="594"
+              y2="140"
+              marker-end="url(#arr)"
+            />
             <rect x="596" y="21" width="112" height="30" rx="3" />
             <text x="652" y="40">EVM address</text>
             <rect x="596" y="125" width="112" height="30" rx="3" />
@@ -694,7 +786,8 @@ clientDataJSON
         </figure>
 
         <p>
-          The example: one ceremony, then app-owned derivation — here BIP-39/BIP-32, as in the demo.
+          The example: one ceremony, then app-owned derivation — here
+          BIP-39/BIP-32, as in the demo.
         </p>
 
         <pre><code class="language-typescript">import {
@@ -723,21 +816,24 @@ const session = createSecp256k1SigningSession({
 const address = getEvmAddress(session.publicKey)</code></pre>
 
         <p>
-          A passkey account stores no database row, localStorage entry, or vault blob. Sign in on a
-          new device with the synced passkey, and the same account appears. Cross-device use follows
-          the password manager's normal sync and security assumptions. Because the derivation is
-          standard, the application can offer an explicit export: the entropy maps to an ordinary
-          recovery phrase that imports into any standard wallet app, like MetaMask or Phantom.
+          A passkey account stores no database row, localStorage entry, or vault
+          blob. Sign in on a new device with the synced passkey, and the same
+          account appears. Cross-device use follows the password manager's
+          normal sync and security assumptions. Because the derivation is
+          standard, the application can offer an explicit export: the entropy
+          maps to an ordinary recovery phrase that imports into any standard
+          wallet app, like MetaMask or Phantom.
         </p>
 
         <h3 id="secret-vault">Secret vault</h3>
 
         <p>
-          A secret vault starts with an independent secret, generated client-side or imported. The
-          PRF output derives the key that encrypts it. The result is a small vault blob, useless
-          without a passkey ceremony, that the application can store anywhere: localStorage, a
-          backend, a sync service. mera defines the vault format and the decrypt step; storage and
-          lifecycle belong to the application.
+          A secret vault starts with an independent secret, generated
+          client-side or imported. The PRF output derives the key that encrypts
+          it. The result is a small vault blob, useless without a passkey
+          ceremony, that the application can store anywhere: localStorage, a
+          backend, a sync service. mera defines the vault format and the decrypt
+          step; storage and lifecycle belong to the application.
         </p>
 
         <figure class="diagram">
@@ -748,7 +844,8 @@ const address = getEvmAddress(session.publicKey)</code></pre>
             xmlns="http://www.w3.org/2000/svg"
           >
             <title>
-              Secret vault: a passkey-derived key encrypts and decrypts an independent secret
+              Secret vault: a passkey-derived key encrypts and decrypts an
+              independent secret
             </title>
             <defs>
               <marker
@@ -780,13 +877,50 @@ const address = getEvmAddress(session.publicKey)</code></pre>
             <text x="580" y="112">stored anywhere</text>
             <rect x="2" y="140" width="130" height="30" rx="3" />
             <text x="67" y="159">recovered secret</text>
-            <line class="flow" x1="72" y1="100" x2="92" y2="100" marker-end="url(#arr2)" />
-            <line class="flow" x1="168" y1="45" x2="300" y2="45" marker-end="url(#arr2)" />
-            <path class="flow" d="M137 78 C 230 78, 280 67, 330 67" marker-end="url(#arr2)" />
-            <path class="flow" d="M390 45 C 480 45, 520 78, 560 78" marker-end="url(#arr2)" />
-            <path class="flow" d="M560 122 C 500 150, 450 155, 390 155" marker-end="url(#arr2)" />
-            <path class="flow" d="M137 122 C 230 122, 280 133, 330 133" marker-end="url(#arr2)" />
-            <line class="flow" x1="300" y1="155" x2="132" y2="155" marker-end="url(#arr2)" />
+            <line
+              class="flow"
+              x1="72"
+              y1="100"
+              x2="92"
+              y2="100"
+              marker-end="url(#arr2)"
+            />
+            <line
+              class="flow"
+              x1="168"
+              y1="45"
+              x2="300"
+              y2="45"
+              marker-end="url(#arr2)"
+            />
+            <path
+              class="flow"
+              d="M137 78 C 230 78, 280 67, 330 67"
+              marker-end="url(#arr2)"
+            />
+            <path
+              class="flow"
+              d="M390 45 C 480 45, 520 78, 560 78"
+              marker-end="url(#arr2)"
+            />
+            <path
+              class="flow"
+              d="M560 122 C 500 150, 450 155, 390 155"
+              marker-end="url(#arr2)"
+            />
+            <path
+              class="flow"
+              d="M137 122 C 230 122, 280 133, 330 133"
+              marker-end="url(#arr2)"
+            />
+            <line
+              class="flow"
+              x1="300"
+              y1="155"
+              x2="132"
+              y2="155"
+              marker-end="url(#arr2)"
+            />
           </svg>
         </figure>
 
@@ -795,18 +929,19 @@ const address = getEvmAddress(session.publicKey)</code></pre>
         <ul>
           <li>
             <strong>Importing an existing account.</strong>
-            A user migrating from another wallet app keeps their addresses; the imported recovery
-            phrase is encrypted into the vault like any other secret.
+            A user migrating from another wallet app keeps their addresses; the
+            imported recovery phrase is encrypted into the vault like any other
+            secret.
           </li>
           <li>
             <strong>A passkey as a second factor.</strong>
-            If the blob lives on the application's backend, spending requires both the blob and the
-            passkey ceremony.
+            If the blob lives on the application's backend, spending requires
+            both the blob and the passkey ceremony.
           </li>
           <li>
             <strong>Rotation.</strong>
-            The secret can be replaced without touching the passkey, and the passkey can be replaced
-            by re-encrypting the vault.
+            The secret can be replaced without touching the passkey, and the
+            passkey can be replaced by re-encrypting the vault.
           </li>
         </ul>
 
@@ -847,17 +982,17 @@ const address = getEvmAddress(session.publicKey)</code></pre>
         </div>
 
         <p>
-          An application can mix the patterns: passkey accounts for new accounts, secret vaults for
-          existing recovery phrases or keys.
+          An application can mix the patterns: passkey accounts for new
+          accounts, secret vaults for existing recovery phrases or keys.
         </p>
 
         <h2 id="try-it">Try it</h2>
 
         <p>
-          The demo below runs both patterns. It opens with passkey accounts; create a passkey or
-          sign in with an existing one, see EVM and Solana addresses, and reveal the recovery
-          phrase. The link under the card switches to the secret-vault flow for importing an
-          existing phrase.
+          The demo below runs both patterns. It opens with passkey accounts;
+          create a passkey or sign in with an existing one, see EVM and Solana
+          addresses, and reveal the recovery phrase. The link under the card
+          switches to the secret-vault flow for importing an existing phrase.
         </p>
 
         <figure class="demo">
@@ -875,12 +1010,17 @@ const address = getEvmAddress(session.publicKey)</code></pre>
 
         <p class="demo-note">
           If the prompt doesn't appear here,
-          <a href="https://mera-demo.up.railway.app/" target="_blank" rel="noopener"
+          <a
+            href="https://mera-demo.up.railway.app/"
+            target="_blank"
+            rel="noopener"
             >open the demo in a new tab</a
           >.
         </p>
 
-        <h2 id="what-users-and-developers-get">What users and developers get</h2>
+        <h2 id="what-users-and-developers-get">
+          What users and developers get
+        </h2>
 
         <p>For users:</p>
 
@@ -895,13 +1035,13 @@ const address = getEvmAddress(session.publicKey)</code></pre>
           </li>
           <li>
             <strong>Backup is passkey sync.</strong>
-            A synced password manager carries the passkey across devices, so a new device is just a
-            sign-in: the same account appears.
+            A synced password manager carries the passkey across devices, so a
+            new device is just a sign-in: the same account appears.
           </li>
           <li>
             <strong>Export can stay standard.</strong>
-            Where the app offers export, the recovery phrase imports into MetaMask, Phantom, or any
-            other standard wallet app.
+            Where the app offers export, the recovery phrase imports into
+            MetaMask, Phantom, or any other standard wallet app.
           </li>
         </ul>
 
@@ -910,27 +1050,30 @@ const address = getEvmAddress(session.publicKey)</code></pre>
         <ul>
           <li>
             <strong>The app stores less key material.</strong>
-            The passkey-account pattern stores no app-owned secret. The secret-vault pattern stores
-            a vault blob that still needs the passkey ceremony, and ending the session is one call.
+            The passkey-account pattern stores no app-owned secret. The
+            secret-vault pattern stores a vault blob that still needs the
+            passkey ceremony, and ending the session is one call.
           </li>
           <li>
             <strong>Passkey accounts have no chain infrastructure.</strong>
-            They need no contracts, bundlers, paymasters, executor accounts, key servers, or
-            provider dependencies. They also need no server-side account state.
+            They need no contracts, bundlers, paymasters, executor accounts, key
+            servers, or provider dependencies. They also need no server-side
+            account state.
           </li>
           <li>
             <strong>The dependency surface is small.</strong>
-            Under 2,000 lines including its JSDoc, built from standard, well-studied primitives:
-            WebAuthn, HMAC-SHA-256,
-            <a href="https://www.rfc-editor.org/rfc/rfc5869">HKDF-SHA-256</a>, and
-            <a href="https://csrc.nist.gov/pubs/sp/800/38/d/final">AES-GCM</a>. Ordinary HD
-            derivation lives in the demo, outside the library.
+            Under 2,000 lines including its JSDoc, built from standard,
+            well-studied primitives: WebAuthn, HMAC-SHA-256,
+            <a href="https://www.rfc-editor.org/rfc/rfc5869">HKDF-SHA-256</a>,
+            and
+            <a href="https://csrc.nist.gov/pubs/sp/800/38/d/final">AES-GCM</a>.
+            Ordinary HD derivation lives in the demo, outside the library.
           </li>
           <li>
             <strong>The primitive is general.</strong>
-            The output is 32 deterministic, authenticator-bound bytes. Apps can feed it into any KDF
-            for any curve, or use it outside chains entirely, such as client-side encryption of app
-            data.
+            The output is 32 deterministic, authenticator-bound bytes. Apps can
+            feed it into any KDF for any curve, or use it outside chains
+            entirely, such as client-side encryption of app data.
           </li>
         </ul>
 
@@ -938,7 +1081,11 @@ const address = getEvmAddress(session.publicKey)</code></pre>
 
         <ul class="references">
           <li>
-            <strong><a href="https://www.w3.org/TR/webauthn-3/">WebAuthn Level 3</a></strong>
+            <strong
+              ><a href="https://www.w3.org/TR/webauthn-3/"
+                >WebAuthn Level 3</a
+              ></strong
+            >
             (W3C): the passkey API. Specifically
             <a href="https://www.w3.org/TR/webauthn-3/#sctn-authenticator-data"
               >authenticator data (§6.1)</a
@@ -946,7 +1093,8 @@ const address = getEvmAddress(session.publicKey)</code></pre>
             <a href="https://www.w3.org/TR/webauthn-3/#dictionary-client-data"
               >client data (§5.8.1)</a
             >,
-            <a href="https://www.w3.org/TR/webauthn-3/#prf-extension">the PRF extension (§10.1.4)</a
+            <a href="https://www.w3.org/TR/webauthn-3/#prf-extension"
+              >the PRF extension (§10.1.4)</a
             >.
           </li>
           <li>
@@ -956,7 +1104,8 @@ const address = getEvmAddress(session.publicKey)</code></pre>
                 >CTAP 2.2</a
               ></strong
             >
-            (FIDO Alliance): the authenticator protocol underneath WebAuthn. Specifically
+            (FIDO Alliance): the authenticator protocol underneath WebAuthn.
+            Specifically
             <a
               href="https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html#sctn-hmac-secret-extension"
               >the hmac-secret extension (§12.7)</a
@@ -964,64 +1113,88 @@ const address = getEvmAddress(session.publicKey)</code></pre>
           </li>
           <li>
             <strong
-              ><a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki"
+              ><a
+                href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki"
                 >BIP-39</a
               ></strong
             >: mnemonic phrases from entropy.
           </li>
           <li>
             <strong
-              ><a href="https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki"
+              ><a
+                href="https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki"
                 >BIP-32</a
               ></strong
             >: hierarchical deterministic derivation for secp256k1.
           </li>
           <li>
             <strong
-              ><a href="https://github.com/satoshilabs/slips/blob/master/slip-0010.md"
+              ><a
+                href="https://github.com/satoshilabs/slips/blob/master/slip-0010.md"
                 >SLIP-0010</a
               ></strong
             >: hierarchical deterministic derivation for Ed25519.
           </li>
           <li>
-            <strong><a href="https://eips.ethereum.org/EIPS/eip-4337">ERC-4337</a></strong
+            <strong
+              ><a href="https://eips.ethereum.org/EIPS/eip-4337"
+                >ERC-4337</a
+              ></strong
             >: account abstraction.
           </li>
           <li>
             <strong
-              ><a href="https://github.com/ethereum/RIPs/blob/master/RIPS/rip-7212.md"
+              ><a
+                href="https://github.com/ethereum/RIPs/blob/master/RIPS/rip-7212.md"
                 >RIP-7212</a
               ></strong
             >: the P-256 signature-verification precompile.
           </li>
           <li>
-            <strong><a href="https://eips.ethereum.org/EIPS/eip-1014">EIP-1014</a></strong
+            <strong
+              ><a href="https://eips.ethereum.org/EIPS/eip-1014"
+                >EIP-1014</a
+              ></strong
             >: CREATE2, deterministic contract addresses.
           </li>
           <li>
-            <strong><a href="https://www.rfc-editor.org/rfc/rfc2104">RFC 2104</a></strong
+            <strong
+              ><a href="https://www.rfc-editor.org/rfc/rfc2104"
+                >RFC 2104</a
+              ></strong
             >: HMAC.
           </li>
           <li>
-            <strong><a href="https://www.rfc-editor.org/rfc/rfc5869">RFC 5869</a></strong
+            <strong
+              ><a href="https://www.rfc-editor.org/rfc/rfc5869"
+                >RFC 5869</a
+              ></strong
             >: HKDF.
           </li>
           <li>
             <strong
-              ><a href="https://csrc.nist.gov/pubs/sp/800/38/d/final">NIST SP 800-38D</a></strong
+              ><a href="https://csrc.nist.gov/pubs/sp/800/38/d/final"
+                >NIST SP 800-38D</a
+              ></strong
             >: AES-GCM.
           </li>
           <li>
-            <strong><a href="https://www.rfc-editor.org/rfc/rfc8032">RFC 8032</a></strong
+            <strong
+              ><a href="https://www.rfc-editor.org/rfc/rfc8032"
+                >RFC 8032</a
+              ></strong
             >: Ed25519 (EdDSA).
           </li>
           <li>
-            <strong><a href="https://www.secg.org/sec2-v2.pdf">SEC 2</a></strong
+            <strong
+              ><a href="https://www.secg.org/sec2-v2.pdf">SEC 2</a></strong
             >: the secp256k1 curve.
           </li>
           <li>
             <strong
-              ><a href="https://csrc.nist.gov/pubs/sp/800/186/final">NIST SP 800-186</a></strong
+              ><a href="https://csrc.nist.gov/pubs/sp/800/186/final"
+                >NIST SP 800-186</a
+              ></strong
             >: the P-256 curve.
           </li>
         </ul>
@@ -1038,34 +1211,41 @@ const address = getEvmAddress(session.publicKey)</code></pre>
       crossorigin="anonymous"
     ></script>
     <script>
-      for (const block of document.querySelectorAll('pre code[class*="language-"]'))
-        hljs.highlightElement(block)
+    for (const block of document.querySelectorAll(
+      'pre code[class*="language-"]',
+    ))
+      hljs.highlightElement(block);
     </script>
     <script>
-      // Size each embedded demo frame to its content. The demo reports its height
-      // from its own origin (see embed.ts); we trust only that origin, and resize
-      // only the frame that sent the message. The CSS clamp() is the fallback
-      // height until the first message arrives (or if the demo isn't redeployed).
-      ;(() => {
-        const DEMO_ORIGIN = "https://mera-demo.up.railway.app"
-        window.addEventListener("message", (e) => {
-          if (e.origin !== DEMO_ORIGIN) return
-          const data = e.data
-          if (data?.type !== "mera:resize" || !Number.isFinite(data.height) || data.height <= 0)
-            return
-          const frames = document.querySelectorAll(".demo iframe")
-          for (const frame of frames) {
-            if (frame.contentWindow === e.source) {
-              // The demo reports its content height; the iframe is border-box
-              // with a 1px frame, so add the vertical border or the content
-              // scrolls under it (a thin scrollbar with a near-full thumb).
-              const cs = getComputedStyle(frame)
-              const borderY = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth)
-              frame.style.height = `${Math.ceil(data.height) + borderY}px`
-            }
+    // Size each embedded demo frame to its content. The demo reports its height
+    // from its own origin (see embed.ts); we trust only that origin, and resize
+    // only the frame that sent the message. The CSS clamp() is the fallback
+    // height until the first message arrives (or if the demo isn't redeployed).
+    (() => {
+      const DEMO_ORIGIN = "https://mera-demo.up.railway.app";
+      window.addEventListener("message", (e) => {
+        if (e.origin !== DEMO_ORIGIN) return;
+        const data = e.data;
+        if (
+          data?.type !== "mera:resize" ||
+          !Number.isFinite(data.height) ||
+          data.height <= 0
+        )
+          return;
+        const frames = document.querySelectorAll(".demo iframe");
+        for (const frame of frames) {
+          if (frame.contentWindow === e.source) {
+            // The demo reports its content height; the iframe is border-box
+            // with a 1px frame, so add the vertical border or the content
+            // scrolls under it (a thin scrollbar with a near-full thumb).
+            const cs = getComputedStyle(frame);
+            const borderY =
+              parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+            frame.style.height = `${Math.ceil(data.height) + borderY}px`;
           }
-        })
-      })()
+        }
+      });
+    })();
     </script>
   </body>
 </html>

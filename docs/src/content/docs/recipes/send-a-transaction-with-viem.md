@@ -3,14 +3,7 @@ title: Send a transaction with viem
 description: Sign in with a passkey, derive the first EVM account, and send a transaction through viem.
 ---
 
-This recipe turns a passkey sign-in into a sent transaction. [viem](https://viem.sh) is a TypeScript client library for [EVM](/concepts/entropy-keys-and-accounts/) chains; [toViemAccount](/reference/to-viem-account/) adapts a [signing session](/concepts/signing-sessions/) into the account shape viem accepts, so viem signs and broadcasts while the key stays in the session.
-
-Prerequisites:
-
-- `@category-labs/mera`, `viem`, `@scure/bip32`, and `@scure/bip39` installed.
-- A [PRF](/concepts/passkeys-and-prf/)-capable authenticator ([authenticator support](/authenticator-support/)).
-- An existing passkey ([Create passkey accounts](/recipes/create-passkey-accounts/) covers the first visit).
-- Test funds on the sending address.
+Mera exports an adapter function [toViemAccount](/reference/to-viem-account/) that adapts a [signing session](/concepts/signing-sessions/) into the account shape [viem](https://viem.sh) accepts, so viem signs and broadcasts while the key is owned by the session.
 
 ## Sign in
 
@@ -21,8 +14,6 @@ const rpId = location.hostname;
 
 const { prfOutput } = await getPasskeyPrfOutput({ rpId });
 ```
-
-The call runs one ceremony, the only prompt in this recipe. [Create passkey accounts](/recipes/create-passkey-accounts/) shows pinning the sign-in to a stored credential ID.
 
 ## Derive the key
 
@@ -36,7 +27,6 @@ import { wordlist } from "@scure/bip39/wordlists/english.js";
 const firstEthereumAccountPath = "m/44'/60'/0'/0/0";
 
 const seed = mnemonicToSeedSync(entropyToMnemonic(prfOutput, wordlist));
-prfOutput.fill(0);
 
 const node = HDKey.fromMasterSeed(seed).derive(firstEthereumAccountPath);
 if (node.privateKey === null) throw new Error("derivation produced no key");
@@ -53,7 +43,6 @@ import { toViemAccount } from "@category-labs/mera/viem";
 const session = createSecp256k1SigningSession({
   privateKey: node.privateKey,
 });
-seed.fill(0);
 
 const account = toViemAccount(session);
 ```
@@ -79,15 +68,7 @@ const hash = await client.sendTransaction({
 session.lock();
 ```
 
-`http()` with no URL uses the chain's default public RPC endpoint. Production apps pass a dedicated RPC URL.
-
-`sendTransaction` fills the missing transaction fields from the RPC, signs through the session, broadcasts, and resolves to the transaction hash. Confirmation is a separate query. viem's `waitForTransactionReceipt` on a public client covers it.
-
-## Pitfalls
-
-- **The derivation must match the app's other sign-in paths.** A different mapping or path reaches a different address.
-- **A locked session rejects every viem signing method** with [`SESSION_LOCKED`](/reference/errors/#session_locked): the account holds no key of its own and cannot sign without the session.
-- **Concurrent transactions can be assigned the same nonce**, the per-account counter that orders transactions, and the chain accepts only one of them. viem's nonce manager assigns nonces in sequence. Pass it through [toViemAccount](/reference/to-viem-account/) options.
+`sendTransaction` fills the missing transaction fields from the RPC, signs through the session and broadcasts.
 
 ## See also
 

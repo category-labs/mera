@@ -3,11 +3,11 @@ title: Passkey accounts
 description: Accounts derived from a passkey's PRF output, with no stored secret.
 ---
 
-A passkey account is a blockchain account whose keys derive from a passkey's PRF output, the 32 secret bytes a passkey returns deterministically ([Passkeys and PRF](/concepts/passkeys-and-prf/) explains the mechanism). Each [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) recomputes the same accounts. This is the default way to use mera.
+In mera's model, a passkey account is a blockchain account whose keys derive from a passkey's PRF output, the 32 secret bytes a passkey returns deterministically, so each [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) recomputes the same accounts.
 
 ## One salt, one stable output
 
-When the PRF salt is omitted, mera uses its [default salt](/reference/get-passkey-prf-output/). The same passkey and relying party then produce the same PRF output on every device the passkey syncs to. There is no stored secret; all state lives in the passkey. The app passes the output to a [derivation scheme](/concepts/entropy-keys-and-accounts/) of its choosing. [Create passkey accounts](/recipes/create-passkey-accounts/) shows one built on common HD (hierarchical deterministic) standards.
+The PRF takes a 32-byte salt as input to give the same passkey unrelated outputs. Mera uses a fixed salt. The same passkey and relying party then produce the same PRF output on every device the passkey syncs to. The app passes the output to a [derivation scheme](/concepts/entropy-keys-and-accounts/) of its choosing. [Create passkey accounts](/recipes/create-passkey-accounts/) shows one built on common HD (hierarchical deterministic) standards.
 
 ## Losing the passkey
 
@@ -15,7 +15,7 @@ The account may be unrecoverable if the passkey is deleted, not synced, tied to 
 
 ## When the secret already exists
 
-Passkey accounts are rooted in the passkey itself, so an account that predates the passkey cannot become one. A [secret vault](/concepts/secret-vaults/) covers that case: it encrypts the existing recovery phrase or private key behind the same passkey ceremony.
+Passkey accounts are rooted in the passkey itself, so an account that predates the passkey cannot become one. Mera supports encrypting arbitrary secrets with Passkey's PRF output, described in [secret vault](/concepts/secret-vaults/). This is an advanced use case since it requires the app to store the encrypted blob.
 
 ## See also
 

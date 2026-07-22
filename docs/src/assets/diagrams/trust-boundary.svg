@@ -69,9 +69,4 @@
   <text x="574" y="224" text-anchor="middle" class="d-sub">
     asks for user verification
   </text>
-
-  <text x="340" y="360" text-anchor="middle" class="d-note">
-    Any script on the page can see key material and sign with an unlocked
-    session.
-  </text>
 </svg>

@@ -214,7 +214,7 @@ async function createSecretVaultWithNewPasskey({
   timeout,
 }: CreateSecretVaultWithNewPasskeyOptions): Promise<PasskeySecretVault> {
   const secretCopy = copyNonEmptySecret(secret);
-  let prfOutput: Uint8Array | undefined;
+  let prfOutput: Uint8Array<ArrayBuffer> | undefined;
 
   try {
     const credential = await createPasskeyWithPrfOutput({

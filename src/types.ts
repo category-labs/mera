@@ -1,5 +1,6 @@
 /**
- * A 20-byte EVM address with a `0x` prefix, lowercase or EIP-55 mixed case.
+ * A 20-byte EVM address as `0x`-prefixed hex. `getEvmAddress` returns it
+ * EIP-55 checksummed.
  *
  * Structural type only: the `0x${string}` shape does not constrain length or
  * hex digits.
@@ -51,14 +52,12 @@ type PasskeyPrfResult = {
   readonly prfOutput: Uint8Array<ArrayBuffer>;
 };
 
-/**
- * Result of creating a passkey together with its first PRF output.
- *
- * `prfSalt` is the salt WebAuthn evaluated. It is returned for protocol
- * interoperability.
- */
+/** Result of creating a passkey together with its first PRF output. */
 type CreatePasskeyWithPrfOutputResult = PasskeyCredentialMetadata & {
-  /** PRF salt that was evaluated. Always 32 bytes and never aliases the caller input. */
+  /**
+   * PRF salt that WebAuthn evaluated, returned for protocol interoperability.
+   * Always 32 bytes and never aliases the caller input.
+   */
   readonly prfSalt: Uint8Array<ArrayBuffer>;
   /** First WebAuthn PRF output for `prfSalt`. Always 32 bytes. */
   readonly prfOutput: Uint8Array<ArrayBuffer>;

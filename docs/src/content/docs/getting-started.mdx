@@ -3,7 +3,7 @@ title: Getting started
 description: Install the library, derive an account, and make a first signature.
 ---
 
-import GettingStartedOverview from "../../assets/diagrams/getting-started-overview.svg"
+import GettingStartedOverview from "../../assets/diagrams/getting-started-overview.svg";
 
 mera lets you:
 
@@ -35,14 +35,14 @@ npm install @scure/bip32 @scure/bip39
 `createPasskeyWithPrfOutput` creates a passkey and evaluates its PRF in one call. The `rpId` is the relying party ID, the domain the passkey is bound to.
 
 ```ts
-import { createPasskeyWithPrfOutput } from "@category-labs/mera"
+import { createPasskeyWithPrfOutput } from "@category-labs/mera";
 
-const rpId = "account.example.com"
+const rpId = "account.example.com";
 
 const { prfOutput } = await createPasskeyWithPrfOutput({
   rp: { id: rpId, name: "Example" },
   user: { name: "account@example.com", displayName: "Example account" },
-})
+});
 ```
 
 mera uses a stable PRF salt for this call, so a later sign-in reproduces the same 32 bytes.
@@ -52,33 +52,36 @@ mera uses a stable PRF salt for this call, so a later sign-in reproduces the sam
 The PRF output is entropy, the root of every account. This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) to a phrase and a [seed](/concepts/entropy-keys-and-accounts/#deterministic-derivation), then derives keys with [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki).
 
 ```ts
-import { HDKey } from "@scure/bip32"
-import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39"
-import { wordlist } from "@scure/bip39/wordlists/english.js"
+import { HDKey } from "@scure/bip32";
+import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
+import { wordlist } from "@scure/bip39/wordlists/english.js";
 
-const firstEthereumAccountPath = "m/44'/60'/0'/0/0"
+const firstEthereumAccountPath = "m/44'/60'/0'/0/0";
 
-const mnemonic = entropyToMnemonic(prfOutput, wordlist)
-const seed = mnemonicToSeedSync(mnemonic)
-const node = HDKey.fromMasterSeed(seed).derive(firstEthereumAccountPath)
-if (node.privateKey === null) throw new Error("derivation produced no key")
+const mnemonic = entropyToMnemonic(prfOutput, wordlist);
+const seed = mnemonicToSeedSync(mnemonic);
+const node = HDKey.fromMasterSeed(seed).derive(firstEthereumAccountPath);
+if (node.privateKey === null) throw new Error("derivation produced no key");
 ```
 
 ## Sign
 
 ```ts
-import { createSecp256k1SigningSession, getEvmAddress } from "@category-labs/mera"
+import {
+  createSecp256k1SigningSession,
+  getEvmAddress,
+} from "@category-labs/mera";
 
 const session = createSecp256k1SigningSession({
   privateKey: node.privateKey,
-})
+});
 
-const address = getEvmAddress(session.publicKey)
+const address = getEvmAddress(session.publicKey);
 
-const digest = new Uint8Array(32)
-const signature = await session.signDigest(digest)
+const digest = new Uint8Array(32);
+const signature = await session.signDigest(digest);
 
-session.lock()
+session.lock();
 ```
 
 ## Sign back in
@@ -86,11 +89,11 @@ session.lock()
 A later visit reproduces the same account.
 
 ```ts
-import { getPasskeyPrfOutput } from "@category-labs/mera"
+import { getPasskeyPrfOutput } from "@category-labs/mera";
 
 const { prfOutput } = await getPasskeyPrfOutput({
   rpId,
-})
+});
 ```
 
 Without `credential`, the browser offers any discoverable passkey it holds for the relying party. The [Create passkey accounts](/recipes/create-passkey-accounts/) recipe shows the app storing the credential ID at create time and passing it back to pin later sign-ins.

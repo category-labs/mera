@@ -1,27 +1,21 @@
-import { hexToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
 import {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
 } from "../dist/passkey.js";
-import { withStubbedGlobal } from "./helpers.js";
-
-// sha256("mera.prf.salt.v1"): the fixed default salt documented on
-// getPasskeyPrfOutput.
-const DEFAULT_PRF_SALT = hexToBytes(
-  "896d46ac4ac191885c46137439db7bb52fb05cff3ecd34af7cdae0a1e0c00db9",
-);
+import {
+  DEFAULT_PRF_SALT,
+  readEvaluatedPrfSalt,
+  stubPublicKeyCredential,
+  withStubbedGlobal,
+} from "./helpers.js";
 
 // Stubs an assertion whose authenticator returns `first` as the PRF result.
 function navigatorWithPrfResult(first: unknown) {
   return {
     credentials: {
       async get() {
-        return {
-          type: "public-key",
-          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-          getClientExtensionResults: () => ({ prf: { results: { first } } }),
-        };
+        return stubPublicKeyCredential({ prf: { results: { first } } });
       },
     },
   };
@@ -109,34 +103,18 @@ test("getPasskeyPrfOutput rejects PRF output that is not 32 bytes", async () => 
 test("PRF output helpers default to Mera's fixed salt", async () => {
   const evaluatedSalts: Uint8Array[] = [];
 
-  function readSalt(value: BufferSource | undefined): ArrayBuffer {
-    if (!(value instanceof ArrayBuffer)) {
-      throw new Error("expected PRF salt as an ArrayBuffer");
-    }
-    evaluatedSalts.push(new Uint8Array(value));
-    return value;
-  }
-
   const navigator = {
     credentials: {
       async create({ publicKey }: CredentialCreationOptions) {
-        readSalt(publicKey?.extensions?.prf?.eval?.first);
-        return {
-          type: "public-key",
-          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-          response: {},
-          getClientExtensionResults: () => ({ prf: { enabled: true } }),
-        };
+        evaluatedSalts.push(readEvaluatedPrfSalt(publicKey));
+        return stubPublicKeyCredential({ prf: { enabled: true } });
       },
       async get({ publicKey }: CredentialRequestOptions) {
-        const salt = readSalt(publicKey?.extensions?.prf?.eval?.first);
-        return {
-          type: "public-key",
-          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-          getClientExtensionResults: () => ({
-            prf: { results: { first: salt } },
-          }),
-        };
+        const salt = readEvaluatedPrfSalt(publicKey);
+        evaluatedSalts.push(salt);
+        return stubPublicKeyCredential({
+          prf: { results: { first: salt.buffer } },
+        });
       },
     },
   };
@@ -237,29 +215,19 @@ test("passkey helpers generate internal challenges and request no attestation", 
     credentials: {
       async create({ publicKey }: CredentialCreationOptions) {
         createOptions = publicKey;
-        return {
-          type: "public-key",
-          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-          response: {
-            getTransports: () => ["internal"],
+        return stubPublicKeyCredential({
+          prf: {
+            enabled: true,
+            results: { first: new Uint8Array(32).buffer },
           },
-          getClientExtensionResults: () => ({
-            prf: {
-              enabled: true,
-              results: { first: new Uint8Array(32).buffer },
-            },
-          }),
-        };
+          transports: ["internal"],
+        });
       },
       async get({ publicKey }: CredentialRequestOptions) {
         getOptions = publicKey;
-        return {
-          type: "public-key",
-          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-          getClientExtensionResults: () => ({
-            prf: { results: { first: new Uint8Array(32).buffer } },
-          }),
-        };
+        return stubPublicKeyCredential({
+          prf: { results: { first: new Uint8Array(32).buffer } },
+        });
       },
     },
   };
@@ -328,29 +296,17 @@ test("createPasskeyWithPrfOutput snapshots prfSalt for fallback and result", asy
     credentials: {
       async create() {
         await Promise.resolve();
-        return {
-          type: "public-key",
-          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-          response: {
-            getTransports: () => ["internal"],
-          },
-          getClientExtensionResults: () => ({ prf: { enabled: true } }),
-        };
+        return stubPublicKeyCredential({
+          prf: { enabled: true },
+          transports: ["internal"],
+        });
       },
       async get({ publicKey }: CredentialRequestOptions) {
-        const first = publicKey?.extensions?.prf?.eval?.first;
-        if (!(first instanceof ArrayBuffer)) {
-          throw new Error("expected fallback PRF salt");
-        }
-
-        fallbackSalt = new Uint8Array(first);
-        return {
-          type: "public-key",
-          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-          getClientExtensionResults: () => ({
-            prf: { results: { first } },
-          }),
-        };
+        const salt = readEvaluatedPrfSalt(publicKey);
+        fallbackSalt = salt;
+        return stubPublicKeyCredential({
+          prf: { results: { first: salt.buffer } },
+        });
       },
     },
   };

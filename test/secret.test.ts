@@ -1,4 +1,4 @@
-import { hexToBytes, utf8ToBytes } from "@noble/hashes/utils.js";
+import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
 import type {
   PasskeyCredentialTransport,
@@ -12,15 +12,17 @@ import {
   decryptSecretVaultWithPasskey,
   parseSecretVault,
 } from "../dist/secret.js";
-import { expectError, withStubbedGlobal } from "./helpers.js";
+import {
+  DEFAULT_PRF_SALT,
+  expectError,
+  readEvaluatedPrfSalt,
+  STUB_CREDENTIAL_ID,
+  stubPublicKeyCredential,
+  withStubbedGlobal,
+} from "./helpers.js";
 
 const PRF_OUTPUT = new Uint8Array(32).fill(7);
 const PRF_SALT = new Uint8Array(32).fill(9);
-// sha256("mera.prf.salt.v1"): the fixed default salt documented on
-// getPasskeyPrfOutput.
-const DEFAULT_PRF_SALT = hexToBytes(
-  "896d46ac4ac191885c46137439db7bb52fb05cff3ecd34af7cdae0a1e0c00db9",
-);
 // A real 12-word BIP-39 phrase stands in for an opaque secret; the library
 // neither knows nor cares that these bytes are a mnemonic.
 const SECRET = utf8ToBytes(
@@ -32,26 +34,13 @@ async function createTestVault(
 ): Promise<PasskeySecretVault> {
   return createSecretVault({
     credential: {
-      credentialId: "AQIDBA",
+      credentialId: STUB_CREDENTIAL_ID,
       transports: ["internal"],
       prfSalt: PRF_SALT,
       prfOutput: PRF_OUTPUT,
     },
     secret,
   });
-}
-
-function readPrfSalt(
-  publicKey:
-    | PublicKeyCredentialRequestOptions
-    | PublicKeyCredentialCreationOptions
-    | undefined,
-): Uint8Array {
-  const first = publicKey?.extensions?.prf?.eval?.first;
-  if (!(first instanceof ArrayBuffer)) {
-    throw new Error("expected PRF salt as an ArrayBuffer");
-  }
-  return new Uint8Array(first);
 }
 
 test("creates a secret vault and decrypts the exact bytes", async () => {
@@ -110,19 +99,10 @@ test("secret-vault creation preserves PRF failures and caller-owned secrets", as
   const navigator = {
     credentials: {
       async create() {
-        return {
-          type: "public-key",
-          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-          response: {},
-          getClientExtensionResults: () => ({ prf: { enabled: false } }),
-        };
+        return stubPublicKeyCredential({ prf: { enabled: false } });
       },
       async get() {
-        return {
-          type: "public-key",
-          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-          getClientExtensionResults: () => ({ prf: {} }),
-        };
+        return stubPublicKeyCredential({ prf: {} });
       },
     },
   };
@@ -158,19 +138,15 @@ test("createSecretVaultWithNewPasskey owns a random salt and snapshots the secre
   const navigator = {
     credentials: {
       async create({ publicKey }: CredentialCreationOptions) {
-        evaluatedSalt = readPrfSalt(publicKey);
+        evaluatedSalt = readEvaluatedPrfSalt(publicKey);
         await creationGate;
-        return {
-          type: "public-key",
-          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-          response: { getTransports: () => ["internal"] },
-          getClientExtensionResults: () => ({
-            prf: {
-              enabled: true,
-              results: { first: evaluatedSalt?.buffer },
-            },
-          }),
-        };
+        return stubPublicKeyCredential({
+          prf: {
+            enabled: true,
+            results: { first: evaluatedSalt?.buffer },
+          },
+          transports: ["internal"],
+        });
       },
     },
   };
@@ -192,7 +168,7 @@ test("createSecretVaultWithNewPasskey owns a random salt and snapshots the secre
     }
 
     expect(vault.credential).toEqual({
-      credentialId: "AQIDBA",
+      credentialId: STUB_CREDENTIAL_ID,
       transports: ["internal"],
     });
     expect(vault.prfSalt).not.toBe(
@@ -214,22 +190,18 @@ test("createSecretVaultWithExistingPasskey snapshots inputs and preserves transp
   const navigator = {
     credentials: {
       async get({ publicKey }: CredentialRequestOptions) {
-        evaluatedSalt = readPrfSalt(publicKey);
+        evaluatedSalt = readEvaluatedPrfSalt(publicKey);
         await assertionGate;
-        return {
-          type: "public-key",
-          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-          getClientExtensionResults: () => ({
-            prf: { results: { first: evaluatedSalt?.buffer } },
-          }),
-        };
+        return stubPublicKeyCredential({
+          prf: { results: { first: evaluatedSalt?.buffer } },
+        });
       },
     },
   };
 
   await withStubbedGlobal("navigator", navigator, async () => {
     const transports: PasskeyCredentialTransport[] = ["usb"];
-    const credential = { credentialId: "AQIDBA", transports };
+    const credential = { credentialId: STUB_CREDENTIAL_ID, transports };
     const secret = new Uint8Array(SECRET);
     const pending = createSecretVaultWithExistingPasskey({
       rpId: "example.com",
@@ -248,7 +220,7 @@ test("createSecretVaultWithExistingPasskey snapshots inputs and preserves transp
     }
 
     expect(vault.credential).toEqual({
-      credentialId: "AQIDBA",
+      credentialId: STUB_CREDENTIAL_ID,
       transports: ["usb"],
     });
     await expect(

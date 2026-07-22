@@ -353,9 +353,9 @@ type DecryptSecretVaultOptions = {
 /**
  * Decrypts the secret from a secret vault with a PRF output.
  *
- * Internal building block: the vault's `nonce` and `ciphertext` strings are
- * still decoded and validated here because a caller-built vault object can
- * bypass `parseSecretVault`.
+ * Internal building block: decoding the vault's `nonce` and `ciphertext`
+ * strings here doubles as validation for direct callers that skip
+ * `parseSecretVault`.
  *
  * @returns The decrypted secret bytes in a fresh allocation.
  * @throws MeraError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url.
@@ -465,10 +465,13 @@ type DecryptSecretVaultWithPasskeyOptions = {
  * Invokes `navigator.credentials.get()` and shows one user-verification
  * prompt. The assertion is restricted to the credential stored in the vault.
  *
+ * The vault is validated with {@link parseSecretVault} and copied before the
+ * assertion starts, so a malformed vault fails before any prompt.
+ *
  * The internal PRF output is zeroed before the function finishes, even when
  * decryption fails.
+ * @throws MeraError with code `VAULT_FORMAT_INVALID` when the vault's required structure, version, or encoded data is invalid.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
- * @throws MeraError with code `INPUT_INVALID` when the vault contains an invalid credential ID, PRF salt, nonce, or ciphertext.
  * @throws MeraError with code `DECRYPT_FAILED` when authentication fails.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
@@ -478,15 +481,16 @@ async function decryptSecretVaultWithPasskey({
   vault,
   timeout,
 }: DecryptSecretVaultWithPasskeyOptions): Promise<Uint8Array<ArrayBuffer>> {
+  const parsedVault = parseSecretVault(vault);
   const { prfOutput } = await getPasskeyPrfOutput({
     rpId,
-    credential: vault.credential,
-    prfSalt: base64UrlDecode(vault.prfSalt),
+    credential: parsedVault.credential,
+    prfSalt: base64UrlDecode(parsedVault.prfSalt),
     ...(timeout !== undefined ? { timeout } : {}),
   });
 
   try {
-    return await decryptSecretVault({ vault, prfOutput });
+    return await decryptSecretVault({ vault: parsedVault, prfOutput });
   } finally {
     prfOutput.fill(0);
   }

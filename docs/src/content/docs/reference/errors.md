@@ -65,4 +65,4 @@ A caller-supplied value at a public boundary did not satisfy a length, range, en
 
 ### VAULT_FORMAT_INVALID
 
-Untrusted vault data (JSON text or an object) was malformed, missing required fields, used a non-canonical encoding, or declared an unsupported version. Thrown only by [parseSecretVault](/reference/parse-secret-vault/), the boundary for stored vault data.
+Untrusted vault data (JSON text or an object) was malformed, missing required fields, used a non-canonical encoding, or declared an unsupported version. Thrown by [parseSecretVault](/reference/parse-secret-vault/), the boundary for stored vault data, and by [decryptSecretVaultWithPasskey](/reference/decrypt-secret-vault-with-passkey/), which runs the same validation before the assertion.

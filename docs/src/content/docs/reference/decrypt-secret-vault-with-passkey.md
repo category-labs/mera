@@ -62,15 +62,15 @@ WebAuthn timeout in milliseconds.
 
 ## Errors
 
+- [`VAULT_FORMAT_INVALID`](/reference/errors/#vault_format_invalid): the vault's required structure, version, or encoded data is invalid.
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not return a usable 32-byte PRF output.
-- [`INPUT_INVALID`](/reference/errors/#input_invalid): the vault contains an invalid credential ID, PRF salt, nonce, or ciphertext.
 - [`DECRYPT_FAILED`](/reference/errors/#decrypt_failed): [AES-GCM](/concepts/secret-vaults/#how-a-vault-works) authentication failed because the PRF output was wrong or the vault was modified.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the page is not in a secure context, or the runtime lacks Web Crypto.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## Notes
 
-The vault is copied before the assertion starts. The transient PRF output is zeroed before the function finishes, even when decryption fails.
+The vault is validated and copied before the assertion starts, so a malformed vault fails before any prompt. The transient PRF output is zeroed before the function finishes, even when decryption fails.
 
 The WebAuthn challenge is generated internally.
 

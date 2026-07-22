@@ -50,16 +50,16 @@ function normalizeSecp256k1PublicKey(
 }
 
 /**
- * Creates a lockable signing session from a secp256k1 private key.
+ * Creates a signing session from a secp256k1 private key.
  *
  * @param options - Signing session inputs; fields are documented on {@link CreateSigningSessionOptions}.
- * @returns An unlocked secp256k1 signing session.
+ * @returns A live secp256k1 signing session.
  * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not a valid secp256k1 scalar.
  */
 function createSecp256k1SigningSession({
   privateKey,
 }: CreateSigningSessionOptions): Secp256k1SigningSession {
-  const { use, lock, publicKey } = createSigningKey(
+  const { use, end, publicKey } = createSigningKey(
     privateKey,
     getSecp256k1PublicKey,
   );
@@ -71,8 +71,8 @@ function createSecp256k1SigningSession({
         throw new MeraError("INPUT_INVALID", "Digest must be 32 bytes");
       }
 
-      const unlockedKey = use();
-      const signature = secp256k1.sign(digest32, unlockedKey, {
+      const activeKey = use();
+      const signature = secp256k1.sign(digest32, activeKey, {
         format: "recovered",
         lowS: true,
         prehash: false,
@@ -97,8 +97,8 @@ function createSecp256k1SigningSession({
         recovery,
       };
     },
-    lock,
-    [Symbol.dispose]: lock,
+    end,
+    [Symbol.dispose]: end,
   };
 }
 

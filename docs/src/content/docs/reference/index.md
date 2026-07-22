@@ -12,8 +12,8 @@ Types are documented on the pages of the functions that produce or accept them.
 
 ## Signing sessions
 
-- [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/): creates a lockable signing session from a secp256k1 private key.
-- [createEd25519SigningSession](/reference/create-ed25519-signing-session/): creates a lockable signing session from an Ed25519 private key.
+- [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/): creates a signing session from a secp256k1 private key.
+- [createEd25519SigningSession](/reference/create-ed25519-signing-session/): creates a signing session from an Ed25519 private key.
 - [toViemAccount](/reference/to-viem-account/): adapts a secp256k1 signing session into a viem local account.
 
 ## Secret vault

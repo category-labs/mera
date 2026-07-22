@@ -39,7 +39,7 @@ test("exposes the session key as a local account", () => {
   expect(typeof account.sign).toBe("function");
   expect(typeof account.signAuthorization).toBe("function");
 
-  session.lock();
+  session.end();
 });
 
 test("signMessage produces an EIP-191 signature that recovers the address", async () => {
@@ -172,12 +172,12 @@ test("signAuthorization signs an EIP-7702 authorization", async () => {
   );
 });
 
-test("signing rejects with SESSION_LOCKED after the session is locked", async () => {
+test("signing rejects with SESSION_ENDED after the session has ended", async () => {
   const { session, account } = createAccount();
-  session.lock();
+  session.end();
 
   await expect(account.signMessage({ message: "x" })).rejects.toMatchObject({
-    code: "SESSION_LOCKED",
+    code: "SESSION_ENDED",
   });
 });
 

@@ -440,7 +440,7 @@
         <p>
           Developers face a version of this too. A payments app, trading app, or
           game still has to ship the key layer first: generate keys, store them,
-          gate their use, lock them when idle, recover them when a device is
+          gate their use, zero them when idle, recover them when a device is
           lost. All of it has to work before the first feature ships. None of it
           sets the app apart, and getting it wrong costs user funds.
         </p>
@@ -466,7 +466,7 @@
           device's secure hardware, gated by a biometric, PIN, or password, and
           synced by the platform. It ships with every phone, laptop, and
           browser. For the user that means no phrase and no password; for the
-          developer it means generation, storage, locking, and cross-device sync
+          developer it means generation, storage, gating, and cross-device sync
           are the platform's job. Crypto adopted passkeys through smart
           accounts, where the passkey signs and a contract on the chain
           verifies.
@@ -647,8 +647,8 @@ clientDataJSON
           authenticator-bound entropy and signs with keys the application hands
           it; how entropy becomes keys (the KDF, the paths, the account model)
           belongs to the application. A session keeps key bytes in memory and
-          zeroes them on <code>session.lock()</code>. One ceremony per session
-          is enough: one user-verification check, then any number of signatures.
+          zeroes them on <code>session.end()</code>. One ceremony per session is
+          enough: one user-verification check, then any number of signatures.
         </p>
 
         <p>
@@ -1051,7 +1051,7 @@ const address = getEvmAddress(session.publicKey)</code></pre>
             <strong>The app stores less key material.</strong>
             The passkey-account pattern stores no app-owned secret. The
             secret-vault pattern stores a vault blob that still needs the
-            passkey ceremony, and locking is one call.
+            passkey ceremony, and ending the session is one call.
           </li>
           <li>
             <strong>Passkey accounts have no chain infrastructure.</strong>

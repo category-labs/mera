@@ -9,7 +9,7 @@ What mera does:
 
 - Create a passkey and get 32 secret bytes from it through the [PRF extension](/concepts/passkeys-and-prf/).
 - Use those bytes as [entropy](/concepts/entropy-keys-and-accounts/) to derive accounts.
-- Sign with a lockable [signing session](/concepts/signing-sessions/).
+- Sign with a [signing session](/concepts/signing-sessions/).
 
 <GettingStartedOverview />
 
@@ -82,7 +82,7 @@ const address = getEvmAddress(session.publicKey);
 const digest = new Uint8Array(32);
 const signature = await session.signDigest(digest);
 
-session.lock();
+session.end();
 ```
 
 ## Sign back in

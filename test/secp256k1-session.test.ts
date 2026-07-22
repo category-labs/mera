@@ -8,7 +8,7 @@ const PRIVATE_KEY_ONE = hexToBytes(
   "0000000000000000000000000000000000000000000000000000000000000001",
 );
 
-test("signs 32-byte digests and locks the session", async () => {
+test("signs 32-byte digests and ends the session", async () => {
   const buffer = new Uint8Array(PRIVATE_KEY_ONE);
   const session = createSecp256k1SigningSession({ privateKey: buffer });
   const digest = new Uint8Array(32).fill(1);
@@ -30,10 +30,10 @@ test("signs 32-byte digests and locks the session", async () => {
     }),
   ).toBe(true);
 
-  session.lock();
+  session.end();
 
   await expect(session.signDigest(digest)).rejects.toMatchObject({
-    code: "SESSION_LOCKED",
+    code: "SESSION_ENDED",
   });
 });
 
@@ -65,7 +65,7 @@ test("rejects an invalid scalar and leaves the caller's buffer unmodified", () =
   );
 });
 
-test("a using declaration locks the session when its scope exits", async () => {
+test("a using declaration ends the session when its scope exits", async () => {
   let escaped: ReturnType<typeof createSecp256k1SigningSession> | undefined;
 
   {
@@ -78,7 +78,7 @@ test("a using declaration locks the session when its scope exits", async () => {
 
   await expect(
     escaped.signDigest(new Uint8Array(32).fill(1)),
-  ).rejects.toMatchObject({ code: "SESSION_LOCKED" });
+  ).rejects.toMatchObject({ code: "SESSION_ENDED" });
 });
 
 test("signs the digest bytes read at call time, not later mutations", async () => {

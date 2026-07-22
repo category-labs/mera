@@ -80,7 +80,7 @@ type PasskeySecretVault = {
   readonly ciphertext: string;
 };
 
-/** secp256k1 ECDSA signature returned by an unlocked signing session. */
+/** secp256k1 ECDSA signature returned by a signing session. */
 type Secp256k1Signature = {
   /** Compact 64-byte `r || s` ECDSA signature. */
   readonly compact: Uint8Array<ArrayBuffer>;
@@ -88,7 +88,7 @@ type Secp256k1Signature = {
   readonly recovery: 0 | 1;
 };
 
-/** Inputs for creating a lockable curve signing session. */
+/** Inputs for creating a curve signing session. */
 type CreateSigningSessionOptions = {
   /**
    * Curve private key. Must be exactly 32 bytes; secp256k1 must also be a valid scalar.
@@ -98,21 +98,21 @@ type CreateSigningSessionOptions = {
   privateKey: Uint8Array;
 };
 
-/** Members shared by every signing session: an explicit lock and `using` disposal. */
-type LockableSession = {
+/** Members shared by every signing session: an explicit end and `using` disposal. */
+type SigningSession = {
   /**
-   * Zeroes the session-owned private-key copy and permanently locks this session; later signing throws `SESSION_LOCKED`.
+   * Zeroes the session-owned private-key copy and permanently ends this session; later signing throws `SESSION_ENDED`.
    */
-  lock(): void;
+  end(): void;
   /**
-   * Calls `lock`, so a `using` declaration locks the session when its scope
+   * Calls `end`, so a `using` declaration ends the session when its scope
    * exits.
    */
   [Symbol.dispose](): void;
 };
 
-/** secp256k1 signing session that can sign 32-byte digests until `lock` is called. */
-type Secp256k1SigningSession = LockableSession & {
+/** secp256k1 signing session that can sign 32-byte digests until `end` is called. */
+type Secp256k1SigningSession = SigningSession & {
   /** Uncompressed secp256k1 public key for the session. */
   readonly publicKey: Uint8Array<ArrayBuffer>;
   /**
@@ -121,13 +121,13 @@ type Secp256k1SigningSession = LockableSession & {
    * @param digest32 - Exactly 32 bytes to sign.
    * @returns A compact secp256k1 ECDSA signature with its recovery ID.
    * @throws MeraError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
-   * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
+   * @throws MeraError with code `SESSION_ENDED` after `end` has been called.
    */
   signDigest(digest32: Uint8Array): Promise<Secp256k1Signature>;
 };
 
-/** Ed25519 signing session that can sign messages until `lock` is called. */
-type Ed25519SigningSession = LockableSession & {
+/** Ed25519 signing session that can sign messages until `end` is called. */
+type Ed25519SigningSession = SigningSession & {
   /** 32-byte Ed25519 public key for the session. */
   readonly publicKey: Uint8Array<ArrayBuffer>;
   /**
@@ -135,7 +135,7 @@ type Ed25519SigningSession = LockableSession & {
    *
    * @param message - Message bytes to sign. Hashing happens inside Ed25519 itself.
    * @returns A 64-byte Ed25519 signature (`R || s`).
-   * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
+   * @throws MeraError with code `SESSION_ENDED` after `end` has been called.
    */
   signMessage(message: Uint8Array): Promise<Uint8Array<ArrayBuffer>>;
 };

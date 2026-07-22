@@ -135,15 +135,15 @@ Build the account list from these helpers:
 const accounts = [deriveEvmAccount(seed, 0), deriveSolanaAccount(seed, 0)];
 ```
 
-## Lock everything
+## End the sessions
 
 ```ts
 for (const account of accounts) {
-  account.session.lock();
+  account.session.end();
 }
 ```
 
-Locking zeroes private keys owned by the session.
+Ending a session zeroes the private keys it owns.
 
 ## See also
 

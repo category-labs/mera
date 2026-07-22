@@ -1,11 +1,11 @@
 ---
 title: Signing sessions
-description: How a session owns its private key, why signing never prompts, and what locking destroys.
+description: How a session owns its private key, why signing never prompts, and what ending a session destroys.
 ---
 
 import SessionLifecycle from "../../../assets/diagrams/session-lifecycle.svg";
 
-A signing session holds a private key and signs with it until it is locked.
+A signing session holds a private key and signs with it until `end` is called.
 
 Two constructors exist, one per [signature scheme](/concepts/entropy-keys-and-accounts/):
 
@@ -20,17 +20,17 @@ A session uses an in-memory private key and doesn't contact an authenticator.
 
 ## The lifecycle
 
-Construction copies the key into a session-owned snapshot. Locking zeroes the session's copy and is permanent. A locked session throws on signing, and new signatures require a new session.
+Construction copies the key into a session-owned snapshot. Ending the session zeroes that copy and is permanent. An ended session throws on signing, and new signatures require a new session.
 
-Sessions also support `using` declarations: disposal calls `lock()` when the scope exits, so a session can be bound to a block instead of a manual call.
+Sessions also support `using` declarations: disposal calls `end()` when the scope exits, so a session can be bound to a block instead of a manual call.
 
 <SessionLifecycle />
 
 ## How long to keep a session
 
-After `lock()`, the next signature needs fresh key material, and both sources (reproducing a derived key, decrypting a vault) start with a ceremony and its prompt. Session lifetime is a trade-off between that prompt and the open window.
+After `end()`, the next signature needs fresh key material, and both sources (reproducing a derived key, decrypting a vault) start with a ceremony and its prompt. Session lifetime is a trade-off between that prompt and the open window.
 
-An app that signs frequently may keep the session active for a burst of work and lock it when the burst ends. Apps that sign occasionally are better served by holding no session at all: create one just to read the public key, lock it, zero the private key, and identify the account by its address. The next signature then starts with a fresh ceremony.
+An app that signs frequently may keep the session for a burst of work and end it when the burst finishes. Apps that sign occasionally are better served by holding no session at all: create one just to read the public key, end it, zero the private key, and identify the account by its address. The next signature then starts with a fresh ceremony.
 
 ## See also
 

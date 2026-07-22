@@ -1,9 +1,9 @@
 ---
 title: createEd25519SigningSession
-description: Creates a lockable signing session from an Ed25519 private key.
+description: Creates a signing session from an Ed25519 private key.
 ---
 
-Creates a lockable signing session from an [Ed25519](/concepts/entropy-keys-and-accounts/) private key.
+Creates a signing session from an [Ed25519](/concepts/entropy-keys-and-accounts/) private key.
 
 ## Import
 
@@ -27,7 +27,7 @@ const session = createEd25519SigningSession({ privateKey });
 const address = getSolanaAddress(session.publicKey);
 const signature = await session.signMessage(message);
 
-session.lock();
+session.end();
 ```
 
 ## Parameters
@@ -43,7 +43,7 @@ Ed25519 private key (the 32-byte seed). Copied into one session-owned snapshot.
 
 ## Returns
 
-An `Ed25519SigningSession`, unlocked.
+A live `Ed25519SigningSession`.
 
 ### publicKey
 
@@ -53,18 +53,18 @@ An `Ed25519SigningSession`, unlocked.
 
 Signs an arbitrary-length message and resolves to the 64-byte Ed25519 signature (`R || s`). Hashing happens inside Ed25519 itself; the caller passes the raw message, never a digest.
 
-### lock()
+### end()
 
-Zeroes the session-owned private-key copy and permanently locks the session; later signing throws [`SESSION_LOCKED`](/reference/errors/#session_locked).
+Zeroes the session-owned private-key copy and permanently ends the session; later signing throws [`SESSION_ENDED`](/reference/errors/#session_ended).
 
 ### [Symbol.dispose]()
 
-Calls `lock`, so a `using` declaration locks the session when its scope exits.
+Calls `end`, so a `using` declaration ends the session when its scope exits.
 
 ## Errors
 
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `privateKey` is not 32 bytes.
-- [`SESSION_LOCKED`](/reference/errors/#session_locked): `signMessage` was called after `lock`.
+- [`SESSION_ENDED`](/reference/errors/#session_ended): `signMessage` was called after `end`.
 
 ## See also
 

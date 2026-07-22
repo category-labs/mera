@@ -7,7 +7,7 @@ import TrustBoundary from "../../../assets/diagrams/trust-boundary.svg";
 
 Mera runs in the page JS code, the keys it produces and derives are software keys and not hardware backed. In principle, it matches a wallet app holding an imported seed phrase in the page.
 
-- Any script in the page can read the [PRF output](/concepts/passkeys-and-prf/) and every key derived from it, and can sign with an unlocked session. An injected script, a malicious dependency, and a browser extension with page access are all inside this boundary. Locking sessions when idle and zeroing key material promptly shorten the exposure.
+- Any script in the page can read the [PRF output](/concepts/passkeys-and-prf/) and every key derived from it, and can sign with a live session. An injected script, a malicious dependency, and a browser extension with page access are all inside this boundary. Ending sessions when idle and zeroing key material promptly shorten the exposure.
 - Losing the passkey without a prior export loses the accounts derived from it.
 - A passkey works only under the rpId (the relying party domain) it was created for: after a domain migration, passkey accounts can no longer be reproduced and vaults can no longer be decrypted. Accounts need an export path before any planned migration.
 - Secrets encrypted with one reused PRF output share an encryption key, and exposing that key exposes them all. The vault functions generate a fresh random 32-byte salt per secret.
@@ -18,5 +18,5 @@ Mera runs in the page JS code, the keys it produces and derives are software key
 ## See also
 
 - [Passkeys and the PRF extension](/concepts/passkeys-and-prf/)
-- [Signing sessions](/concepts/signing-sessions/): what an unlocked session exposes and when to lock it.
+- [Signing sessions](/concepts/signing-sessions/): what a live session exposes and when to end it.
 - [Errors](/reference/errors/): every failure the library signals, by code.

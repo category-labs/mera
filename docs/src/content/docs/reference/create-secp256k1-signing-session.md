@@ -1,9 +1,9 @@
 ---
 title: createSecp256k1SigningSession
-description: Creates a lockable signing session from a secp256k1 private key.
+description: Creates a signing session from a secp256k1 private key.
 ---
 
-Creates a lockable signing session from a [secp256k1](/concepts/entropy-keys-and-accounts/) private key.
+Creates a signing session from a [secp256k1](/concepts/entropy-keys-and-accounts/) private key.
 
 ## Import
 
@@ -27,7 +27,7 @@ const session = createSecp256k1SigningSession({ privateKey });
 const address = getEvmAddress(session.publicKey);
 const { compact, recovery } = await session.signDigest(digest32);
 
-session.lock();
+session.end();
 ```
 
 ## Parameters
@@ -43,7 +43,7 @@ secp256k1 private key. Must be exactly 32 bytes and a valid scalar, an integer i
 
 ## Returns
 
-A `Secp256k1SigningSession`, unlocked.
+A live `Secp256k1SigningSession`.
 
 ### publicKey
 
@@ -53,25 +53,25 @@ A `Secp256k1SigningSession`, unlocked.
 
 Signs a 32-byte digest without prehashing it and resolves to a `Secp256k1Signature`: `compact` (64 bytes, `r || s`, low-S: `s` lies in the lower half of the curve order) plus `recovery` (0 or 1).
 
-### lock()
+### end()
 
-Zeroes the session-owned private-key copy and permanently locks the session; later signing throws [`SESSION_LOCKED`](/reference/errors/#session_locked).
+Zeroes the session-owned private-key copy and permanently ends the session; later signing throws [`SESSION_ENDED`](/reference/errors/#session_ended).
 
 ### [Symbol.dispose]()
 
-Calls `lock`, so a `using` declaration locks the session when its scope exits:
+Calls `end`, so a `using` declaration ends the session when its scope exits:
 
 ```ts
 {
   using session = createSecp256k1SigningSession({ privateKey });
   await session.signDigest(digest32);
-} // locked here
+} // ended here
 ```
 
 ## Errors
 
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `privateKey` is not a valid secp256k1 scalar, or `digest32` is not 32 bytes.
-- [`SESSION_LOCKED`](/reference/errors/#session_locked): `signDigest` was called after `lock`.
+- [`SESSION_ENDED`](/reference/errors/#session_ended): `signDigest` was called after `end`.
 
 ## Notes
 

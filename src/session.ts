@@ -2,32 +2,32 @@ import { copyBytes } from "./encoding.js";
 import { MeraError } from "./errors.js";
 
 /**
- * Session-owned signing key whose lifetime is gated by `lock`, paired with the
+ * Session-owned signing key whose lifetime is gated by `end`, paired with the
  * public key derived from it.
  */
 type SigningKey = {
   /**
    * Returns the live session-owned key for immediate use.
    *
-   * @throws MeraError with code `SESSION_LOCKED` after `lock` has been called.
+   * @throws MeraError with code `SESSION_ENDED` after `end` has been called.
    */
   use(): Uint8Array<ArrayBuffer>;
-  /** Zeroes the session-owned key and permanently locks this handle. */
-  lock(): void;
+  /** Zeroes the session-owned key; later `use` calls throw. */
+  end(): void;
   /** Public key derived from the session-owned key. */
   readonly publicKey: Uint8Array<ArrayBuffer>;
 };
 
 /**
- * Copies a private key into a lockable signing key and derives its public key.
+ * Copies a private key into a signing key handle and derives its public key.
  *
  * `privateKey` is copied into one session-owned snapshot. The snapshot is
- * zeroed by `lock` or, when `derivePublicKey` throws, before the error is
+ * zeroed by `end` or, when `derivePublicKey` throws, before the error is
  * rethrown.
  *
  * @param privateKey - Private key to copy into the signing key.
  * @param derivePublicKey - Derives the public key from the owned snapshot; a throw doubles as private-key validation.
- * @returns The lockable signing key with its derived public key.
+ * @returns The signing key handle with its derived public key.
  * @throws Rethrows whatever `derivePublicKey` throws.
  */
 function createSigningKey(
@@ -44,9 +44,9 @@ function createSigningKey(
 
     return {
       use(): Uint8Array<ArrayBuffer> {
-        return requireUnlocked(activePrivateKey);
+        return requireActive(activePrivateKey);
       },
-      lock(): void {
+      end(): void {
         if (activePrivateKey !== undefined) {
           activePrivateKey.fill(0);
           activePrivateKey = undefined;
@@ -61,17 +61,17 @@ function createSigningKey(
 }
 
 /**
- * Returns the active private key, or throws once the session has been locked.
+ * Returns the active private key, or throws once the session has ended.
  *
- * @param privateKey - Session-owned private key, or `undefined` after `lock`.
+ * @param privateKey - Session-owned private key, or `undefined` after `end`.
  * @returns The live session-owned private key.
- * @throws MeraError with code `SESSION_LOCKED` when `privateKey` is undefined.
+ * @throws MeraError with code `SESSION_ENDED` when `privateKey` is undefined.
  */
-function requireUnlocked(
+function requireActive(
   privateKey: Uint8Array<ArrayBuffer> | undefined,
 ): Uint8Array<ArrayBuffer> {
   if (privateKey === undefined) {
-    throw new MeraError("SESSION_LOCKED", "Signing session is locked");
+    throw new MeraError("SESSION_ENDED", "Signing session has ended");
   }
 
   return privateKey;

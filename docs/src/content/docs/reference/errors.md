@@ -51,9 +51,9 @@ Web Crypto is unavailable. In practice this means the page is running outside a 
 
 The authenticator did not enable PRF, or did not return a usable 32-byte PRF output. [Authenticator support](/authenticator-support/) lists tested compatible stacks.
 
-### SESSION_LOCKED
+### SESSION_ENDED
 
-A signing call was made after the session's `lock()`. Locking is permanent; new signatures require a new session built from fresh key material.
+A signing call was made after the session's `end()`. An ended session never signs again; new signatures require a new session built from fresh key material.
 
 ### DECRYPT_FAILED
 

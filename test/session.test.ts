@@ -13,7 +13,7 @@ test("derives the public key from the stored private-key snapshot", () => {
   const original = new Uint8Array(privateKey);
   let snapshot: Uint8Array | undefined;
 
-  const { use, lock, publicKey } = createSigningKey(privateKey, (value) => {
+  const { use, end, publicKey } = createSigningKey(privateKey, (value) => {
     snapshot = value;
     const derived = new Uint8Array(value);
     privateKey.fill(9);
@@ -27,9 +27,9 @@ test("derives the public key from the stored private-key snapshot", () => {
   expect(snapshot?.buffer).toBeInstanceOf(ArrayBuffer);
   expect(publicKey).toEqual(original);
   expect(use()).toEqual(original);
-  lock();
+  end();
   expect(snapshot).toEqual(new Uint8Array(4));
-  expectError(() => use(), "SESSION_LOCKED");
+  expectError(() => use(), "SESSION_ENDED");
 });
 
 test("zeroes the stored private-key snapshot when validation fails", () => {

@@ -8,11 +8,11 @@
 >
   <title>
     The trust boundary. The page contains the app, which derives keys from PRF
-    output and decides when to lock sessions, and mera, which copies the bytes
-    it is given and zeroes its own copies. The authenticator sits outside the
-    page, reachable only through WebAuthn ceremonies: it holds the passkey and
-    PRF, the key never leaves, and it asks for user verification. Any script on
-    the page can see key material and sign with an unlocked session.
+    output and decides when to end sessions, and mera, which copies the bytes it
+    is given and zeroes its own copies. The authenticator sits outside the page,
+    reachable only through WebAuthn ceremonies: it holds the passkey and PRF,
+    the key never leaves, and it asks for user verification. Any script on the
+    page can see key material and sign with a live session.
   </title>
   <defs>
     <marker
@@ -37,7 +37,7 @@
     derives keys from PRF output
   </text>
   <text x="222" y="153" text-anchor="middle" class="d-sub">
-    decides when to lock sessions
+    decides when to end sessions
   </text>
 
   <rect class="d-node" x="48" y="200" width="348" height="80" rx="8" />

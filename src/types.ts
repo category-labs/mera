@@ -1,6 +1,5 @@
 /**
- * A 20-byte EVM address as `0x`-prefixed hex. `getEvmAddress` returns it
- * EIP-55 checksummed.
+ * A 20-byte EVM address as `0x`-prefixed hex.
  *
  * Structural type only: the `0x${string}` shape does not constrain length or
  * hex digits.

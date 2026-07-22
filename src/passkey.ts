@@ -301,6 +301,10 @@ async function getPasskeyPrfOutput({
           type: "public-key",
           ...(allowCredential.transports !== undefined
             ? {
+                // The library's transport type admits future strings beyond
+                // lib.dom's closed AuthenticatorTransport union. The cast is
+                // safe: transports are hints, and WebAuthn ignores values it
+                // does not recognize.
                 transports:
                   allowCredential.transports as AuthenticatorTransport[],
               }

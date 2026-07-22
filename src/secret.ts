@@ -16,15 +16,13 @@ import {
   toCredentialMetadata,
 } from "./passkey.js";
 import type {
-  PasskeyCredentialMetadata,
+  CreatePasskeyWithPrfOutputResult,
   PasskeyCredentialTransport,
-  PasskeyPrfResult,
   PasskeySecretVault,
 } from "./types.js";
 import { getCrypto, randomBytes } from "./webcrypto.js";
 
 const PRF_SALT_LENGTH = 32;
-const PRF_OUTPUT_LENGTH = 32;
 const NONCE_LENGTH = 12;
 // AES-256-GCM authentication tag length in bytes (WebCrypto's 128-bit default,
 // since aesGcmEncrypt does not set tagLength). Ciphertext carries its tag, so
@@ -48,7 +46,7 @@ type EncryptedBytes = {
 // asArrayBuffer snapshots the output before importKey's first await, preserving
 // the public copy guarantee while the 32-byte check validates the key material.
 async function deriveEncryptionKey(prfOutput: Uint8Array): Promise<CryptoKey> {
-  if (prfOutput.length !== PRF_OUTPUT_LENGTH) {
+  if (prfOutput.length !== 32) {
     throw new MeraError("INPUT_INVALID", "PRF output must be 32 bytes");
   }
 
@@ -159,80 +157,50 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/** Inputs for encrypting one arbitrary secret into a vault. */
+/** Inputs for `createSecretVault`. */
 type CreateSecretVaultOptions = {
-  /**
-   * Passkey credential plus the PRF salt and PRF output it produced. Secret-vault
-   * flows use a fresh salt for each secret.
-   */
-  credential: PasskeyCredentialMetadata & {
-    /** PRF salt for this secret. Must be exactly 32 bytes. */
-    prfSalt: Uint8Array;
-    /** First WebAuthn PRF output for `prfSalt`. Must be exactly 32 bytes. */
-    prfOutput: Uint8Array;
-  };
-  /** Secret bytes to encrypt. Any non-empty length. */
+  /** Credential metadata plus the PRF salt and PRF output that key this secret. */
+  credential: CreatePasskeyWithPrfOutputResult;
+  /** Secret bytes to encrypt. */
   secret: Uint8Array;
 };
 
 /**
- * Encrypts an arbitrary secret into a passkey-protected vault.
+ * Encrypts a secret into a passkey-protected vault.
  *
  * An AES-256-GCM encryption key is derived from the PRF output with fixed
  * HKDF info (`mera.v1.encrypt.secret`), which separates it from other keys
  * derived from the same PRF output.
  *
- * @remarks
- * The input byte buffers are copied before async cryptographic work starts.
+ * A vault is bound to its PRF output only, not to the credential ID or salt:
+ * vaults encrypted with one reused PRF output share an encryption key, so the
+ * orchestrators use a fresh salt for each secret.
  *
- * Security: a vault is bound to its `prfOutput` only, not to the credential
- * ID or salt. Secrets encrypted using one reused PRF output share an encryption
- * key, so their nonce/ciphertext pairs are interchangeable by anyone who can
- * rewrite stored vault JSON; a fresh `prfSalt` per secret avoids the shared key.
- * @param options - Credential material and the secret to encrypt; fields are documented on {@link CreateSecretVaultOptions}.
+ * Internal building block: inputs are validated and owned by the caller, so
+ * nothing is copied or zeroed here.
+ *
  * @returns A JSON-safe secret vault.
- * @throws MeraError with code `INPUT_INVALID` when the credential ID is empty or not canonical base64url, the PRF salt or output is not 32 bytes, or `secret` is empty.
+ * @throws MeraError with code `INPUT_INVALID` when the PRF output is not 32 bytes.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
+ * @internal
  */
 async function createSecretVault({
   credential,
   secret,
 }: CreateSecretVaultOptions): Promise<PasskeySecretVault> {
-  const { credentialId, transports, prfSalt, prfOutput } = credential;
+  const encryptionKey = await deriveEncryptionKey(credential.prfOutput);
+  const encrypted = await aesGcmEncrypt({ plaintext: secret, encryptionKey });
 
-  base64UrlDecode(credentialId, {
-    name: "credential.credentialId",
-    minByteLength: 1,
-  });
-
-  if (prfSalt.length !== PRF_SALT_LENGTH) {
-    throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
-  }
-
-  if (secret.length === 0) {
-    throw new MeraError("INPUT_INVALID", "secret must not be empty");
-  }
-
-  const prfSaltCopy = copyBytes(prfSalt);
-  const secretCopy = copyBytes(secret);
-
-  try {
-    const encryptionKey = await deriveEncryptionKey(prfOutput);
-    const encrypted = await aesGcmEncrypt({
-      plaintext: secretCopy,
-      encryptionKey,
-    });
-
-    return {
-      version: 1,
-      credential: toCredentialMetadata(credentialId, transports),
-      prfSalt: base64UrlEncode(prfSaltCopy),
-      nonce: base64UrlEncode(encrypted.nonce),
-      ciphertext: base64UrlEncode(encrypted.ciphertext),
-    };
-  } finally {
-    secretCopy.fill(0);
-  }
+  return {
+    version: 1,
+    credential: toCredentialMetadata(
+      credential.credentialId,
+      credential.transports,
+    ),
+    prfSalt: base64UrlEncode(credential.prfSalt),
+    nonce: base64UrlEncode(encrypted.nonce),
+    ciphertext: base64UrlEncode(encrypted.ciphertext),
+  };
 }
 
 /** Inputs for creating a secret vault together with a new passkey. */
@@ -344,7 +312,7 @@ async function createSecretVaultWithExistingPasskey({
   const credentialCopy =
     credential &&
     toCredentialMetadata(credential.credentialId, credential.transports);
-  let prfOutput: Uint8Array | undefined;
+  let prfOutput: Uint8Array<ArrayBuffer> | undefined;
 
   try {
     const prfSalt = randomBytes(PRF_SALT_LENGTH);
@@ -356,16 +324,15 @@ async function createSecretVaultWithExistingPasskey({
     });
     prfOutput = evaluated.prfOutput;
 
+    // Reuse the caller's metadata (with its transports) only when the browser
+    // selected that same credential.
+    const credentialMetadata =
+      credentialCopy?.credentialId === evaluated.credentialId
+        ? credentialCopy
+        : { credentialId: evaluated.credentialId };
+
     return await createSecretVault({
-      credential: {
-        credentialId: evaluated.credentialId,
-        ...(credentialCopy?.credentialId === evaluated.credentialId &&
-        credentialCopy.transports !== undefined
-          ? { transports: credentialCopy.transports }
-          : {}),
-        prfSalt,
-        prfOutput,
-      },
+      credential: { ...credentialMetadata, prfSalt, prfOutput },
       secret: secretCopy,
     });
   } finally {
@@ -383,16 +350,17 @@ type DecryptSecretVaultOptions = {
 };
 
 /**
- * Decrypts the secret from a secret vault.
+ * Decrypts the secret from a secret vault with a PRF output.
  *
- * @remarks
- * `prfOutput` is copied before async cryptographic work starts.
+ * Internal building block: the vault's `nonce` and `ciphertext` strings are
+ * still decoded and validated here because a caller-built vault object can
+ * bypass `parseSecretVault`.
  *
- * @param options - Vault and PRF output; fields are documented on {@link DecryptSecretVaultOptions}.
- * @returns The decrypted secret bytes, exactly as passed to `createSecretVault`. The returned buffer is a fresh allocation.
- * @throws MeraError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url (already validated for vaults from `parseSecretVault`).
+ * @returns The decrypted secret bytes in a fresh allocation.
+ * @throws MeraError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url.
  * @throws MeraError with code `DECRYPT_FAILED` when authentication fails.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
+ * @internal
  */
 async function decryptSecretVault({
   vault,
@@ -477,8 +445,8 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
   return { version: 1, credential, prfSalt, nonce, ciphertext };
 }
 
-/** Inputs for the WebAuthn assertion that unlocks a secret vault. */
-type GetSecretVaultPrfOutputOptions = {
+/** Inputs for performing the passkey ceremony and decrypting a secret vault. */
+type DecryptSecretVaultWithPasskeyOptions = {
   /** Relying party ID for the WebAuthn assertion. */
   rpId: string;
   /** Parsed secret vault. */
@@ -486,40 +454,6 @@ type GetSecretVaultPrfOutputOptions = {
   /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
   timeout?: number;
 };
-
-/**
- * Performs the WebAuthn assertion needed to unlock a secret vault.
- *
- * Reads the credential metadata and PRF salt from a parsed vault and delegates
- * to `getPasskeyPrfOutput`.
- *
- * @param options - Secret-vault PRF inputs; fields are documented on {@link GetSecretVaultPrfOutputOptions}.
- * @returns The selected credential ID and first WebAuthn PRF output.
- * @remarks
- * Invokes `navigator.credentials.get()` and shows one user-verification
- * prompt.
- *
- * The WebAuthn challenge is generated internally.
- * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
- * @throws MeraError with code `INPUT_INVALID` when the vault's `prfSalt` is not canonical base64url or does not decode to 32 bytes, or `credentialId` is empty or not canonical base64url (already validated for vaults from `parseSecretVault`).
- * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
- * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
- */
-async function getSecretVaultPrfOutput({
-  rpId,
-  vault,
-  timeout,
-}: GetSecretVaultPrfOutputOptions): Promise<PasskeyPrfResult> {
-  return getPasskeyPrfOutput({
-    rpId,
-    credential: vault.credential,
-    prfSalt: base64UrlDecode(vault.prfSalt),
-    ...(timeout !== undefined ? { timeout } : {}),
-  });
-}
-
-/** Inputs for performing the passkey ceremony and decrypting a secret vault. */
-type DecryptSecretVaultWithPasskeyOptions = GetSecretVaultPrfOutputOptions;
 
 /**
  * Performs the passkey assertion for a vault and decrypts its secret.
@@ -543,9 +477,10 @@ async function decryptSecretVaultWithPasskey({
   vault,
   timeout,
 }: DecryptSecretVaultWithPasskeyOptions): Promise<Uint8Array<ArrayBuffer>> {
-  const { prfOutput } = await getSecretVaultPrfOutput({
+  const { prfOutput } = await getPasskeyPrfOutput({
     rpId,
-    vault,
+    credential: vault.credential,
+    prfSalt: base64UrlDecode(vault.prfSalt),
     ...(timeout !== undefined ? { timeout } : {}),
   });
 
@@ -562,7 +497,6 @@ export type {
   CreateSecretVaultWithNewPasskeyOptions,
   DecryptSecretVaultOptions,
   DecryptSecretVaultWithPasskeyOptions,
-  GetSecretVaultPrfOutputOptions,
 };
 export {
   createSecretVault,
@@ -570,6 +504,5 @@ export {
   createSecretVaultWithNewPasskey,
   decryptSecretVault,
   decryptSecretVaultWithPasskey,
-  getSecretVaultPrfOutput,
   parseSecretVault,
 };

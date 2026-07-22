@@ -68,32 +68,6 @@ test("creates a secret vault and decrypts the exact bytes", async () => {
   ).resolves.toEqual(SECRET);
 });
 
-test("createSecretVault snapshots caller-owned byte inputs before async work", async () => {
-  const prfSalt = new Uint8Array(PRF_SALT);
-  const prfOutput = new Uint8Array(PRF_OUTPUT);
-  const secret = new Uint8Array(SECRET);
-
-  const pending = createSecretVault({
-    credential: {
-      credentialId: "AQIDBA",
-      prfSalt,
-      prfOutput,
-    },
-    secret,
-  });
-
-  prfSalt.fill(1);
-  prfOutput.fill(2);
-  secret.fill(0);
-
-  const vault = await pending;
-
-  expect(vault.prfSalt).toBe("CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk");
-  await expect(
-    decryptSecretVault({ vault, prfOutput: PRF_OUTPUT }),
-  ).resolves.toEqual(SECRET);
-});
-
 test("secret-vault creation rejects an empty secret before prompting", async () => {
   let ceremonyCount = 0;
   const navigator = {
@@ -458,45 +432,6 @@ test("parseSecretVault accepts a ciphertext of exactly the GCM tag length", asyn
   // AES-GCM output (a bare tag), so parsing passes it through unchanged.
   const parsed = parseSecretVault({ ...vault, ciphertext: "A".repeat(22) });
   expect(parsed.ciphertext).toBe("A".repeat(22));
-});
-
-test("createSecretVault rejects an empty secret", async () => {
-  await expect(
-    createSecretVault({
-      credential: {
-        credentialId: "AQIDBA",
-        prfSalt: PRF_SALT,
-        prfOutput: PRF_OUTPUT,
-      },
-      secret: new Uint8Array(0),
-    }),
-  ).rejects.toMatchObject({ code: "INPUT_INVALID" });
-});
-
-test("createSecretVault rejects an empty credential id", async () => {
-  await expect(
-    createSecretVault({
-      credential: {
-        credentialId: "",
-        prfSalt: PRF_SALT,
-        prfOutput: PRF_OUTPUT,
-      },
-      secret: SECRET,
-    }),
-  ).rejects.toMatchObject({ code: "INPUT_INVALID" });
-});
-
-test("createSecretVault rejects a wrong-length PRF salt", async () => {
-  await expect(
-    createSecretVault({
-      credential: {
-        credentialId: "AQIDBA",
-        prfSalt: new Uint8Array(16),
-        prfOutput: PRF_OUTPUT,
-      },
-      secret: SECRET,
-    }),
-  ).rejects.toMatchObject({ code: "INPUT_INVALID" });
 });
 
 test("decryptSecretVault rejects a wrong-length PRF output", async () => {

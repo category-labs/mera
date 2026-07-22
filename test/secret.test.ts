@@ -1,10 +1,9 @@
-import { utf8ToBytes } from "@noble/hashes/utils.js";
+import { hexToBytes, utf8ToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
 import type {
   PasskeyCredentialTransport,
   PasskeySecretVault,
 } from "../dist/index.js";
-import { getDefaultPrfSalt } from "../dist/passkey.js";
 import {
   createSecretVault,
   createSecretVaultWithExistingPasskey,
@@ -16,6 +15,11 @@ import { expectError, withStubbedGlobal } from "./helpers.js";
 
 const PRF_OUTPUT = new Uint8Array(32).fill(7);
 const PRF_SALT = new Uint8Array(32).fill(9);
+// sha256("mera.prf.salt.v1"): the fixed default salt documented on
+// getPasskeyPrfOutput.
+const DEFAULT_PRF_SALT = hexToBytes(
+  "896d46ac4ac191885c46137439db7bb52fb05cff3ecd34af7cdae0a1e0c00db9",
+);
 // A real 12-word BIP-39 phrase stands in for an opaque secret; the library
 // neither knows nor cares that these bytes are a mnemonic.
 const SECRET = utf8ToBytes(
@@ -241,7 +245,7 @@ test("createSecretVaultWithNewPasskey owns a random salt and snapshots the secre
       transports: ["internal"],
     });
     expect(vault.prfSalt).not.toBe(
-      Buffer.from(getDefaultPrfSalt()).toString("base64url"),
+      Buffer.from(DEFAULT_PRF_SALT).toString("base64url"),
     );
     await expect(
       decryptSecretVault({ vault, prfOutput: evaluatedSalt }),

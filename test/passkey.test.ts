@@ -1,12 +1,16 @@
-import { bytesToHex } from "@noble/hashes/utils.js";
+import { hexToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
 import {
-  createPasskey,
   createPasskeyWithPrfOutput,
-  getDefaultPrfSalt,
   getPasskeyPrfOutput,
 } from "../dist/passkey.js";
 import { withStubbedGlobal } from "./helpers.js";
+
+// sha256("mera.prf.salt.v1"): the fixed default salt documented on
+// getPasskeyPrfOutput.
+const DEFAULT_PRF_SALT = hexToBytes(
+  "896d46ac4ac191885c46137439db7bb52fb05cff3ecd34af7cdae0a1e0c00db9",
+);
 
 // Stubs an assertion whose authenticator returns `first` as the PRF result.
 function navigatorWithPrfResult(first: unknown) {
@@ -102,50 +106,6 @@ test("getPasskeyPrfOutput rejects PRF output that is not 32 bytes", async () => 
   });
 });
 
-test("createPasskey without prfSalt does not evaluate or return PRF output", async () => {
-  let createOptions: PublicKeyCredentialCreationOptions | undefined;
-  const navigator = {
-    credentials: {
-      async create({ publicKey }: CredentialCreationOptions) {
-        createOptions = publicKey;
-        return {
-          type: "public-key",
-          rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-          response: {},
-          getClientExtensionResults: () => ({
-            prf: {
-              enabled: true,
-              results: { first: new Uint8Array(32).fill(7).buffer },
-            },
-          }),
-        };
-      },
-    },
-  };
-
-  await withStubbedGlobal("navigator", navigator, async () => {
-    const result = await createPasskey({
-      rp: { id: "example.com", name: "Mera Test" },
-      user: { name: "nad", displayName: "nad" },
-    });
-
-    expect(result.prfOutput).toBeUndefined();
-  });
-
-  expect(createOptions?.extensions?.prf).toEqual({});
-});
-
-test("getDefaultPrfSalt returns a fresh copy of the documented constant", () => {
-  const documentedDigest =
-    "896d46ac4ac191885c46137439db7bb52fb05cff3ecd34af7cdae0a1e0c00db9";
-  const salt = getDefaultPrfSalt();
-
-  expect(bytesToHex(salt)).toBe(documentedDigest);
-
-  salt.fill(0);
-  expect(bytesToHex(getDefaultPrfSalt())).toBe(documentedDigest);
-});
-
 test("PRF output helpers default to Mera's fixed salt", async () => {
   const evaluatedSalts: Uint8Array[] = [];
 
@@ -182,7 +142,7 @@ test("PRF output helpers default to Mera's fixed salt", async () => {
   };
 
   await withStubbedGlobal("navigator", navigator, async () => {
-    const expected = getDefaultPrfSalt();
+    const expected = DEFAULT_PRF_SALT;
     const created = await createPasskeyWithPrfOutput({
       rp: { id: "example.com", name: "Mera Test" },
       user: { name: "nad", displayName: "nad" },
@@ -204,7 +164,7 @@ test("PRF output helpers default to Mera's fixed salt", async () => {
 
   expect(evaluatedSalts).toHaveLength(5);
   for (const salt of evaluatedSalts) {
-    expect(salt).toEqual(getDefaultPrfSalt());
+    expect(salt).toEqual(DEFAULT_PRF_SALT);
   }
 });
 
@@ -250,14 +210,6 @@ test("passkey helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavailable",
     await withStubbedGlobal("crypto", undefined, async () => {
       const user = { name: "nad", displayName: "nad" };
       const prfSalt = new Uint8Array(32);
-
-      await expect(
-        createPasskey({
-          rp: { id: "example.com", name: "Mera Test" },
-          user,
-          prfSalt,
-        }),
-      ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
 
       await expect(
         getPasskeyPrfOutput({
@@ -313,7 +265,7 @@ test("passkey helpers generate internal challenges and request no attestation", 
   };
 
   await withStubbedGlobal("navigator", navigator, async () => {
-    await createPasskey({
+    await createPasskeyWithPrfOutput({
       rp: { id: "example.com", name: "Mera Test" },
       user: {
         id: new Uint8Array([1]),

@@ -8,7 +8,6 @@ import {
 } from "./encoding.js";
 import { isMeraError, MeraError } from "./errors.js";
 import type {
-  CreatePasskeyResult,
   CreatePasskeyWithPrfOutputResult,
   PasskeyCredentialMetadata,
   PasskeyCredentialTransport,
@@ -18,21 +17,13 @@ import { randomBytes } from "./webcrypto.js";
 
 const DEFAULT_PRF_SALT = sha256(utf8ToBytes("mera.prf.salt.v1"));
 
-/**
- * Returns Mera's default PRF salt: `sha256("mera.prf.salt.v1")`.
- *
- * @returns A fresh 32-byte copy of the default salt: a `Uint8Array` cannot be
- * frozen, so a shared buffer mutated by one caller would silently change every
- * later derivation.
- */
-function getDefaultPrfSalt(): Uint8Array<ArrayBuffer> {
-  return new Uint8Array(DEFAULT_PRF_SALT);
-}
-
-/** Inputs for creating a discoverable, user-verified passkey with PRF enabled. */
-type CreatePasskeyOptions = {
-  /** Relying party identity passed directly to WebAuthn. */
-  rp: PublicKeyCredentialRpEntity;
+/** Inputs for creating a discoverable, user-verified passkey and obtaining its first WebAuthn PRF output in one call. */
+type CreatePasskeyWithPrfOutputOptions = {
+  /**
+   * Relying party identity passed to WebAuthn. `id` is required so the
+   * fallback assertion can target the same relying party.
+   */
+  rp: PublicKeyCredentialRpEntity & { id: string };
   /** User identity passed to WebAuthn. `id` is copied before use. */
   user: {
     /**
@@ -52,31 +43,8 @@ type CreatePasskeyOptions = {
   /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
   timeout?: number;
   /**
-   * 32-byte PRF salt to evaluate during creation. Authenticators that
-   * do not support PRF eval at create time silently ignore it and the result
-   * omits `prfOutput`; a later `getPasskeyPrfOutput` with the same `rpId`,
-   * `credentialId`, and salt yields the PRF output.
-   *
-   * Copied before use.
-   */
-  prfSalt?: Uint8Array;
-};
-
-/**
- * Inputs for creating a passkey and obtaining its first WebAuthn PRF output in one call.
- *
- * Tightens `CreatePasskeyOptions`: `rp.id` is required so the fallback ceremony
- * can target the same relying party. `prfSalt` defaults to Mera's fixed salt.
- */
-type CreatePasskeyWithPrfOutputOptions = Omit<
-  CreatePasskeyOptions,
-  "rp" | "prfSalt"
-> & {
-  /** Relying party identity passed to WebAuthn. `id` is required here. */
-  rp: PublicKeyCredentialRpEntity & { id: string };
-  /**
    * 32-byte PRF salt evaluated during creation, or by the fallback assertion.
-   * Defaults to Mera's fixed salt.
+   * Defaults to Mera's fixed salt. Copied before use.
    */
   prfSalt?: Uint8Array;
 };
@@ -110,21 +78,19 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
 };
 
 /**
- * Creates a discoverable, user-verified passkey and requires WebAuthn PRF support.
+ * Creates a discoverable, user-verified passkey that requires WebAuthn PRF
+ * support, and returns the first PRF output, falling back to
+ * {@link getPasskeyPrfOutput} with the same salt only when the authenticator
+ * does not evaluate PRF at create time.
  *
- * When `prfSalt` is provided and the authenticator evaluates PRF at create
- * time, the result includes the first PRF output, so no second ceremony is
- * needed. Without `prfSalt`, no PRF evaluation happens during creation and
- * the result carries credential metadata only; a later `getPasskeyPrfOutput`
- * call with a salt produces PRF output for this passkey.
- *
- * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyOptions}.
- * @returns Credential metadata, plus the first PRF output when `prfSalt` was provided and evaluated during creation.
+ * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyWithPrfOutputOptions}.
+ * @returns Credential metadata and the first PRF output.
  * @remarks
  * Invokes `navigator.credentials.create()` and shows one user-verification
- * prompt.
+ * prompt. On authenticators that do not evaluate PRF during creation, also
+ * invokes `navigator.credentials.get()`, which shows a second.
  *
- * The WebAuthn challenge is generated internally.
+ * WebAuthn challenges are generated internally.
  *
  * The credential is requested with fixed parameters: ES256 or RS256 key types,
  * attestation `"none"`, a required resident key, and required user
@@ -133,22 +99,24 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * The requirement is not configurable ({@link getPasskeyPrfOutput} documents
  * the authenticator mechanism).
  *
- * A `PRF_UNAVAILABLE` failure happens after the creation ceremony has
- * completed: the passkey exists on the authenticator, but the thrown error
- * does not carry its metadata.
- * @see {@link https://www.w3.org/TR/webauthn-3/#user-verification | WebAuthn: user verification}
- * @see {@link https://www.w3.org/TR/webauthn-3/#prf-extension | WebAuthn: the PRF extension}
- * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or returns a malformed create-time PRF output.
- * @throws MeraError with code `INPUT_INVALID` when `prfSalt` is provided but not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
+ * When `prfSalt` is omitted, the default salt is used;
+ * {@link getPasskeyPrfOutput} documents its value and stability.
+ *
+ * `prfSalt` is copied before async WebAuthn work starts.
+ *
+ * Any failure after the creation ceremony completes leaves the passkey on the
+ * authenticator, but the thrown error does not carry its metadata.
+ * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, returns a malformed create-time PRF output, or does not return PRF output on the fallback ceremony.
+ * @throws MeraError with code `INPUT_INVALID` when an explicit `prfSalt` is not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
-async function createPasskey({
+async function createPasskeyWithPrfOutput({
   rp,
   user,
   timeout,
   prfSalt,
-}: CreatePasskeyOptions): Promise<CreatePasskeyResult> {
+}: CreatePasskeyWithPrfOutputOptions): Promise<CreatePasskeyWithPrfOutputResult> {
   try {
     assertCredentialApiAvailable();
 
@@ -160,8 +128,7 @@ async function createPasskey({
       throw new MeraError("INPUT_INVALID", "user.id must be 1 to 64 bytes");
     }
 
-    const prfExtension =
-      prfSalt !== undefined ? { eval: { first: asArrayBuffer(prfSalt) } } : {};
+    const prfSaltCopy = copyBytes(prfSalt ?? DEFAULT_PRF_SALT);
 
     const credential = await navigator.credentials.create({
       publicKey: {
@@ -184,7 +151,7 @@ async function createPasskey({
           userVerification: "required",
         },
         extensions: {
-          prf: prfExtension,
+          prf: { eval: { first: asArrayBuffer(prfSaltCopy) } },
         },
       },
     });
@@ -205,15 +172,26 @@ async function createPasskey({
       typeof response.getTransports === "function"
         ? response.getTransports()
         : undefined;
+    const credentialMetadata = toCredentialMetadata(
+      base64UrlEncode(new Uint8Array(publicKeyCredential.rawId)),
+      transports,
+    );
+
+    const prfOutput = prf.results?.first
+      ? copyPrfOutput(prf.results.first)
+      : (
+          await getPasskeyPrfOutput({
+            rpId: rp.id,
+            credential: credentialMetadata,
+            prfSalt: prfSaltCopy,
+            ...(timeout !== undefined ? { timeout } : {}),
+          })
+        ).prfOutput;
 
     return {
-      ...toCredentialMetadata(
-        base64UrlEncode(new Uint8Array(publicKeyCredential.rawId)),
-        transports,
-      ),
-      ...(prfSalt !== undefined && prf.results?.first
-        ? { prfOutput: copyPrfOutput(prf.results.first) }
-        : {}),
+      ...credentialMetadata,
+      prfSalt: prfSaltCopy,
+      prfOutput,
     };
   } catch (error) {
     if (isMeraError(error)) {
@@ -272,7 +250,7 @@ async function getPasskeyPrfOutput({
     }
 
     const prf = {
-      eval: { first: asArrayBuffer(prfSalt ?? getDefaultPrfSalt()) },
+      eval: { first: asArrayBuffer(prfSalt ?? DEFAULT_PRF_SALT) },
     };
 
     const publicKey: PublicKeyCredentialRequestOptions = {
@@ -336,77 +314,6 @@ async function getPasskeyPrfOutput({
       { cause: error },
     );
   }
-}
-
-/**
- * Creates a discoverable, user-verified passkey that requires WebAuthn PRF
- * support, and returns the first PRF output, falling back to
- * {@link getPasskeyPrfOutput} with the same salt only when the authenticator
- * does not evaluate PRF at create time.
- *
- * @param options - Passkey creation inputs; fields are documented on {@link CreatePasskeyWithPrfOutputOptions}.
- * @returns Credential metadata and the first PRF output.
- * @remarks
- * Invokes `navigator.credentials.create()` and shows one user-verification
- * prompt. On authenticators that do not evaluate PRF during creation, also
- * invokes `navigator.credentials.get()`, which shows a second.
- *
- * WebAuthn challenges are generated internally.
- *
- * The credential is requested with fixed parameters: ES256 or RS256 key types,
- * attestation `"none"`, a required resident key, and required user
- * verification. User verification is the authenticator's local check; the
- * gesture depends on the platform (a biometric, a device PIN, or a password).
- * The requirement is not configurable ({@link getPasskeyPrfOutput} documents
- * the authenticator mechanism).
- *
- * When `prfSalt` is omitted, the default salt is used:
- * `sha256("mera.prf.salt.v1")`. This default will not change across
- * library versions.
- *
- * `prfSalt` is copied before async WebAuthn work starts.
- *
- * Any failure after the creation ceremony completes leaves the passkey on the
- * authenticator, but the thrown error does not carry its metadata.
- * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, or does not return PRF output on the fallback ceremony.
- * @throws MeraError with code `INPUT_INVALID` when an explicit `prfSalt` is not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
- * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
- * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
- */
-async function createPasskeyWithPrfOutput({
-  rp,
-  user,
-  timeout,
-  prfSalt,
-}: CreatePasskeyWithPrfOutputOptions): Promise<CreatePasskeyWithPrfOutputResult> {
-  const prfSaltCopy =
-    prfSalt === undefined ? getDefaultPrfSalt() : copyBytes(prfSalt);
-
-  const credential = await createPasskey({
-    rp,
-    user,
-    ...(timeout !== undefined ? { timeout } : {}),
-    prfSalt: prfSaltCopy,
-  });
-
-  const { prfOutput: createTimePrfOutput, ...credentialMetadata } = credential;
-
-  const prfOutput =
-    createTimePrfOutput ??
-    (
-      await getPasskeyPrfOutput({
-        rpId: rp.id,
-        credential: credentialMetadata,
-        prfSalt: prfSaltCopy,
-        ...(timeout !== undefined ? { timeout } : {}),
-      })
-    ).prfOutput;
-
-  return {
-    ...credentialMetadata,
-    prfSalt: prfSaltCopy,
-    prfOutput,
-  };
 }
 
 /**
@@ -511,15 +418,9 @@ function copyPrfOutput(
   return output;
 }
 
-export type {
-  CreatePasskeyOptions,
-  CreatePasskeyWithPrfOutputOptions,
-  GetPasskeyPrfOutputOptions,
-};
+export type { CreatePasskeyWithPrfOutputOptions, GetPasskeyPrfOutputOptions };
 export {
-  createPasskey,
   createPasskeyWithPrfOutput,
-  getDefaultPrfSalt,
   getPasskeyPrfOutput,
   toCredentialMetadata,
 };

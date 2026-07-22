@@ -51,12 +51,6 @@ type PasskeyPrfResult = {
   readonly prfOutput: Uint8Array<ArrayBuffer>;
 };
 
-/** Result of creating a passkey. */
-type CreatePasskeyResult = PasskeyCredentialMetadata & {
-  /** First WebAuthn PRF output when `prfSalt` was provided and evaluated during creation. */
-  readonly prfOutput?: Uint8Array<ArrayBuffer>;
-};
-
 /**
  * Result of creating a passkey together with its first PRF output.
  *
@@ -150,7 +144,6 @@ type Ed25519SigningSession = LockableSession & {
 };
 
 export type {
-  CreatePasskeyResult,
   CreatePasskeyWithPrfOutputResult,
   CreateSigningSessionOptions,
   Ed25519SigningSession,

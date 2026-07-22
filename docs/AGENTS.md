@@ -8,7 +8,7 @@ The reader is a strong software engineer who may know none of blockchain, crypto
 
 Define every complex concept or acronym on first mention in a page: one to three sentences, tied to the step the reader is in, linking the owning page for depth. Later mentions on the same page reuse the short name without re-explaining. The foundations concept page (`concepts/entropy-keys-and-accounts`) owns the blockchain background; glosses elsewhere link there rather than re-teaching it.
 
-Reference pages are exempt: they state facts and link to the page that teaches. Getting started is exempt in the other direction: it links the owning concept page instead of defining inline.
+Reference pages are exempt: they state facts and link to the page that teaches. Getting started and recipes are exempt in the other direction: they link the owning concept page instead of defining inline.
 
 ## Information architecture
 

@@ -9,6 +9,7 @@ import {
   createSecretVaultWithExistingPasskey,
   createSecretVaultWithNewPasskey,
   decryptSecretVault,
+  decryptSecretVaultWithPasskey,
   parseSecretVault,
 } from "../dist/secret.js";
 import { expectError, withStubbedGlobal } from "./helpers.js";
@@ -286,6 +287,37 @@ test("decryptSecretVault fails with the wrong PRF output", async () => {
   await expect(
     decryptSecretVault({ vault, prfOutput: new Uint8Array(32).fill(1) }),
   ).rejects.toMatchObject({ code: "DECRYPT_FAILED" });
+});
+
+test("decryptSecretVaultWithPasskey rejects a malformed vault without prompting", async () => {
+  const vault = await createTestVault();
+  let asserted = false;
+  const navigator = {
+    credentials: {
+      async get() {
+        asserted = true;
+        throw new Error("assertion must not start");
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    await expect(
+      decryptSecretVaultWithPasskey({
+        rpId: "example.com",
+        vault: { ...vault, ciphertext: "!!!!" },
+      }),
+    ).rejects.toMatchObject({ code: "VAULT_FORMAT_INVALID" });
+
+    await expect(
+      decryptSecretVaultWithPasskey({
+        rpId: "example.com",
+        vault: { ...vault, nonce: "AQ" },
+      }),
+    ).rejects.toMatchObject({ code: "VAULT_FORMAT_INVALID" });
+  });
+
+  expect(asserted).toBe(false);
 });
 
 test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavailable", async () => {

@@ -65,7 +65,7 @@ const hash = await client.sendTransaction({
   value: parseEther("0.01"),
 });
 
-session.lock();
+session.end();
 ```
 
 `sendTransaction` fills the missing transaction fields from the RPC, signs through the session and broadcasts.

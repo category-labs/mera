@@ -11,7 +11,7 @@ const RFC_PUBLIC_KEY = hexToBytes(
   "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
 );
 
-test("signs messages and locks the session", async () => {
+test("signs messages and ends the session", async () => {
   const buffer = new Uint8Array(RFC_SECRET);
   const session = createEd25519SigningSession({ privateKey: buffer });
   const message = new TextEncoder().encode("mera demo");
@@ -23,10 +23,10 @@ test("signs messages and locks the session", async () => {
   expect(signature).toHaveLength(64);
   expect(ed25519.verify(signature, message, session.publicKey)).toBe(true);
 
-  session.lock();
+  session.end();
 
   await expect(session.signMessage(message)).rejects.toMatchObject({
-    code: "SESSION_LOCKED",
+    code: "SESSION_ENDED",
   });
 });
 
@@ -41,7 +41,7 @@ test("rejects a wrong-length private key and leaves the caller's buffer unmodifi
   expect(buffer).toEqual(new Uint8Array(31).fill(7));
 });
 
-test("a using declaration locks the session when its scope exits", async () => {
+test("a using declaration ends the session when its scope exits", async () => {
   let escaped: ReturnType<typeof createEd25519SigningSession> | undefined;
 
   {
@@ -54,7 +54,7 @@ test("a using declaration locks the session when its scope exits", async () => {
 
   await expect(
     escaped.signMessage(new TextEncoder().encode("mera demo")),
-  ).rejects.toMatchObject({ code: "SESSION_LOCKED" });
+  ).rejects.toMatchObject({ code: "SESSION_ENDED" });
 });
 
 test("signs the message bytes read at call time, not later mutations", async () => {

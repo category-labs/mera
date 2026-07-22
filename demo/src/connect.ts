@@ -33,7 +33,7 @@ type Account = {
  *
  * The account's key is derived at connect and the BIP-39 seed it came from
  * is zeroed before connect returns, so the wallet holds no secret beyond the
- * account's signing session. `lock()` zeroes that session's key.
+ * account's signing session. `lock()` ends that session, zeroing its key.
  */
 type ConnectedWallet = {
   mode: AccountMode;
@@ -85,7 +85,7 @@ function buildPasskeyWallet(
     mode: "passkey",
     credentialId,
     account,
-    lock: () => account.session.lock(),
+    lock: () => account.session.end(),
   };
 }
 
@@ -187,7 +187,7 @@ function vaultWalletFromPhrase(phrase: string): ConnectedWallet {
   return {
     mode: "vault",
     account,
-    lock: () => account.session.lock(),
+    lock: () => account.session.end(),
   };
 }
 
@@ -261,8 +261,8 @@ function describeError(error: unknown): string {
         return "This browser or authenticator doesn't support the WebAuthn PRF extension this demo needs.";
       case "DECRYPT_FAILED":
         return "Couldn't unlock the account with that passkey.";
-      case "SESSION_LOCKED":
-        return "The session is locked. Connect again.";
+      case "SESSION_ENDED":
+        return "The session has ended. Connect again.";
       case "CRYPTO_UNAVAILABLE":
         return "This browser doesn't provide the Web Crypto APIs this demo needs.";
       case "PASSKEY_OPERATION_FAILED":

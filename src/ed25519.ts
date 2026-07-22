@@ -26,16 +26,16 @@ function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array<ArrayBuffer> {
 }
 
 /**
- * Creates a lockable signing session from an Ed25519 private key.
+ * Creates a signing session from an Ed25519 private key.
  *
  * @param options - Signing session inputs; fields are documented on {@link CreateSigningSessionOptions}.
- * @returns An unlocked Ed25519 signing session.
+ * @returns A live Ed25519 signing session.
  * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not 32 bytes.
  */
 function createEd25519SigningSession({
   privateKey,
 }: CreateSigningSessionOptions): Ed25519SigningSession {
-  const { use, lock, publicKey } = createSigningKey(
+  const { use, end, publicKey } = createSigningKey(
     privateKey,
     getEd25519PublicKey,
   );
@@ -45,8 +45,8 @@ function createEd25519SigningSession({
     async signMessage(message: Uint8Array): Promise<Uint8Array<ArrayBuffer>> {
       return new Uint8Array(ed25519.sign(message, use()));
     },
-    lock,
-    [Symbol.dispose]: lock,
+    end,
+    [Symbol.dispose]: end,
   };
 }
 

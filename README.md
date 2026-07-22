@@ -2,7 +2,7 @@
 
 Accounts on any chain and platform, from a passkey.
 
-mera is an experimental TypeScript library for building passkey accounts. It gives applications authenticator-bound entropy and lockable signing sessions while leaving account derivation, recovery, storage, and product flows under application control.
+mera is an experimental TypeScript library for building passkey accounts. It gives applications authenticator-bound entropy and signing sessions that zero their keys when ended, while leaving account derivation, recovery, storage, and product flows under application control.
 
 Developers can use mera to:
 

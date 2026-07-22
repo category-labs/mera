@@ -4,7 +4,7 @@
  * - `PASSKEY_OPERATION_FAILED`: WebAuthn failed, was cancelled, returned an unexpected credential, or the credential API is unavailable.
  * - `CRYPTO_UNAVAILABLE`: the page is not in a secure context, or the runtime lacks Web Crypto.
  * - `PRF_UNAVAILABLE`: the authenticator did not enable or return a usable 32-byte WebAuthn PRF output.
- * - `SESSION_LOCKED`: a signing call was made after `lock()`.
+ * - `SESSION_ENDED`: a signing call was made after `end()`.
  * - `DECRYPT_FAILED`: AES-GCM authentication failed (wrong key or tampered nonce/ciphertext).
  * - `INPUT_INVALID`: a caller-supplied value at a public boundary did not satisfy a length, range, encoding, or curve (scalar or point) constraint.
  * - `VAULT_FORMAT_INVALID`: untrusted vault data (JSON or object) was malformed, missing required fields, used a non-canonical encoding, or declared an unsupported version.
@@ -13,7 +13,7 @@ type MeraErrorCode =
   | "PASSKEY_OPERATION_FAILED"
   | "CRYPTO_UNAVAILABLE"
   | "PRF_UNAVAILABLE"
-  | "SESSION_LOCKED"
+  | "SESSION_ENDED"
   | "DECRYPT_FAILED"
   | "INPUT_INVALID"
   | "VAULT_FORMAT_INVALID";

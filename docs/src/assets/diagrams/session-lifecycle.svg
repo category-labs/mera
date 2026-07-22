@@ -8,10 +8,10 @@
 >
   <title>
     The signing session lifecycle. A private key, derived, decrypted, or
-    imported, is consumed when the session is created. The unlocked session
-    holds the only copy of the key and signs on request. Calling lock() zeroes
-    the session's key copy; the locked state is permanent, and a new signature
-    needs a new session.
+    imported, is consumed when the session is created. The live session holds
+    the only copy of the key and signs on request. Calling end() zeroes the
+    session's key copy; the ended state is permanent, and a new signature needs
+    a new session.
   </title>
   <defs>
     <marker
@@ -34,7 +34,7 @@
   <text x="332" y="126" class="d-sub">create the session</text>
 
   <rect class="d-secret" x="220" y="168" width="200" height="64" rx="16" />
-  <text x="320" y="205" text-anchor="middle">Unlocked</text>
+  <text x="320" y="205" text-anchor="middle">Live</text>
 
   <path
     class="d-edge"
@@ -44,8 +44,8 @@
   <text x="490" y="203" class="d-sub">signs on request</text>
 
   <path class="d-edge" d="M320 232 V344" marker-end="url(#sl-arrow)" />
-  <text x="332" y="292" class="d-mono">lock()</text>
+  <text x="332" y="292" class="d-mono">end()</text>
 
   <rect class="d-node" x="220" y="348" width="200" height="64" rx="16" />
-  <text x="320" y="385" text-anchor="middle">Locked</text>
+  <text x="320" y="385" text-anchor="middle">Ended</text>
 </svg>

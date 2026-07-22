@@ -34,7 +34,7 @@ const hash = await client.sendTransaction({
   value: parseEther("0.01"),
 });
 
-session.lock();
+session.end();
 ```
 
 ## Parameters
@@ -46,7 +46,7 @@ The session is positional; `options` is a `ToViemAccountOptions` and may be omit
 - Type: `Secp256k1SigningSession`
 - Required
 
-Unlocked secp256k1 signing session that backs the account. [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) produces one.
+Live secp256k1 signing session that backs the account. [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) produces one.
 
 ### options.nonceManager
 
@@ -89,7 +89,7 @@ Signs a 32-byte hash directly, with no additional hashing, and resolves to the 6
 
 ## Errors
 
-- [`SESSION_LOCKED`](/reference/errors/#session_locked): any signing method rejects with this after `session.lock()`.
+- [`SESSION_ENDED`](/reference/errors/#session_ended): any signing method rejects with this after `session.end()`.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `sign` rejects with this when `hash` is not exactly 32 bytes.
 
 ## Notes

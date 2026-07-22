@@ -13,7 +13,7 @@
     getPasskeyPrfOutput signs in using the stored metadata. The PRF output
     becomes the seed through BIP-39, held in memory for the session, and HD
     derivation by index produces the EVM and Solana signing sessions, ended by
-    lock().
+    end().
   </title>
   <defs>
     <marker
@@ -79,5 +79,5 @@
   <text x="508" y="405" text-anchor="middle">Signing sessions</text>
 
   <path class="d-edge" d="M508 432 V476" marker-end="url(#fr-arrow)" />
-  <text x="520" y="458" class="d-mono">lock()</text>
+  <text x="520" y="458" class="d-mono">end()</text>
 </svg>

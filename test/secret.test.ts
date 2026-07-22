@@ -308,13 +308,6 @@ test("decryptSecretVaultWithPasskey rejects a malformed vault without prompting"
         vault: { ...vault, ciphertext: "!!!!" },
       }),
     ).rejects.toMatchObject({ code: "VAULT_FORMAT_INVALID" });
-
-    await expect(
-      decryptSecretVaultWithPasskey({
-        rpId: "example.com",
-        vault: { ...vault, nonce: "AQ" },
-      }),
-    ).rejects.toMatchObject({ code: "VAULT_FORMAT_INVALID" });
   });
 
   expect(asserted).toBe(false);

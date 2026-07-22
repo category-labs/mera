@@ -49,7 +49,7 @@ Web Crypto is unavailable. In practice this means the page is running outside a 
 
 ### PRF_UNAVAILABLE
 
-The authenticator did not enable PRF, or did not return a usable 32-byte PRF output. On the create path the passkey may already exist ([createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) documents that behavior). [Authenticator support](/authenticator-support/) lists tested compatible stacks.
+The authenticator did not enable PRF, or did not return a usable 32-byte PRF output. [Authenticator support](/authenticator-support/) lists tested compatible stacks.
 
 ### SESSION_LOCKED
 
@@ -65,4 +65,4 @@ A caller-supplied value at a public boundary did not satisfy a length, range, en
 
 ### VAULT_FORMAT_INVALID
 
-Untrusted vault data (JSON text or an object) was malformed, missing required fields, used a non-canonical encoding, or declared an unsupported version. Thrown by [parseSecretVault](/reference/parse-secret-vault/), the boundary for stored vault data, and by [decryptSecretVaultWithPasskey](/reference/decrypt-secret-vault-with-passkey/), which runs the same validation before the assertion.
+Untrusted vault data (JSON text or an object) was malformed, missing required fields, used a non-canonical encoding, or declared an unsupported version.

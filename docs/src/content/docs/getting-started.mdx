@@ -32,11 +32,12 @@ npm install @scure/bip32 @scure/bip39
 
 ## Create a passkey
 
-`createPasskeyWithPrfOutput` creates a passkey and evaluates its PRF in one call. The `rpId` is the relying party ID, the domain the passkey is bound to.
+`createPasskeyWithPrfOutput` creates a passkey and evaluates its PRF in one call.
 
 ```ts
 import { createPasskeyWithPrfOutput } from "@category-labs/mera";
 
+// The relying party ID, the domain the passkey is bound to.
 const rpId = "account.example.com";
 
 const { prfOutput } = await createPasskeyWithPrfOutput({

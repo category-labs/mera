@@ -31,7 +31,7 @@ Every call creates a new passkey.
 
 ## Remember the credential
 
-Store the credential metadata. It holds no key material; its only job is letting the next sign-in pin the exact passkey instead of showing every [discoverable credential](/concepts/passkeys-and-prf/) the authenticator holds for the domain.
+The app can store the credential metadata and pass it back on the next sign-in, so the browser reuses the same passkey instead of offering a choice.
 
 ```ts
 localStorage.setItem(

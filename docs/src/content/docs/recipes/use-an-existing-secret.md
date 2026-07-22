@@ -3,7 +3,12 @@ title: Encrypt an existing secret with a passkey
 description: Encrypt an existing secret into a passkey-protected vault and unlock it later.
 ---
 
-A [secret vault](/concepts/secret-vaults/) encrypts one [recovery phrase](/concepts/entropy-keys-and-accounts/#seed-phrases), private key, or other byte string behind a passkey. This recipe validates a phrase, stores its vault, and decrypts it with explicit zeroing. It requires `@category-labs/mera` and `@scure/bip39` installed, and a place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
+A [secret vault](/concepts/secret-vaults/) encrypts one [recovery phrase](/concepts/entropy-keys-and-accounts/#seed-phrases), private key, or other byte string behind a passkey. This recipe validates a phrase, stores its vault, and decrypts it with explicit zeroing.
+
+Prerequisites:
+
+- `@category-labs/mera` and `@scure/bip39` installed.
+- A place to keep vault JSON (`localStorage` here; a backend or sync service works the same).
 
 ## Validate the phrase
 
@@ -42,7 +47,7 @@ try {
 }
 ```
 
-The `finally` zeroes the caller-owned encoded phrase. A private key is encrypted the same way: pass its raw bytes as `secret` instead of encoded text.
+A private key is encrypted the same way: pass its raw bytes as `secret` instead of encoded text.
 
 ## Unlock
 

@@ -5,7 +5,12 @@ description: Create numbered EVM and Solana accounts from one passkey ceremony, 
 
 import FirstVsReturning from "../../../assets/diagrams/first-vs-returning.svg";
 
-This recipe builds [passkey accounts](/concepts/passkey-accounts/), extending [Getting started](/getting-started/): numbered EVM (Ethereum Virtual Machine) and Solana accounts, credential pinning, one passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) per session, and locking. It requires `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed, plus a [PRF](/concepts/passkeys-and-prf/)-capable authenticator ([authenticator support](/authenticator-support/)). Seeds, derivation paths, and phrases are introduced in [Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/).
+This recipe builds [passkey accounts](/concepts/passkey-accounts/), extending [Getting started](/getting-started/): numbered [EVM](/concepts/entropy-keys-and-accounts/) and Solana accounts, credential pinning, one passkey [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) per session, and locking.
+
+Prerequisites:
+
+- `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed.
+- A [PRF](/concepts/passkeys-and-prf/)-capable authenticator ([authenticator support](/authenticator-support/)).
 
 <FirstVsReturning />
 
@@ -21,8 +26,7 @@ const created = await createPasskeyWithPrfOutput({
   user: { name: "account@example.com", displayName: "Example account" },
 });
 
-// The seed comes from the sign-in ceremony below, so this flow never uses
-// the create-time PRF output; zero it right away.
+// The seed comes from the sign-in ceremony below; this output is unused.
 created.prfOutput.fill(0);
 ```
 
@@ -59,8 +63,7 @@ const { prfOutput, credentialId } = await getPasskeyPrfOutput({
   credential: known,
 });
 
-// The ceremony reports which credential was used; with no stored record,
-// the browser may have offered any discoverable passkey for the domain.
+// With no stored record, the browser may have used any discoverable passkey.
 const record =
   known?.credentialId === credentialId ? known : { credentialId };
 localStorage.setItem("app.derivedCredential", JSON.stringify(record));
@@ -68,7 +71,7 @@ localStorage.setItem("app.derivedCredential", JSON.stringify(record));
 
 ## Hold a seed for the session
 
-Turn the PRF output into a [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed once, zero the output, and keep the seed in memory for the session. The seed is the one secret every account below derives from, so deriving account 3 later is pure HD (hierarchical deterministic) math with no further prompt.
+Turn the PRF output into a [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed once, zero the output, and keep the seed in memory for the session: every account below derives from it without another ceremony.
 
 ```ts
 import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
@@ -80,7 +83,7 @@ prfOutput.fill(0);
 
 ## Derive numbered accounts
 
-EVM accounts follow [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) over the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) Ethereum path, the MetaMask convention. BIP-44 fixes the path shape `m/44'/coin'/account'/change/index`, and 60 is Ethereum's registered coin type:
+EVM accounts follow [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) over the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) Ethereum path:
 
 ```ts
 import {
@@ -90,7 +93,8 @@ import {
 import { HDKey } from "@scure/bip32";
 
 function deriveEvmAccount(seed: Uint8Array, index: number) {
-  const node = HDKey.fromMasterSeed(seed).derive(`m/44'/60'/0'/0/${index}`);
+  const ethereumAccountPath = `m/44'/60'/0'/0/${index}`;
+  const node = HDKey.fromMasterSeed(seed).derive(ethereumAccountPath);
   if (node.privateKey === null) throw new Error("derivation produced no key");
   const session = createSecp256k1SigningSession({
     privateKey: node.privateKey,
@@ -99,7 +103,7 @@ function deriveEvmAccount(seed: Uint8Array, index: number) {
 }
 ```
 
-Solana uses [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md), the [Ed25519](/concepts/entropy-keys-and-accounts/) counterpart of BIP-32. The path is `m/44'/501'/{index}'/0'`, the one Phantom and Solflare use, and 501 is Solana's registered coin type. A hardened step is one that requires the parent private key, and Ed25519 supports only hardened steps, so the implementation is a short chain of HMAC (keyed hash) calls:
+Solana uses [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md), the [Ed25519](/concepts/entropy-keys-and-accounts/) counterpart of BIP-32, and its derivation is a short chain of HMAC (keyed hash) calls:
 
 ```ts
 import {
@@ -111,8 +115,10 @@ import { sha512 } from "@noble/hashes/sha2.js";
 import { utf8ToBytes } from "@noble/hashes/utils.js";
 
 function deriveSolanaSeed(seed: Uint8Array, index: number): Uint8Array {
+  // The SLIP-0010 path m/44'/501'/{index}'/0'; every step is hardened.
+  const solanaAccountPath = [44, 501, index, 0];
   let i = hmac(sha512, utf8ToBytes("ed25519 seed"), seed);
-  for (const step of [44, 501, index, 0]) {
+  for (const step of solanaAccountPath) {
     const data = new Uint8Array(1 + 32 + 4);
     data.set(i.slice(0, 32), 1);
     new DataView(data.buffer).setUint32(33, (step + 0x80000000) >>> 0, false);

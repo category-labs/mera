@@ -3,9 +3,14 @@ title: Send a transaction with viem
 description: Sign in with a passkey, derive the first EVM account, and send a transaction through viem.
 ---
 
-This recipe turns a passkey sign-in into a sent transaction. Prerequisites: `@category-labs/mera`, `viem`, `@scure/bip32`, and `@scure/bip39` installed, a [PRF](/concepts/passkeys-and-prf/)-capable authenticator ([authenticator support](/authenticator-support/)), an existing passkey ([Create passkey accounts](/recipes/create-passkey-accounts/) covers the first visit), and test funds on the sending address.
+This recipe turns a passkey sign-in into a sent transaction. [viem](https://viem.sh) is a TypeScript client library for [EVM](/concepts/entropy-keys-and-accounts/) chains; [toViemAccount](/reference/to-viem-account/) adapts a [signing session](/concepts/signing-sessions/) into the account shape viem accepts, so viem signs and broadcasts while the key stays in the session.
 
-[viem](https://viem.sh) is a TypeScript client library for EVM chains (chains that run the Ethereum Virtual Machine). [toViemAccount](/reference/to-viem-account/) adapts a [signing session](/concepts/signing-sessions/) into the account shape viem accepts, so viem signs and broadcasts while the key stays in the session.
+Prerequisites:
+
+- `@category-labs/mera`, `viem`, `@scure/bip32`, and `@scure/bip39` installed.
+- A [PRF](/concepts/passkeys-and-prf/)-capable authenticator ([authenticator support](/authenticator-support/)).
+- An existing passkey ([Create passkey accounts](/recipes/create-passkey-accounts/) covers the first visit).
+- Test funds on the sending address.
 
 ## Sign in
 
@@ -21,17 +26,19 @@ The call runs one ceremony, the only prompt in this recipe. [Create passkey acco
 
 ## Derive the key
 
-The seed comes from the same mapping [Create passkey accounts](/recipes/create-passkey-accounts/) uses: the PRF output becomes [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) entropy, the seed feeds [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki), and `m/44'/60'/0'/0/0` is the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) Ethereum path ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/) introduces the standards).
+The seed and path come from the same mapping [Create passkey accounts](/recipes/create-passkey-accounts/) uses ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/) introduces the standards).
 
 ```ts
 import { HDKey } from "@scure/bip32";
 import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 
+const firstEthereumAccountPath = "m/44'/60'/0'/0/0";
+
 const seed = mnemonicToSeedSync(entropyToMnemonic(prfOutput, wordlist));
 prfOutput.fill(0);
 
-const node = HDKey.fromMasterSeed(seed).derive("m/44'/60'/0'/0/0");
+const node = HDKey.fromMasterSeed(seed).derive(firstEthereumAccountPath);
 if (node.privateKey === null) throw new Error("derivation produced no key");
 ```
 

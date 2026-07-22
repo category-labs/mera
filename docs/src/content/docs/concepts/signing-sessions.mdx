@@ -5,27 +5,23 @@ description: How a session owns its private key, why signing never prompts, and 
 
 import SessionLifecycle from "../../../assets/diagrams/session-lifecycle.svg";
 
-A signing session holds one private key and signs with it until it is locked.
+A signing session holds a private key and signs with it until it is locked.
 
-Two constructors exist, one per [signature scheme](/concepts/entropy-keys-and-accounts/). [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) signs 32-byte digests. A digest is the fixed-length hash of the content to sign. [createEd25519SigningSession](/reference/create-ed25519-signing-session/) signs arbitrary-length messages. Both hold and destroy the key the same way.
+Two constructors exist, one per [signature scheme](/concepts/entropy-keys-and-accounts/). [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) signs 32-byte digests. [createEd25519SigningSession](/reference/create-ed25519-signing-session/) signs arbitrary-length messages.
 
 ## Independent of passkeys
 
-A session's input is a raw private key, derived from PRF output, decrypted from a vault, or imported from elsewhere. The step in between, turning 32 bytes of [entropy](/concepts/entropy-keys-and-accounts/) into a chain-specific private key, is app-owned by design. [Passkey accounts](/concepts/passkey-accounts/) and [secret vaults](/concepts/secret-vaults/) describe the two sources of [key material](/concepts/entropy-keys-and-accounts/#deterministic-derivation).
+A session's input is a raw private key, derived from PRF output, decrypted from a vault, or imported from elsewhere.
 
-Because a session never contacts an authenticator, signing never prompts: the one user-verification prompt happened in the [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) that produced the entropy, and it covers any number of signatures.
+A session uses an in-memory private key and doesn't contact an authenticator.
 
 ## The lifecycle
 
-Construction copies the key into a session-owned snapshot. Locking zeroes the session's copy and is permanent. A locked session throws on signing, and new signatures require a new session. An unlock path would mean the key still existed somewhere after `lock()`.
+Construction copies the key into a session-owned snapshot. Locking zeroes the session's copy and is permanent. A locked session throws on signing, and new signatures require a new session.
 
 Sessions also support `using` declarations: disposal calls `lock()` when the scope exits, so a session can be bound to a block instead of a manual call.
 
 <SessionLifecycle />
-
-## The open window
-
-Between construction and lock, a compromised runtime can request signatures without reading the key. The [security model](/concepts/security-model/) covers the runtime trust boundary in full.
 
 ## How long to keep a session
 
@@ -35,6 +31,6 @@ An app that signs frequently may keep the session active for a burst of work and
 
 ## See also
 
-- [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) and [createEd25519SigningSession](/reference/create-ed25519-signing-session/): the exact copy, zeroing, and locking semantics.
+- [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) and [createEd25519SigningSession](/reference/create-ed25519-signing-session/)
 - [toViemAccount](/reference/to-viem-account/): a viem account backed by a secp256k1 session.
 - [Getting started](/getting-started/): the ceremony-to-signature path in code.

@@ -1,7 +1,7 @@
 {
   "name": "@category-labs/mera",
   "version": "0.1.0",
-  "description": "Primitive-first passkey-backed signing utilities for secp256k1 (EVM) and Ed25519 (Solana).",
+  "description": "Accounts on any chain and platform, from a passkey",
   "keywords": [
     "passkey",
     "webauthn",

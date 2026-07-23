@@ -132,8 +132,8 @@ export default defineConfig({
           items: [
             "concepts/passkey-accounts",
             "concepts/signing-sessions",
-            "concepts/secret-vaults",
             "concepts/security-model",
+            "concepts/secret-vaults",
             {
               label: "Foundations",
               items: [

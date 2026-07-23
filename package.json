@@ -43,7 +43,7 @@
     "LICENSE-MIT",
     "LICENSE-APACHE"
   ],
-  "private": true,
+  "private": false,
   "publishConfig": {
     "access": "public"
   },

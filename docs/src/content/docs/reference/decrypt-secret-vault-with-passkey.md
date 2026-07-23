@@ -70,8 +70,6 @@ WebAuthn timeout in milliseconds.
 
 ## Notes
 
-The vault is copied before the assertion starts. The transient PRF output is zeroed before the function finishes, even when decryption fails.
-
 The WebAuthn challenge is generated internally.
 
 ## See also

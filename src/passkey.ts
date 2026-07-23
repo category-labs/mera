@@ -24,10 +24,7 @@ type CreatePasskeyWithPrfOutputOptions = {
    * fallback assertion can target the same relying party.
    */
   rp: PublicKeyCredentialRpEntity & { id: string };
-  /**
-   * User identity passed to WebAuthn. `id` is copied before async WebAuthn
-   * work starts.
-   */
+  /** User identity passed to WebAuthn. */
   user: {
     /**
      * User handle stored for the discoverable credential. Must be 1 to 64
@@ -45,7 +42,6 @@ type CreatePasskeyWithPrfOutputOptions = {
   /**
    * 32-byte PRF salt evaluated during creation, or by the fallback assertion.
    * Defaults to the fixed salt documented on {@link getPasskeyPrfOutput}.
-   * Copied before async WebAuthn work starts.
    */
   prfSalt?: Uint8Array;
 };
@@ -62,7 +58,7 @@ type GetPasskeyPrfOutputOptions = {
   credential?: PasskeyCredentialMetadata;
   /**
    * PRF salt as 32 raw bytes. Defaults to the fixed salt documented on
-   * {@link getPasskeyPrfOutput}. Copied before async WebAuthn work starts.
+   * {@link getPasskeyPrfOutput}.
    */
   prfSalt?: Uint8Array;
   /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */

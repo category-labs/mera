@@ -46,7 +46,7 @@ The AES-GCM ciphertext with its 16-byte authentication tag appended, base64url. 
 
 ## What is deliberately absent
 
-The encryption key and the PRF output are never stored; both exist only transiently in memory. The rpId is also absent; the unlock assertion supplies it.
+The encryption key and the PRF output are never stored. The rpId is also absent; the unlock assertion supplies it.
 
 The credential ID and salt are stored but not authenticated: neither is supplied as AES-GCM additional authenticated data, so a vault is cryptographically bound to its PRF output only. This is why each secret needs a fresh salt: vaults that share a PRF output share an encryption key.
 

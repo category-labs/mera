@@ -42,7 +42,7 @@ Credential metadata that restricts the assertion to one passkey: a `credentialId
 - Type: `Uint8Array`
 - Optional; defaults to mera's fixed salt
 
-PRF salt as 32 raw bytes. An explicit value supports custom PRF namespaces. It is copied before use.
+PRF salt as 32 raw bytes. An explicit value supports custom PRF namespaces.
 
 ### options.timeout
 

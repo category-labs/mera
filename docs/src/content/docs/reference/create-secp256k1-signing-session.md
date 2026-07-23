@@ -47,7 +47,7 @@ A live `Secp256k1SigningSession`.
 
 ### publicKey
 
-`Uint8Array`, 65 bytes, the uncompressed secp256k1 public key with the `0x04` prefix. Derived from the same owned snapshot used for signing, so the two cannot diverge.
+`Uint8Array`, 65 bytes, the uncompressed secp256k1 public key with the `0x04` prefix.
 
 ### signDigest(digest32)
 

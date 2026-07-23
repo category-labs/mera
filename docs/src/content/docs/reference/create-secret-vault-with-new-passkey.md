@@ -72,8 +72,6 @@ WebAuthn timeout in milliseconds, applied to each ceremony.
 
 ## Notes
 
-The secret is copied before either ceremony begins. Internal secret and PRF-output copies are zeroed before the function finishes, even when it fails.
-
 If the fallback ceremony or vault encryption fails after creation, the passkey remains on the authenticator and the error does not contain its metadata.
 
 ## See also

@@ -1,3 +1,7 @@
+# AGENTS.md
+
+This file provides guidance for AI and LLM coding agents working in this repository.
+
 ### Core Values
 
 Simplicity, elegance, and correctness are the bar for everything here — code, documentation, tests, and examples alike.

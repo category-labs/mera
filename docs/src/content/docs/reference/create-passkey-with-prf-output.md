@@ -50,7 +50,7 @@ Human-readable display name for the authenticator UI.
 - Type: `Uint8Array`
 - Optional; a fresh 32-byte random handle is generated per call when omitted
 
-User handle stored with the discoverable credential. Must be 1 to 64 bytes when provided (WebAuthn's user-handle limit). The generated handle is not correlated with an app account.
+User handle stored with the discoverable credential. Must be 1 to 64 bytes when provided (WebAuthn's user-handle limit).
 
 ### options.prfSalt
 

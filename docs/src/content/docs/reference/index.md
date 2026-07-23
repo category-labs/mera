@@ -3,8 +3,6 @@ title: API reference
 description: The exported functions, the vault storage format, and the error codes.
 ---
 
-Types are documented on the pages of the functions that produce or accept them.
-
 ## Passkeys
 
 - [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/): creates a passkey and returns its deterministic PRF output in one call.
@@ -13,7 +11,9 @@ Types are documented on the pages of the functions that produce or accept them.
 ## Signing sessions
 
 - [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/): creates a signing session from a secp256k1 private key.
+- [Secp256k1SigningSession](/reference/secp256k1-signing-session/): the returned session.
 - [createEd25519SigningSession](/reference/create-ed25519-signing-session/): creates a signing session from an Ed25519 private key.
+- [Ed25519SigningSession](/reference/ed25519-signing-session/): the returned session.
 - [toViemAccount](/reference/to-viem-account/): adapts a secp256k1 signing session into a viem local account.
 
 ## Secret vault

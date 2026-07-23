@@ -16,7 +16,7 @@ type SigningKey = {
 };
 
 /**
- * Copies a private key into one session-owned snapshot and derives its public
+ * Copies a private key into a session-owned snapshot and derives its public
  * key.
  *
  * The snapshot is zeroed by `end` or, when `derivePublicKey` throws, before

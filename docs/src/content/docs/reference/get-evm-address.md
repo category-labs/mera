@@ -43,7 +43,3 @@ An `EvmAddress`: the EIP-55 mixed-case checksummed address as a `0x`-prefixed st
 ## Errors
 
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `publicKey` is not valid secp256k1 (wrong length, wrong prefix, or not a point on the curve).
-
-## See also
-
-- [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/): the session whose `publicKey` this typically receives.

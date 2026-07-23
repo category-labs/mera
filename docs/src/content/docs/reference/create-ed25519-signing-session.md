@@ -39,34 +39,17 @@ session.end();
 - Type: `Uint8Array`
 - Required
 
-Ed25519 private key (the 32-byte seed). Copied into one session-owned snapshot.
+Ed25519 private key (the 32-byte seed).
 
 ## Returns
 
-A live `Ed25519SigningSession`.
-
-### publicKey
-
-`Uint8Array`, the 32-byte Ed25519 public key.
-
-### signMessage(message)
-
-Signs an arbitrary-length message and resolves to the 64-byte Ed25519 signature (`R || s`). Hashing happens inside Ed25519 itself; the caller passes the raw message, never a digest.
-
-### end()
-
-Zeroes the session-owned private-key copy and permanently ends the session; later signing throws [`SESSION_ENDED`](/reference/errors/#session_ended).
-
-### [Symbol.dispose]()
-
-Calls `end`, so a `using` declaration ends the session when its scope exits.
+A live [`Ed25519SigningSession`](/reference/ed25519-signing-session/).
 
 ## Errors
 
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `privateKey` is not 32 bytes.
-- [`SESSION_ENDED`](/reference/errors/#session_ended): `signMessage` was called after `end`.
 
 ## See also
 
 - [getSolanaAddress](/reference/get-solana-address/): the address for `session.publicKey`.
-- [Signing sessions](/concepts/signing-sessions/): how a session owns the key, the lifecycle, and what an active session exposes.
+- [Signing sessions](/concepts/signing-sessions/): how a session owns the key, and the lifecycle.

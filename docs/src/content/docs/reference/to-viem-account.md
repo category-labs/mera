@@ -43,7 +43,7 @@ The session is positional; `options` is a `ToViemAccountOptions` and may be omit
 
 ### session
 
-- Type: `Secp256k1SigningSession`
+- Type: [`Secp256k1SigningSession`](/reference/secp256k1-signing-session/)
 - Required
 
 Live secp256k1 signing session that backs the account. [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/) produces one.
@@ -94,7 +94,7 @@ Signs a 32-byte hash directly, with no additional hashing, and resolves to the 6
 
 ## Notes
 
-Signatures are [low-S](/reference/create-secp256k1-signing-session/#signdigestdigest32), which EVM chains require since [EIP-2](https://eips.ethereum.org/EIPS/eip-2); `signDigest` enforces this.
+Signatures are [low-S](/reference/secp256k1-signing-session/#signdigestdigest32), which EVM chains require since [EIP-2](https://eips.ethereum.org/EIPS/eip-2).
 
 ## See also
 

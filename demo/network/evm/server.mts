@@ -52,6 +52,12 @@ const MAX_BODY_BYTES = 128 * 1024;
 // Mixed mining mines transactions instantly and adds an interval block every
 // second, so the head timestamp, and with it the stock price, moves at the
 // finest pace a second-granular timestamp allows.
+// That pace also means anvil, which by default keeps every block and a state
+// snapshot per block in memory, grows without bound and gets killed by the
+// platform's memory cap within a day. The pruning flags cap it: keep only the
+// latest state and the last 256 blocks with transactions. Nothing reads
+// further back; the demo's oldest lookup is a receipt polled seconds after
+// the send.
 const anvil = spawn(
   "anvil",
   [
@@ -64,6 +70,9 @@ const anvil = spawn(
     "--mixed-mining",
     "--block-time",
     "1",
+    "--prune-history",
+    "--transaction-block-keeper",
+    "256",
   ],
   { stdio: ["ignore", "inherit", "inherit"] },
 );

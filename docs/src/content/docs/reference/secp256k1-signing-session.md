@@ -25,7 +25,7 @@ Signs a 32-byte digest without prehashing it and resolves to a `Secp256k1Signatu
 
 Zeroes the session-owned private-key copy and permanently ends the session; later signing throws [`SESSION_ENDED`](/reference/errors/#session_ended).
 
-### [Symbol.dispose]()
+### \[Symbol.dispose]()
 
 Calls `end`, so a `using` declaration ends the session when its scope exits:
 

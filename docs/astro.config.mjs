@@ -130,12 +130,17 @@ export default defineConfig({
         {
           label: "Concepts",
           items: [
-            "concepts/passkeys-and-prf",
-            "concepts/security-model",
             "concepts/passkey-accounts",
             "concepts/signing-sessions",
             "concepts/secret-vaults",
-            "concepts/entropy-keys-and-accounts",
+            "concepts/security-model",
+            {
+              label: "Foundations",
+              items: [
+                "concepts/passkeys-and-prf",
+                "concepts/entropy-keys-and-accounts",
+              ],
+            },
           ],
         },
         {

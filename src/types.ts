@@ -89,8 +89,6 @@ type CreateSigningSessionOptions = {
   /**
    * Curve private key. Must be exactly 32 bytes and, for secp256k1, a valid
    * scalar.
-   *
-   * Copied into one session-owned snapshot.
    */
   privateKey: Uint8Array;
 };

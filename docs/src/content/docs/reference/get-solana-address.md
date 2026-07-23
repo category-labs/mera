@@ -43,7 +43,3 @@ A `SolanaAddress`, a branded `string` type. TypeScript cannot check base58 the w
 ## Errors
 
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `publicKey` is not 32 bytes.
-
-## See also
-
-- [createEd25519SigningSession](/reference/create-ed25519-signing-session/): the session whose `publicKey` this typically receives.

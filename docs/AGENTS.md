@@ -27,7 +27,7 @@ When content feels misplaced, move it and link to it: a reference page that star
 
 ## Reference pages
 
-One exported function per page. A new public export means a new page and a new sidebar entry in `astro.config.mjs`. A small export inseparable from a larger contract is documented on that contract's page instead.
+One exported function per page. A new public export means a new page and a new sidebar entry in `astro.config.mjs`. A small export inseparable from a larger contract is documented on that contract's page instead. A returned object with members of its own (a signing session) gets a page titled with the exported type name, with the members under `## Members`; the producing function's Returns section links to it.
 
 Fixed section order:
 

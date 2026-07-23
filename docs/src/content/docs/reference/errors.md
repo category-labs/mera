@@ -53,11 +53,11 @@ The authenticator did not enable PRF, or did not return a usable 32-byte PRF out
 
 ### SESSION_ENDED
 
-A signing call was made after the session's `end()`. An ended session never signs again; new signatures require a new session built from fresh key material.
+A signing call was made after the session's `end()`.
 
 ### DECRYPT_FAILED
 
-[AES-GCM](/concepts/secret-vaults/#how-a-vault-works) authentication failed while decrypting a vault: wrong key material or a tampered nonce/ciphertext pair. The two cases are indistinguishable by design; GCM authenticates before it decrypts.
+[AES-GCM](/concepts/secret-vaults/#how-a-vault-works) authentication failed while decrypting a vault: wrong key material or a tampered nonce/ciphertext pair.
 
 ### INPUT_INVALID
 

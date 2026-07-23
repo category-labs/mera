@@ -22,7 +22,7 @@ A secret vault is a versioned JSON object containing one passkey-encrypted secre
 
 ### version
 
-Always `1`. [parseSecretVault](/reference/parse-secret-vault/) rejects anything else, including future versions it does not understand.
+Always `1`. [parseSecretVault](/reference/parse-secret-vault/) rejects anything else.
 
 ### credential.credentialId
 

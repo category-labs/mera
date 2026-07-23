@@ -35,7 +35,7 @@ Relying party ID for the [WebAuthn](https://www.w3.org/TR/webauthn-3/) [assertio
 - Type: `PasskeyCredentialMetadata`
 - Optional; when omitted, WebAuthn may choose any discoverable credential for the relying party
 
-Credential metadata that restricts the assertion to one passkey: a `credentialId` in canonical unpadded base64url, plus the `transports` reported when it was created. An empty `credentialId` is rejected rather than passed through, because WebAuthn would treat it as no restriction at all and silently widen the assertion to any discoverable passkey.
+Credential metadata that restricts the assertion to one passkey: a `credentialId` in canonical unpadded base64url, plus the `transports` reported when it was created.
 
 ### options.prfSalt
 
@@ -64,7 +64,7 @@ WebAuthn timeout in milliseconds.
 
 ## Notes
 
-When `prfSalt` is omitted, the default salt is used: `sha256("mera.prf.salt.v1")`. The salt will not change across library versions, and another implementation can reproduce the output from the same constant. The salt encodes no account selection; that happens in the derivation scheme the app applies to the PRF output.
+When `prfSalt` is omitted, the default salt is used: `sha256("mera.prf.salt.v1")`. The salt will not change across library versions, and another implementation can reproduce the output from the same constant.
 
 The assertion requires user verification, and the requirement is not configurable ([Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism).
 

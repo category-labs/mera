@@ -28,15 +28,11 @@ The secret vault as JSON text or an untrusted object. Strings are JSON-parsed fi
 
 ## Returns
 
-A validated `PasskeySecretVault`. Only version 1 vaults are accepted. The credential ID, PRF salt, nonce, and ciphertext are validated as canonical base64url and length-checked (salt 32 bytes, nonce 12 bytes, ciphertext at least the 16-byte GCM tag). Unknown fields are dropped: the returned object carries the v1 schema fields and nothing else.
+A validated `PasskeySecretVault`. Its credential ID, PRF salt, nonce, and ciphertext are canonical base64url with checked lengths (salt 32 bytes, nonce 12 bytes, ciphertext at least the 16-byte GCM tag). Unknown fields are dropped.
 
 ## Errors
 
 - [`VAULT_FORMAT_INVALID`](/reference/errors/#vault_format_invalid): the required structure, version, or encoded data is invalid. The underlying parse failure, when there is one, is attached as `cause`.
-
-## Notes
-
-Rejecting an unknown version keeps an old library from misreading data written by a newer format.
 
 ## See also
 

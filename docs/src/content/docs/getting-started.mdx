@@ -8,7 +8,7 @@ import GettingStartedOverview from "../../assets/diagrams/getting-started-overvi
 What mera does:
 
 - Create a passkey and get 32 secret bytes from it through the [PRF extension](/concepts/passkeys-and-prf/).
-- Use those bytes as [entropy](/concepts/entropy-keys-and-accounts/) to derive accounts.
+- [Derive accounts](/concepts/entropy-keys-and-accounts/) from those bytes.
 - Sign with a [signing session](/concepts/signing-sessions/).
 
 <GettingStartedOverview />
@@ -50,7 +50,7 @@ mera uses a stable PRF salt for this call, so a later sign-in reproduces the sam
 
 ## Derive an account
 
-The PRF output is entropy, the root of every account. This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) to a phrase and a [seed](/concepts/entropy-keys-and-accounts/#deterministic-derivation), then derives keys with [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki).
+The PRF output is the root of every account. This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) to a phrase and a [seed](/concepts/entropy-keys-and-accounts/#deterministic-derivation), then derives keys with [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki).
 
 ```ts
 import { HDKey } from "@scure/bip32";

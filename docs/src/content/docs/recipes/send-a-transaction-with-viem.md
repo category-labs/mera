@@ -17,7 +17,7 @@ const { prfOutput } = await getPasskeyPrfOutput({ rpId });
 
 ## Derive the key
 
-The seed and path come from the same mapping [Create passkey accounts](/recipes/create-passkey-accounts/) uses ([Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/) introduces the standards).
+The seed and path come from the same mapping [Create passkey accounts](/recipes/create-passkey-accounts/) uses ([Keys and accounts](/concepts/entropy-keys-and-accounts/) introduces the standards).
 
 ```ts
 import { HDKey } from "@scure/bip32";

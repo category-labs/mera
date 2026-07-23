@@ -76,10 +76,6 @@ WebAuthn timeout in milliseconds.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the page is not in a secure context, or the runtime lacks Web Crypto.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
-## Notes
-
-The secret and supplied credential metadata are copied before the ceremony begins. Internal secret and PRF-output copies are zeroed before the function finishes, even when it fails.
-
 ## See also
 
 - [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/): create the first vault together with a passkey.

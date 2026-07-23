@@ -50,14 +50,14 @@ Human-readable display name for the authenticator UI.
 - Type: `Uint8Array`
 - Optional; a fresh 32-byte random handle is generated per call when omitted
 
-User handle stored with the discoverable credential. Must be 1 to 64 bytes when provided (WebAuthn's user-handle limit). The generated handle is not correlated with an app account. Copied before use.
+User handle stored with the discoverable credential. Must be 1 to 64 bytes when provided (WebAuthn's user-handle limit). The generated handle is not correlated with an app account.
 
 ### options.prfSalt
 
 - Type: `Uint8Array`
 - Optional; defaults to mera's fixed salt
 
-32-byte PRF salt evaluated during creation or by the fallback [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts). An explicit value supports custom PRF namespaces. It is copied before async WebAuthn work starts.
+32-byte PRF salt evaluated during creation or by the fallback [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts). An explicit value supports custom PRF namespaces.
 
 ### options.timeout
 
@@ -68,7 +68,7 @@ WebAuthn timeout in milliseconds, applied to each ceremony.
 
 ## Returns
 
-`Promise<CreatePasskeyWithPrfOutputResult>`. Credential metadata (`credentialId`, `transports` when reported) plus the 32-byte `prfSalt` that was evaluated and the 32-byte `prfOutput`. The returned salt is a fresh copy.
+`Promise<CreatePasskeyWithPrfOutputResult>`. Credential metadata (`credentialId`, `transports` when reported) plus the 32-byte `prfSalt` that was evaluated and the 32-byte `prfOutput`.
 
 ## Errors
 

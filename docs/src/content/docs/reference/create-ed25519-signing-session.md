@@ -47,7 +47,7 @@ A live `Ed25519SigningSession`.
 
 ### publicKey
 
-`Uint8Array`, the 32-byte Ed25519 public key. Derived from the same owned snapshot used for signing, so the two cannot diverge.
+`Uint8Array`, the 32-byte Ed25519 public key.
 
 ### signMessage(message)
 

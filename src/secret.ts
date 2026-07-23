@@ -190,9 +190,7 @@ function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
  * invokes `navigator.credentials.get()`, which shows a second.
  *
  * A fresh random PRF salt is generated internally and stored in the returned
- * vault. `secret` is copied and validated before either ceremony starts. The
- * internal secret and PRF output are zeroed before the function finishes, even
- * when it fails.
+ * vault.
  *
  * If the fallback ceremony or vault encryption fails, the passkey from the
  * completed creation ceremony still exists on the authenticator, but the
@@ -237,9 +235,7 @@ async function createSecretVaultWithNewPasskey({
  * prompt.
  *
  * A fresh random PRF salt is generated internally and stored in the returned
- * vault. `secret` and `credential` are copied before the ceremony starts. The
- * internal secret and PRF output are zeroed before the function finishes, even
- * when it fails.
+ * vault.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when `secret` is empty, or `credential.credentialId` is empty or not canonical base64url.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
@@ -420,9 +416,6 @@ type DecryptSecretVaultWithPasskeyOptions = {
  * @remarks
  * Invokes `navigator.credentials.get()` and shows one user-verification
  * prompt. The assertion is restricted to the credential stored in the vault.
- *
- * The internal PRF output is zeroed before the function finishes, even when
- * decryption fails.
  * @throws MeraError with code `VAULT_FORMAT_INVALID` when the vault's required structure, version, or encoded data is invalid.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `DECRYPT_FAILED` when AES-GCM authentication fails.

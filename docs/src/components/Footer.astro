@@ -1,0 +1,19 @@
+---
+// Starlight's default footer followed by the legal links. The legal block
+// is a <footer> so the landing's hide rule in Hero.astro covers it too.
+import Default from "@astrojs/starlight/components/Footer.astro";
+import LegalLinks from "./LegalLinks.astro";
+---
+
+<Default />
+<footer class="legal">
+  <LegalLinks />
+</footer>
+
+<style>
+  .legal {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--sl-color-hairline);
+  }
+</style>

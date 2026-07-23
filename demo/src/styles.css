@@ -1,0 +1,609 @@
+:root {
+  color-scheme: light;
+
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #f1f2f5;
+  --text: #0f1115;
+  --muted: #6b7280;
+  --border: rgba(15, 17, 21, 0.1);
+  --field: #ffffff;
+  --accent: #f50;
+  --accent-text: #ffffff;
+  --ok: #15a34a;
+  --error: #dc2626;
+  --up: #15a34a;
+  --down: #dc2626;
+  --shadow:
+    0 1px 2px rgba(15, 17, 21, 0.04), 0 12px 32px rgba(15, 17, 21, 0.06);
+
+  font-family: "Satoshi", -apple-system, system-ui, sans-serif;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* body and `#root` form a flex-column chain that hands the viewport height down
+   to `.app`, so `.app` can pin its footer link to the bottom of the page.
+   Horizontal centering stays on `.app` itself (`margin-inline: auto`): React
+   mounts into `<div id="root">` between body and `.app`, so centering applied
+   to body would center that full-width container instead. */
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.app {
+  margin: 48px auto 0;
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 18px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+/* Title row: app name on the left, account chip on the right. */
+.app-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.account-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+/* Network line under the address: the dot turns green once the network
+   context resolves. */
+.chip-network {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 550;
+  color: var(--muted);
+}
+
+.chip-network::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.chip-network.connected::before {
+  background: var(--ok);
+}
+
+.chip-address {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+input::placeholder {
+  color: color-mix(in srgb, var(--muted) 75%, transparent);
+}
+
+input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* Card */
+.card {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+/* Trading surface shell: the card, its footer links, and the shell footer.
+   Flexing lets the footer push itself to the page bottom with
+   `margin-top: auto`, like the old connect screen's footer did. */
+.account-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 14px;
+}
+
+/* Page-bottom footer: the connect mode switch (signed out) and the
+   disclaimer. `margin-top: auto` pushes it to the bottom of the
+   viewport-filling column; embedded, where the page hugs its content, the
+   auto margin collapses to the plain gap. */
+.shell-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: auto;
+  gap: 14px;
+}
+
+/* Connect area under the market data, divided from it like `.holdings`. */
+.connect-cta {
+  display: grid;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+/* Footer links under the trading card: add funds, export, sign out. */
+.account-links {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.disclaimer {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.backup {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.backup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.backup-title {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mnemonic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mnemonic-grid li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.mnemonic-grid .num {
+  min-width: 18px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: right;
+}
+
+/* Segmented control */
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-2);
+  border-radius: 11px;
+}
+
+.segment {
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 550;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.segment.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(15, 17, 21, 0.12);
+}
+
+.segment:disabled {
+  cursor: default;
+}
+
+/* Fields */
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field > span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Buttons */
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.btn {
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    opacity 0.15s,
+    transform 0.05s;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn.primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--accent-text);
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 88%, #000);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.link {
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 550;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.link.small {
+  font-size: 13px;
+  margin-left: auto;
+}
+
+.link:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.field-head .link {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Signed-out footer link that swaps passkey and vault connect modes.
+   Quiet by default, accent on hover. */
+.mode-switch {
+  border: none;
+  background: none;
+  padding: 4px 8px;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.mode-switch:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.mode-switch:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.status {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  /* Error text can embed long unbroken tokens (URLs, hex payloads), which
+     would widen the card's grid track and force horizontal scrolling; see
+     `.break` for the same fix on the signed-transaction display. */
+  overflow-wrap: anywhere;
+}
+
+.status.error {
+  color: var(--error);
+}
+
+.status.ok {
+  color: var(--ok);
+}
+
+.mono {
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Stock header: company and ticker on the left, live quote on the right. */
+.stock-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stock-name {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.stock-symbol {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  vertical-align: 2px;
+}
+
+.stock-quote {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+}
+
+.stock-price {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stock-delta {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.stock-delta.up {
+  color: var(--up);
+}
+
+.stock-delta.down {
+  color: var(--down);
+}
+
+/* Price chart */
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.chart-label {
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--muted);
+}
+
+/* Fake newsroom line under the chart. */
+.news {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.news-tag {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+/* Cash and position rows. */
+.holdings {
+  display: grid;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.holding-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.holding-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.holding-value {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.holding-value.up {
+  color: var(--up);
+}
+
+.holding-value.down {
+  color: var(--down);
+}
+
+/* Trade form */
+.trade {
+  display: grid;
+  gap: 12px;
+}
+
+.send-row {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+}
+
+.field.grow {
+  flex: 1;
+}
+
+.send-btn {
+  flex: 0 0 auto;
+  min-width: 92px;
+  height: 41px;
+}
+
+a {
+  color: var(--accent);
+}
+
+/* Embedded in the post's iframe: drop the viewport-filling height and big
+   margins so the demo hugs its content and `embed.ts` can report a tight
+   height. Standalone (opened in its own tab) keeps the centered full layout. */
+html[data-embedded="true"] body {
+  min-height: 0;
+  padding: 16px;
+}
+
+html[data-embedded="true"] .app {
+  margin: 8px auto;
+}
+
+/* Embedded in a frame taller than the content (embed.ts sets
+   `data-footer-pinned`): the hugged column has no spare height for
+   `margin-top: auto` to distribute, so pin the shell footer just above the
+   frame's bottom edge instead. The column reserves the footer's in-flow band
+   so the measured content height stays the same whether or not the footer is
+   in the flow; small drift between the reserve and the real band is absorbed
+   by FOOTER_PIN_SLACK_PX in embed.ts. */
+html[data-footer-pinned="true"] .app:has(.shell-footer) {
+  /* The 14px shell gap + the disclaimer's ~14px line. */
+  padding-bottom: 28px;
+}
+
+html[data-footer-pinned="true"] .app:has(.mode-switch) {
+  /* + the mode switch's ~23px box and the footer's 14px gap. */
+  padding-bottom: 65px;
+}
+
+html[data-footer-pinned="true"] .shell-footer {
+  position: fixed;
+  /* 16px embedded body padding + 8px `.app` margin: the same bottom offset
+     the in-flow footer gets in a content-sized frame. The side offsets mirror
+     the body padding so the pinned footer keeps the in-flow width and the
+     disclaimer wraps identically in both states. */
+  bottom: 24px;
+  left: 16px;
+  right: 16px;
+}

@@ -1,0 +1,56 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 680 468"
+  width="680"
+  height="468"
+  role="img"
+  class="mera-diagram"
+>
+  <title>
+    The vault round trip. A secret, a phrase, a key, or any bytes, is encrypted
+    with AES-256-GCM. The encryption key material is the PRF output of a passkey
+    ceremony run against a fresh random salt for this secret. The result is
+    ordinary vault JSON, stored in localStorage, a backend, or a sync service,
+    with the salt stored inside. Unlocking runs the same ceremony with the
+    stored salt, which reproduces the key and recovers the secret. Tampering
+    with the stored bytes makes decryption fail.
+  </title>
+  <defs>
+    <marker
+      id="vr-arrow"
+      viewBox="0 0 10 10"
+      refX="8"
+      refY="5"
+      markerWidth="7"
+      markerHeight="7"
+      orient="auto-start-reverse"
+    >
+      <path d="M0 0 L10 5 L0 10 z" class="d-head" />
+    </marker>
+  </defs>
+
+  <rect class="d-secret" x="60" y="24" width="240" height="56" rx="8" />
+  <text x="180" y="57" text-anchor="middle">Secret</text>
+
+  <path class="d-edge" d="M180 80 V140" marker-end="url(#vr-arrow)" />
+
+  <rect class="d-node" x="60" y="144" width="240" height="56" rx="8" />
+  <text x="180" y="177" text-anchor="middle">AES-256-GCM</text>
+
+  <rect class="d-node" x="380" y="144" width="260" height="56" rx="8" />
+  <text x="510" y="177" text-anchor="middle">Passkey ceremony</text>
+
+  <path class="d-edge" d="M380 172 H308" marker-end="url(#vr-arrow)" />
+  <text x="344" y="164" text-anchor="middle" class="d-sub">PRF output</text>
+
+  <path class="d-edge" d="M180 200 V260" marker-end="url(#vr-arrow)" />
+
+  <rect class="d-node" x="60" y="264" width="240" height="64" rx="8" />
+  <text x="180" y="301" text-anchor="middle">Vault JSON</text>
+
+  <path class="d-edge" d="M180 328 V388" marker-end="url(#vr-arrow)" />
+  <text x="192" y="362" class="d-sub">unlock</text>
+
+  <rect class="d-secret" x="60" y="392" width="240" height="56" rx="8" />
+  <text x="180" y="425" text-anchor="middle">Secret</text>
+</svg>

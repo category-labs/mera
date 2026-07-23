@@ -1,0 +1,44 @@
+---
+title: Keys and accounts
+description: How random bytes become a private key, an address, and a reproducible family of accounts.
+---
+
+import DerivationPipeline from "../../../assets/diagrams/derivation-pipeline.svg";
+import Bip32Tree from "../../../assets/diagrams/bip32-tree.svg";
+
+<DerivationPipeline />
+
+## Keys, signatures, and accounts
+
+A private key is a 256-bit secret number. A one-way function computes the public key from it, which is safe to share. A signature is computed from a message and a private key and verified with the public key alone. A valid signature proves the key's holder approved that exact message.
+
+A blockchain account is the state a chain tracks for one key pair: a balance and a transaction history. The address is a short encoding of the public key.
+
+mera supports two signature schemes: secp256k1 on Ethereum and other EVM chains (chains that run the Ethereum Virtual Machine), and Ed25519 on Solana.
+
+## Deterministic derivation
+
+A key-derivation function (KDF) turns one secret into others: the output looks random, but the same input always produces the same output. 
+
+A seed is the byte string a key tree starts from. BIP-32 (secp256k1) and [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md) (Ed25519) extend one seed into a tree of child keys, a scheme called hierarchical deterministic (HD) derivation, and a derivation path such as `m/44'/60'/0'/0/0` names one key in the tree. The same seed and path produce the same key, so one 32-byte value backs any number of accounts with nothing stored per account.
+
+<Bip32Tree />
+
+
+
+## Seed phrases
+
+BIP-39 maps random bytes to a phrase of common words and back: 128 bits become 12 words, 256 bits become 24.
+
+A wallet app that follows the same standards turns an imported phrase back into the same accounts.
+
+## Where mera fits
+
+mera supplies the random bytes this pipeline starts from: the PRF output of a passkey ceremony. [Passkey accounts](/concepts/passkey-accounts/) explains the account model built on it.
+
+## See also
+
+- [Passkeys and the PRF extension](/concepts/passkeys-and-prf/): where the 32 bytes come from and why they are stable.
+- [Passkey accounts](/concepts/passkey-accounts/): the default pattern built on this pipeline.
+- [Create passkey accounts](/recipes/create-passkey-accounts/): the pipeline in code.
+- [Getting started](/getting-started/): the shortest path from ceremony to signature.

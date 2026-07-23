@@ -1,0 +1,77 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 680 416"
+  width="680"
+  height="416"
+  role="img"
+  class="mera-diagram"
+>
+  <title>
+    The PRF as a function. The relying party ID and a salt enter the
+    authenticator, where the credential and the PRF live; the PRF returns 32
+    bytes of output. The same credential, relying party ID, and salt produce the
+    same 32 bytes on every synced device; a different salt produces unrelated
+    output.
+  </title>
+  <defs>
+    <marker
+      id="pf-arrow"
+      viewBox="0 0 10 10"
+      refX="8"
+      refY="5"
+      markerWidth="7"
+      markerHeight="7"
+      orient="auto-start-reverse"
+    >
+      <path d="M0 0 L10 5 L0 10 z" class="d-head" />
+    </marker>
+  </defs>
+
+  <!-- inputs supplied by the ceremony -->
+  <rect class="d-node" x="140" y="24" width="190" height="56" rx="8" />
+  <text x="235" y="48" text-anchor="middle">Relying party ID</text>
+  <text x="235" y="67" text-anchor="middle" class="d-mono">
+    account.example.com
+  </text>
+
+  <rect class="d-node" x="350" y="24" width="190" height="56" rx="8" />
+  <text x="445" y="48" text-anchor="middle">Salt</text>
+  <text x="445" y="67" text-anchor="middle" class="d-sub">
+    32 bytes, a namespace
+  </text>
+
+  <path class="d-edge" d="M235 80 L410 143" marker-end="url(#pf-arrow)" />
+  <path class="d-edge" d="M445 80 L455 143" marker-end="url(#pf-arrow)" />
+
+  <!-- the authenticator holds the credential and evaluates the PRF -->
+  <rect class="d-zone" x="140" y="118" width="400" height="128" rx="10" />
+  <text x="156" y="140" class="d-sub">authenticator</text>
+
+  <rect class="d-secret" x="156" y="150" width="190" height="56" rx="8" />
+  <text x="251" y="174" text-anchor="middle">Credential</text>
+  <text x="251" y="193" text-anchor="middle" class="d-sub">
+    never leaves the authenticator
+  </text>
+
+  <path class="d-edge" d="M346 178 H372" marker-end="url(#pf-arrow)" />
+
+  <rect class="d-node" x="380" y="150" width="144" height="56" rx="8" />
+  <text x="452" y="174" text-anchor="middle">PRF</text>
+  <text x="452" y="193" text-anchor="middle" class="d-sub">deterministic</text>
+
+  <path class="d-edge" d="M452 206 V282" marker-end="url(#pf-arrow)" />
+
+  <rect class="d-secret" x="362" y="286" width="180" height="56" rx="8" />
+  <text x="452" y="310" text-anchor="middle">PRF output</text>
+  <text x="452" y="329" text-anchor="middle" class="d-sub">
+    32 bytes, stable
+  </text>
+
+  <text x="340" y="380" text-anchor="middle" class="d-note">
+    The same credential, rpId, and salt produce the same 32 bytes on every
+    synced device.
+  </text>
+  <text x="340" y="402" text-anchor="middle" class="d-note">
+    A different salt produces unrelated output: salts are namespaces.
+  </text>
+</svg>

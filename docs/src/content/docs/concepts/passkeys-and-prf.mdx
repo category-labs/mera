@@ -1,0 +1,40 @@
+---
+title: Passkeys and the PRF extension
+description: What a passkey is, what the PRF extension adds, and why its output is stable.
+---
+
+import PrfFunction from "../../../assets/diagrams/prf-function.svg";
+
+A passkey is a WebAuthn credential. [WebAuthn](https://www.w3.org/TR/webauthn-3/) is the browser standard for signing in with key pairs instead of passwords. A credential is one such key pair, created at a website's request by an authenticator: a phone, a password manager, or a hardware key. The private key never leaves the authenticator.
+
+**Passkeys are bound to a relying party ID.** The `rpId` is a domain, and a credential created under one rpId cannot be used under another.
+
+**Passkeys sync.** Platform authenticators, the credential stores built into an operating system or a password manager, replicate credentials across a person's devices: iCloud Keychain across Apple devices, Google Password Manager across Android and Chrome, 1Password wherever it runs.
+
+## User verification
+
+Every mera ceremony requires user verification, the authenticator's local check that the person is present and is the owner. The gesture depends on the platform: a biometric, a device PIN, a password.
+
+The requirement is not configurable. PRF is built on the [`hmac-secret`](https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html#sctn-hmac-secret-extension) primitive of [CTAP](https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html), the protocol browsers use to talk to authenticators. An authenticator keeps two PRFs per credential, one for user-verified requests and one for the rest. WebAuthn exposes only the user-verified PRF and overrides a weaker `userVerification` setting when evaluating it.
+
+## The PRF extension
+
+The [PRF extension](https://www.w3.org/TR/webauthn-3/#prf-extension) gives each credential a pseudorandom function: a function whose output looks random but is fully determined by its inputs. The caller passes a 32-byte salt with the ceremony and the authenticator returns 32 bytes.
+
+PRF output is determined by the credential, relying party ID, and salt. Those inputs produce the same 32 bytes on every synced device. Salts act as namespaces.
+
+<PrfFunction />
+
+## Using the output
+
+The output works as key material in two ways. Used as an encryption key, it locks data to the passkey: decrypting takes another ceremony. Used as a [derivation seed](/concepts/entropy-keys-and-accounts/), it recreates the same keys and accounts on every ceremony, so none of them are stored.
+
+## Ceremonies and prompts
+
+A ceremony is one WebAuthn call and one user-verification prompt. A ceremony either creates a credential (closest analogy is sign up) or runs an assertion (sign in).
+
+## See also
+
+- [Keys and accounts](/concepts/entropy-keys-and-accounts/): what the 32 bytes become once the app holds them.
+- [Authenticator support](/authenticator-support/): which stacks deliver PRF today.
+- [Getting started](/getting-started/): the ceremony-to-signature path in code.

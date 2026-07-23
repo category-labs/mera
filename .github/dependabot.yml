@@ -1,0 +1,41 @@
+# Dependabot version updates. The private demo/ app is intentionally not
+# covered.
+version: 2
+
+updates:
+  # Root library package: runtime dependencies (the shipped surface) and the
+  # build/test/lint toolchain, grouped separately.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "build"
+      include: "scope"
+    groups:
+      library-runtime:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      library-tooling:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions in CI. The workflows track floating major tags
+  # (e.g. actions/checkout@v7), which already pick up minor and patch
+  # releases; Dependabot opens a PR when a new major tag is available.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"

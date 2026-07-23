@@ -41,6 +41,8 @@ Fixed section order:
 8. `## Notes`: copy and zeroing semantics, determinism statements, caveats. Omit the section when there is nothing to say.
 9. `## See also`: related functions, the owning concept page, the recipe that uses it.
 
+Each section states its own kind of fact: what an input must be under Parameters, what comes back under Returns, what fails under Errors. A fact in the wrong section ("only version 1 vaults are accepted" under Returns) moves to the section that owns it, or out of the page when another section already carries it.
+
 Parameters use subheadings and lists, never wide tables. The content column is narrow; a five-column table does not survive it. Tables are reserved for genuinely tabular data, like the authenticator matrix.
 
 Source of truth is the JSDoc in `src/`. Write reference prose from it. When the JSDoc is silent, inspect the implementation and tests.
@@ -55,6 +57,8 @@ Source of truth is the JSDoc in `src/`. Write reference prose from it. When the 
 ## Voice
 
 The bar is simple, concise, and detailed at once: detail survives the cut, filler does not. Every sentence must add information a reader can act on; delete sentences that only set up, restate, or editorialize ("that choice is what makes this repeatable", "what happens next is the app's decision").
+
+Design rationale meets the same bar: keep the why only when it changes what the reader does. A sentence that explains the library to itself ("rejecting an unknown version keeps an old library from misreading newer data", "the two cases are indistinguishable by design") is filler next to the behavior it decorates. The same goes for restating a guarantee the adjacent text already carries.
 
 `site/WRITING.md` applies in full. The rules that carry the most weight here:
 
@@ -104,6 +108,8 @@ The bar is simple, concise, and detailed at once: detail survives the cut, fille
 - The sidebar in `astro.config.mjs` is hand-maintained. A sidebar slug without a page fails the build.
 - Plain `.md` unless the page imports a component; then `.mdx`.
 - Internal links are root-relative with a trailing slash: `/reference/errors/`. Link text is descriptive; no bare "here".
+- A link description states a fact the link title does not. "Security model: learn more about the security model" restates the title; "Security model: what mera protects, and the risks left to the app" adds one.
+- A bracketed name followed by parentheses, `[Symbol.dispose]()`, is markdown link syntax and renders as a link with an empty target. Escape the opening bracket: `\[Symbol.dispose]()`.
 - Link the first mention of a spec'd name on each page to its spec (BIP-32/BIP-39/BIP-44 to the bips repo, SLIP-0010 to the slips repo, WebAuthn to the W3C spec, CTAP and `hmac-secret` to the FIDO spec); later mentions on the page stay plain.
 - Never reference sections by number; name the thing and link it.
 - `npm run build` must pass before a PR.

@@ -25,7 +25,7 @@ Signs an arbitrary-length message and resolves to the 64-byte Ed25519 signature 
 
 Zeroes the session-owned private-key copy and permanently ends the session; later signing throws [`SESSION_ENDED`](/reference/errors/#session_ended).
 
-### [Symbol.dispose]()
+### \[Symbol.dispose]()
 
 Calls `end`, so a `using` declaration ends the session when its scope exits:
 

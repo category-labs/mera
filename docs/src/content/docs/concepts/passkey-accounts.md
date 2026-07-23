@@ -15,7 +15,7 @@ What if a seed phrase or another secret already exists, and the goal is passkey 
 
 ## See also
 
-- [Entropy, keys, and accounts](/concepts/entropy-keys-and-accounts/): the derivation pipeline the app runs on the PRF output.
+- [Keys and accounts](/concepts/entropy-keys-and-accounts/): the derivation pipeline the app runs on the PRF output.
 - [Create passkey accounts](/recipes/create-passkey-accounts/): the pattern in code, with numbered accounts and credential pinning.
 - [Secret vaults](/concepts/secret-vaults/): the advanced pattern for secrets that exist on their own.
 - [getPasskeyPrfOutput](/reference/get-passkey-prf-output/): the ceremony and the fixed salt behind the stability.

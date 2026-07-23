@@ -1,0 +1,22 @@
+---
+title: Security model
+description: What mera protects, what it cannot, and the risks left to the app.
+---
+
+import TrustBoundary from "../../../assets/diagrams/trust-boundary.svg";
+
+Mera runs in the page JS code, the keys it produces and derives are software keys and not hardware backed. In principle, mera's security model matches that of a wallet browser extension like MetaMask or Phantom: whatever the wallet signs with, a seed phrase, a private key, or an access token for a remote signer, lives in script memory.
+
+- Any script in the page can read the [PRF output](/concepts/passkeys-and-prf/) and every key derived from it, and can sign with a live session. An injected script, a malicious dependency, and a browser extension with page access are all inside this boundary. Ending sessions when idle and zeroing key material promptly reduce the exposure.
+- Losing access to the passkey without a backup or export also loses access to the accounts derived from it.
+- A passkey works only under the rpId (the relying party domain) it was created for: after a domain migration, passkey accounts can no longer be reproduced and vaults can no longer be decrypted. Accounts need an export path before any planned migration.
+- Secrets encrypted with one reused PRF output share an encryption key, and exposing that key exposes them all. The vault functions generate a fresh random 32-byte salt per secret.
+- The only runtime dependencies are `@noble/*` and `@scure/*`, well-known audited cryptography libraries.
+
+<TrustBoundary />
+
+## See also
+
+- [Passkeys and the PRF extension](/concepts/passkeys-and-prf/)
+- [Signing sessions](/concepts/signing-sessions/): what a live session exposes and when to end it.
+- [Errors](/reference/errors/): every failure the library signals, by code.

@@ -1,0 +1,152 @@
+---
+title: Create passkey accounts
+description: Create numbered EVM and Solana accounts from one passkey ceremony, with credential pinning.
+---
+
+import FirstVsReturning from "../../../assets/diagrams/first-vs-returning.svg";
+
+
+Prerequisites:
+
+- `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed.
+- A [PRF](/concepts/passkeys-and-prf/)-capable authenticator ([authenticator support](/authenticator-support/)).
+
+<FirstVsReturning />
+
+## Create the passkey
+
+```ts
+import { createPasskeyWithPrfOutput } from "@category-labs/mera";
+
+const rpId = location.hostname;
+
+const created = await createPasskeyWithPrfOutput({
+  rp: { id: rpId, name: "Example" },
+  user: { name: "account@example.com", displayName: "Example account" },
+});
+
+```
+
+Every call creates a new passkey.
+
+## Remember the credential
+
+The app can store the credential metadata and pass it back on the next sign-in, so the browser reuses the same passkey instead of offering a choice.
+
+```ts
+localStorage.setItem(
+  "app.derivedCredential",
+  JSON.stringify({
+    credentialId: created.credentialId,
+    transports: created.transports,
+  }),
+);
+```
+
+`transports` is optional and only a hint: the browser uses it to reach the authenticator directly (a platform prompt for a platform passkey, a QR flow for a phone) instead of offering every option.
+
+## Sign in
+
+```ts
+import { getPasskeyPrfOutput } from "@category-labs/mera";
+
+const stored = localStorage.getItem("app.derivedCredential");
+const known = stored ? JSON.parse(stored) : undefined;
+
+const { prfOutput, credentialId } = await getPasskeyPrfOutput({
+  rpId,
+  credential: known,
+});
+
+// With no stored record, the browser may have used any discoverable passkey.
+const record =
+  known?.credentialId === credentialId ? known : { credentialId };
+localStorage.setItem("app.derivedCredential", JSON.stringify(record));
+```
+
+## Create a seed from the PRF output
+
+Turn the PRF output into a [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed.
+
+```ts
+import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
+import { wordlist } from "@scure/bip39/wordlists/english.js";
+
+const seed = mnemonicToSeedSync(entropyToMnemonic(prfOutput, wordlist));
+```
+
+## Derive numbered accounts
+
+EVM accounts follow [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) over the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) Ethereum path:
+
+```ts
+import {
+  createSecp256k1SigningSession,
+  getEvmAddress,
+} from "@category-labs/mera";
+import { HDKey } from "@scure/bip32";
+
+function deriveEvmAccount(seed: Uint8Array, index: number) {
+  const ethereumAccountPath = `m/44'/60'/0'/0/${index}`;
+  const node = HDKey.fromMasterSeed(seed).derive(ethereumAccountPath);
+  if (node.privateKey === null) throw new Error("derivation produced no key");
+  const session = createSecp256k1SigningSession({
+    privateKey: node.privateKey,
+  });
+  return { session, address: getEvmAddress(session.publicKey) };
+}
+```
+
+Solana uses [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md), the Ed25519 counterpart of BIP-32, and its derivation is a short chain of HMAC (keyed hash) calls:
+
+```ts
+import {
+  createEd25519SigningSession,
+  getSolanaAddress,
+} from "@category-labs/mera";
+import { hmac } from "@noble/hashes/hmac.js";
+import { sha512 } from "@noble/hashes/sha2.js";
+import { utf8ToBytes } from "@noble/hashes/utils.js";
+
+function deriveSolanaSeed(seed: Uint8Array, index: number): Uint8Array {
+  // The SLIP-0010 path m/44'/501'/{index}'/0'; every step is hardened.
+  const solanaAccountPath = [44, 501, index, 0];
+  let i = hmac(sha512, utf8ToBytes("ed25519 seed"), seed);
+  for (const step of solanaAccountPath) {
+    const data = new Uint8Array(1 + 32 + 4);
+    data.set(i.slice(0, 32), 1);
+    new DataView(data.buffer).setUint32(33, (step + 0x80000000) >>> 0, false);
+    i = hmac(sha512, i.slice(32), data);
+  }
+  return i.slice(0, 32);
+}
+
+function deriveSolanaAccount(seed: Uint8Array, index: number) {
+  const session = createEd25519SigningSession({
+    privateKey: deriveSolanaSeed(seed, index),
+  });
+  return { session, address: getSolanaAddress(session.publicKey) };
+}
+```
+
+Build the account list from these helpers:
+
+```ts
+const accounts = [deriveEvmAccount(seed, 0), deriveSolanaAccount(seed, 0)];
+```
+
+## End the sessions
+
+```ts
+for (const account of accounts) {
+  account.session.end();
+}
+```
+
+Ending a session zeroes the private keys it owns.
+
+## See also
+
+- [Passkey accounts](/concepts/passkey-accounts/): the account model this recipe implements.
+- [Send a transaction with viem](/recipes/send-a-transaction-with-viem/): sign and broadcast with a derived account.
+- [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) and [getPasskeyPrfOutput](/reference/get-passkey-prf-output/): the two ceremonies this recipe runs.

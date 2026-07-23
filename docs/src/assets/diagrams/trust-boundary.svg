@@ -1,0 +1,72 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 680 384"
+  width="680"
+  height="384"
+  role="img"
+  class="mera-diagram"
+>
+  <title>
+    The trust boundary. The page contains the app, which derives keys from PRF
+    output and decides when to end sessions, and mera, which copies the bytes it
+    is given and zeroes its own copies. The authenticator sits outside the page,
+    reachable only through WebAuthn ceremonies: it holds the passkey and PRF,
+    the key never leaves, and it asks for user verification. Any script on the
+    page can see key material and sign with a live session.
+  </title>
+  <defs>
+    <marker
+      id="tb-arrow"
+      viewBox="0 0 10 10"
+      refX="8"
+      refY="5"
+      markerWidth="7"
+      markerHeight="7"
+      orient="auto-start-reverse"
+    >
+      <path d="M0 0 L10 5 L0 10 z" class="d-head" />
+    </marker>
+  </defs>
+
+  <rect class="d-zone" x="24" y="24" width="396" height="296" rx="10" />
+  <text x="38" y="46" class="d-sub">the page</text>
+
+  <rect class="d-node" x="48" y="88" width="348" height="80" rx="8" />
+  <text x="222" y="116" text-anchor="middle">The app</text>
+  <text x="222" y="135" text-anchor="middle" class="d-sub">
+    derives keys from PRF output
+  </text>
+  <text x="222" y="153" text-anchor="middle" class="d-sub">
+    decides when to end sessions
+  </text>
+
+  <rect class="d-node" x="48" y="200" width="348" height="80" rx="8" />
+  <text x="222" y="228" text-anchor="middle">mera</text>
+  <text x="222" y="247" text-anchor="middle" class="d-sub">
+    copies the bytes it is given
+  </text>
+  <text x="222" y="265" text-anchor="middle" class="d-sub">
+    zeroes its own copies
+  </text>
+
+  <path
+    class="d-edge"
+    d="M428 204 H478"
+    marker-start="url(#tb-arrow)"
+    marker-end="url(#tb-arrow)"
+  />
+  <text x="452" y="194" text-anchor="middle" class="d-sub">WebAuthn</text>
+  <text x="452" y="224" text-anchor="middle" class="d-sub">ceremonies</text>
+
+  <rect class="d-secret" x="484" y="130" width="180" height="140" rx="8" />
+  <text x="574" y="166" text-anchor="middle">Authenticator</text>
+  <text x="574" y="188" text-anchor="middle" class="d-sub">
+    holds the passkey and PRF
+  </text>
+  <text x="574" y="206" text-anchor="middle" class="d-sub">
+    the key never leaves
+  </text>
+  <text x="574" y="224" text-anchor="middle" class="d-sub">
+    asks for user verification
+  </text>
+</svg>

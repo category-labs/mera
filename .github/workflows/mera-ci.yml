@@ -1,0 +1,187 @@
+name: Mera - CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+# Cancel superseded runs when a PR branch gets a new push. Runs on main are
+# queued instead of cancelled so post-merge validation always completes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  # Classifies a PR's changed files so later jobs can skip work the change
+  # cannot affect: `library` covers everything the root package build/tests
+  # depend on, `demo` adds demo/ on top of that (the demo compiles against the
+  # library's dist/), `package` adds the packaged root files that
+  # scripts/verify-tarball.mjs requires in the tarball, and `docs` is
+  # independent of library code. Runs only on pull_request; on push and manual
+  # dispatch the gated jobs run unconditionally.
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: read
+    outputs:
+      library: ${{ steps.filter.outputs.library }}
+      demo: ${{ steps.filter.outputs.demo }}
+      package: ${{ steps.filter.outputs.package }}
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - name: Filter changed paths
+        id: filter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.url }}
+        run: |
+          gh api --paginate "$PR_URL/files" --jq '.[].filename' > changed-files.txt
+
+          matches() { grep -qE "$1" changed-files.txt && echo true || echo false; }
+          library='^(src/|test/|scripts/|package\.json$|package-lock\.json$|tsconfig\.json$|tsconfig\.test\.json$|playwright\.config\.ts$|\.nvmrc$|\.github/workflows/)'
+          packaged='^(README\.md|LICENSE-MIT|LICENSE-APACHE)$'
+          shared='^(\.nvmrc$|\.github/workflows/)'
+
+          {
+            echo "library=$(matches "$library")"
+            echo "demo=$(matches "$library|^demo/")"
+            echo "package=$(matches "$library|$packaged")"
+            echo "docs=$(matches "$shared|^docs/")"
+          } >> "$GITHUB_OUTPUT"
+
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          check-latest: true
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Biome checks
+        run: npm run check
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    # On non-PR events `changes` is skipped, which would skip dependents too;
+    # `!cancelled()` keeps them eligible so the event check can run everything.
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.library == 'true') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          check-latest: true
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npm exec -- playwright install --with-deps chromium
+
+      - name: Run tests
+        run: npm test
+
+  demo:
+    name: Demo
+    runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.demo == 'true') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          check-latest: true
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            demo/package-lock.json
+
+      - name: Install library dependencies
+        run: npm ci
+
+      - name: Build library
+        run: npm run build
+
+      - name: Install demo dependencies
+        run: npm ci
+        working-directory: demo
+
+      - name: Build demo
+        run: npm run build
+        working-directory: demo
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.docs == 'true') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          check-latest: true
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install docs dependencies
+        run: npm ci
+        working-directory: docs
+
+      - name: Build docs
+        run: npm run build
+        working-directory: docs
+
+  package:
+    name: Publish check
+    runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.package == 'true') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          check-latest: true
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify package contents, exports, and types
+        run: npm run check:pack

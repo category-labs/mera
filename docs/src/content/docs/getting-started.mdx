@@ -1,0 +1,107 @@
+---
+title: Getting started
+description: Install the library, derive an account, and make a first signature.
+---
+
+import GettingStartedOverview from "../../assets/diagrams/getting-started-overview.svg";
+
+What mera does:
+
+- Create a passkey and get 32 secret bytes from it through the [PRF extension](/concepts/passkeys-and-prf/).
+- [Derive accounts](/concepts/entropy-keys-and-accounts/) from those bytes.
+- Sign with a [signing session](/concepts/signing-sessions/).
+
+<GettingStartedOverview />
+
+Prerequisites:
+
+- A secure context: HTTPS, or `localhost` during development.
+- An authenticator that supports the PRF extension. [Authenticator support](/authenticator-support/) lists the combinations known to work. 1Password and iCloud Keychain are good first choices.
+
+## Install
+
+```sh
+npm install @category-labs/mera
+```
+
+This walkthrough derives accounts with `@scure/bip32` and `@scure/bip39`. Any derivation scheme works.
+
+```sh
+npm install @scure/bip32 @scure/bip39
+```
+
+## Create a passkey
+
+`createPasskeyWithPrfOutput` creates a passkey and evaluates its PRF in one call.
+
+```ts
+import { createPasskeyWithPrfOutput } from "@category-labs/mera";
+
+// The relying party ID, the domain the passkey is bound to.
+const rpId = "account.example.com";
+
+const { prfOutput } = await createPasskeyWithPrfOutput({
+  rp: { id: rpId, name: "Example" },
+  user: { name: "account@example.com", displayName: "Example account" },
+});
+```
+
+mera uses a stable PRF salt for this call, so a later sign-in reproduces the same 32 bytes.
+
+## Derive an account
+
+The PRF output is the root of every account. This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) to a phrase and a [seed](/concepts/entropy-keys-and-accounts/#deterministic-derivation), then derives keys with [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki).
+
+```ts
+import { HDKey } from "@scure/bip32";
+import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
+import { wordlist } from "@scure/bip39/wordlists/english.js";
+
+const firstEthereumAccountPath = "m/44'/60'/0'/0/0";
+
+const mnemonic = entropyToMnemonic(prfOutput, wordlist);
+const seed = mnemonicToSeedSync(mnemonic);
+const node = HDKey.fromMasterSeed(seed).derive(firstEthereumAccountPath);
+if (node.privateKey === null) throw new Error("derivation produced no key");
+```
+
+## Sign
+
+```ts
+import {
+  createSecp256k1SigningSession,
+  getEvmAddress,
+} from "@category-labs/mera";
+
+const session = createSecp256k1SigningSession({
+  privateKey: node.privateKey,
+});
+
+const address = getEvmAddress(session.publicKey);
+
+const digest = new Uint8Array(32);
+const signature = await session.signDigest(digest);
+
+session.end();
+```
+
+## Sign back in
+
+A later visit reproduces the same account.
+
+```ts
+import { getPasskeyPrfOutput } from "@category-labs/mera";
+
+const { prfOutput } = await getPasskeyPrfOutput({
+  rpId,
+});
+```
+
+Without `credential`, the browser offers any discoverable passkey it holds for the relying party. The [Create passkey accounts](/recipes/create-passkey-accounts/) recipe shows the app storing the credential ID at create time and passing it back to pin later sign-ins.
+
+## Where next
+
+- [Send a transaction with viem](/recipes/send-a-transaction-with-viem/): from sign-in to a sent transaction.
+- [Passkey accounts](/concepts/passkey-accounts/): how the same passkey reproduces the same accounts.
+- [Secret vaults](/concepts/secret-vaults/): use passkey PRF output to encrypt a secret, useful for cases where the secret must come from elsewhere.
+- [Security model](/concepts/security-model/): what mera protects, and the risks left to the app.

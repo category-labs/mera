@@ -1,0 +1,87 @@
+import { hexToBytes } from "@noble/hashes/utils.js";
+import { expect } from "@playwright/test";
+
+// sha256("mera.prf.salt.v1"): the fixed default salt documented on
+// getPasskeyPrfOutput.
+const DEFAULT_PRF_SALT = hexToBytes(
+  "896d46ac4ac191885c46137439db7bb52fb05cff3ecd34af7cdae0a1e0c00db9",
+);
+
+// Canonical unpadded base64url of the [1, 2, 3, 4] rawId every
+// stubPublicKeyCredential result reports.
+const STUB_CREDENTIAL_ID = "AQIDBA";
+
+// WebAuthn credential stub for navigator.credentials fakes: `prf` becomes the
+// client extension results, and `transports` adds a create-style response
+// implementing getTransports (otherwise the response is empty, like an
+// assertion's).
+function stubPublicKeyCredential({
+  prf,
+  transports,
+}: {
+  prf: unknown;
+  transports?: string[];
+}) {
+  return {
+    type: "public-key",
+    rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+    response:
+      transports !== undefined ? { getTransports: () => transports } : {},
+    getClientExtensionResults: () => ({ prf }),
+  };
+}
+
+// Reads the PRF salt a stubbed WebAuthn call was asked to evaluate.
+function readEvaluatedPrfSalt(
+  publicKey:
+    | PublicKeyCredentialRequestOptions
+    | PublicKeyCredentialCreationOptions
+    | undefined,
+): Uint8Array {
+  const first = publicKey?.extensions?.prf?.eval?.first;
+  if (!(first instanceof ArrayBuffer)) {
+    throw new Error("expected PRF salt as an ArrayBuffer");
+  }
+  return new Uint8Array(first);
+}
+
+function expectError(fn: () => unknown, code: string): void {
+  try {
+    fn();
+  } catch (error) {
+    expect(error).toMatchObject({ code });
+    return;
+  }
+
+  throw new Error(`expected fn to throw with code ${code}`);
+}
+
+// Replaces a globalThis property for the duration of fn, then restores the
+// original property descriptor (or deletes the property if it did not exist).
+async function withStubbedGlobal<T>(
+  name: string,
+  value: unknown,
+  fn: () => T | Promise<T>,
+): Promise<T> {
+  const original = Object.getOwnPropertyDescriptor(globalThis, name);
+  Object.defineProperty(globalThis, name, { configurable: true, value });
+
+  try {
+    return await fn();
+  } finally {
+    if (original) {
+      Object.defineProperty(globalThis, name, original);
+    } else {
+      Reflect.deleteProperty(globalThis, name);
+    }
+  }
+}
+
+export {
+  DEFAULT_PRF_SALT,
+  expectError,
+  readEvaluatedPrfSalt,
+  STUB_CREDENTIAL_ID,
+  stubPublicKeyCredential,
+  withStubbedGlobal,
+};

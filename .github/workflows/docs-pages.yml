@@ -1,0 +1,54 @@
+name: Mera - Docs Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - docs/**
+      - .github/workflows/docs-pages.yml
+  workflow_dispatch:
+
+# Keep a publishing deployment running while replacing any older queued run
+# with the latest docs build.
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Build and upload docs
+        uses: withastro/action@v6
+        with:
+          path: docs
+          node-version: 24
+          # The action restores node_modules/.astro from any older commit's
+          # cache; a stale content-layer store makes the build emit module
+          # imports that no longer resolve. The cache only holds optimized
+          # remote images, which this site does not use.
+          cache: "false"
+        env:
+          DOCS_SITE: https://mera.category.xyz
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,0 +1,357 @@
+---
+// The landing page, registered as the Hero override in astro.config.mjs:
+// pitch, install command, numbered features, actions, and the live demo.
+// The title, tagline, and action buttons come from the page frontmatter; the
+// rest of the landing copy lives here.
+import { Code, LinkButton } from "@astrojs/starlight/components";
+import { withBasePath } from "../base-path";
+import DemoEmbed from "./DemoEmbed.astro";
+import LegalLinks from "./LegalLinks.astro";
+
+const { data } = Astro.locals.starlightRoute.entry;
+const { tagline, actions = [] } = data.hero || {};
+
+const installCommand = "npm install @category-labs/mera";
+
+const features = [
+  {
+    title: "Onboarding without a seed phrase",
+    link: "/getting-started/",
+    text: "Creating an account is a passkey prompt.",
+  },
+  {
+    title: "Cross-device, cross-platform",
+    link: "/concepts/passkeys-and-prf/",
+    text: "A web app and its native iOS or Android counterpart can use the same passkey to restore the same accounts.",
+  },
+  {
+    title: "Works with existing accounts",
+    link: "/concepts/secret-vaults/",
+    text: "Encrypt a recovery phrase or private key once, then decrypt it with the passkey.",
+  },
+  {
+    title: "The authenticator is the key store",
+    link: "/concepts/security-model/",
+    text: "Passkey providers store, sync, and guard credentials, so the app needs no custody backend, MPC setup, or smart-account contracts.",
+  },
+];
+---
+
+<div class="hero not-content">
+  <div class="copy">
+    <header class="intro">
+      {tagline && <p class="tagline" set:html={tagline} />}
+    </header>
+
+    <div class="code-frame">
+      <Code code={installCommand} lang="sh" frame="none" />
+    </div>
+
+    <ol class="features">
+      {
+        features.map((feature, index) => (
+          <li>
+            <span class="feature-number" aria-hidden="true">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <div>
+              <a href={withBasePath(feature.link)}>{feature.title}</a>
+              <p>{feature.text}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+
+    {
+      actions.length > 0 && (
+        <div class="actions">
+          {actions.map(
+            ({
+              attrs: { class: className, ...attrs } = {},
+              icon,
+              link,
+              text,
+              variant,
+            }) => (
+              <LinkButton
+                href={withBasePath(link)}
+                {variant}
+                icon={icon?.name}
+                class:list={[className]}
+                {...attrs}
+              >
+                {text}
+                {icon?.html && <Fragment set:html={icon.html} />}
+              </LinkButton>
+            ),
+          )}
+        </div>
+      )
+    }
+
+    <div class="legal">
+      <LegalLinks />
+    </div>
+  </div>
+
+  <div class="demo-column">
+    <figure class="demo">
+      <DemoEmbed />
+    </figure>
+  </div>
+</div>
+
+<style>
+  .hero {
+    display: grid;
+    grid-template-areas:
+      "intro"
+      "code"
+      "demo"
+      "features"
+      "actions"
+      "legal";
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    width: 100%;
+    padding-block: 1rem 1.5rem;
+  }
+
+  /* The wrapper disappears in the single-column grid so its children can be
+     placed on either side of the demo. It becomes the left column on wide
+     screens, where the copy should size independently from the sticky demo. */
+  .copy {
+    display: contents;
+  }
+
+  /* Only the landing uses the full content panel. Article pages retain
+     Starlight's readable content width. */
+  :global([data-has-hero] .sl-container) {
+    width: 100%;
+    max-width: none;
+  }
+
+  /* Starlight's page includes the fixed navigation offset in its 100vh
+     minimum. Subtracting the navigation height removes that extra scroll. */
+  :global([data-has-hero] .page) {
+    min-height: calc(100vh - var(--sl-nav-height));
+  }
+
+  :global([data-has-hero] .content-panel) {
+    padding-block: 0.5rem;
+  }
+
+  :global([data-has-hero] main) {
+    padding-bottom: 0;
+  }
+
+  /* The landing has no markdown body and needs no page footer. */
+  :global([data-has-hero] .sl-markdown-content:empty),
+  :global([data-has-hero] .sl-container > footer) {
+    display: none;
+  }
+
+  .intro {
+    grid-area: intro;
+  }
+
+  .tagline {
+    max-width: 36ch;
+    margin: 0;
+    color: var(--sl-color-white);
+    font-size: clamp(1.65rem, 1.25rem + 1.7vw, 2.5rem);
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    line-height: 1.12;
+  }
+
+  /* Restyle the embedded code block through Expressive Code's documented
+     style-setting variables, which inherit into its rendered markup. */
+  .code-frame {
+    grid-area: code;
+    --ec-brdCol: var(--sl-color-hairline);
+    --ec-brdRad: 6px;
+    --ec-codeBg: var(--sl-color-bg-inline-code);
+    --ec-codeFontSize: 0.85rem;
+    --ec-codeLineHt: 1.6;
+    --ec-codePadBlk: 0.7rem;
+    --ec-codePadInl: 1rem;
+  }
+
+  .demo-column {
+    grid-area: demo;
+    min-width: 0;
+  }
+
+  .demo {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 8px;
+    background: #f5f6f8;
+  }
+
+  .demo :global(iframe) {
+    flex: none;
+    height: var(--demo-content-height, clamp(42rem, 110dvh, 52rem));
+    min-height: 0;
+  }
+
+  .features {
+    display: grid;
+    grid-area: features;
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--sl-color-hairline);
+  }
+
+  .features li {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 0.8rem 0;
+    border-top: 1px solid var(--sl-color-hairline);
+  }
+
+  .feature-number {
+    color: var(--sl-color-accent-high);
+    font-family: var(--sl-font-mono);
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+
+  .features a {
+    color: var(--sl-color-white);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+  }
+
+  .features a:hover {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.16em;
+  }
+
+  .features p {
+    margin: 0.2rem 0 0;
+    color: var(--sl-color-gray-2);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .actions {
+    display: grid;
+    grid-area: actions;
+    gap: 0.75rem;
+  }
+
+  .actions :global(.sl-link-button) {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .actions :global(.sl-link-button.minimal) {
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 10px;
+    color: var(--sl-color-white);
+  }
+
+  .legal {
+    grid-area: legal;
+  }
+
+  @media (min-width: 56rem) {
+    .hero {
+      grid-template-areas: none;
+      grid-template-columns: minmax(0, 7fr) minmax(23rem, 5fr);
+      column-gap: 0;
+      align-items: start;
+      min-height: calc(100dvh - var(--sl-nav-height) - 1rem);
+      padding-block: 1rem 1.5rem;
+    }
+
+    .copy {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      align-self: stretch;
+      margin-inline-end: clamp(1rem, 3vw, 4rem);
+    }
+
+    /* Pin the legal links to the bottom of the viewport-sized column. */
+    .legal {
+      margin-top: auto;
+    }
+
+    .demo-column {
+      grid-column: 2;
+      grid-row: 1;
+      position: sticky;
+      top: calc(var(--sl-nav-height) + 1.5rem);
+      align-self: start;
+      height: calc(100dvh - var(--sl-nav-height) - 3rem);
+      padding-inline-start: clamp(0.75rem, 2vw, 3rem);
+      border-inline-start: 1px solid var(--sl-color-hairline);
+    }
+
+    .demo {
+      height: 100%;
+    }
+
+    .demo :global(iframe) {
+      flex: 1;
+      height: 100%;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem 1.5rem;
+    }
+
+    .actions :global(.sl-link-button) {
+      width: auto;
+    }
+
+    .actions :global(.sl-link-button.minimal) {
+      border: 0;
+      border-radius: 0;
+      color: var(--sl-color-text-accent);
+    }
+  }
+
+  /* Tighten the left column on short laptop viewports without changing the
+     sticky demo's viewport-sized panel. */
+  @media (min-width: 56rem) and (max-height: 53rem) {
+    .copy {
+      gap: 1rem;
+    }
+
+    .tagline {
+      font-size: clamp(1.8rem, 3vw, 2.2rem);
+    }
+
+    .code-frame {
+      --ec-codeFontSize: 0.8rem;
+      --ec-codePadBlk: 0.55rem;
+      --ec-codePadInl: 0.9rem;
+    }
+
+    .features li {
+      padding-block: 0.6rem;
+    }
+
+    .features p {
+      font-size: 0.84rem;
+      line-height: 1.4;
+    }
+  }
+</style>

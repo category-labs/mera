@@ -47,8 +47,9 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
     return (
       <div className="connect-cta">
         <p className="hint">
-          The demo encrypts a generated or imported recovery phrase in a vault
-          that opens with the passkey.
+          The demo encrypts a recovery phrase in a vault that opens with the
+          passkey. Generate a fresh one rather than importing a phrase that
+          holds funds.
         </p>
         <label className="field">
           <span className="field-head">

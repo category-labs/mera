@@ -7,7 +7,7 @@ import TrustBoundary from "../../../assets/diagrams/trust-boundary.svg";
 
 Mera runs in the page JS code, the keys it produces and derives are software keys and not hardware backed. In principle, mera's security model matches that of a wallet browser extension like MetaMask or Phantom: whatever the wallet signs with, a seed phrase, a private key, or an access token for a remote signer, lives in script memory.
 
-- A ceremony under the rpId (the relying party domain) returns the [PRF output](/concepts/passkeys-and-prf/) for the salt it asks for. Whoever takes over a hostname under the rpId can serve a page there and run one. So can any script in the app's own page, injected or from a dependency or extension.
+- Whoever takes over a hostname under the rpId (the relying party domain) can serve a page there and run a ceremony, which returns the [PRF output](/concepts/passkeys-and-prf/) that the account keys derive from. So can any script in the app's own page, injected or from a dependency or extension.
 - Losing access to the passkey without a backup or export also loses access to the accounts derived from it.
 - A passkey works only under the rpId it was created for: after a domain migration, passkey accounts can no longer be reproduced and vaults can no longer be decrypted. Accounts need an export path before any planned migration.
 - Secrets encrypted with one reused PRF output share an encryption key, and exposing that key exposes them all. The vault functions generate a fresh random 32-byte salt per secret.

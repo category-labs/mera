@@ -122,6 +122,7 @@ export default defineConfig({
         Footer: "./src/components/Footer.astro",
         Header: "./src/components/Header.astro",
         Hero: "./src/components/Hero.astro",
+        Search: "./src/components/Search.astro",
         ThemeProvider: "./src/components/ThemeProvider.astro",
         ThemeSelect: "./src/components/ThemeSelect.astro",
       },

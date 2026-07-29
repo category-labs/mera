@@ -73,7 +73,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.4",
     "@playwright/test": "1.61.1",
-    "@types/node": "24.13.3",
+    "@types/node": "26.1.2",
     "publint": "0.3.21",
     "typescript": "7.0.2",
     "viem": "2.55.2"

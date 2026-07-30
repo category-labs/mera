@@ -3,7 +3,7 @@ title: Passkey accounts
 description: Accounts derived from a passkey with no stored secret.
 ---
 
-In mera's model, a passkey account is a blockchain account whose keys derive from a passkey's [PRF output](/concepts/passkeys-and-prf/), the 32 secret bytes a passkey returns deterministically. Mera evaluates the PRF with a fixed salt, so each [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) recomputes the same accounts on every device the passkey syncs to, with no secret stored anywhere. The app passes the output to a [derivation scheme](/concepts/entropy-keys-and-accounts/) of its choosing. [Create passkey accounts](/recipes/create-passkey-accounts/) shows one built on common HD (hierarchical deterministic) standards.
+In mera's model, a passkey account is a blockchain account whose keys derive from a passkey's [PRF output](/concepts/passkeys-and-prf/), the 32 secret bytes a passkey returns deterministically. mera evaluates the PRF with a fixed salt, so each [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) recomputes the same accounts on every device the passkey syncs to, with no secret stored anywhere. The app passes the output to a [derivation scheme](/concepts/entropy-keys-and-accounts/) of its choosing. [Create passkey accounts](/recipes/create-passkey-accounts/) shows one built on common HD (hierarchical deterministic) standards.
 
 ## Losing the passkey
 

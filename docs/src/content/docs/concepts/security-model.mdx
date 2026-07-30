@@ -7,10 +7,10 @@ import TrustBoundary from "../../../assets/diagrams/trust-boundary.svg";
 
 mera produces software keys and not hardware-backed ones. The [PRF output](/concepts/passkeys-and-prf/) and every key derived from it are bytes in the memory of the code that calls mera. Only the passkey private key stays inside the authenticator.
 
-The library host decides who can reach those bytes. In a web page, every script the page loads shares the same memory. The diagram below shows a web page under the rpId.
+The library host decides who can reach those bytes. In a web page, every script the page loads runs in the same JavaScript environment as mera. The diagram below shows a web page under the rpId.
 
 - Whoever takes over a hostname under the rpId (the relying party domain) can serve a page there and run a ceremony, which returns the PRF output that the account keys derive from.
-- Any code that runs in the same page as mera shares one JavaScript environment with it. An injected script, a malicious dependency, and a browser extension with page access all run there.
+- A script in that environment can replace the browser APIs mera calls and keep the PRF output a ceremony returns. It also signs with any live session it reaches. Injected scripts and malicious dependencies run there. An extension content script stays isolated until the extension injects code into the page.
 - Losing access to the passkey without a backup or export also loses access to the accounts derived from it.
 - A passkey works only under the rpId it was created for: after a domain migration, passkey accounts can no longer be reproduced and vaults can no longer be decrypted. Accounts need an export path before any planned migration.
 - Secrets encrypted with one reused PRF output share an encryption key, and exposing that key exposes them all. The vault functions generate a fresh random 32-byte salt per secret.

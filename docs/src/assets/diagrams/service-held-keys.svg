@@ -1,0 +1,80 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 680 790"
+  width="680"
+  height="790"
+  role="img"
+  class="mera-diagram"
+>
+  <title>
+    Two ways to reach a signing key. In the first, the device holds the app and
+    a service SDK, and the path leaves the device: over the network sits the
+    service, where an auth server checks the sign-in and the signing key is
+    kept. In the second, the path stays on the device: the app calls mera, mera
+    runs a passkey ceremony, and the app derives keys from what the passkey
+    returns.
+  </title>
+
+  <defs>
+    <marker
+      id="shk-arrow"
+      viewBox="0 0 10 10"
+      refX="8"
+      refY="5"
+      markerWidth="7"
+      markerHeight="7"
+      orient="auto-start-reverse"
+    >
+      <path d="M0 0 L10 5 L0 10 z" class="d-head" />
+    </marker>
+  </defs>
+
+  <rect class="d-zone" x="24" y="24" width="632" height="166" rx="10" />
+  <text x="40" y="46" class="d-sub">on the device</text>
+
+  <rect class="d-node" x="180" y="58" width="320" height="44" rx="8" />
+  <text x="340" y="86" text-anchor="middle">The app</text>
+
+  <path class="d-edge" d="M340 102 V122" marker-end="url(#shk-arrow)" />
+
+  <rect class="d-node" x="180" y="130" width="320" height="44" rx="8" />
+  <text x="340" y="158" text-anchor="middle">The service SDK</text>
+
+  <path class="d-edge" d="M240 194 V242" marker-end="url(#shk-arrow)" />
+  <path class="d-edge" d="M440 242 V194" marker-end="url(#shk-arrow)" />
+  <text x="340" y="224" text-anchor="middle" class="d-sub">
+    over the network
+  </text>
+
+  <rect class="d-zone" x="24" y="250" width="632" height="166" rx="10" />
+  <text x="40" y="272" class="d-sub">in the service</text>
+
+  <rect class="d-node" x="180" y="284" width="320" height="44" rx="8" />
+  <text x="340" y="312" text-anchor="middle">Auth server</text>
+
+  <path class="d-edge" d="M340 328 V348" marker-end="url(#shk-arrow)" />
+
+  <rect class="d-secret" x="180" y="356" width="320" height="44" rx="8" />
+  <text x="340" y="384" text-anchor="middle">The signing key</text>
+
+  <rect class="d-zone" x="24" y="472" width="632" height="310" rx="10" />
+  <text x="40" y="494" class="d-sub">on the device, with mera</text>
+
+  <rect class="d-node" x="180" y="506" width="320" height="44" rx="8" />
+  <text x="340" y="534" text-anchor="middle">The app</text>
+
+  <path class="d-edge" d="M340 550 V570" marker-end="url(#shk-arrow)" />
+
+  <rect class="d-node" x="180" y="578" width="320" height="44" rx="8" />
+  <text x="340" y="606" text-anchor="middle">mera</text>
+
+  <path class="d-edge" d="M340 622 V642" marker-end="url(#shk-arrow)" />
+
+  <rect class="d-secret" x="180" y="650" width="320" height="44" rx="8" />
+  <text x="340" y="678" text-anchor="middle">The passkey</text>
+
+  <path class="d-edge" d="M340 694 V714" marker-end="url(#shk-arrow)" />
+
+  <rect class="d-secret" x="180" y="722" width="320" height="44" rx="8" />
+  <text x="340" y="750" text-anchor="middle">Keys the app derives</text>
+</svg>

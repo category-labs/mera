@@ -1,0 +1,41 @@
+---
+title: How mera compares
+description: Where the signing key comes from in mera, in a service that holds keys, and in a keystore built for each platform.
+---
+
+import PerPlatformKeystores from "../../assets/diagrams/per-platform-keystores.svg";
+import ServiceHeldKeys from "../../assets/diagrams/service-held-keys.svg";
+
+Mera derives keys from a passkey's [PRF output](/concepts/passkeys-and-prf/) and stores none of them. Two other models are common: a service holds a key for each user, or every platform gets a keystore of its own. This page shows where the signing key comes from in each of the three.
+
+## A service that holds the key
+
+<ServiceHeldKeys />
+
+Services that hold keys for an application's users are often called wallet services. The app calls the service's SDK, and the user signs in with an email address, a social account, or a passkey. Services hold the key in different ways, as shares split between the device and the service, or as one key inside a trusted execution environment. In each of them the app reaches the service to sign in and to reach the key.
+
+A passkey in that model is one way to sign in. The key sits elsewhere, so the service governs recovery, and the service is on the path to every signature. The app takes on an account with the service, its API keys, and its uptime, and trust extends to the service and the infrastructure under it.
+
+With mera the passkey returns the key material itself: 32 secret bytes, from a ceremony the authenticator answers on the device. No service stands between the passkey and the signature. Removing the service also removes the recovery it provided, which is why an app that derives [passkey accounts](/concepts/passkey-accounts/) owns its own export path.
+
+## One keystore for each platform
+
+<PerPlatformKeystores />
+
+An app with no shared source of key material stores the key on each platform separately: the iOS Keychain, the Android Keystore, browser storage behind a password. Each one is a separate implementation, with its own backup and its own recovery, and a fourth platform starts from nothing. One account across all of them means the person moves a seed phrase by hand.
+
+Passkeys sync, and their PRF output is stable. The same passkey therefore recomputes the same accounts wherever it syncs, so a web app and its native counterparts under one domain share one account and one code path.
+
+## What mera does not do
+
+- **Recovery.** Accounts derived from a passkey last as long as the passkey does. An export, import, or backup path is the app's to build, and to build before the passkey is gone.
+- **Custody and policy.** Mera signs on the device it runs on. Spending limits, transaction policy, sponsored fees, and server-side signing stay with the app.
+- **Protection from the page.** Keys derived in the page are software keys. Any script running there can read them and can sign with a live session, as the [security model](/concepts/security-model/) sets out.
+- **Universal reach.** PRF is unevenly implemented across authenticators. [Authenticator support](/authenticator-support/) records what works today.
+- **Survival of a domain change.** A passkey works only under the relying party ID it was created for, and derivation cannot be reproduced under another.
+
+## See also
+
+- [Passkey accounts](/concepts/passkey-accounts/): the model this page compares, and what losing the passkey costs.
+- [Security model](/concepts/security-model/): what mera protects, and the risks left to the app.
+- [Getting started](/getting-started/): the path from a passkey to a signature in code.

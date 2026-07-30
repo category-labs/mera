@@ -127,6 +127,7 @@ export default defineConfig({
       },
       sidebar: [
         { label: "Getting started", slug: "getting-started" },
+        { label: "How mera compares", slug: "how-mera-compares" },
         {
           label: "Concepts",
           items: [

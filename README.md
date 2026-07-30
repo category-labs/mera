@@ -2,7 +2,7 @@
 
 Accounts on any chain and platform, from a passkey.
 
-mera is an experimental TypeScript library for building passkey accounts. It gives applications authenticator-bound entropy and signing sessions that zero their keys when ended, while leaving account derivation, recovery, storage, and product flows under application control.
+mera is a TypeScript library for building passkey accounts. It gives applications authenticator-bound entropy and signing sessions that zero their keys when ended, while leaving account derivation, recovery, storage, and product flows under application control.
 
 Developers can use mera to:
 
@@ -24,7 +24,7 @@ Installation, guides, compatibility information, the security model, the API ref
 
 ## Status
 
-mera is an experimental reference implementation. The documentation describes its [security model](https://mera.category.xyz/concepts/security-model/) and [known authenticator support](https://mera.category.xyz/authenticator-support/).
+mera is in preview. The API may change before 1.0. Category Labs has completed an internal security review. The documentation describes its [security model](https://mera.category.xyz/concepts/security-model/) and [known authenticator support](https://mera.category.xyz/authenticator-support/).
 
 ## Contributing
 

@@ -1,0 +1,42 @@
+name: Socket
+
+# Supply-chain scanning via Socket. The root library depends on @noble/curves,
+# @noble/hashes, and @scure/base (plus viem as an optional peer), so this guards
+# every install against known-malicious packages and catches risky additions to
+# the dependency tree.
+#
+# Free mode ("Socket Firewall: Free") requires no account and no token: it
+# installs `sfw` and proxies the install, blocking known-malicious packages.
+# For richer PR-level analysis, install the Socket GitHub App as well (see
+# SETUP.md) — that requires a (free) Socket account.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  socket:
+    name: socket
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+      - name: Install Socket Firewall (free)
+        uses: SocketDev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall-free
+      # Run the locked install through Socket Firewall so every dependency in
+      # the tree is checked before it is fetched.
+      - name: Locked install through Socket
+        run: sfw npm ci

@@ -6,6 +6,11 @@ on:
       - main
     paths:
       - docs/**
+      - demo/**
+      - src/**
+      - package.json
+      - package-lock.json
+      - tsconfig.json
       - .github/workflows/docs-pages.yml
   workflow_dispatch:
 

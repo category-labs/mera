@@ -3,6 +3,7 @@ node_modules/
 demo/network/evm/out/
 demo/network/evm/cache/
 demo/.env
+docs/public/demo/
 .astro/
 playwright-report/
 test-results/

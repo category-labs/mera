@@ -1,8 +1,8 @@
 ---
 // The landing page, registered as the Hero override in astro.config.mjs:
-// pitch, install command, numbered features, actions, and the live demo.
-// The title, tagline, and action buttons come from the page frontmatter; the
-// rest of the landing copy lives here.
+// pitch, install command, orientation strip, numbered features, actions, and
+// the live demo. The title, tagline, and action buttons come from the page
+// frontmatter; the rest of the landing copy lives here.
 import { Code, LinkButton } from "@astrojs/starlight/components";
 import { withBasePath } from "../base-path";
 import DemoEmbed from "./DemoEmbed.astro";
@@ -12,6 +12,30 @@ const { data } = Astro.locals.starlightRoute.entry;
 const { tagline, actions = [] } = data.hero || {};
 
 const installCommand = "npm install @category-labs/mera";
+
+// The strip above the features corrects the model most readers arrive with: a
+// passkey as the login, with the key held elsewhere. The stance drives both the
+// label and the accent treatment.
+const claims = [
+  {
+    stance: "not this",
+    title: "A service holds the key",
+    link: "/how-mera-compares/",
+    text: "The app reaches a service to sign in and to sign.",
+  },
+  {
+    stance: "not this",
+    title: "Each platform stores a key",
+    link: "/how-mera-compares/",
+    text: "Every platform brings its own store and backup.",
+  },
+  {
+    stance: "this",
+    title: "The passkey returns the key",
+    link: "/concepts/passkey-accounts/",
+    text: "Every ceremony returns the same 32 secret bytes.",
+  },
+];
 
 const features = [
   {
@@ -47,11 +71,34 @@ const features = [
       <Code code={installCommand} lang="sh" frame="none" />
     </div>
 
+    <section class="strip">
+      <span class="row-number" aria-hidden="true">00</span>
+      <p class="strip-claim">
+        mera is not a wallet service, and not a keystore for each platform.
+      </p>
+      <ul class="claims">
+        {
+          claims.map((claim) => (
+            <li class:list={["claim", { "is-mera": claim.stance === "this" }]}>
+              <span class="claim-stance">{claim.stance}</span>
+              <div>
+                <a href={withBasePath(claim.link)}>{claim.title}</a>
+                <p>{claim.text}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+      <a class="strip-link" href={withBasePath("/how-mera-compares/")}>
+        Full comparison<span aria-hidden="true">&#160;&#8594;</span>
+      </a>
+    </section>
+
     <ol class="features">
       {
         features.map((feature, index) => (
           <li>
-            <span class="feature-number" aria-hidden="true">
+            <span class="row-number" aria-hidden="true">
               {String(index + 1).padStart(2, "0")}
             </span>
             <div>
@@ -108,6 +155,7 @@ const features = [
     grid-template-areas:
       "intro"
       "code"
+      "strip"
       "demo"
       "features"
       "actions"
@@ -200,6 +248,77 @@ const features = [
     min-height: 0;
   }
 
+  /* The strip and the features are one list: the strip is row 00, so both use
+     the same numbers, hairlines, and link treatment. */
+  .strip {
+    display: grid;
+    grid-area: strip;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: 0.5rem 0.75rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--sl-color-hairline);
+  }
+
+  .strip-claim {
+    grid-column: 2;
+    margin: 0;
+    color: var(--sl-color-white);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .claims {
+    display: grid;
+    grid-column: 2;
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Stacked, the claims are list rows and take the features' separators. The
+     two-column layout turns them into cards and replaces the top border with a
+     full one. */
+  .claim {
+    display: grid;
+    grid-template-columns: 5rem minmax(0, 1fr);
+    gap: 0.6rem;
+    align-items: baseline;
+    padding: 0.5rem;
+    border-top: 1px solid var(--sl-color-hairline);
+    border-radius: 6px;
+  }
+
+  .claim.is-mera {
+    background: color-mix(in srgb, var(--sl-color-accent) 8%, transparent);
+  }
+
+  .claim-stance {
+    color: var(--sl-color-gray-3);
+    font-family: var(--sl-font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+    text-transform: uppercase;
+  }
+
+  .claim.is-mera .claim-stance {
+    color: var(--sl-color-accent-high);
+  }
+
+  .strip-link {
+    grid-column: 2;
+    color: var(--sl-color-text-accent);
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+
+  .strip-link:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.16em;
+  }
+
   .features {
     display: grid;
     grid-area: features;
@@ -218,28 +337,31 @@ const features = [
     border-top: 1px solid var(--sl-color-hairline);
   }
 
-  .feature-number {
+  .row-number {
     color: var(--sl-color-accent-high);
     font-family: var(--sl-font-mono);
     font-size: 0.82rem;
     line-height: 1.6;
   }
 
-  .features a {
+  .features a,
+  .claim a {
     color: var(--sl-color-white);
     font-weight: 500;
     letter-spacing: -0.01em;
     text-decoration: none;
   }
 
-  .features a:hover {
+  .features a:hover,
+  .claim a:hover {
     text-decoration: underline;
     text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
     text-decoration-thickness: 1px;
     text-underline-offset: 0.16em;
   }
 
-  .features p {
+  .features p,
+  .claim p {
     margin: 0.2rem 0 0;
     color: var(--sl-color-gray-2);
     font-size: 0.9rem;
@@ -280,7 +402,7 @@ const features = [
     .copy {
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
+      gap: 0.95rem;
       align-self: stretch;
       margin-inline-end: clamp(1rem, 3vw, 4rem);
     }
@@ -310,6 +432,39 @@ const features = [
       height: 100%;
     }
 
+    .strip {
+      grid-template-columns: 2rem minmax(0, 1fr) auto;
+      align-items: baseline;
+    }
+
+    .strip-link {
+      grid-row: 1;
+      grid-column: 3;
+      white-space: nowrap;
+    }
+
+    .claims {
+      grid-column: 2 / -1;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.6rem;
+    }
+
+    .claim {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.15rem;
+      align-items: start;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid var(--sl-color-hairline);
+    }
+
+    .claim.is-mera {
+      border-color: color-mix(
+        in srgb,
+        var(--sl-color-accent) 35%,
+        var(--sl-color-hairline)
+      );
+    }
+
     .actions {
       display: flex;
       flex-wrap: wrap;
@@ -332,11 +487,11 @@ const features = [
      sticky demo's viewport-sized panel. */
   @media (min-width: 56rem) and (max-height: 53rem) {
     .copy {
-      gap: 1rem;
+      gap: 0.7rem;
     }
 
     .tagline {
-      font-size: clamp(1.8rem, 3vw, 2.2rem);
+      font-size: clamp(1.7rem, 2.8vw, 2rem);
     }
 
     .code-frame {
@@ -346,10 +501,15 @@ const features = [
     }
 
     .features li {
-      padding-block: 0.6rem;
+      padding-block: 0.3rem;
     }
 
-    .features p {
+    .claim {
+      padding-block: 0.35rem;
+    }
+
+    .features p,
+    .claim p {
       font-size: 0.84rem;
       line-height: 1.4;
     }

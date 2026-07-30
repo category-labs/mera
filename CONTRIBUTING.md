@@ -26,7 +26,7 @@ npm run check:pack  # publishable package contents, exports, and types
 
 `npm run check` applies to every change; biome verifies formatting and lint across the repository, including CSS and SVG files, and `npm run format` fixes the formatting failures it reports. Run `npm test` for library or test changes. Run `npm run check:pack` when packaged files, exports, types, or package metadata change.
 
-The demo compiles against the built library:
+The demo compiles against the built library and writes to `docs/public/demo`, where the documentation website serves it at `/demo/`:
 
 ```sh
 npm run build
@@ -35,7 +35,7 @@ npm ci
 npm run build
 ```
 
-Build the documentation website from its package directory:
+Build the documentation website from its package directory. Its landing page embeds the demo, so run the demo build above first:
 
 ```sh
 cd docs

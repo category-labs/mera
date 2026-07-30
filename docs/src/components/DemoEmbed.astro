@@ -1,25 +1,18 @@
 ---
 // Renders the demo app in an iframe. The demo reports its content height so
 // stacked layouts can show it without an inner scrollbar; wide layouts may
-// still constrain it to the viewport. The delegated permissions let passkey
-// ceremonies and clipboard writes run in-frame.
-const DEMO_ORIGIN = "https://mera-demo.up.railway.app";
-const DEMO_PERMISSIONS = [
-  "publickey-credentials-create",
-  "publickey-credentials-get",
-  "clipboard-write",
-]
-  .map((permission) => `${permission} ${DEMO_ORIGIN}`)
-  .join("; ");
+// still constrain it to the viewport.
+//
+// The frame stays same-origin because WebKit refuses passkey creation in a
+// cross-origin frame, so the demo is built into this site at /demo/. Passkey
+// ceremonies and clipboard writes need no delegated permissions there: their
+// default allowlist is `self`. The path names index.html because the dev server
+// serves files from public/ but does not resolve directory indexes.
+const DEMO_PATH = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/demo/index.html`;
 ---
 
-<iframe
-  src={DEMO_ORIGIN}
-  data-demo-origin={DEMO_ORIGIN}
-  title="mera demo"
-  class="not-content"
-  allow={DEMO_PERMISSIONS}></iframe>
-<a class="open-demo" href={DEMO_ORIGIN} target="_blank" rel="noreferrer">
+<iframe src={DEMO_PATH} data-demo title="mera demo" class="not-content"></iframe>
+<a class="open-demo" href={DEMO_PATH} target="_blank" rel="noreferrer">
   If the demo does not work, try opening it in a new tab.
 </a>
 
@@ -28,6 +21,7 @@ const DEMO_PERMISSIONS = [
     const data = event.data;
     if (
       data?.type !== "mera:resize" ||
+      event.origin !== location.origin ||
       !Number.isFinite(data.height) ||
       data.height <= 0
     ) {
@@ -35,12 +29,9 @@ const DEMO_PERMISSIONS = [
     }
 
     for (const frame of document.querySelectorAll<HTMLIFrameElement>(
-      "iframe[data-demo-origin]",
+      "iframe[data-demo]",
     )) {
-      if (
-        frame.contentWindow === event.source &&
-        frame.dataset.demoOrigin === event.origin
-      ) {
+      if (frame.contentWindow === event.source) {
         frame.style.setProperty(
           "--demo-content-height",
           `${Math.ceil(data.height)}px`,

@@ -4,8 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "build:demo": "npm --prefix .. ci && npm --prefix .. run build && npm --prefix ../demo ci && npm --prefix ../demo run build -- --outDir ../docs/public/demo --emptyOutDir",
+    "predev": "npm run build:demo",
     "dev": "astro dev",
-    "prebuild": "npm --prefix .. ci && npm --prefix .. run build && npm --prefix ../demo ci && npm --prefix ../demo run build -- --outDir ../docs/public/demo --emptyOutDir",
+    "prebuild": "npm run build:demo",
     "build": "astro build",
     "preview": "astro preview"
   },

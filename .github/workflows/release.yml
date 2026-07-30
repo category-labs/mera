@@ -1,30 +1,8 @@
 name: Mera - Release
 
-# Publishes @category-labs/mera to npm with provenance.
-#
-# The package is built AND published on a GitHub-hosted runner in the same job.
-# This is a requirement for meaningful npm provenance: the attestation is signed
-# with the runner's OIDC token and certifies that the published artifact was
-# built from this repository at this commit by this workflow. Building elsewhere
-# (e.g. inside a Docker container) and only uploading the tarball would weaken
-# that guarantee to "a runner uploaded a file", so the Dockerfile is used for
-# local verification only, not for the publish path.
-#
-# Triggers:
-#   - push of a v* tag   -> real publish with provenance
-#   - workflow_dispatch  -> dry-run only (no registry write, no secrets needed)
-#
-# Cut a release (once the prerequisites below exist):
-#   npm version <patch|minor|major>   # bumps package.json + creates the tag
-#   git push --follow-tags
-#
-# One-time prerequisites before the first real publish:
-#   1. Create the `category-labs` npm org/scope (unscoped `mera` is taken).
-#   2. Add an `NPM_TOKEN` secret (automation/granular token that can publish
-#      to @category-labs/*).
-#   3. Create the `npm-publish` GitHub Actions environment (optionally gated
-#      with required reviewers).
-# The dry-run path works without any of these.
+# Publishes @category-labs/mera to npm with provenance, building and publishing
+# in one GitHub-hosted job so the attestation certifies the artifact was built
+# here. A v* tag publishes for real; workflow_dispatch runs a dry-run.
 
 on:
   push:
@@ -36,18 +14,15 @@ permissions:
   contents: read
 
 jobs:
-  # Real publish: only on a v* tag. Builds on the runner so provenance is honest.
   publish:
     name: Publish to npm (provenance)
     if: github.event_name == 'push'
-    runs-on: ubuntu-latest # must be GitHub-hosted for provenance
+    runs-on: ubuntu-latest
     environment: npm-publish
     permissions:
       contents: read
-      id-token: write # OIDC token used to sign the provenance attestation
+      id-token: write
     steps:
-      # Provenance is unsupported for private repos: npm publish --provenance
-      # would fail deep in the run. Fail fast with a clear message instead.
       - name: Require a public repository (provenance prerequisite)
         if: github.event.repository.private
         run: |
@@ -62,8 +37,6 @@ jobs:
         with:
           node-version-file: .nvmrc
           registry-url: https://registry.npmjs.org
-          # No dependency cache in the publish path: a poisoned cache could
-          # inject artifacts into the published package (zizmor cache-poisoning).
           package-manager-cache: false
 
       - name: Install dependencies
@@ -81,13 +54,9 @@ jobs:
             exit 1
           fi
 
-      # publishConfig in package.json sets access:public + provenance:true.
       - name: Publish
         run: npm publish --provenance
 
-  # Dry-run: manual trigger only. Exercises checkout -> build -> pack/publish
-  # resolution without contacting the registry. Needs no secrets and no OIDC,
-  # and deliberately omits --provenance (only meaningful on a real publish).
   dry-run:
     name: Dry-run publish (no registry write)
     if: github.event_name == 'workflow_dispatch'
@@ -100,8 +69,6 @@ jobs:
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version-file: .nvmrc
-          # No dependency cache in the publish path: a poisoned cache could
-          # inject artifacts into the published package (zizmor cache-poisoning).
           package-manager-cache: false
 
       - name: Install dependencies

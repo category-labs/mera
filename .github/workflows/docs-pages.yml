@@ -30,6 +30,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          check-latest: true
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            demo/package-lock.json
+
+      # The demo build writes to docs/public/demo, which the site serves at
+      # /demo/. The library has to exist first: the demo compiles against dist/.
+      - name: Build the demo into the site
+        run: |
+          npm ci
+          npm run build
+          npm --prefix demo ci
+          npm --prefix demo run build
+
       - name: Build and upload docs
         uses: withastro/action@v6
         with:

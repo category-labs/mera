@@ -6,6 +6,7 @@
       "!**/dist",
       "!**/node_modules",
       "!**/.astro",
+      "!docs/public/demo",
       "!.claude/worktrees",
       "!playwright-report",
       "!test-results",

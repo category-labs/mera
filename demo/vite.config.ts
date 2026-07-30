@@ -9,6 +9,8 @@ const libEntry = fileURLToPath(new URL("../dist/index.js", import.meta.url));
 const libViemEntry = fileURLToPath(new URL("../dist/viem.js", import.meta.url));
 
 export default defineConfig({
+  // The docs site embeds this build at /demo/, so asset URLs must be relative.
+  base: "./",
   plugins: [react()],
   resolve: {
     alias: {

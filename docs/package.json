@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "npm --prefix .. ci && npm --prefix .. run build && npm --prefix ../demo ci && npm --prefix ../demo run build -- --outDir ../docs/public/demo --emptyOutDir",
     "build": "astro build",
     "preview": "astro preview"
   },

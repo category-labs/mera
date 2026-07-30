@@ -33,7 +33,6 @@ export default defineConfig({
   site,
   base: base || undefined,
   redirects: {
-    "/demo": withBase("/"),
     "/concepts/derived-accounts-and-secret-vaults": withBase(
       "/concepts/passkey-accounts/",
     ),

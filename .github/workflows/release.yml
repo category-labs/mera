@@ -45,10 +45,14 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Refuse to republish an existing version
+      - name: Validate release version and refuse to republish
         run: |
           name=$(node -p "require('./package.json').name")
           version=$(node -p "require('./package.json').version")
+          if [ "$GITHUB_REF_NAME" != "v${version}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match package version ${version}."
+            exit 1
+          fi
           if npm view "${name}@${version}" version >/dev/null 2>&1; then
             echo "::error::${name}@${version} is already published. Bump the version."
             exit 1

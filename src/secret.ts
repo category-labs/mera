@@ -220,8 +220,6 @@ async function createSecretVaultWithNewPasskey({
 
     return await createSecretVault({ credential, secret: secretCopy });
   } finally {
-    // Web Crypto reads a BufferSource into its own copy before its promise
-    // settles, so filling these after the await cannot race the encryption.
     secretCopy.fill(0);
     prfOutput?.fill(0);
   }

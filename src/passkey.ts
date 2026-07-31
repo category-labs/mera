@@ -227,8 +227,6 @@ async function getPasskeyPrfOutput({
       throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
     }
 
-    // The salt is caller-owned and DEFAULT_PRF_SALT is shared across calls, so
-    // the ceremony gets a copy either way.
     const prf = {
       eval: { first: copyBytes(prfSalt ?? DEFAULT_PRF_SALT) },
     };

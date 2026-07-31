@@ -45,8 +45,6 @@ function base64UrlDecode(
 
   let bytes: Uint8Array<ArrayBuffer>;
   try {
-    // The decoder takes a string and allocates its own output, so the buffer
-    // cannot be shared; @scure/base types it as the wider ArrayBufferLike.
     bytes = base64urlnopad.decode(value) as Uint8Array<ArrayBuffer>;
   } catch (cause) {
     throw new MeraError(code, `${name} must be base64url`, { cause });

@@ -192,11 +192,14 @@ function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
  * A fresh random PRF salt is generated internally and stored in the returned
  * vault.
  *
+ * A fresh random user handle (`user.id`) is generated for the new credential,
+ * so each call adds a passkey instead of replacing one.
+ *
  * If the fallback ceremony or vault encryption fails, the passkey from the
  * completed creation ceremony still exists on the authenticator, but the
  * thrown error does not carry its metadata.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF or return a usable 32-byte PRF output.
- * @throws MeraError with code `INPUT_INVALID` when `secret` is empty, or `user.id` is provided but not 1 to 64 bytes.
+ * @throws MeraError with code `INPUT_INVALID` when `secret` is empty.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */

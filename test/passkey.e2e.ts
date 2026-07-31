@@ -43,11 +43,7 @@ test("creates a PRF-capable passkey and returns stable PRF output", async ({
       const otherSalt = new Uint8Array(32).fill(6);
       const credential = await mera.createPasskeyWithPrfOutput({
         rp: { id: "localhost", name: "Mera Test" },
-        user: {
-          id: crypto.getRandomValues(new Uint8Array(32)),
-          name: "nad",
-          displayName: "nad",
-        },
+        user: { name: "nad", displayName: "nad" },
         prfSalt: salt,
       });
       const second = await mera.getPasskeyPrfOutput({
@@ -96,11 +92,7 @@ test("PRF output helpers use the default salt when prfSalt is omitted", async ({
       const mera = await import("@category-labs/mera");
       const created = await mera.createPasskeyWithPrfOutput({
         rp: { id: "localhost", name: "Mera Test" },
-        user: {
-          id: crypto.getRandomValues(new Uint8Array(32)),
-          name: "nad",
-          displayName: "nad",
-        },
+        user: { name: "nad", displayName: "nad" },
       });
 
       // Omission uses the same stable salt for returning assertions.
@@ -146,11 +138,7 @@ test("secret-vault orchestrators create independent vaults and decrypt them", as
 
       const firstVault = await mera.createSecretVaultWithNewPasskey({
         rp: { id: "localhost", name: "Mera Test" },
-        user: {
-          id: crypto.getRandomValues(new Uint8Array(32)),
-          name: "nad",
-          displayName: "nad",
-        },
+        user: { name: "nad", displayName: "nad" },
         secret: new TextEncoder().encode(firstPhrase),
       });
 

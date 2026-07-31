@@ -26,12 +26,6 @@ type CreatePasskeyWithPrfOutputOptions = {
   rp: PublicKeyCredentialRpEntity & { id: string };
   /** User identity passed to WebAuthn. */
   user: {
-    /**
-     * User handle stored for the discoverable credential. Must be 1 to 64
-     * bytes when provided (WebAuthn's user-handle limit). When omitted, a
-     * fresh 32-byte random handle is generated for each call.
-     */
-    id?: Uint8Array;
     /** User name displayed or stored by the authenticator. */
     name: string;
     /** Human-readable display name for the authenticator UI. */
@@ -90,7 +84,10 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * fallback `navigator.credentials.get()` evaluates the same salt and shows a
  * second prompt.
  *
- * WebAuthn challenges are generated internally.
+ * WebAuthn challenges and the credential's user handle (`user.id`) are
+ * generated internally, 32 random bytes each. An authenticator overwrites a
+ * discoverable credential that has the same `rp.id` and `user.id`, so a fresh
+ * handle per call adds a passkey instead of replacing one.
  *
  * The credential is requested with fixed parameters: ES256 or RS256 key types,
  * attestation `"none"`, a required resident key, and required user
@@ -99,7 +96,7 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
  * Any failure after the creation ceremony completes leaves the passkey on the
  * authenticator, but the thrown error does not carry its metadata.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF, returns a malformed create-time PRF output, or does not return PRF output on the fallback ceremony.
- * @throws MeraError with code `INPUT_INVALID` when an explicit `prfSalt` is not 32 bytes, or `user.id` is provided but not 1 to 64 bytes.
+ * @throws MeraError with code `INPUT_INVALID` when an explicit `prfSalt` is not 32 bytes.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
@@ -116,17 +113,13 @@ async function createPasskeyWithPrfOutput({
       throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
     }
 
-    if (user.id !== undefined && (user.id.length < 1 || user.id.length > 64)) {
-      throw new MeraError("INPUT_INVALID", "user.id must be 1 to 64 bytes");
-    }
-
     const prfSaltCopy = copyBytes(prfSalt ?? DEFAULT_PRF_SALT);
 
     const credential = await navigator.credentials.create({
       publicKey: {
         rp,
         user: {
-          id: asArrayBuffer(user.id ?? randomBytes(32)),
+          id: asArrayBuffer(randomBytes(32)),
           name: user.name,
           displayName: user.displayName,
         },

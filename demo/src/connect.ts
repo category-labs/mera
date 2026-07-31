@@ -49,6 +49,17 @@ const DEFAULT_USER = "nad";
 
 const rpId = location.hostname;
 
+const passkeyLabelFormat = new Intl.DateTimeFormat(undefined, {
+  dateStyle: "medium",
+  timeStyle: "medium",
+});
+
+// Every create adds a passkey, so a creation-time label keeps the entries
+// apart in the authenticator's picker.
+function passkeyLabel(): string {
+  return `Account ${passkeyLabelFormat.format(new Date())}`;
+}
+
 /**
  * Derives the demo's account (HD index 0) from a BIP-39 seed and zeroes the
  * seed, so no caller retains it past the derivation.
@@ -90,11 +101,9 @@ function buildPasskeyWallet(
 }
 
 async function createPasskeyWallet(): Promise<ConnectedWallet> {
-  // `user.id` is left to default (32 random bytes), so every "Create" is a
-  // distinct, parallel passkey rather than silently overwriting an existing one.
   const credential = await createPasskeyWithPrfOutput({
     rp: { id: rpId, name: RP_NAME },
-    user: { name: DEFAULT_USER, displayName: DEFAULT_USER },
+    user: { name: DEFAULT_USER, displayName: passkeyLabel() },
   });
 
   rememberPasskeyWallet({
@@ -143,7 +152,7 @@ async function createVaultAccount(mnemonic: string): Promise<ConnectedWallet> {
   try {
     const vault = await createSecretVaultWithNewPasskey({
       rp: { id: rpId, name: RP_NAME },
-      user: { name: DEFAULT_USER, displayName: DEFAULT_USER },
+      user: { name: DEFAULT_USER, displayName: passkeyLabel() },
       secret,
     });
     localStorage.setItem(VAULT_KEY, JSON.stringify(vault));

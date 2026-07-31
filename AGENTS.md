@@ -26,6 +26,11 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 - Preserve runtime validation at cryptographic, string, wire, and untrusted JSON boundaries. Avoid "perfect validation" of typed internal invariants that TypeScript or a dependency already owns.
 - Keep object-parameter APIs when the operation is likely to gain optional parameters or when named fields make security-sensitive inputs harder to mix up.
 
+### Secret Handling
+
+- Zero buffers the library allocated. Inputs belong to the caller, and so are the returned buffers.
+- Treat zeroing as a bound on secret lifetime and reachability, not as erasure from the process. Documentation must not claim more.
+
 ### Documentation and Examples
 
 - Documentation prose is technical writing held to a hard bar: simple, concise, and detailed at once. Every sentence must add information; cut sentences that only set up, restate, or editorialize on what adjacent sentences already show.

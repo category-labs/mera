@@ -1,11 +1,6 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { utf8ToBytes } from "@noble/hashes/utils.js";
-import {
-  asArrayBuffer,
-  base64UrlDecode,
-  base64UrlEncode,
-  copyBytes,
-} from "./encoding.js";
+import { base64UrlDecode, base64UrlEncode, copyBytes } from "./encoding.js";
 import { isMeraError, MeraError } from "./errors.js";
 import type {
   CreatePasskeyWithPrfOutputResult,
@@ -119,11 +114,11 @@ async function createPasskeyWithPrfOutput({
       publicKey: {
         rp,
         user: {
-          id: asArrayBuffer(randomBytes(32)),
+          id: randomBytes(32),
           name: user.name,
           displayName: user.displayName,
         },
-        challenge: asArrayBuffer(randomBytes(32)),
+        challenge: randomBytes(32),
         pubKeyCredParams: [
           { type: "public-key", alg: -7 },
           { type: "public-key", alg: -257 },
@@ -136,7 +131,7 @@ async function createPasskeyWithPrfOutput({
           userVerification: "required",
         },
         extensions: {
-          prf: { eval: { first: asArrayBuffer(prfSaltCopy) } },
+          prf: { eval: { first: prfSaltCopy } },
         },
       },
     });
@@ -232,13 +227,15 @@ async function getPasskeyPrfOutput({
       throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
     }
 
+    // The salt is caller-owned and DEFAULT_PRF_SALT is shared across calls, so
+    // the ceremony gets a copy either way.
     const prf = {
-      eval: { first: asArrayBuffer(prfSalt ?? DEFAULT_PRF_SALT) },
+      eval: { first: copyBytes(prfSalt ?? DEFAULT_PRF_SALT) },
     };
 
     const publicKey: PublicKeyCredentialRequestOptions = {
       rpId,
-      challenge: asArrayBuffer(randomBytes(32)),
+      challenge: randomBytes(32),
       ...(timeout !== undefined ? { timeout } : {}),
       userVerification: "required",
       extensions: { prf },
@@ -253,12 +250,10 @@ async function getPasskeyPrfOutput({
       // https://www.w3.org/TR/webauthn-3/#credential-id
       publicKey.allowCredentials = [
         {
-          id: asArrayBuffer(
-            base64UrlDecode(allowCredential.credentialId, {
-              name: "credential.credentialId",
-              minByteLength: 1,
-            }),
-          ),
+          id: base64UrlDecode(allowCredential.credentialId, {
+            name: "credential.credentialId",
+            minByteLength: 1,
+          }),
           type: "public-key",
           ...(allowCredential.transports !== undefined
             ? {

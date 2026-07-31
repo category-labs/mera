@@ -31,7 +31,9 @@ function stubPublicKeyCredential({
   };
 }
 
-// Reads the PRF salt a stubbed WebAuthn call was asked to evaluate.
+// Reads the PRF salt a stubbed WebAuthn call was asked to evaluate. The salt
+// arrives as the library's own live buffer, so the read is a copy: a caller
+// that mutates a returned prfSalt must not change what a stub already recorded.
 function readEvaluatedPrfSalt(
   publicKey:
     | PublicKeyCredentialRequestOptions
@@ -39,8 +41,8 @@ function readEvaluatedPrfSalt(
     | undefined,
 ): Uint8Array<ArrayBuffer> {
   const first = publicKey?.extensions?.prf?.eval?.first;
-  if (!(first instanceof ArrayBuffer)) {
-    throw new Error("expected PRF salt as an ArrayBuffer");
+  if (!(first instanceof Uint8Array)) {
+    throw new Error("expected PRF salt as a Uint8Array");
   }
   return new Uint8Array(first);
 }

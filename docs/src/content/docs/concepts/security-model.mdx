@@ -18,6 +18,14 @@ The library host decides who can reach those bytes. In a web page, every script 
 
 <TrustBoundary />
 
+## Zeroing
+
+mera zeroes every sensitive buffer it allocates after it no longer needs it. Input buffers belong to the caller and so are buffers returned by mera.
+
+Zeroing bounds how long key material stays readable. It reduces the chance that a key appears in a crash dump, a swap or hibernation file, a heap snapshot, or an error report that serializes the object graph.
+
+A zeroed buffer is not proof the bytes left the process. Garbage collection copies values, dependencies may convert private keys to immutable bigint scalars while signing, etc. Also, the behaviour may differ between JavaScript engines. Zeroing is a defense-in-depth measure, not a guarantee.
+
 ## See also
 
 - [Passkeys and the PRF extension](/concepts/passkeys-and-prf/)

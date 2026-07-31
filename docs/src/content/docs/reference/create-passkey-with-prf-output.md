@@ -63,6 +63,8 @@ WebAuthn timeout in milliseconds, applied to each ceremony.
 
 `Promise<CreatePasskeyWithPrfOutputResult>`. Credential metadata (`credentialId`, `transports` when reported) plus the 32-byte `prfSalt` that was evaluated and the 32-byte `prfOutput`.
 
+Disposing the result zeroes `prfOutput`, so a `using` declaration clears it when its scope exits. `prfSalt` stays readable, because a vault stores it. Destructuring the result drops the disposal member, and the `prfOutput` binding then lives as long as the caller keeps it.
+
 ## Errors
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not enable PRF, or did not return PRF output on the fallback ceremony.

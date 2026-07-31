@@ -16,7 +16,7 @@ import {
   toCredentialMetadata,
 } from "./passkey.js";
 import type {
-  CreatePasskeyWithPrfOutputResult,
+  PasskeyCredentialMetadata,
   PasskeyCredentialTransport,
   PasskeySecretVault,
 } from "./types.js";
@@ -97,8 +97,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 /** Inputs for `createSecretVault`. */
 type CreateSecretVaultOptions = {
-  /** Credential metadata plus the PRF salt and PRF output that key this secret. */
-  credential: CreatePasskeyWithPrfOutputResult;
+  /**
+   * Credential metadata plus the PRF salt and PRF output that key this secret.
+   * Narrower than `CreatePasskeyWithPrfOutputResult`: these bytes are read
+   * here and owned by the caller, so no disposal member is required.
+   */
+  credential: PasskeyCredentialMetadata & {
+    prfSalt: Uint8Array;
+    prfOutput: Uint8Array;
+  };
   /** Secret bytes to encrypt. */
   secret: Uint8Array;
 };
@@ -210,21 +217,18 @@ async function createSecretVaultWithNewPasskey({
   timeout,
 }: CreateSecretVaultWithNewPasskeyOptions): Promise<PasskeySecretVault> {
   const secretCopy = copyNonEmptySecret(secret);
-  let prfOutput: Uint8Array<ArrayBuffer> | undefined;
 
   try {
-    const credential = await createPasskeyWithPrfOutput({
+    using credential = await createPasskeyWithPrfOutput({
       rp,
       user,
       ...(timeout !== undefined ? { timeout } : {}),
       prfSalt: randomBytes(PRF_SALT_LENGTH),
     });
-    prfOutput = credential.prfOutput;
 
     return await createSecretVault({ credential, secret: secretCopy });
   } finally {
     secretCopy.fill(0);
-    prfOutput?.fill(0);
   }
 }
 
@@ -255,17 +259,15 @@ async function createSecretVaultWithExistingPasskey({
   const credentialCopy =
     credential &&
     toCredentialMetadata(credential.credentialId, credential.transports);
-  let prfOutput: Uint8Array<ArrayBuffer> | undefined;
 
   try {
     const prfSalt = randomBytes(PRF_SALT_LENGTH);
-    const evaluated = await getPasskeyPrfOutput({
+    using evaluated = await getPasskeyPrfOutput({
       rpId,
       ...(credentialCopy !== undefined ? { credential: credentialCopy } : {}),
       prfSalt,
       ...(timeout !== undefined ? { timeout } : {}),
     });
-    prfOutput = evaluated.prfOutput;
 
     // Reuse the caller's metadata (with its transports) only when the browser
     // selected that same credential.
@@ -275,12 +277,15 @@ async function createSecretVaultWithExistingPasskey({
         : { credentialId: evaluated.credentialId };
 
     return await createSecretVault({
-      credential: { ...credentialMetadata, prfSalt, prfOutput },
+      credential: {
+        ...credentialMetadata,
+        prfSalt,
+        prfOutput: evaluated.prfOutput,
+      },
       secret: secretCopy,
     });
   } finally {
     secretCopy.fill(0);
-    prfOutput?.fill(0);
   }
 }
 
@@ -431,18 +436,19 @@ async function decryptSecretVaultWithPasskey({
   timeout,
 }: DecryptSecretVaultWithPasskeyOptions): Promise<Uint8Array<ArrayBuffer>> {
   const parsedVault = parseSecretVault(vault);
-  const { prfOutput } = await getPasskeyPrfOutput({
+  using evaluated = await getPasskeyPrfOutput({
     rpId,
     credential: parsedVault.credential,
     prfSalt: base64UrlDecode(parsedVault.prfSalt),
     ...(timeout !== undefined ? { timeout } : {}),
   });
 
-  try {
-    return await decryptSecretVault({ vault: parsedVault, prfOutput });
-  } finally {
-    prfOutput.fill(0);
-  }
+  // `return await` so disposal zeroes the PRF output after decryption reads it,
+  // not while it is still in flight.
+  return await decryptSecretVault({
+    vault: parsedVault,
+    prfOutput: evaluated.prfOutput,
+  });
 }
 
 export type {

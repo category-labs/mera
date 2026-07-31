@@ -55,6 +55,8 @@ WebAuthn timeout in milliseconds.
 
 `Promise<PasskeyPrfResult>`: the `credentialId` the browser actually selected (canonical unpadded base64url) and the 32-byte `prfOutput`. When `credential` was omitted, the person picks the passkey in the browser UI, so the returned ID can name a different credential than the app expected.
 
+Disposing the result zeroes `prfOutput`, so a `using` declaration clears it when its scope exits. Destructuring the result drops the disposal member, and the `prfOutput` binding then lives as long as the caller keeps it.
+
 ## Errors
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not return a usable 32-byte PRF output.

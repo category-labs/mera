@@ -177,6 +177,9 @@ async function createPasskeyWithPrfOutput({
       ...credentialMetadata,
       prfSalt: prfSaltCopy,
       prfOutput,
+      [Symbol.dispose]: () => {
+        prfOutput.fill(0);
+      },
     };
   } catch (error) {
     if (isMeraError(error)) {
@@ -286,9 +289,14 @@ async function getPasskeyPrfOutput({
       );
     }
 
+    const prfOutput = copyPrfOutput(first);
+
     return {
       credentialId: base64UrlEncode(new Uint8Array(publicKeyCredential.rawId)),
-      prfOutput: copyPrfOutput(first),
+      prfOutput,
+      [Symbol.dispose]: () => {
+        prfOutput.fill(0);
+      },
     };
   } catch (error) {
     if (isMeraError(error)) {

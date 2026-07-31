@@ -318,6 +318,61 @@ test("getPasskeyPrfOutput rejects an empty credentialId without prompting", asyn
   });
 });
 
+test("a using declaration zeroes the PRF output when its scope exits", async () => {
+  const expected = Uint8Array.from({ length: 32 }, (_, index) => index + 1);
+  const navigator = {
+    credentials: {
+      async create() {
+        return stubPublicKeyCredential({
+          prf: { enabled: true, results: { first: expected.buffer } },
+          transports: ["internal"],
+        });
+      },
+      async get() {
+        return stubPublicKeyCredential({
+          prf: { results: { first: expected.buffer } },
+        });
+      },
+    },
+  };
+
+  // Distinct from the PRF output, and non-zero so the surviving-salt assertion
+  // below cannot pass by accident.
+  const salt = Uint8Array.from({ length: 32 }, (_, index) => index + 100);
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    let assertedOutput: Uint8Array | undefined;
+    let createdOutput: Uint8Array | undefined;
+    let createdSalt: Uint8Array | undefined;
+
+    {
+      using asserted = await getPasskeyPrfOutput({
+        rpId: "example.com",
+        prfSalt: salt,
+      });
+      using created = await createPasskeyWithPrfOutput({
+        rp: { id: "example.com", name: "Mera Test" },
+        user: { name: "nad", displayName: "nad" },
+        prfSalt: salt,
+      });
+
+      assertedOutput = asserted.prfOutput;
+      createdOutput = created.prfOutput;
+      createdSalt = created.prfSalt;
+
+      expect(assertedOutput).toEqual(expected);
+      expect(createdOutput).toEqual(expected);
+    }
+
+    expect(assertedOutput).toEqual(new Uint8Array(32));
+    expect(createdOutput).toEqual(new Uint8Array(32));
+    // A vault stores the salt, so disposal must leave it readable.
+    expect(createdSalt).toEqual(salt);
+    // The authenticator's own buffer is upstream of the copy and untouched.
+    expect(expected[0]).toBe(1);
+  });
+});
+
 test("createPasskeyWithPrfOutput snapshots prfSalt for fallback and result", async () => {
   const originalSalt = Uint8Array.from({ length: 32 }, (_, index) => index);
   const prfSalt = new Uint8Array(originalSalt);

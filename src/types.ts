@@ -47,6 +47,11 @@ type PasskeyPrfResult = {
   readonly credentialId: string;
   /** First PRF output from WebAuthn. Always 32 bytes. */
   readonly prfOutput: Uint8Array<ArrayBuffer>;
+  /**
+   * Zeroes `prfOutput`, so a `using` declaration clears it when its scope
+   * exits. Reading `prfOutput` afterwards yields zeroes.
+   */
+  [Symbol.dispose](): void;
 };
 
 /** Result of creating a passkey together with its first PRF output. */
@@ -57,6 +62,12 @@ type CreatePasskeyWithPrfOutputResult = PasskeyCredentialMetadata & {
   readonly prfSalt: Uint8Array<ArrayBuffer>;
   /** First WebAuthn PRF output for `prfSalt`. Always 32 bytes. */
   readonly prfOutput: Uint8Array<ArrayBuffer>;
+  /**
+   * Zeroes `prfOutput`, so a `using` declaration clears it when its scope
+   * exits. `prfSalt` is not secret and stays readable, which matters because a
+   * vault stores it.
+   */
+  [Symbol.dispose](): void;
 };
 
 /**

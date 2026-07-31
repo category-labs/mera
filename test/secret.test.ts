@@ -274,6 +274,57 @@ test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavaila
   });
 });
 
+test("zeroes the secret copies handed to Web Crypto", async () => {
+  const real = globalThis.crypto;
+  // Every buffer the library hands to Web Crypto carrying PRF output or
+  // plaintext. Nonces and the HKDF info arrive as algorithm fields, not as the
+  // captured arguments, so they stay out of the assertion.
+  const captured: ArrayBuffer[] = [];
+  const capturing = {
+    getRandomValues: real.getRandomValues.bind(real),
+    subtle: {
+      deriveKey: real.subtle.deriveKey.bind(real.subtle),
+      decrypt: real.subtle.decrypt.bind(real.subtle),
+      importKey(
+        format: "raw",
+        keyData: ArrayBuffer,
+        algorithm: "HKDF",
+        extractable: boolean,
+        usages: KeyUsage[],
+      ) {
+        captured.push(keyData);
+        return real.subtle.importKey(
+          format,
+          keyData,
+          algorithm,
+          extractable,
+          usages,
+        );
+      },
+      encrypt(algorithm: AesGcmParams, key: CryptoKey, data: ArrayBuffer) {
+        captured.push(data);
+        return real.subtle.encrypt(algorithm, key, data);
+      },
+    },
+  };
+
+  await withStubbedGlobal("crypto", capturing, async () => {
+    const vault = await createTestVault();
+
+    await expect(
+      decryptSecretVault({ vault, prfOutput: PRF_OUTPUT }),
+    ).resolves.toEqual(SECRET);
+  });
+
+  // One PRF-output import per key derivation (encrypting, then decrypting) plus
+  // the plaintext handed to encrypt.
+  expect(captured.length).toBe(3);
+
+  for (const buffer of captured) {
+    expect(new Uint8Array(buffer)).toEqual(new Uint8Array(buffer.byteLength));
+  }
+});
+
 test("secret vault encryption is independent of credential metadata and PRF salt", async () => {
   const vault = await createTestVault();
   const edited = parseSecretVault({

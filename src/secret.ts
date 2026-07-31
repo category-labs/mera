@@ -33,21 +33,37 @@ const GCM_TAG_LENGTH = 16;
 // the same PRF output.
 const SECRET_ENCRYPTION_INFO = utf8ToBytes("mera.v1.encrypt.secret");
 
-// Derives the non-extractable AES-256-GCM vault key with HKDF-SHA-256.
-// asArrayBuffer snapshots the output before importKey's first await, preserving
-// the public copy guarantee while the 32-byte check validates the key material.
+/**
+ * Passes a standalone `ArrayBuffer` copy of `value` to `use`, then zeroes the
+ * copy.
+ *
+ * Web Crypto reads a `BufferSource` argument into its own copy synchronously,
+ * before the returned promise settles, so zeroing after the await cannot race
+ * the operation.
+ */
+async function withSecretArrayBuffer<T>(
+  value: Uint8Array,
+  use: (buffer: ArrayBuffer) => Promise<T>,
+): Promise<T> {
+  const buffer = asArrayBuffer(value);
+
+  try {
+    return await use(buffer);
+  } finally {
+    new Uint8Array(buffer).fill(0);
+  }
+}
+
+// Derives the non-extractable AES-256-GCM vault key with HKDF-SHA-256. The
+// 32-byte check validates the key material before it reaches HKDF.
 async function deriveEncryptionKey(prfOutput: Uint8Array): Promise<CryptoKey> {
   if (prfOutput.length !== 32) {
     throw new MeraError("INPUT_INVALID", "PRF output must be 32 bytes");
   }
 
   const crypto = getCrypto();
-  const material = await crypto.subtle.importKey(
-    "raw",
-    asArrayBuffer(prfOutput),
-    "HKDF",
-    false,
-    ["deriveKey"],
+  const material = await withSecretArrayBuffer(prfOutput, (keyData) =>
+    crypto.subtle.importKey("raw", keyData, "HKDF", false, ["deriveKey"]),
   );
 
   return crypto.subtle.deriveKey(
@@ -114,8 +130,8 @@ type CreateSecretVaultOptions = {
  * vaults encrypted with one reused PRF output share an encryption key, so each
  * secret needs a fresh salt.
  *
- * Inputs arrive validated and caller-owned. Byte inputs are read in place and
- * never zeroed here; callers own the pre-ceremony snapshots and the zeroing.
+ * Inputs arrive validated and caller-owned; callers own the pre-ceremony
+ * snapshots and the zeroing.
  *
  * @returns A JSON-safe secret vault.
  * @throws MeraError with code `INPUT_INVALID` when the PRF output is not 32 bytes.
@@ -128,16 +144,18 @@ async function createSecretVault({
 }: CreateSecretVaultOptions): Promise<PasskeySecretVault> {
   const encryptionKey = await deriveEncryptionKey(credential.prfOutput);
 
-  // subtle.encrypt copies its inputs synchronously; the GCM nonce is generated
-  // internally so callers cannot accidentally reuse one.
+  // The GCM nonce is generated internally so callers cannot accidentally reuse
+  // one.
   const nonce = randomBytes(NONCE_LENGTH);
-  const ciphertext = await getCrypto().subtle.encrypt(
-    {
-      name: "AES-GCM",
-      iv: asArrayBuffer(nonce),
-    },
-    encryptionKey,
-    asArrayBuffer(secret),
+  const ciphertext = await withSecretArrayBuffer(secret, (data) =>
+    getCrypto().subtle.encrypt(
+      {
+        name: "AES-GCM",
+        iv: asArrayBuffer(nonce),
+      },
+      encryptionKey,
+      data,
+    ),
   );
 
   return {

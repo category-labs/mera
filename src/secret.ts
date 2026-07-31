@@ -1,10 +1,5 @@
 import { utf8ToBytes } from "@noble/hashes/utils.js";
-import {
-  asArrayBuffer,
-  base64UrlDecode,
-  base64UrlEncode,
-  copyBytes,
-} from "./encoding.js";
+import { base64UrlDecode, base64UrlEncode, copyBytes } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import type {
   CreatePasskeyWithPrfOutputOptions,
@@ -31,7 +26,7 @@ const GCM_TAG_LENGTH = 16;
 
 // HKDF info keeps the encryption key distinct from any other key derived from
 // the same PRF output.
-const SECRET_ENCRYPTION_INFO = utf8ToBytes("mera.v1.encrypt.secret");
+const SECRET_ENCRYPTION_INFO = copyBytes(utf8ToBytes("mera.v1.encrypt.secret"));
 
 // Derives the non-extractable AES-256-GCM vault key with HKDF-SHA-256.
 // prfOutput reaches importKey uncopied, so the caller's zeroing covers every
@@ -58,7 +53,7 @@ async function deriveEncryptionKey(
       name: "HKDF",
       hash: "SHA-256",
       salt: new Uint8Array(0),
-      info: asArrayBuffer(SECRET_ENCRYPTION_INFO),
+      info: SECRET_ENCRYPTION_INFO,
     },
     material,
     {
@@ -323,10 +318,10 @@ async function decryptSecretVault({
     const plaintext = await crypto.subtle.decrypt(
       {
         name: "AES-GCM",
-        iv: asArrayBuffer(nonce),
+        iv: nonce,
       },
       encryptionKey,
-      asArrayBuffer(ciphertext),
+      ciphertext,
     );
     return new Uint8Array(plaintext);
   } catch (error) {

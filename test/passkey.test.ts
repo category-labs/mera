@@ -248,13 +248,11 @@ test("passkey helpers generate internal challenges and request no attestation", 
     throw new Error("expected WebAuthn options to be captured");
   }
 
-  expect(createOptions.challenge).toBeInstanceOf(ArrayBuffer);
-  expect(new Uint8Array(createOptions.challenge as ArrayBuffer)).toHaveLength(
-    32,
-  );
+  expect(createOptions.challenge).toBeInstanceOf(Uint8Array);
+  expect(createOptions.challenge as Uint8Array).toHaveLength(32);
   expect(createOptions.attestation).toBe("none");
-  expect(getOptions.challenge).toBeInstanceOf(ArrayBuffer);
-  expect(new Uint8Array(getOptions.challenge as ArrayBuffer)).toHaveLength(32);
+  expect(getOptions.challenge).toBeInstanceOf(Uint8Array);
+  expect(getOptions.challenge as Uint8Array).toHaveLength(32);
 });
 
 test("createPasskeyWithPrfOutput generates a fresh user handle per call", async () => {
@@ -266,7 +264,7 @@ test("createPasskeyWithPrfOutput generates a fresh user handle per call", async 
   const navigator = {
     credentials: {
       async create({ publicKey }: CredentialCreationOptions) {
-        handles.push(new Uint8Array(publicKey?.user.id as ArrayBuffer));
+        handles.push(new Uint8Array(publicKey?.user.id as Uint8Array));
         return stubPublicKeyCredential({
           prf: {
             enabled: true,

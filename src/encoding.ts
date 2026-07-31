@@ -11,17 +11,6 @@ function copyBytes(value: Uint8Array): Uint8Array<ArrayBuffer> {
 }
 
 /**
- * Copies bytes into a standalone `ArrayBuffer` for Web APIs.
- *
- * @internal
- */
-function asArrayBuffer(value: Uint8Array): ArrayBuffer {
-  const output = new ArrayBuffer(value.byteLength);
-  new Uint8Array(output).set(value);
-  return output;
-}
-
-/**
  * Encodes bytes as canonical unpadded base64url.
  *
  * @internal
@@ -51,12 +40,14 @@ function base64UrlDecode(
     byteLength?: number;
     minByteLength?: number;
   } = {},
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   const { name = "value", code = "INPUT_INVALID" } = options;
 
-  let bytes: Uint8Array;
+  let bytes: Uint8Array<ArrayBuffer>;
   try {
-    bytes = base64urlnopad.decode(value);
+    // The decoder takes a string and allocates its own output, so the buffer
+    // cannot be shared; @scure/base types it as the wider ArrayBufferLike.
+    bytes = base64urlnopad.decode(value) as Uint8Array<ArrayBuffer>;
   } catch (cause) {
     throw new MeraError(code, `${name} must be base64url`, { cause });
   }
@@ -78,4 +69,4 @@ function base64UrlDecode(
   return bytes;
 }
 
-export { asArrayBuffer, base64UrlDecode, base64UrlEncode, copyBytes };
+export { base64UrlDecode, base64UrlEncode, copyBytes };

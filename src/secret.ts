@@ -1,4 +1,3 @@
-import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { base64UrlDecode, base64UrlEncode, copyBytes } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import type {
@@ -26,12 +25,14 @@ const GCM_TAG_LENGTH = 16;
 
 // HKDF info keeps the encryption key distinct from any other key derived from
 // the same PRF output.
-const SECRET_ENCRYPTION_INFO = copyBytes(utf8ToBytes("mera.v1.encrypt.secret"));
+const SECRET_ENCRYPTION_INFO = new TextEncoder().encode(
+  "mera.v1.encrypt.secret",
+);
 
 // Derives the non-extractable AES-256-GCM vault key with HKDF-SHA-256.
-// prfOutput reaches importKey uncopied, so the caller's zeroing covers every
-// buffer holding these bytes; importKey reads it before its promise settles,
-// so a later fill cannot race the import.
+// prfOutput reaches importKey uncopied, so this adds no buffer for the caller
+// to zero; importKey reads it before its promise settles, so a later fill
+// cannot race the import.
 async function deriveEncryptionKey(
   prfOutput: Uint8Array<ArrayBuffer>,
 ): Promise<CryptoKey> {
@@ -126,9 +127,11 @@ async function createSecretVault({
 }: CreateSecretVaultOptions): Promise<PasskeySecretVault> {
   const encryptionKey = await deriveEncryptionKey(credential.prfOutput);
 
-  // The GCM nonce is generated internally so callers cannot accidentally reuse
-  // one. secret reaches encrypt uncopied, so the caller's zeroing covers it.
+  // Generated internally so callers cannot accidentally reuse one.
   const nonce = randomBytes(NONCE_LENGTH);
+
+  // secret reaches encrypt uncopied, so this adds no buffer for the caller to
+  // zero.
   const ciphertext = await getCrypto().subtle.encrypt(
     {
       name: "AES-GCM",

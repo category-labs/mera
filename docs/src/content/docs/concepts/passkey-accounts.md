@@ -7,7 +7,7 @@ In mera's model, a passkey account is a blockchain account whose keys derive fro
 
 ## Losing the passkey
 
-The accounts may be unrecoverable if the passkey is deleted, not synced, tied to a lost provider account, or unavailable under the app's rpId after a domain migration. Recovery then depends on an app-provided export, import, or backup path, taken while the passkey still works.
+The accounts may be unrecoverable if the passkey is deleted, not synced, tied to a lost provider account, unavailable under the app's rpId after a domain migration, or [overwritten](/concepts/passkeys-and-prf/#user-handles) by a second passkey with the same user handle. Recovery then depends on an app-provided export, import, or backup path, taken while the passkey still works.
 
 ## When the secret already exists
 

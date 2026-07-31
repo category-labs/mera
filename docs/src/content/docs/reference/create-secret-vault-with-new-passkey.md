@@ -38,12 +38,19 @@ try {
 
 Relying party identity passed to [WebAuthn](https://www.w3.org/TR/webauthn-3/). The required ID is reused by the fallback [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts).
 
-### options.user
+### options.user.name
 
-- Type: `{ id?: Uint8Array; name: string; displayName: string }`
+- Type: `string`
 - Required
 
-User identity passed to WebAuthn. `id` must be 1 to 64 bytes when provided. A fresh random 32-byte user handle is generated when it is omitted.
+User name displayed or stored by the authenticator.
+
+### options.user.displayName
+
+- Type: `string`
+- Required
+
+Human-readable display name for the authenticator UI.
 
 ### options.secret
 
@@ -66,11 +73,13 @@ WebAuthn timeout in milliseconds, applied to each ceremony.
 ## Errors
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not enable PRF or return a usable 32-byte output.
-- [`INPUT_INVALID`](/reference/errors/#input_invalid): `secret` is empty, or the provided `user.id` length is outside 1 to 64 bytes.
+- [`INPUT_INVALID`](/reference/errors/#input_invalid): `secret` is empty.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the page is not in a secure context, or the runtime lacks Web Crypto.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## Notes
+
+The credential's [user handle](/concepts/passkeys-and-prf/#user-handles) (`user.id`) is 32 random bytes, generated per call, so each call adds a passkey and never overwrites one.
 
 If the fallback ceremony or vault encryption fails after creation, the passkey remains on the authenticator and the error does not contain its metadata.
 

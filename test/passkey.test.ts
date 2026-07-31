@@ -235,11 +235,7 @@ test("passkey helpers generate internal challenges and request no attestation", 
   await withStubbedGlobal("navigator", navigator, async () => {
     await createPasskeyWithPrfOutput({
       rp: { id: "example.com", name: "Mera Test" },
-      user: {
-        id: new Uint8Array([1]),
-        name: "nad",
-        displayName: "nad",
-      },
+      user: { name: "nad", displayName: "nad" },
       prfSalt: new Uint8Array(32),
     });
     await getPasskeyPrfOutput({
@@ -259,6 +255,41 @@ test("passkey helpers generate internal challenges and request no attestation", 
   expect(createOptions.attestation).toBe("none");
   expect(getOptions.challenge).toBeInstanceOf(ArrayBuffer);
   expect(new Uint8Array(getOptions.challenge as ArrayBuffer)).toHaveLength(32);
+});
+
+test("createPasskeyWithPrfOutput generates a fresh user handle per call", async () => {
+  // The handle never reaches the caller, so the WebAuthn options are the only
+  // place it is observable. A repeated handle would make the second call
+  // overwrite the passkey the first one created.
+  const handles: Uint8Array[] = [];
+
+  const navigator = {
+    credentials: {
+      async create({ publicKey }: CredentialCreationOptions) {
+        handles.push(new Uint8Array(publicKey?.user.id as ArrayBuffer));
+        return stubPublicKeyCredential({
+          prf: {
+            enabled: true,
+            results: { first: new Uint8Array(32).buffer },
+          },
+          transports: ["internal"],
+        });
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    const options = {
+      rp: { id: "example.com", name: "Mera Test" },
+      user: { name: "nad", displayName: "nad" },
+    };
+    await createPasskeyWithPrfOutput(options);
+    await createPasskeyWithPrfOutput(options);
+  });
+
+  expect(handles[0]).toHaveLength(32);
+  expect(handles[1]).toHaveLength(32);
+  expect(handles[0]).not.toEqual(handles[1]);
 });
 
 test("getPasskeyPrfOutput rejects an empty credentialId without prompting", async () => {
@@ -314,11 +345,7 @@ test("createPasskeyWithPrfOutput snapshots prfSalt for fallback and result", asy
   await withStubbedGlobal("navigator", navigator, async () => {
     const pending = createPasskeyWithPrfOutput({
       rp: { id: "example.com", name: "Mera Test" },
-      user: {
-        id: new Uint8Array([1]),
-        name: "nad",
-        displayName: "nad",
-      },
+      user: { name: "nad", displayName: "nad" },
       prfSalt,
     });
 

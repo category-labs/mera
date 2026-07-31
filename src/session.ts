@@ -32,8 +32,6 @@ function createSigningKey(
   let activePrivateKey: Uint8Array<ArrayBuffer> | undefined;
 
   try {
-    // Derive and store from the same owned snapshot, so the public key cannot
-    // diverge from the private key later used for signing.
     activePrivateKey = copyBytes(privateKey);
     const publicKey = derivePublicKey(activePrivateKey);
 

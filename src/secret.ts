@@ -33,37 +33,26 @@ const GCM_TAG_LENGTH = 16;
 // the same PRF output.
 const SECRET_ENCRYPTION_INFO = utf8ToBytes("mera.v1.encrypt.secret");
 
-/**
- * Passes a standalone `ArrayBuffer` copy of `value` to `use`, then zeroes the
- * copy.
- *
- * Web Crypto reads a `BufferSource` argument into its own copy synchronously,
- * before the returned promise settles, so zeroing after the await cannot race
- * the operation.
- */
-async function withSecretArrayBuffer<T>(
-  value: Uint8Array,
-  use: (buffer: ArrayBuffer) => Promise<T>,
-): Promise<T> {
-  const buffer = asArrayBuffer(value);
-
-  try {
-    return await use(buffer);
-  } finally {
-    new Uint8Array(buffer).fill(0);
-  }
-}
-
 // Derives the non-extractable AES-256-GCM vault key with HKDF-SHA-256. The
 // 32-byte check validates the key material before it reaches HKDF.
-async function deriveEncryptionKey(prfOutput: Uint8Array): Promise<CryptoKey> {
+//
+// prfOutput reaches importKey uncopied so that the caller's zeroing covers
+// every buffer holding these bytes. importKey reads the buffer before its
+// promise settles, so a later fill cannot race the import.
+async function deriveEncryptionKey(
+  prfOutput: Uint8Array<ArrayBuffer>,
+): Promise<CryptoKey> {
   if (prfOutput.length !== 32) {
     throw new MeraError("INPUT_INVALID", "PRF output must be 32 bytes");
   }
 
   const crypto = getCrypto();
-  const material = await withSecretArrayBuffer(prfOutput, (keyData) =>
-    crypto.subtle.importKey("raw", keyData, "HKDF", false, ["deriveKey"]),
+  const material = await crypto.subtle.importKey(
+    "raw",
+    prfOutput,
+    "HKDF",
+    false,
+    ["deriveKey"],
   );
 
   return crypto.subtle.deriveKey(
@@ -116,7 +105,7 @@ type CreateSecretVaultOptions = {
   /** Credential metadata plus the PRF salt and PRF output that key this secret. */
   credential: CreatePasskeyWithPrfOutputResult;
   /** Secret bytes to encrypt. */
-  secret: Uint8Array;
+  secret: Uint8Array<ArrayBuffer>;
 };
 
 /**
@@ -145,17 +134,15 @@ async function createSecretVault({
   const encryptionKey = await deriveEncryptionKey(credential.prfOutput);
 
   // The GCM nonce is generated internally so callers cannot accidentally reuse
-  // one.
+  // one. secret reaches encrypt uncopied, like the PRF output above.
   const nonce = randomBytes(NONCE_LENGTH);
-  const ciphertext = await withSecretArrayBuffer(secret, (data) =>
-    getCrypto().subtle.encrypt(
-      {
-        name: "AES-GCM",
-        iv: asArrayBuffer(nonce),
-      },
-      encryptionKey,
-      data,
-    ),
+  const ciphertext = await getCrypto().subtle.encrypt(
+    {
+      name: "AES-GCM",
+      iv: nonce,
+    },
+    encryptionKey,
+    secret,
   );
 
   return {
@@ -307,7 +294,7 @@ type DecryptSecretVaultOptions = {
   /** Secret vault to decrypt. */
   vault: PasskeySecretVault;
   /** WebAuthn PRF output for the vault's PRF salt. Must be exactly 32 bytes. */
-  prfOutput: Uint8Array;
+  prfOutput: Uint8Array<ArrayBuffer>;
 };
 
 /**

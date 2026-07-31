@@ -37,7 +37,7 @@ function readEvaluatedPrfSalt(
     | PublicKeyCredentialRequestOptions
     | PublicKeyCredentialCreationOptions
     | undefined,
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   const first = publicKey?.extensions?.prf?.eval?.first;
   if (!(first instanceof ArrayBuffer)) {
     throw new Error("expected PRF salt as an ArrayBuffer");

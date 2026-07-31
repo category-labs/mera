@@ -25,12 +25,14 @@ const PRF_OUTPUT = new Uint8Array(32).fill(7);
 const PRF_SALT = new Uint8Array(32).fill(9);
 // A real 12-word BIP-39 phrase stands in for an opaque secret; the library
 // neither knows nor cares that these bytes are a mnemonic.
-const SECRET = utf8ToBytes(
-  "legal winner thank year wave sausage worth useful legal winner thank yellow",
+const SECRET = new Uint8Array(
+  utf8ToBytes(
+    "legal winner thank year wave sausage worth useful legal winner thank yellow",
+  ),
 );
 
 async function createTestVault(
-  secret: Uint8Array = SECRET,
+  secret: Uint8Array<ArrayBuffer> = SECRET,
 ): Promise<PasskeySecretVault> {
   return createSecretVault({
     credential: {
@@ -133,7 +135,7 @@ test("createSecretVaultWithNewPasskey owns a random salt and snapshots the secre
   const creationGate = new Promise<void>((resolve) => {
     releaseCreation = resolve;
   });
-  let evaluatedSalt: Uint8Array | undefined;
+  let evaluatedSalt: Uint8Array<ArrayBuffer> | undefined;
 
   const navigator = {
     credentials: {
@@ -185,7 +187,7 @@ test("createSecretVaultWithExistingPasskey snapshots inputs and preserves transp
   const assertionGate = new Promise<void>((resolve) => {
     releaseAssertion = resolve;
   });
-  let evaluatedSalt: Uint8Array | undefined;
+  let evaluatedSalt: Uint8Array<ArrayBuffer> | undefined;
 
   const navigator = {
     credentials: {
@@ -274,12 +276,12 @@ test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavaila
   });
 });
 
-test("zeroes the secret copies handed to Web Crypto", async () => {
+test("zeroes every buffer handed to Web Crypto", async () => {
   const real = globalThis.crypto;
   // Every buffer the library hands to Web Crypto carrying PRF output or
   // plaintext. Nonces and the HKDF info arrive as algorithm fields, not as the
   // captured arguments, so they stay out of the assertion.
-  const captured: ArrayBuffer[] = [];
+  const captured: Uint8Array[] = [];
   const capturing = {
     getRandomValues: real.getRandomValues.bind(real),
     subtle: {
@@ -287,7 +289,7 @@ test("zeroes the secret copies handed to Web Crypto", async () => {
       decrypt: real.subtle.decrypt.bind(real.subtle),
       importKey(
         format: "raw",
-        keyData: ArrayBuffer,
+        keyData: Uint8Array<ArrayBuffer>,
         algorithm: "HKDF",
         extractable: boolean,
         usages: KeyUsage[],
@@ -301,19 +303,50 @@ test("zeroes the secret copies handed to Web Crypto", async () => {
           usages,
         );
       },
-      encrypt(algorithm: AesGcmParams, key: CryptoKey, data: ArrayBuffer) {
+      encrypt(
+        algorithm: AesGcmParams,
+        key: CryptoKey,
+        data: Uint8Array<ArrayBuffer>,
+      ) {
         captured.push(data);
         return real.subtle.encrypt(algorithm, key, data);
       },
     },
   };
 
-  await withStubbedGlobal("crypto", capturing, async () => {
-    const vault = await createTestVault();
+  // The orchestrators own the zeroing, so the assertion runs against them
+  // rather than against createSecretVault and decryptSecretVault, whose inputs
+  // stay caller-owned.
+  const navigator = {
+    credentials: {
+      async create({ publicKey }: CredentialCreationOptions) {
+        const prfSalt = readEvaluatedPrfSalt(publicKey);
+        return stubPublicKeyCredential({
+          prf: { enabled: true, results: { first: prfSalt.buffer } },
+          transports: ["internal"],
+        });
+      },
+      async get({ publicKey }: CredentialRequestOptions) {
+        const prfSalt = readEvaluatedPrfSalt(publicKey);
+        return stubPublicKeyCredential({
+          prf: { results: { first: prfSalt.buffer } },
+        });
+      },
+    },
+  };
 
-    await expect(
-      decryptSecretVault({ vault, prfOutput: PRF_OUTPUT }),
-    ).resolves.toEqual(SECRET);
+  await withStubbedGlobal("navigator", navigator, async () => {
+    await withStubbedGlobal("crypto", capturing, async () => {
+      const vault = await createSecretVaultWithNewPasskey({
+        rp: { id: "example.com", name: "Mera Test" },
+        user: { name: "nad", displayName: "nad" },
+        secret: SECRET,
+      });
+
+      await expect(
+        decryptSecretVaultWithPasskey({ rpId: "example.com", vault }),
+      ).resolves.toEqual(SECRET);
+    });
   });
 
   // One PRF-output import per key derivation (encrypting, then decrypting) plus
@@ -321,7 +354,7 @@ test("zeroes the secret copies handed to Web Crypto", async () => {
   expect(captured.length).toBe(3);
 
   for (const buffer of captured) {
-    expect(new Uint8Array(buffer)).toEqual(new Uint8Array(buffer.byteLength));
+    expect(buffer).toEqual(new Uint8Array(buffer.byteLength));
   }
 });
 

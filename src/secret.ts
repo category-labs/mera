@@ -30,9 +30,6 @@ const SECRET_ENCRYPTION_INFO = new TextEncoder().encode(
 );
 
 // Derives the non-extractable AES-256-GCM vault key with HKDF-SHA-256.
-// prfOutput reaches importKey uncopied, so this adds no buffer for the caller
-// to zero; importKey reads it before its promise settles, so a later fill
-// cannot race the import.
 async function deriveEncryptionKey(
   prfOutput: Uint8Array<ArrayBuffer>,
 ): Promise<CryptoKey> {
@@ -113,8 +110,8 @@ type CreateSecretVaultOptions = {
  * vaults encrypted with one reused PRF output share an encryption key, so each
  * secret needs a fresh salt.
  *
- * Inputs arrive validated and caller-owned, and reach Web Crypto in place;
- * callers own the pre-ceremony snapshots and the zeroing.
+ * Inputs arrive validated and caller-owned; callers own the pre-ceremony
+ * snapshots and the zeroing.
  *
  * @returns A JSON-safe secret vault.
  * @throws MeraError with code `INPUT_INVALID` when the PRF output is not 32 bytes.
@@ -127,11 +124,10 @@ async function createSecretVault({
 }: CreateSecretVaultOptions): Promise<PasskeySecretVault> {
   const encryptionKey = await deriveEncryptionKey(credential.prfOutput);
 
-  // Generated internally so callers cannot accidentally reuse one.
+  // The GCM nonce is generated internally so callers cannot accidentally reuse
+  // one.
   const nonce = randomBytes(NONCE_LENGTH);
 
-  // secret reaches encrypt uncopied, so this adds no buffer for the caller to
-  // zero.
   const ciphertext = await getCrypto().subtle.encrypt(
     {
       name: "AES-GCM",
@@ -224,6 +220,8 @@ async function createSecretVaultWithNewPasskey({
 
     return await createSecretVault({ credential, secret: secretCopy });
   } finally {
+    // Web Crypto reads a BufferSource into its own copy before its promise
+    // settles, so filling these after the await cannot race the encryption.
     secretCopy.fill(0);
     prfOutput?.fill(0);
   }

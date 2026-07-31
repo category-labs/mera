@@ -1,4 +1,3 @@
-import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
 import type {
   PasskeyCredentialTransport,
@@ -25,10 +24,8 @@ const PRF_OUTPUT = new Uint8Array(32).fill(7);
 const PRF_SALT = new Uint8Array(32).fill(9);
 // A real 12-word BIP-39 phrase stands in for an opaque secret; the library
 // neither knows nor cares that these bytes are a mnemonic.
-const SECRET = new Uint8Array(
-  utf8ToBytes(
-    "legal winner thank year wave sausage worth useful legal winner thank yellow",
-  ),
+const SECRET = new TextEncoder().encode(
+  "legal winner thank year wave sausage worth useful legal winner thank yellow",
 );
 
 async function createTestVault(

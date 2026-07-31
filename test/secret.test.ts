@@ -276,11 +276,10 @@ test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavaila
   });
 });
 
-test("zeroes every buffer handed to Web Crypto", async () => {
+test("zeroes the PRF output and secret handed to Web Crypto", async () => {
   const real = globalThis.crypto;
-  // Every buffer the library hands to Web Crypto carrying PRF output or
-  // plaintext. Nonces and the HKDF info arrive as algorithm fields, not as the
-  // captured arguments, so they stay out of the assertion.
+  // Nonces and the HKDF info reach Web Crypto as algorithm fields rather than
+  // as these arguments, and are public values that stay unzeroed.
   const captured: Uint8Array[] = [];
   const capturing = {
     getRandomValues: real.getRandomValues.bind(real),

@@ -33,12 +33,10 @@ const GCM_TAG_LENGTH = 16;
 // the same PRF output.
 const SECRET_ENCRYPTION_INFO = utf8ToBytes("mera.v1.encrypt.secret");
 
-// Derives the non-extractable AES-256-GCM vault key with HKDF-SHA-256. The
-// 32-byte check validates the key material before it reaches HKDF.
-//
-// prfOutput reaches importKey uncopied so that the caller's zeroing covers
-// every buffer holding these bytes. importKey reads the buffer before its
-// promise settles, so a later fill cannot race the import.
+// Derives the non-extractable AES-256-GCM vault key with HKDF-SHA-256.
+// prfOutput reaches importKey uncopied, so the caller's zeroing covers every
+// buffer holding these bytes; importKey reads it before its promise settles,
+// so a later fill cannot race the import.
 async function deriveEncryptionKey(
   prfOutput: Uint8Array<ArrayBuffer>,
 ): Promise<CryptoKey> {
@@ -119,8 +117,8 @@ type CreateSecretVaultOptions = {
  * vaults encrypted with one reused PRF output share an encryption key, so each
  * secret needs a fresh salt.
  *
- * Inputs arrive validated and caller-owned; callers own the pre-ceremony
- * snapshots and the zeroing.
+ * Inputs arrive validated and caller-owned, and reach Web Crypto in place;
+ * callers own the pre-ceremony snapshots and the zeroing.
  *
  * @returns A JSON-safe secret vault.
  * @throws MeraError with code `INPUT_INVALID` when the PRF output is not 32 bytes.
@@ -134,7 +132,7 @@ async function createSecretVault({
   const encryptionKey = await deriveEncryptionKey(credential.prfOutput);
 
   // The GCM nonce is generated internally so callers cannot accidentally reuse
-  // one. secret reaches encrypt uncopied, like the PRF output above.
+  // one. secret reaches encrypt uncopied, so the caller's zeroing covers it.
   const nonce = randomBytes(NONCE_LENGTH);
   const ciphertext = await getCrypto().subtle.encrypt(
     {

@@ -51,3 +51,22 @@ cd docs
 npm ci
 npm run build
 ```
+
+## Releases
+
+A GitHub workflow publishes the library to npm as `@category-labs/mera`. A release takes three steps: merge the version bump, push a matching tag, then create the GitHub release that carries the notes for the version.
+
+Bump `version` in `package.json` and merge that change to `main`. Then tag the merge commit:
+
+```sh
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+The tag starts the workflow, which builds and publishes in the same job, so the provenance attestation covers the artifact it built. Publishing fails if the tag does not read `v<version>` from `package.json`, or if that version is already on npm. Both checks run before any registry write.
+
+The workflow authenticates through npm trusted publishing, and the repository holds no npm token. npm accepts the publish only when its trusted publisher for the package names this repository and the workflow file, so renaming either means updating the setting on npmjs.com.
+
+Once npm has the version, create the release from the tag and write its notes.
+
+Running the workflow by hand from the Actions tab does a dry run and writes nothing to the registry.

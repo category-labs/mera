@@ -29,5 +29,8 @@ jobs:
         uses: SocketDev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
         with:
           mode: firewall-free
-      - name: Locked install through Socket
-        run: sfw npm ci
+      - name: Locked installs through Socket
+        run: |
+          sfw npm ci
+          (cd demo && sfw npm ci)
+          (cd docs && sfw npm ci)

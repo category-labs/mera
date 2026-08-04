@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="An interactive model of passkey PRF output and the accounts derived from it with mera."
+    >
+    <meta name="theme-color" content="#f5f6f8">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="mera">
+    <meta property="og:title" content="Passkey PRF model | mera">
+    <meta
+      property="og:description"
+      content="Change a modeled passkey, relying party ID, or salt and see the resulting account data."
+    >
+    <meta property="og:image" content="%BASE_URL%../og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="preconnect" href="https://api.fontshare.com">
+    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+    <link
+      rel="stylesheet"
+      referrerpolicy="no-referrer"
+      href="https://api.fontshare.com/v2/css?f[]=satoshi@1&display=swap"
+    >
+    <title>Passkey PRF model | mera</title>
+  </head>
+  <body>
+    <main class="panel" aria-labelledby="panel-title">
+      <header class="panel-head">
+        <h1 id="panel-title">Passkey PRF to accounts</h1>
+      </header>
+
+      <section class="stage" aria-labelledby="input-stage-title">
+        <header class="stage-marker">
+          <span class="stage-number">01</span>
+          <h2 id="input-stage-title">Input</h2>
+        </header>
+
+        <div class="stage-content">
+          <div class="inputs">
+            <div class="field">
+              <label for="in-rp-id">RP ID</label>
+              <input
+                id="in-rp-id"
+                type="text"
+                spellcheck="false"
+                autocomplete="off"
+                autocapitalize="off"
+              >
+              <div class="chips" data-field="rpId">
+                <button
+                  type="button"
+                  class="chip"
+                  data-value="mera.category.xyz"
+                >
+                  mera.category.xyz
+                </button>
+                <button type="button" class="chip" data-value="app.example.com">
+                  app.example.com
+                </button>
+                <button
+                  type="button"
+                  class="chip"
+                  data-value="mera.category.xyz.evil.link"
+                >
+                  look-alike
+                </button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="in-salt">Salt</label>
+              <input
+                id="in-salt"
+                type="text"
+                spellcheck="false"
+                autocomplete="off"
+                autocapitalize="off"
+              >
+              <div class="chips" data-field="salt">
+                <button
+                  type="button"
+                  class="chip"
+                  data-value="mera.prf.salt.v1"
+                >
+                  salt.v1
+                </button>
+                <button
+                  type="button"
+                  class="chip"
+                  data-value="mera.prf.salt.v2"
+                >
+                  salt.v2
+                </button>
+                <button type="button" class="chip" data-value="backup-key">
+                  backup-key
+                </button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="in-passkey">Modeled passkey</label>
+              <input
+                id="in-passkey"
+                type="text"
+                spellcheck="false"
+                autocomplete="off"
+                autocapitalize="off"
+              >
+              <div class="chips" data-field="passkey">
+                <button type="button" class="chip" data-value="blue-yubikey">
+                  blue-yubikey
+                </button>
+                <button
+                  type="button"
+                  class="chip"
+                  data-value="1password-passkey"
+                >
+                  1password
+                </button>
+                <button type="button" class="chip" data-value="apple-keychain">
+                  apple-keychain
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="input-merge">
+            <div class="merge-lines" aria-hidden="true">
+              <span class="merge-stem"></span><span class="merge-stem"></span
+              ><span class="merge-stem"></span>
+            </div>
+            <div class="process-node">HMAC-SHA256</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stage" aria-labelledby="output-stage-title">
+        <header class="stage-marker">
+          <span class="stage-number">02</span>
+          <h2 id="output-stage-title">PRF output</h2>
+        </header>
+
+        <div class="stage-content">
+          <div class="prf-card">
+            <div class="prf-data">
+              <div class="value-heading">
+                <h3>32-byte PRF output</h3>
+                <span class="value-meta">256 bits</span>
+              </div>
+              <output
+                id="entropy"
+                class="byte-matrix"
+                aria-label="32 bytes of PRF output in hexadecimal"
+              ></output>
+            </div>
+
+            <figure class="fingerprint-figure">
+              <canvas
+                id="fingerprint"
+                class="fingerprint"
+                width="112"
+                height="112"
+                role="img"
+                aria-label="Visual fingerprint of the PRF output"
+              ></canvas>
+              <figcaption>Visual fingerprint</figcaption>
+            </figure>
+          </div>
+
+          <div class="transition">
+            <span class="transition-label">BIP-39 entropy</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="stage" aria-labelledby="recovery-stage-title">
+        <header class="stage-marker">
+          <span class="stage-number">03</span>
+          <h2 id="recovery-stage-title">Recovery</h2>
+        </header>
+
+        <div class="stage-content">
+          <div class="value-heading recovery-heading">
+            <h3>Recovery phrase</h3>
+            <span class="value-meta">BIP-39 · 24 words</span>
+          </div>
+          <ol
+            id="mnemonic"
+            class="mnemonic-grid"
+            aria-label="24-word recovery phrase"
+          ></ol>
+
+          <div class="transition">
+            <span class="transition-label">BIP-39 seed</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="stage" aria-labelledby="accounts-stage-title">
+        <header class="stage-marker">
+          <span class="stage-number">04</span>
+          <h2 id="accounts-stage-title">Accounts</h2>
+        </header>
+
+        <div class="stage-content account-grid">
+          <article class="account-card">
+            <header>
+              <h3>Ethereum</h3>
+              <span class="account-path">BIP-32 · m/44'/60'/0'/0/0</span>
+            </header>
+            <output
+              id="evm-address"
+              class="address"
+              aria-label="Ethereum address"
+            ></output>
+          </article>
+
+          <article class="account-card">
+            <header>
+              <h3>Solana</h3>
+              <span class="account-path">SLIP-0010 · m/44'/501'/0'/0'</span>
+            </header>
+            <output
+              id="solana-address"
+              class="address"
+              aria-label="Solana address"
+            ></output>
+          </article>
+        </div>
+      </section>
+
+      <p id="error" class="error" role="alert" hidden></p>
+
+      <footer class="panel-foot">
+        <p class="note">
+          <strong>For visualisation purposes only.</strong>
+          Do not fund these addresses.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

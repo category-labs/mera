@@ -11,14 +11,15 @@ Developers can use mera to:
 - keep account derivation and recovery choices in the application;
 - use the same passkey across web, iOS, and Android applications tied to the same domain.
 
-## Documentation and demo
+## Documentation and demos
 
-Installation, guides, compatibility information, the security model, the API reference, and the live demo are on the [mera documentation website](https://mera.category.xyz/).
+Installation, guides, compatibility information, the security model, the API reference, and the live demos are on the [mera documentation website](https://mera.category.xyz/). The [passkey PRF model](https://mera.category.xyz/prf-demo/) shows how stable PRF output determines account data.
 
 ## Repository
 
 - [`src/`](./src/) contains the library source.
 - [`demo/`](./demo/) contains the live demo application source.
+- [`prf-demo/`](./prf-demo/) contains the standalone passkey PRF model.
 - [`docs/`](./docs/) contains the documentation website.
 - [`test/`](./test/) contains the library test suite.
 

@@ -4,6 +4,7 @@ demo/network/evm/out/
 demo/network/evm/cache/
 demo/.env
 docs/public/demo/
+docs/public/prf-demo/
 .astro/
 playwright-report/
 test-results/

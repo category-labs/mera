@@ -591,14 +591,7 @@ button:focus-visible {
   }
 
   .stage-marker {
-    display: flex;
-    align-items: baseline;
-    gap: 0.65rem;
-    padding-top: 0;
-  }
-
-  .stage-marker h2 {
-    margin-top: 0;
+    display: none;
   }
 
   .inputs {

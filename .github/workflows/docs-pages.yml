@@ -7,6 +7,7 @@ on:
     paths:
       - docs/**
       - demo/**
+      - prf-demo/**
       - src/**
       - package.json
       - package-lock.json
@@ -39,15 +40,20 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             demo/package-lock.json
+            prf-demo/package-lock.json
 
       # The demo build writes to docs/public/demo, which the site serves at
-      # /demo/. The library has to exist first: the demo compiles against dist/.
-      - name: Build the demo into the site
+      # /demo/. The PRF model writes to docs/public/prf-demo. The library has
+      # to exist first because both apps compile against dist/.
+      - name: Build the demos into the site
         run: |
           npm ci
           npm run build
           npm --prefix demo ci
           npm --prefix demo run build
+          npm --prefix prf-demo ci
+          npm --prefix prf-demo run test
+          npm --prefix prf-demo run build
 
       - name: Build and upload docs
         uses: withastro/action@v6

@@ -35,7 +35,16 @@ npm ci
 npm run build
 ```
 
-Build the documentation website from its package directory. Its landing page embeds the demo, so run the demo build above first:
+The passkey PRF model also compiles against the built library. It writes to `docs/public/prf-demo`, where the website serves it as a standalone page at `/prf-demo/`:
+
+```sh
+cd prf-demo
+npm ci
+npm test
+npm run build
+```
+
+Build the documentation website from its package directory. Run both demo builds above first so their generated files are present:
 
 ```sh
 cd docs

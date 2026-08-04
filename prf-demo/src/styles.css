@@ -688,12 +688,16 @@ button:focus-visible {
     margin-bottom: 0.5rem;
   }
 
+  /* Words flow instead of filling even columns, so a short word claims less
+     width and each row carries as many words as it fits. */
   .mnemonic-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
   }
 
   .mnemonic-grid li {
     min-height: 2.4rem;
+    flex: 1 1 auto;
     gap: 0.3rem;
     padding: 0.4rem 0.45rem;
   }

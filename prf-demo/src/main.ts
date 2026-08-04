@@ -10,10 +10,14 @@ function elementById<T extends HTMLElement>(id: string): T {
   return element as T;
 }
 
-const inputs: Record<keyof ModelInputs, HTMLInputElement> = {
+const inputs: {
+  rpId: HTMLInputElement;
+  salt: HTMLInputElement;
+  passkey: HTMLSelectElement;
+} = {
   rpId: elementById<HTMLInputElement>("in-rp-id"),
   salt: elementById<HTMLInputElement>("in-salt"),
-  passkey: elementById<HTMLInputElement>("in-passkey"),
+  passkey: elementById<HTMLSelectElement>("in-passkey"),
 };
 const entropyElement = elementById<HTMLOutputElement>("entropy");
 const mnemonicElement = elementById<HTMLOListElement>("mnemonic");

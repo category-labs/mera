@@ -1,7 +1,11 @@
 import "@fontsource-variable/jetbrains-mono";
 import { reportHeightWhenEmbedded } from "./embed";
-import { deriveModel, type ModelInputs, type ModelResult } from "./model";
-import { readHash, writeHash } from "./state";
+import {
+  DEFAULT_INPUTS,
+  deriveModel,
+  type ModelInputs,
+  type ModelResult,
+} from "./model";
 import "./styles.css";
 
 function elementById<T extends HTMLElement>(id: string): T {
@@ -175,7 +179,6 @@ function update(): void {
   const values = readInputs();
   render(values);
   syncChips(values);
-  history.replaceState(null, "", writeHash(values));
 }
 
 function scheduleUpdate(): void {
@@ -202,11 +205,6 @@ for (const group of document.querySelectorAll<HTMLElement>(".chips")) {
   }
 }
 
-window.addEventListener("hashchange", () => {
-  setInputs(readHash(location.hash));
-  scheduleUpdate();
-});
-
 reportHeightWhenEmbedded();
-setInputs(readHash(location.hash));
+setInputs(DEFAULT_INPUTS);
 update();

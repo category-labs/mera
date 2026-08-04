@@ -94,11 +94,15 @@ function setAnimatedText(element: HTMLElement, value: string): void {
   if (previous) animateChange(element);
 }
 
+// The compact layout puts the fingerprint beside the byte matrix as a swatch.
+// Each size gets its own draw so the cells land on whole pixels either way.
+const compactLayout = window.matchMedia("(max-width: 760px)");
+
 function drawFingerprint(fingerprint: Uint8Array): void {
   const context = fingerprintCanvas.getContext("2d");
   if (!context) throw new Error("Canvas is unavailable");
 
-  const size = 112;
+  const size = compactLayout.matches ? 32 : 112;
   const scale = Math.min(window.devicePixelRatio || 1, 3);
   const gridSize = 7;
   const padding = size * 0.12;
@@ -129,8 +133,6 @@ function drawFingerprint(fingerprint: Uint8Array): void {
       }
     }
   }
-
-  if (previous) animateChange(fingerprintCanvas);
 }
 
 function syncChips(values: ModelInputs): void {
@@ -163,6 +165,7 @@ function render(values: ModelInputs): void {
     setAnimatedText(solanaAddressElement, result.solanaAddress);
     if (previous?.fingerprintHex !== result.fingerprintHex) {
       drawFingerprint(result.fingerprint);
+      if (previous) animateChange(fingerprintCanvas);
     }
 
     previous = result;
@@ -204,6 +207,10 @@ for (const group of document.querySelectorAll<HTMLElement>(".chips")) {
     });
   }
 }
+
+compactLayout.addEventListener("change", () => {
+  if (previous) drawFingerprint(previous.fingerprint);
+});
 
 reportHeightWhenEmbedded();
 setInputs(DEFAULT_INPUTS);

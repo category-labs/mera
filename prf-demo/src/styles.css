@@ -556,17 +556,6 @@ button:focus-visible {
     gap: 1rem;
   }
 
-  .prf-card {
-    grid-template-columns: 1fr;
-  }
-
-  .fingerprint-figure {
-    padding-top: 1.1rem;
-    padding-left: 0;
-    border-top: 1px solid var(--border);
-    border-left: 0;
-  }
-
   .mnemonic-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }

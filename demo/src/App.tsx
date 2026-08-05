@@ -69,7 +69,7 @@ function App(): ReactElement {
   return (
     <main className="app">
       <header className="app-head">
-        <h1>Mera Demo</h1>
+        <h1>mera demo</h1>
         <AccountChip
           address={accountAddress(account)}
           connected={evmContext !== null}

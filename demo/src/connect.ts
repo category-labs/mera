@@ -43,7 +43,7 @@ type ConnectedWallet = {
   lock(): void;
 };
 
-const RP_NAME = "Mera Demo";
+const RP_NAME = "mera demo";
 const VAULT_KEY = "mera.demo.secretVault";
 const DEFAULT_USER = "nad";
 

@@ -1,0 +1,8 @@
+.expo/
+expo-env.d.ts
+.kotlin/
+.metro-health-check*
+.env*.local
+*.tsbuildinfo
+/ios
+/android

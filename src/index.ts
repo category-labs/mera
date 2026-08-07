@@ -33,3 +33,4 @@ export type {
   Secp256k1SigningSession,
   SolanaAddress,
 } from "./types.js";
+export type { WebAuthnClient } from "./webauthn.js";

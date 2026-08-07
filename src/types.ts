@@ -24,26 +24,43 @@ type Brand<T, Name extends string> = T & { readonly [brand]: Name };
  */
 type SolanaAddress = Brand<string, "SolanaAddress">;
 
+/** Relying party identity WebAuthn stores with a passkey. */
+type PasskeyRelyingParty = {
+  /** Relying party ID: the host the passkey is scoped to. */
+  readonly id: string;
+  /** Relying party name the authenticator may show. */
+  readonly name: string;
+};
+
 /**
  * WebAuthn authenticator transport.
  *
- * The `string & {}` arm accepts any string without collapsing the union to
- * plain `string`, so editors keep offering the known `AuthenticatorTransport`
- * literals in autocomplete.
+ * The literals are WebAuthn's registered transports, spelled out rather than
+ * taken from `lib.dom` so the public API also types in runtimes without the
+ * DOM. The `string & {}` arm accepts any string without collapsing the union
+ * to plain `string`, so editors keep offering the known literals in
+ * autocomplete.
  */
-type PasskeyCredentialTransport = AuthenticatorTransport | (string & {});
+type PasskeyCredentialTransport =
+  | "ble"
+  | "hybrid"
+  | "internal"
+  | "nfc"
+  | "smart-card"
+  | "usb"
+  | (string & {});
 
 /** Metadata needed to ask WebAuthn for a previously created passkey. */
 type PasskeyCredentialMetadata = {
   /** Credential ID encoded as canonical unpadded base64url. */
   readonly credentialId: string;
-  /** Authenticator transports reported by the browser, when available. */
+  /** Authenticator transports reported by the platform, when available. */
   readonly transports?: readonly PasskeyCredentialTransport[];
 };
 
 /** Result of a passkey assertion with the WebAuthn PRF extension. */
 type PasskeyPrfResult = {
-  /** Credential ID selected by the browser, as canonical unpadded base64url. */
+  /** Credential ID selected by the platform, as canonical unpadded base64url. */
   readonly credentialId: string;
   /** First PRF output from WebAuthn. Always 32 bytes. */
   readonly prfOutput: Uint8Array<ArrayBuffer>;
@@ -144,6 +161,7 @@ export type {
   PasskeyCredentialMetadata,
   PasskeyCredentialTransport,
   PasskeyPrfResult,
+  PasskeyRelyingParty,
   PasskeySecretVault,
   Secp256k1Signature,
   Secp256k1SigningSession,

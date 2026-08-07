@@ -8,9 +8,12 @@ import { execFileSync } from "node:child_process";
 const REQUIRED_FILES = [
   "dist/index.js",
   "dist/index.d.ts",
+  "dist/react-native-webauthn-client.js",
+  "dist/react-native-webauthn-client.d.ts",
   "dist/viem.js",
   "dist/viem.d.ts",
   "src/index.ts",
+  "src/react-native-webauthn-client.ts",
   "src/viem.ts",
   "README.md",
   "LICENSE-MIT",

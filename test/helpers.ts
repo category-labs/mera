@@ -7,8 +7,10 @@ const DEFAULT_PRF_SALT = hexToBytes(
   "896d46ac4ac191885c46137439db7bb52fb05cff3ecd34af7cdae0a1e0c00db9",
 );
 
-// Canonical unpadded base64url of the [1, 2, 3, 4] rawId every
-// stubPublicKeyCredential result reports.
+// The rawId every stub credential reports, in the two forms the tests need: the
+// bytes a WebAuthnClient returns, and the canonical unpadded base64url mera
+// encodes them as.
+const STUB_CREDENTIAL_ID_BYTES = new Uint8Array([1, 2, 3, 4]);
 const STUB_CREDENTIAL_ID = "AQIDBA";
 
 // WebAuthn credential stub for navigator.credentials fakes: `prf` becomes the
@@ -24,7 +26,7 @@ function stubPublicKeyCredential({
 }) {
   return {
     type: "public-key",
-    rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+    rawId: new Uint8Array(STUB_CREDENTIAL_ID_BYTES).buffer,
     response:
       transports !== undefined ? { getTransports: () => transports } : {},
     getClientExtensionResults: () => ({ prf }),
@@ -84,6 +86,7 @@ export {
   expectError,
   readEvaluatedPrfSalt,
   STUB_CREDENTIAL_ID,
+  STUB_CREDENTIAL_ID_BYTES,
   stubPublicKeyCredential,
   withStubbedGlobal,
 };

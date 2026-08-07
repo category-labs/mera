@@ -3,7 +3,7 @@ title: getPasskeyPrfOutput
 description: Requests a passkey PRF evaluation and returns the output.
 ---
 
-Runs one `navigator.credentials.get()` [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) and returns the passkey's PRF output.
+Runs one [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) ceremony and returns the passkey's PRF output.
 
 ## Import
 
@@ -47,19 +47,26 @@ PRF salt as 32 raw bytes. An explicit value supports custom PRF namespaces.
 ### options.timeout
 
 - Type: `number`
-- Optional; browser defaults apply when omitted
+- Optional; platform defaults apply when omitted
 
 WebAuthn timeout in milliseconds.
 
+### options.webAuthnClient
+
+- Type: `WebAuthnClient`
+- Optional; defaults to the built-in browser client
+
+Client that runs the ceremony. [WebAuthnClient](/reference/web-authn-client/) covers supplying one for a runtime without `navigator.credentials`.
+
 ## Returns
 
-`Promise<PasskeyPrfResult>`: the `credentialId` the browser actually selected (canonical unpadded base64url) and the 32-byte `prfOutput`. When `credential` was omitted, the person picks the passkey in the browser UI, so the returned ID can name a different credential than the app expected.
+`Promise<PasskeyPrfResult>`: the `credentialId` that actually answered (canonical unpadded base64url) and the 32-byte `prfOutput`. When `credential` was omitted, the person picks the passkey in the platform's own UI, so the returned ID can name a different credential than the app expected.
 
 ## Errors
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not return a usable 32-byte PRF output.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): an explicit `prfSalt` is not 32 bytes, or `credential.credentialId` is empty or not canonical base64url.
-- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the page is not in a secure context, or the runtime lacks Web Crypto.
+- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the runtime provides no `crypto.getRandomValues`.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## Notes

@@ -11,6 +11,38 @@ function copyBytes(value: Uint8Array): Uint8Array<ArrayBuffer> {
 }
 
 /**
+ * Reads an array buffer, view, or array-like value as bytes. Buffers and views
+ * are not copied. Array-like values are validated before `Uint8Array` can
+ * coerce them.
+ *
+ * @throws MeraError with `options.code` when an array-like value contains
+ * anything other than integers from 0 through 255.
+ * @internal
+ */
+function normalizeByteArray(
+  value: ArrayBuffer | ArrayBufferView | ArrayLike<number>,
+  options: { name: string; code: MeraErrorCode },
+): Uint8Array {
+  if (ArrayBuffer.isView(value)) {
+    return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+  }
+
+  if (value instanceof ArrayBuffer) {
+    return new Uint8Array(value);
+  }
+
+  return Uint8Array.from(value, (byte) => {
+    if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
+      throw new MeraError(
+        options.code,
+        `${options.name} must contain only byte values (integers 0-255)`,
+      );
+    }
+    return byte;
+  });
+}
+
+/**
  * Encodes bytes as canonical unpadded base64url.
  *
  * @internal
@@ -67,4 +99,4 @@ function base64UrlDecode(
   return bytes;
 }
 
-export { base64UrlDecode, base64UrlEncode, copyBytes };
+export { base64UrlDecode, base64UrlEncode, copyBytes, normalizeByteArray };

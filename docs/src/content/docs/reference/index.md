@@ -7,6 +7,7 @@ description: The exported functions, the vault storage format, and the error cod
 
 - [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/): creates a passkey and returns its deterministic PRF output in one call.
 - [getPasskeyPrfOutput](/reference/get-passkey-prf-output/): requests a passkey PRF evaluation and returns the deterministic output.
+- [WebAuthnClient](/reference/web-authn-client/): the client the ceremonies run through, and how to supply one off the web.
 
 ## Signing sessions
 

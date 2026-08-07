@@ -3,7 +3,7 @@ title: createSecretVaultWithNewPasskey
 description: Creates a passkey and encrypts one secret into a vault with a fresh random salt.
 ---
 
-Creates a passkey and encrypts one secret into a vault. Runs one `navigator.credentials.create()` ceremony and may run a fallback `navigator.credentials.get()` ceremony, so it shows one or two user-verification prompts.
+Creates a passkey and encrypts one secret into a vault. Runs one creation ceremony and may run a fallback assertion, so it shows one or two user-verification prompts.
 
 ## Import
 
@@ -33,7 +33,7 @@ try {
 
 ### options.rp
 
-- Type: `PublicKeyCredentialRpEntity & { id: string }`
+- Type: `{ id: string; name: string }`
 - Required, including `rp.id`
 
 Relying party identity passed to [WebAuthn](https://www.w3.org/TR/webauthn-3/). The required ID is reused by the fallback [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts).
@@ -62,9 +62,16 @@ Secret bytes to encrypt. Any non-empty length.
 ### options.timeout
 
 - Type: `number`
-- Optional; browser defaults apply when omitted
+- Optional; platform defaults apply when omitted
 
 WebAuthn timeout in milliseconds, applied to each ceremony.
+
+### options.webAuthnClient
+
+- Type: `WebAuthnClient`
+- Optional; defaults to the built-in browser client
+
+Client that runs the ceremony. [WebAuthnClient](/reference/web-authn-client/) covers supplying one for a runtime without `navigator.credentials`.
 
 ## Returns
 
@@ -74,7 +81,7 @@ WebAuthn timeout in milliseconds, applied to each ceremony.
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not enable PRF or return a usable 32-byte output.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `secret` is empty.
-- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the page is not in a secure context, or the runtime lacks Web Crypto.
+- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the runtime provides no `crypto.getRandomValues` or `crypto.subtle`.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## Notes

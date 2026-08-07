@@ -1,3 +1,4 @@
+import { normalizeByteArray } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import type {
   PasskeyCredentialTransport,
@@ -9,13 +10,17 @@ type WebAuthnCreateCredentialRequest = {
   /** Relying party identity for the new credential. */
   rp: PasskeyRelyingParty;
   /** User identity stored with the discoverable credential. */
-  user: { id: Uint8Array; name: string; displayName: string };
+  user: {
+    id: Uint8Array<ArrayBuffer>;
+    name: string;
+    displayName: string;
+  };
   /** Challenge as raw bytes. */
-  challenge: Uint8Array;
+  challenge: Uint8Array<ArrayBuffer>;
   /** COSE algorithm identifiers for the credential key, most preferred first. */
   algorithms: readonly number[];
   /** PRF salt to evaluate during creation, as 32 raw bytes. */
-  prfSalt: Uint8Array;
+  prfSalt: Uint8Array<ArrayBuffer>;
   /** Discoverable-credential requirement. */
   residentKey: "required";
   /** User-verification requirement. */
@@ -41,7 +46,7 @@ type WebAuthnCreateCredentialResult = {
 /** Credential an assertion is restricted to. */
 type WebAuthnAllowCredential = {
   /** Credential ID as raw bytes. */
-  credentialId: Uint8Array;
+  credentialId: Uint8Array<ArrayBuffer>;
   /** Authenticator transports, which the platform reads as hints. */
   transports?: readonly PasskeyCredentialTransport[];
 };
@@ -51,14 +56,14 @@ type WebAuthnGetCredentialRequest = {
   /** Relying party ID the assertion targets. */
   rpId: string;
   /** Challenge as raw bytes. */
-  challenge: Uint8Array;
+  challenge: Uint8Array<ArrayBuffer>;
   /**
    * Credential the assertion is restricted to. When omitted, any discoverable
    * credential for `rpId` may answer.
    */
   allowCredential?: WebAuthnAllowCredential;
   /** PRF salt to evaluate, as 32 raw bytes. */
-  prfSalt: Uint8Array;
+  prfSalt: Uint8Array<ArrayBuffer>;
   /** User-verification requirement. */
   userVerification: "required";
   /** Timeout in milliseconds. Platform defaults apply when omitted. */
@@ -74,21 +79,15 @@ type WebAuthnGetCredentialResult = {
 };
 
 /**
- * Performs the two WebAuthn ceremonies mera needs, so runtimes without
- * `navigator.credentials` can supply their own. {@link browserWebAuthnClient}
- * is the default.
+ * Performs the two WebAuthn ceremonies mera needs. The built-in browser
+ * implementation is the default.
  *
  * @remarks
- * Every ceremony parameter comes from the request, including the
- * discoverable-credential, user-verification, and attestation requirements, so
- * an implementation forwards the request to the platform and reports what came
- * back without knowing any of mera's ceremony policy.
+ * Every ceremony parameter comes from the request, so an implementation
+ * forwards the request to the platform and reports what came back without
+ * knowing mera's ceremony policy.
  *
- * Binary values cross in both directions as raw bytes. mera encodes the
- * credential IDs it hands its own callers as canonical unpadded base64url, so
- * that encoding holds by construction rather than by a check on the way back.
- *
- * A PRF output that is not 32 bytes fails with `PRF_UNAVAILABLE`.
+ * Binary values cross in both directions as raw bytes.
  */
 type WebAuthnClient = {
   createCredential(
@@ -113,10 +112,9 @@ type PublicKeyCredentialWithPrf = PublicKeyCredential & {
 };
 
 /**
- * The {@link WebAuthnClient} backed by `navigator.credentials`.
+ * Browser implementation used when no {@link WebAuthnClient} is supplied.
  *
- * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable or returns an unexpected credential.
- * @throws MeraError with code `PRF_UNAVAILABLE` when a PRF result carries values that are not bytes.
+ * @internal
  */
 const browserWebAuthnClient: WebAuthnClient = {
   async createCredential(request) {
@@ -126,11 +124,11 @@ const browserWebAuthnClient: WebAuthnClient = {
       publicKey: {
         rp: request.rp,
         user: {
-          id: asBufferSource(request.user.id),
+          id: request.user.id,
           name: request.user.name,
           displayName: request.user.displayName,
         },
-        challenge: asBufferSource(request.challenge),
+        challenge: request.challenge,
         pubKeyCredParams: request.algorithms.map((alg) => ({
           type: "public-key" as const,
           alg,
@@ -145,7 +143,7 @@ const browserWebAuthnClient: WebAuthnClient = {
           userVerification: request.userVerification,
         },
         extensions: {
-          prf: { eval: { first: asBufferSource(request.prfSalt) } },
+          prf: { eval: { first: request.prfSalt } },
         },
       },
     });
@@ -173,10 +171,10 @@ const browserWebAuthnClient: WebAuthnClient = {
 
     const publicKey: PublicKeyCredentialRequestOptions = {
       rpId: request.rpId,
-      challenge: asBufferSource(request.challenge),
+      challenge: request.challenge,
       ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
       userVerification: request.userVerification,
-      extensions: { prf: { eval: { first: asBufferSource(request.prfSalt) } } },
+      extensions: { prf: { eval: { first: request.prfSalt } } },
     };
 
     const { allowCredential } = request;
@@ -184,7 +182,7 @@ const browserWebAuthnClient: WebAuthnClient = {
     if (allowCredential !== undefined) {
       publicKey.allowCredentials = [
         {
-          id: asBufferSource(allowCredential.credentialId),
+          id: allowCredential.credentialId,
           type: "public-key",
           ...(allowCredential.transports !== undefined
             ? {
@@ -213,15 +211,6 @@ const browserWebAuthnClient: WebAuthnClient = {
 };
 
 /**
- * Hands a request's bytes to WebAuthn, which takes `BufferSource`: a view over a
- * `SharedArrayBuffer` is not one. mera allocates every byte field in a request,
- * so none of them is one.
- */
-function asBufferSource(bytes: Uint8Array): BufferSource {
-  return bytes as Uint8Array<ArrayBuffer>;
-}
-
-/**
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable.
  */
 function assertCredentialApiAvailable(): void {
@@ -238,60 +227,28 @@ function assertCredentialApiAvailable(): void {
 function assertPublicKeyCredential(
   credential: Credential | null,
 ): PublicKeyCredentialWithPrf {
-  if (credential?.type !== "public-key" || !("rawId" in credential)) {
+  if (
+    credential?.type !== "public-key" ||
+    !("rawId" in credential) ||
+    !("getClientExtensionResults" in credential) ||
+    typeof credential.getClientExtensionResults !== "function"
+  ) {
     throw new MeraError(
       "PASSKEY_OPERATION_FAILED",
-      "WebAuthn returned no public key credential",
+      "WebAuthn returned no usable public key credential",
     );
   }
 
-  const publicKeyCredential = credential as PublicKeyCredentialWithPrf;
-
-  if (typeof publicKeyCredential.getClientExtensionResults !== "function") {
-    throw new MeraError(
-      "PASSKEY_OPERATION_FAILED",
-      "WebAuthn extension results are unavailable",
-    );
-  }
-
-  return publicKeyCredential;
+  return credential as PublicKeyCredentialWithPrf;
 }
 
-/**
- * Reads a browser PRF result as bytes.
- *
- * Authenticators surface PRF output inconsistently: most return an `ArrayBuffer`,
- * some return an `ArrayBufferView`, and others (notably the 1Password browser
- * extension) return a plain array of byte values. The two typed forms become a
- * view over the browser's own buffer, which the caller copies.
- *
- * The typed forms are already constrained to bytes. A plain array-like is not,
- * so each element is validated as an integer in [0, 255] while it is read; a
- * bare `Uint8Array.from(value)` would instead silently coerce malformed values
- * (mod 256, `NaN` -> 0) into HKDF key material.
- *
- * @throws MeraError with code `PRF_UNAVAILABLE` when a plain array-like contains
- * a value that is not an integer in [0, 255].
- */
+/** Reads a browser PRF result as bytes. */
 function normalizePrfOutput(
   value: BufferSource | ArrayLike<number>,
 ): Uint8Array {
-  if (ArrayBuffer.isView(value)) {
-    return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
-  }
-
-  if (value instanceof ArrayBuffer) {
-    return new Uint8Array(value);
-  }
-
-  return Uint8Array.from(value, (byte) => {
-    if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
-      throw new MeraError(
-        "PRF_UNAVAILABLE",
-        "PRF output must contain only byte values (integers 0-255)",
-      );
-    }
-    return byte;
+  return normalizeByteArray(value, {
+    name: "PRF output",
+    code: "PRF_UNAVAILABLE",
   });
 }
 

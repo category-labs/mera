@@ -1,11 +1,6 @@
 import type { ExpoConfig } from "expo/config";
 
-/**
- * The host the web demo runs on. WebAuthn binds every passkey to it and mera
- * derives accounts from that binding, so this one value decides which passkeys
- * the app can use and which addresses it reaches. Set MERA_RP_ID to point the
- * app at another deployment.
- */
+/** The WebAuthn relying party. MERA_RP_ID selects another deployment. */
 const rpId = process.env.MERA_RP_ID ?? "mera-demo.up.railway.app";
 
 /** The demo network the web app trades on. State is wiped on every restart. */
@@ -13,8 +8,7 @@ const evmRpcUrl =
   process.env.MERA_EVM_RPC_URL ??
   "https://evm-network-production.up.railway.app";
 
-// Both platforms bind an app to a relying party by application identifier, so
-// this value also appears in the association files `rpId` serves.
+// The association files served by rpId contain this identifier.
 const applicationId = "xyz.category.mera.demo";
 
 const config: ExpoConfig = {
@@ -26,7 +20,6 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: applicationId,
     supportsTablet: true,
-    // Lets AuthenticationServices offer the passkeys created for this host.
     associatedDomains: [`webcredentials:${rpId}`],
   },
   android: {
@@ -46,8 +39,7 @@ const config: ExpoConfig = {
       },
     ],
   ],
-  // Read back at runtime through expo-constants, so the ceremony and the
-  // associated domain cannot drift apart.
+  // Keeps the runtime ceremony aligned with the associated domain.
   extra: { evmRpcUrl, rpId },
 };
 

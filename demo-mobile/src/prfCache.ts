@@ -41,8 +41,6 @@ async function readCachedPrfResult(): Promise<PasskeyPrfResult | undefined> {
       return undefined;
     }
 
-    // decode hands back a Uint8Array over an unknown buffer kind; the copy is
-    // what gives PasskeyPrfResult the Uint8Array<ArrayBuffer> it declares.
     const bytes = new Uint8Array(base64urlnopad.decode(prfOutput));
 
     return bytes.length === PRF_OUTPUT_LENGTH
@@ -53,7 +51,6 @@ async function readCachedPrfResult(): Promise<PasskeyPrfResult | undefined> {
   }
 }
 
-/** Caches one ceremony result when the device supports authenticated storage. */
 async function cachePrfResult(result: PasskeyPrfResult): Promise<void> {
   const stored: StoredPrfResult = {
     credentialId: result.credentialId,
@@ -65,7 +62,6 @@ async function cachePrfResult(result: PasskeyPrfResult): Promise<void> {
   );
 }
 
-/** Drops the cached result, so the next sign-in runs a passkey ceremony. */
 async function clearCachedPrfResult(): Promise<void> {
   await deleteItemAsync(KEY);
 }

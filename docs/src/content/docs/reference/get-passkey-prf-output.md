@@ -54,7 +54,7 @@ WebAuthn timeout in milliseconds.
 ### options.webAuthnClient
 
 - Type: `WebAuthnClient`
-- Optional; defaults to `browserWebAuthnClient`
+- Optional; defaults to the built-in browser client
 
 Client that runs the ceremony. [WebAuthnClient](/reference/web-authn-client/) covers supplying one for a runtime without `navigator.credentials`.
 

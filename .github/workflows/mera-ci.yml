@@ -17,14 +17,8 @@ permissions:
   contents: read
 
 jobs:
-  # Classifies a PR's changed files so later jobs can skip work the change
-  # cannot affect: `library` covers everything the root package build/tests
-  # depend on, `demo` adds both web demo apps and `mobile` adds the Expo app on
-  # top of that (all three compile against the library's dist/), `package` adds
-  # the packaged root files that scripts/verify-tarball.mjs requires in the
-  # tarball, and `docs` is independent of library code. Runs only on
-  # pull_request; on push and manual dispatch the gated jobs run
-  # unconditionally.
+  # Classifies a PR's changed files so later jobs can skip unrelated work. Push
+  # and manual runs execute every gated job.
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
@@ -176,9 +170,6 @@ jobs:
       - name: Install library dependencies
         run: npm ci
 
-      # Installing the app packs the library from the repo root without running
-      # its prepack, so dist/ has to exist first; demo-mobile/.npmrc explains
-      # why that fails silently until the app tries to import the library.
       - name: Build library
         run: npm run build
 
@@ -190,8 +181,7 @@ jobs:
         run: npm run typecheck
         working-directory: demo-mobile
 
-      # Bundling is what proves the library resolves through Metro, which
-      # nothing else covers. Android needs no macOS runner.
+      # Covers Metro resolution without a device.
       - name: Bundle mobile demo
         run: npx expo export --platform android --output-dir /tmp/mobile-demo-bundle
         working-directory: demo-mobile

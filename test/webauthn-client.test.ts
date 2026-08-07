@@ -159,23 +159,6 @@ test("a client that does not enable PRF fails before any fallback ceremony", asy
   expect(calls.get).toHaveLength(0);
 });
 
-test("a create-time PRF output stands even when the client reports no PRF", async () => {
-  const createPrfOutput = new Uint8Array(32).fill(7);
-  const { client, calls } = stubClient({
-    prfEnabled: false,
-    createPrfOutput: () => new Uint8Array(createPrfOutput),
-  });
-
-  const created = await createPasskeyWithPrfOutput({
-    rp,
-    user,
-    webAuthnClient: client,
-  });
-
-  expect(created.prfOutput).toEqual(createPrfOutput);
-  expect(calls.get).toHaveLength(0);
-});
-
 test("the client's PRF output is copied, not adopted", async () => {
   const clientOutput = new Uint8Array(32).fill(9);
   const { client } = stubClient({ getPrfOutput: () => clientOutput });

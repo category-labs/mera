@@ -17,10 +17,6 @@ function readConfig(): { evmRpcUrl: string; rpId: string } {
   return { evmRpcUrl, rpId };
 }
 
-/**
- * `rpId` is the relying party ID for every ceremony: the same host the web demo
- * passes to WebAuthn, which is what makes the app land on the same accounts.
- */
 const { evmRpcUrl, rpId } = readConfig();
 
 export { evmRpcUrl, rpId };

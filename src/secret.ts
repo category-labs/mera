@@ -408,8 +408,8 @@ type DecryptSecretVaultWithPasskeyOptions = {
   /** WebAuthn timeout in milliseconds. Platform defaults apply when omitted. */
   timeout?: number;
   /**
-   * Client that runs the WebAuthn ceremony. Defaults to
-   * `browserWebAuthnClient`, which calls `navigator.credentials`.
+   * Client that runs the WebAuthn ceremony. Defaults to the built-in browser
+   * client, which calls `navigator.credentials`.
    */
   webAuthnClient?: WebAuthnClient;
 };

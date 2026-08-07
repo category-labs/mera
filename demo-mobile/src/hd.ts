@@ -1,5 +1,8 @@
 import { HDKey } from "@scure/bip32";
-import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
+import {
+  entropyToMnemonic,
+  mnemonicToSeedSync as mnemonicToSeed,
+} from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 
 const PRF_OUTPUT_LENGTH = 32;
@@ -22,11 +25,6 @@ function prfOutputToMnemonic(prfOutput: Uint8Array): string {
     throw new Error("PRF output must be 32 bytes");
   }
   return entropyToMnemonic(prfOutput, wordlist);
-}
-
-/** Derives the 64-byte BIP-39 seed (PBKDF2, empty passphrase). */
-function mnemonicToSeed(mnemonic: string): Uint8Array {
-  return mnemonicToSeedSync(mnemonic);
 }
 
 /** secp256k1 private key for EVM account `index` (BIP-32 over BIP-44). */

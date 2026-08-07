@@ -22,7 +22,6 @@ const USER_NAME = "nad";
 // The creation time distinguishes multiple passkeys in supported pickers.
 const accountLabel = (): string => `Account ${new Date().toLocaleString()}`;
 
-/** One account backed by a live signing session. */
 type PasskeyWallet = {
   address: EvmAddress;
   credentialId: string;
@@ -31,10 +30,6 @@ type PasskeyWallet = {
   lock(): void;
 };
 
-/**
- * Creates a passkey for {@link rpId}, caches its PRF output, and derives its
- * account.
- */
 async function createAccount(): Promise<PasskeyWallet> {
   const created = await createPasskeyWithPrfOutput({
     rp: { id: rpId, name: RP_NAME },
@@ -98,7 +93,6 @@ function toWallet(
   }
 }
 
-/** Signs `message` as EIP-191 personal data with the live session. */
 async function signMessage(
   wallet: PasskeyWallet,
   message: string,
@@ -124,7 +118,6 @@ async function revealMnemonic(wallet: PasskeyWallet): Promise<string> {
   }
 }
 
-/** Turns library and platform errors into short status text. */
 function describeError(error: unknown): string {
   if (isMeraError(error)) {
     switch (error.code) {

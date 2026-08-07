@@ -43,8 +43,8 @@ type CreatePasskeyWithPrfOutputOptions = {
    */
   prfSalt?: Uint8Array;
   /**
-   * Client that runs the WebAuthn ceremonies. Defaults to
-   * {@link browserWebAuthnClient}, which calls `navigator.credentials`.
+   * Client that runs the WebAuthn ceremonies. Defaults to the built-in browser
+   * client, which calls `navigator.credentials`.
    */
   webAuthnClient?: WebAuthnClient;
 };
@@ -67,8 +67,8 @@ type GetPasskeyPrfOutputOptions = {
   /** WebAuthn timeout in milliseconds. Platform defaults apply when omitted. */
   timeout?: number;
   /**
-   * Client that runs the WebAuthn ceremony. Defaults to
-   * {@link browserWebAuthnClient}, which calls `navigator.credentials`.
+   * Client that runs the WebAuthn ceremony. Defaults to the built-in browser
+   * client, which calls `navigator.credentials`.
    */
   webAuthnClient?: WebAuthnClient;
 };

@@ -1,36 +1,25 @@
 # mera mobile demo
 
-An Expo app that shares accounts with the [web demo](../demo) in both
-directions: create a passkey here and the web app reaches the same account, or
-create one there and sign in here.
+An Expo app that shares passkey accounts with the [web demo](../demo) in both
+directions.
 
 Both apps turn the same PRF output into a BIP-39 mnemonic, then derive the key at
 `m/44'/60'/0'/0/0`. The passkey and relying party therefore produce the same
 address in each app.
 
-The app covers passkey mode. It creates or opens an account, signs a message,
-reveals the recovery phrase behind a fresh ceremony, locks the signing session,
-and manages the device cache described below. Creating twice adds two passkeys
-and accounts because mera generates a fresh user handle for each creation.
+The app creates or opens an account, signs a message, reveals the recovery
+phrase behind a fresh ceremony, locks the signing session, and manages a device
+cache. Creating twice adds two passkeys and accounts.
 
 ## What makes it work
 
-mera runs its WebAuthn ceremonies through a
-[`WebAuthnClient`](https://mera.category.xyz/reference/web-authn-client/), which
-defaults to `navigator.credentials`. The app supplies mera's
-`reactNativeWebAuthnClient`, backed by
-[react-native-passkey](https://github.com/f-23/react-native-passkey): iOS
-AuthenticationServices and Android Credential Manager. The client converts
-each byte field to the shape the native module expects and uses platform-key
-entry points so an iOS security key cannot answer without PRF output.
+The app supplies mera's
+[`reactNativeWebAuthnClient`](https://mera.category.xyz/reference/web-authn-client/#reactnativewebauthnclient),
+backed by [react-native-passkey](https://github.com/f-23/react-native-passkey).
+It uses AuthenticationServices on iOS and Credential Manager on Android.
 
 The passkey APIs need only `crypto.getRandomValues`, which
 [src/polyfills.ts](src/polyfills.ts) installs from `expo-crypto`.
-
-An authenticator that enables PRF without returning an output during creation
-causes a fallback assertion and a second prompt. Signing in is confirmed on a
-Pixel 9a with 1Password against an account from the web demo. Native creation and
-both iOS ceremonies remain untested on a device.
 
 ## The device cache
 
@@ -39,20 +28,17 @@ the PRF output in `expo-secure-store`, encrypted by a key the platform keystore
 holds. Reading it requires a biometric or device credential, and the item stays
 on that device. Later sign-ins can skip the passkey ceremony.
 
-Any read failure counts as a cache miss and starts a ceremony. Clearing the item,
-changing enrolled biometrics, or moving to another phone therefore keeps the
-passkey as the source of the account. Creating another account replaces the one
-cached result; **Clear device cache** opens the authenticator picker on the next
-sign-in.
+Any read failure counts as a cache miss and starts a ceremony. Creating another
+account replaces the cached result. **Clear device cache** removes it.
 
 Deleting the app is not one of those on iOS. Android drops the item on uninstall,
 but iOS keeps a keychain item written under the same bundle ID, so a reinstall
 can sign in without a ceremony. **Clear device cache** is what removes it.
 
 The [authentication prompt](https://docs.expo.dev/versions/latest/sdk/securestore/)
-differs by platform. Android asks on every operation. iOS asks when reading or
-updating an item. A device with no biometric or device credential cannot cache
-the result.
+differs by platform. Android asks on every operation, while iOS asks when reading
+or updating an item. A device with no biometric or device credential cannot
+cache the result.
 
 Revealing the recovery phrase still runs its own ceremony. That phrase reproduces
 every account, so it is worth a passkey even on a device that already unlocked
@@ -144,8 +130,5 @@ Phone to web:
 2. Sign in on the web demo and pick that passkey. It appears wherever the
    provider syncs it, so a browser signed into the same account offers it.
 
-Either way the addresses match, or something in the chain above is wrong: a
-different relying party host, a passkey that never synced across, or a provider
-without PRF. **Reveal recovery phrase** on both is the stronger check: the same
-24 words, which import into any HD wallet and derive the same address a third
-time.
+The addresses should match. **Reveal recovery phrase** in both apps should also
+show the same 24 words.

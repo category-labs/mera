@@ -32,14 +32,8 @@ const NATIVE_TRANSPORTS: readonly string[] = [
 ];
 
 /**
- * mera's {@link WebAuthnClient} backed by the platform passkey APIs:
- * AuthenticationServices on iOS, Credential Manager on Android, both reached
- * through react-native-passkey.
- *
- * The native modules take most binary fields as base64url strings, so this
- * client is an encoding layer and nothing else. Every ceremony parameter comes
- * from the request. The PRF salt is the one field that crosses as bytes; see
- * {@link prfExtension}.
+ * mera's {@link WebAuthnClient} over react-native-passkey. It converts request
+ * and result fields for AuthenticationServices and Credential Manager.
  */
 const nativePasskeyClient: WebAuthnClient = {
   async createCredential(request) {

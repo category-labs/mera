@@ -18,8 +18,7 @@ import { randomBytes } from "./webcrypto.js";
 
 const DEFAULT_PRF_SALT = sha256(utf8ToBytes("mera.prf.salt.v1"));
 
-// COSE algorithm identifiers for ES256 and RS256, the two key types every
-// passkey provider supports.
+// COSE algorithm identifiers for the credential key types mera requests.
 const CREDENTIAL_ALGORITHMS = [-7, -257];
 
 /** Inputs for creating a passkey and obtaining its first WebAuthn PRF output. */

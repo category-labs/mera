@@ -264,7 +264,7 @@ async function createSecretVaultWithExistingPasskey({
     });
     prfOutput = evaluated.prfOutput;
 
-    // Reuse the caller's metadata (with its transports) only when the browser
+    // Reuse the caller's metadata (with its transports) only when the platform
     // selected that same credential.
     const credentialMetadata =
       credentialCopy?.credentialId === evaluated.credentialId

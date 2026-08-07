@@ -54,13 +54,13 @@ type PasskeyCredentialTransport =
 type PasskeyCredentialMetadata = {
   /** Credential ID encoded as canonical unpadded base64url. */
   readonly credentialId: string;
-  /** Authenticator transports reported by the browser, when available. */
+  /** Authenticator transports reported by the platform, when available. */
   readonly transports?: readonly PasskeyCredentialTransport[];
 };
 
 /** Result of a passkey assertion with the WebAuthn PRF extension. */
 type PasskeyPrfResult = {
-  /** Credential ID selected by the browser, as canonical unpadded base64url. */
+  /** Credential ID selected by the platform, as canonical unpadded base64url. */
   readonly credentialId: string;
   /** First PRF output from WebAuthn. Always 32 bytes. */
   readonly prfOutput: Uint8Array<ArrayBuffer>;

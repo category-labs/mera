@@ -15,22 +15,14 @@ import { deriveEvmPrivateKey, mnemonicToSeed, prfOutputToMnemonic } from "./hd";
 import { nativePasskeyClient } from "./passkeyClient";
 import { cachePrfResult, readCachedPrfResult } from "./prfCache";
 
-// The relying party name and user name the web demo passes, repeated here so
-// both apps label their passkeys alike. Neither reaches the PRF, so neither can
-// move an address.
+// Matches the web demo's passkey labels. Neither value affects the PRF.
 const RP_NAME = "mera demo";
 const USER_NAME = "nad";
 
-// Every create adds a passkey, so the label carries the creation time to keep
-// the entries apart. Android shows it; iOS does not, because
-// react-native-passkey's platform registration request takes only `name`.
+// The creation time distinguishes multiple passkeys in supported pickers.
 const accountLabel = (): string => `Account ${new Date().toLocaleString()}`;
 
-/**
- * Authority over one account for as long as the session lives. `lock` ends the
- * signing session, zeroing its key. `source` names where the PRF output came
- * from: a passkey ceremony, or this device's cache.
- */
+/** One account backed by a live signing session. */
 type PasskeyWallet = {
   address: EvmAddress;
   credentialId: string;
@@ -40,19 +32,8 @@ type PasskeyWallet = {
 };
 
 /**
- * Creates a passkey for {@link rpId} and derives its account. The web demo
- * reaches the same account from the same passkey: the address is a function of
- * the credential, the relying party, and the salt, and both apps agree on all
- * three.
- *
- * mera draws a fresh user handle per call and this passes no excluded
- * credentials, so every call adds a passkey and an account rather than replacing
- * one, which is what the web demo does as well. The cache holds one result, so
- * creating again repoints it at the newest account.
- *
- * One prompt where the authenticator evaluates PRF while it writes the
- * credential, which is what iOS 18 does. One that enables PRF without returning
- * an output makes mera assert the new passkey for one, showing a second prompt.
+ * Creates a passkey for {@link rpId}, caches its PRF output, and derives its
+ * account.
  */
 async function createAccount(): Promise<PasskeyWallet> {
   const created = await createPasskeyWithPrfOutput({
@@ -67,16 +48,9 @@ async function createAccount(): Promise<PasskeyWallet> {
 }
 
 /**
- * Signs in from the device cache when it holds a PRF output, and from a passkey
- * ceremony for {@link rpId} when it does not, caching what the ceremony returns.
- *
- * The ceremony path stays the source of truth: clearing the cache, enrolling a
- * new fingerprint, or picking up another phone falls back to it and reaches the
- * same address, because the address is a function of the passkey.
- *
- * The ceremony pins no credential, so the platform offers every discoverable
- * passkey it holds for the host, which is what a first run on a new device
- * needs.
+ * Signs in from the device cache or caches the result of a ceremony. An uncached
+ * ceremony pins no credential, so the platform can offer every passkey for the
+ * relying party.
  */
 async function signIn(): Promise<PasskeyWallet> {
   const cached = await readCachedPrfResult();
@@ -95,11 +69,8 @@ async function signIn(): Promise<PasskeyWallet> {
 }
 
 /**
- * Derives the account the web demo derives from the same passkey: BIP-39
- * mnemonic, then seed, then account key. The PRF output, the seed, and the
- * derived key are zeroed before this returns; the session signs from its own
- * copy. BIP-32 leaves a key on each node along the path and hands back no way
- * to reach them, so those stay until they are collected.
+ * Derives the web demo's account and clears reachable key buffers. BIP-32 keeps
+ * internal path-node keys until garbage collection.
  */
 function toWallet(
   { credentialId, prfOutput }: PasskeyPrfResult,
@@ -127,10 +98,7 @@ function toWallet(
   }
 }
 
-/**
- * Signs `message` as EIP-191 personal data through mera's viem account. Signing
- * reads the session key, so it shows no passkey prompt.
- */
+/** Signs `message` as EIP-191 personal data with the live session. */
 async function signMessage(
   wallet: PasskeyWallet,
   message: string,
@@ -139,12 +107,8 @@ async function signMessage(
 }
 
 /**
- * Re-derives the account's recovery phrase behind a fresh passkey ceremony,
- * pinned to the credential that signed in. The PRF output is zeroed; the
- * returned string cannot be.
- *
- * This reads no cache on purpose. Handing over the phrase that reproduces every
- * account is worth the passkey, even on a device that has already unlocked one.
+ * Re-derives the recovery phrase in a ceremony pinned to the signed-in
+ * credential. This path does not read the device cache.
  */
 async function revealMnemonic(wallet: PasskeyWallet): Promise<string> {
   const { prfOutput } = await getPasskeyPrfOutput({
@@ -182,10 +146,8 @@ function describeError(error: unknown): string {
  * Names the failure behind `PASSKEY_OPERATION_FAILED`, which mera throws with
  * whatever the WebAuthn client rejected with as its cause.
  *
- * react-native-passkey rejects with a plain object rather than an `Error`, so the
- * code arrives as `error` and its own account of the failure as `message`. That
- * account reads well for most codes, which is why the last line shows it; the two
- * named here are the ones it gets wrong.
+ * react-native-passkey rejects with a plain object rather than an `Error`. The
+ * two cases below need clearer text than its `message` field provides.
  */
 function describePasskeyFailure(cause: unknown): string {
   const { error, message } = (cause ?? {}) as Partial<PasskeyError>;

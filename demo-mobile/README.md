@@ -4,28 +4,14 @@ An Expo app that shares accounts with the [web demo](../demo) in both
 directions: create a passkey here and the web app reaches the same account, or
 create one there and sign in here.
 
-Nothing is copied between the two apps. The address is a function of the passkey:
-one PRF output becomes a BIP-39 mnemonic, the mnemonic becomes a seed, and the
-seed derives the key at `m/44'/60'/0'/0/0`. Both apps run that derivation, so
-naming the same relying party is all it takes to reach the same address.
+Both apps turn the same PRF output into a BIP-39 mnemonic, then derive the key at
+`m/44'/60'/0'/0/0`. The passkey and relying party therefore produce the same
+address in each app.
 
-The demo covers the web app's passkey mode only. Vault mode works here too, since
-a vault is bytes the caller stores wherever it likes, `expo-secure-store` as
-readily as `localStorage`, and it needs `crypto.subtle` for HKDF and AES-GCM,
-which Hermes lacks and `react-native-quick-crypto` supplies. What does not cross
-over is a vault the web app already wrote: that ciphertext sits in one browser's
-storage, so reaching it from a phone means syncing it, not deriving it.
-
-The app screen creates a passkey or signs in with one, shows the address and its
-balance on the demo network, signs a message without a second prompt, reveals the
-recovery phrase behind a fresh ceremony, locks, and clears the device cache
-described below.
-
-Creating twice adds a second passkey and so a second account, which is what the
-web demo does too: mera draws a fresh user handle per call, so a creation adds a
-credential rather than replacing one. Each entry carries its creation time, which
-Android shows in the picker and iOS does not, since react-native-passkey's
-platform registration request takes only a user name.
+The app covers passkey mode. It creates or opens an account, signs a message,
+reveals the recovery phrase behind a fresh ceremony, locks the signing session,
+and manages the device cache described below. Creating twice adds two passkeys
+and accounts because mera generates a fresh user handle for each creation.
 
 ## What makes it work
 
@@ -34,55 +20,39 @@ mera runs its WebAuthn ceremonies through a
 defaults to `navigator.credentials`. React Native has no such object, so
 [src/passkeyClient.ts](src/passkeyClient.ts) implements the same two ceremonies
 over [react-native-passkey](https://github.com/f-23/react-native-passkey): iOS
-AuthenticationServices, Android Credential Manager. It is an encoding layer, and
-every ceremony parameter still comes from mera.
-
-The encoding is per field, not one rule. Challenges, user handles, and credential
-IDs cross as base64url; the PRF salt crosses as bytes, because
-react-native-passkey rewrites binary fields to base64url only on Android, and
-iOS decodes the salt only from the index-keyed object a `Uint8Array` stringifies
-to. Both ceremonies also take the platform-key entry points, since a security key
-would answer with no PRF output on iOS.
+AuthenticationServices and Android Credential Manager. The adapter converts
+each byte field to the shape the native module expects and uses platform-key
+entry points so an iOS security key cannot answer without PRF output.
 
 The passkey APIs need only `crypto.getRandomValues`, which
 [src/polyfills.ts](src/polyfills.ts) installs from `expo-crypto`.
 
-Creation runs one ceremony on iOS 18, which evaluates PRF while it writes the
-credential. An authenticator that enables PRF without returning an output makes
-mera assert the new passkey for one, so the create shows a second prompt. A
-provider without PRF fails after the passkey is written: the entry stays in the
-authenticator and has to be deleted there. Signing in is confirmed on a Pixel 9a
-with 1Password, reaching the account the web demo created; no device has run
-creation, and no device has run either ceremony on iOS.
+An authenticator that enables PRF without returning an output during creation
+causes a fallback assertion and a second prompt. Signing in is confirmed on a
+Pixel 9a with 1Password against an account from the web demo. Native creation and
+both iOS ceremonies remain untested on a device.
 
 ## The device cache
 
 The first sign-in runs a ceremony. [src/prfCache.ts](src/prfCache.ts) then keeps
 the PRF output in `expo-secure-store`, encrypted by a key the platform keystore
-holds and this app never sees, readable only after a biometric or
-device-credential check and only on this device. Later sign-ins skip the passkey.
-Creating an account fills the same item, and creating another repoints it, so
-**Sign in** reaches the newest account and an earlier one takes **Clear device
-cache** and a trip through the authenticator's picker.
+holds. Reading it requires a biometric or device credential, and the item stays
+on that device. Later sign-ins can skip the passkey ceremony.
 
-It is a cache and not storage, which is what makes it safe to keep. The address is
-a function of the passkey, so clearing the item, enrolling a new fingerprint, or
-picking up another phone all fall back to a ceremony and arrive at the same
-account. That also lets the read path be forgiving: anything that fails counts as
-a miss, a dismissed prompt and a malformed item alike. **Clear device cache** on
-the screen forces the fallback so you can watch it happen.
+Any read failure counts as a cache miss and starts a ceremony. Clearing the item,
+changing enrolled biometrics, or moving to another phone therefore keeps the
+passkey as the source of the account. Creating another account replaces the one
+cached result; **Clear device cache** opens the authenticator picker on the next
+sign-in.
 
 Deleting the app is not one of those on iOS. Android drops the item on uninstall,
 but iOS keeps a keychain item written under the same bundle ID, so a reinstall
 can sign in without a ceremony. **Clear device cache** is what removes it.
 
-Gating the item costs a prompt, and [where that prompt
-lands](https://docs.expo.dev/versions/latest/sdk/securestore/) differs: Android
-asks on every operation, iOS only on reading or updating an item and never on
-creating one. So a first sign-in shows two prompts on Android, the passkey and
-then a biometric check to write the item, and one on iOS. A phone with no
-biometric or device credential enrolled cannot hold the item at all, so it runs a
-ceremony every time.
+The [authentication prompt](https://docs.expo.dev/versions/latest/sdk/securestore/)
+differs by platform. Android asks on every operation. iOS asks when reading or
+updating an item. A device with no biometric or device credential cannot cache
+the result.
 
 Revealing the recovery phrase still runs its own ceremony. That phrase reproduces
 every account, so it is worth a passkey even on a device that already unlocked

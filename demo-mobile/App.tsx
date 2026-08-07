@@ -24,8 +24,6 @@ export default function App() {
   const [status, setStatus] = useState<string>();
   const [busy, setBusy] = useState(false);
 
-  // Every action reports through the status line instead of throwing, so a
-  // cancelled ceremony reads the same way as any other outcome.
   async function run(pending: string, action: () => Promise<void>) {
     setBusy(true);
     setStatus(pending);
@@ -38,9 +36,6 @@ export default function App() {
     }
   }
 
-  // Everything on screen below the relying party belongs to one account. The
-  // Sign in and Create account buttons render only while there is no wallet, so
-  // this is what puts the screen back into that state.
   function clearAccount() {
     setWallet(undefined);
     setBalance(undefined);
@@ -48,7 +43,6 @@ export default function App() {
     setMnemonic(undefined);
   }
 
-  // The counterpart of clearAccount: what putting an account on screen means.
   async function showAccount(connected: PasskeyWallet, done: string) {
     setWallet(connected);
     setStatus(done);
@@ -66,8 +60,6 @@ export default function App() {
       );
     });
 
-  // Creation is not done until the PRF output is in hand, so this text stays
-  // true across the second prompt mera shows when the create returned none.
   const create = () =>
     run("Creating the passkey…", async () => {
       await showAccount(
@@ -110,10 +102,8 @@ export default function App() {
           <Text style={styles.title}>mera</Text>
           <Text style={styles.subtitle}>
             Sign in with a passkey the web demo created, or create one here.
-            Either way the address comes from the passkey itself, so both apps
-            reach the same account. After the first sign-in the device holds the
-            PRF output behind a biometric check, which skips the ceremony and
-            loses nothing when cleared.
+            Both apps derive the same address from it. Later sign-ins can use a
+            device cache protected by a biometric or device credential.
           </Text>
 
           <Field label="Relying party" value={rpId} />
@@ -155,8 +145,6 @@ export default function App() {
             </>
           ) : (
             <>
-              {/* Sign in first: it is the returning action, and it changes
-                  nothing, where Create adds an account and repoints the cache. */}
               <Button label="Sign in" disabled={busy} onPress={connect} />
               <Button label="Create account" disabled={busy} onPress={create} />
             </>

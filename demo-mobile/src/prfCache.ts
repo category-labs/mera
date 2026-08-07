@@ -9,11 +9,8 @@ import {
 
 const KEY = "mera.prf.v1";
 
-// The item is encrypted by a key the platform keystore holds and this app never
-// sees. Reading it needs a biometric or device-credential check, so a cached
-// PRF output is no more ambient than one a ceremony returns. Keeping it to this
-// device stops a restored backup from carrying it to a phone the passkey never
-// reached.
+// The platform keystore encrypts the item and requires local authentication to
+// read it. Backups cannot move it to another device.
 const ITEM_OPTIONS = {
   requireAuthentication: true,
   keychainAccessible: WHEN_UNLOCKED_THIS_DEVICE_ONLY,
@@ -25,15 +22,8 @@ const PRF_OUTPUT_LENGTH = 32;
 type StoredPrfResult = { credentialId: string; prfOutput: string };
 
 /**
- * Reads the cached ceremony result, or `undefined` when nothing is stored, the
- * item no longer decrypts, the person dismisses the prompt, or what comes back
- * is not the shape this wrote. Enrolling a new fingerprint invalidates the
- * keystore key, which lands here as well.
- *
- * Every one of those falls back to a ceremony, so the cache never needs
- * repairing and losing it costs nothing. That holds only while every failure
- * ends here, which is why the item is checked rather than just parsed: a PRF
- * output of the wrong length would throw further down, past the fallback.
+ * Reads a valid cached result. Missing, unreadable, rejected, and malformed
+ * items return `undefined` so sign-in falls back to a ceremony.
  */
 async function readCachedPrfResult(): Promise<PasskeyPrfResult | undefined> {
   try {
@@ -63,12 +53,7 @@ async function readCachedPrfResult(): Promise<PasskeyPrfResult | undefined> {
   }
 }
 
-/**
- * Caches one ceremony result, and gives up quietly when the device cannot hold
- * it: a phone with no biometric or device credential enrolled has nothing to
- * gate the item on. Sign-in has already succeeded by the time this runs, and
- * the next one simply runs another ceremony.
- */
+/** Caches one ceremony result when the device supports authenticated storage. */
 async function cachePrfResult(result: PasskeyPrfResult): Promise<void> {
   const stored: StoredPrfResult = {
     credentialId: result.credentialId,

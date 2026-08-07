@@ -82,9 +82,9 @@ const timedClient: WebAuthnClient = {
 
 ## Runtimes without a DOM
 
-React Native reaches passkeys through AuthenticationServices on iOS and Credential Manager on Android, so a client for them is an encoding layer. The bridge decides how each binary field is encoded, and it need not decide them alike: the mobile demo's client sends challenges, user handles, and credential IDs as base64url, and the PRF salt as raw bytes, because that is what its native module reads on both platforms. Check each field against the bridge rather than assuming one rule. [demo-mobile/src/passkeyClient.ts](https://github.com/category-labs/mera/blob/main/demo-mobile/src/passkeyClient.ts) is a worked example.
+A non-browser client converts each byte field to the shape its platform bridge expects and converts results back to `Uint8Array`. The [mobile demo adapter](https://github.com/category-labs/mera/blob/main/demo-mobile/src/passkeyClient.ts) shows this for AuthenticationServices on iOS and Credential Manager on Android.
 
-Two more things differ off the web. Hermes provides no Web Crypto, so `crypto.getRandomValues` has to be installed before the first ceremony, from `expo-crypto` or another CSPRNG; the [secret vault](/concepts/secret-vaults/) APIs additionally need `crypto.subtle` for HKDF and AES-GCM, which a shim such as `react-native-quick-crypto` supplies, and the passkey APIs do not need it at all. PRF itself needs iOS 18 or newer, or an Android provider that supports it ([Authenticator support](/authenticator-support/#native-apps)).
+Passkey functions need `crypto.getRandomValues`. Secret-vault functions also need `crypto.subtle`. [Authenticator support](/authenticator-support/#native-apps) lists the native PRF requirements and tested combinations.
 
 ## See also
 

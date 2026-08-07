@@ -1,5 +1,5 @@
 import { Passkey } from "react-native-passkey";
-import { createReactNativeWebAuthnClient } from "./react-native-passkey-client.js";
+import { createReactNativeWebAuthnClient } from "./react-native-webauthn-client-internal.js";
 import type { WebAuthnClient } from "./webauthn.js";
 
 /**

@@ -8,7 +8,7 @@ import {
   type PasskeyPrfResult,
   type Secp256k1SigningSession,
 } from "@category-labs/mera";
-import { reactNativeWebAuthnClient } from "@category-labs/mera/react-native-passkey";
+import { reactNativeWebAuthnClient } from "@category-labs/mera/react-native-webauthn-client";
 import { toViemAccount } from "@category-labs/mera/viem";
 import type { PasskeyError } from "react-native-passkey";
 import { rpId } from "./config";

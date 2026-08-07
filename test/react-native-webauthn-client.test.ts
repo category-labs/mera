@@ -1,18 +1,18 @@
 import { expect, test } from "@playwright/test";
 import {
   createReactNativeWebAuthnClient,
-  type ReactNativePasskeyApi,
-} from "../dist/react-native-passkey-client.js";
+  type ReactNativeWebAuthnApi,
+} from "../dist/react-native-webauthn-client-internal.js";
 
 type NativeCreateRequest = Parameters<
-  ReactNativePasskeyApi["createPlatformKey"]
+  ReactNativeWebAuthnApi["createPlatformKey"]
 >[0];
-type NativeGetRequest = Parameters<ReactNativePasskeyApi["getPlatformKey"]>[0];
+type NativeGetRequest = Parameters<ReactNativeWebAuthnApi["getPlatformKey"]>[0];
 type NativeCreateResult = Awaited<
-  ReturnType<ReactNativePasskeyApi["createPlatformKey"]>
+  ReturnType<ReactNativeWebAuthnApi["createPlatformKey"]>
 >;
 type NativeGetResult = Awaited<
-  ReturnType<ReactNativePasskeyApi["getPlatformKey"]>
+  ReturnType<ReactNativeWebAuthnApi["getPlatformKey"]>
 >;
 
 function createResult(
@@ -44,14 +44,14 @@ function stubApi(
     getResult?: NativeGetResult;
   } = {},
 ): {
-  api: ReactNativePasskeyApi;
+  api: ReactNativeWebAuthnApi;
   createRequests: NativeCreateRequest[];
   getRequests: NativeGetRequest[];
 } {
   const createRequests: NativeCreateRequest[] = [];
   const getRequests: NativeGetRequest[] = [];
 
-  const api: ReactNativePasskeyApi = {
+  const api: ReactNativeWebAuthnApi = {
     async createPlatformKey(request) {
       createRequests.push(request);
       return options.createResult ?? createResult();
@@ -261,7 +261,7 @@ for (const value of [-1, 256, 1.5, Number.NaN]) {
 
 test("preserves a native rejection", async () => {
   const cause = { error: "NoCredentials", message: "No credentials" };
-  const api: ReactNativePasskeyApi = {
+  const api: ReactNativeWebAuthnApi = {
     async createPlatformKey() {
       return createResult();
     },

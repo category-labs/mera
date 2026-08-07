@@ -9,7 +9,7 @@ import { MeraError, type MeraErrorCode } from "./errors.js";
 import type { PasskeyCredentialTransport } from "./types.js";
 import type { WebAuthnClient } from "./webauthn.js";
 
-type ReactNativePasskeyApi = {
+type ReactNativeWebAuthnApi = {
   createPlatformKey(
     request: PasskeyCreateRequest,
   ): Promise<PasskeyCreateResult>;
@@ -41,7 +41,7 @@ const NATIVE_TRANSPORTS: readonly string[] = [
  * @internal
  */
 function createReactNativeWebAuthnClient(
-  passkey: ReactNativePasskeyApi,
+  passkey: ReactNativeWebAuthnApi,
 ): WebAuthnClient {
   return {
     async createCredential(request) {
@@ -177,5 +177,5 @@ function knownTransports(
   );
 }
 
-export type { ReactNativePasskeyApi };
+export type { ReactNativeWebAuthnApi };
 export { createReactNativeWebAuthnClient };

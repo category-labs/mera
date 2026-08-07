@@ -16,7 +16,7 @@
   },
   // The DOM-free entry points and, through them, every declaration they import.
   // dist/viem.d.ts stays out: it imports viem, whose types are viem's to define.
-  "include": ["dist/index.d.ts", "dist/react-native-passkey.d.ts"],
+  "include": ["dist/index.d.ts", "dist/react-native-webauthn-client.d.ts"],
   // tsc excludes outDir by default, and outDir is the inherited dist/, which
   // would drop the one file this checks.
   "exclude": []

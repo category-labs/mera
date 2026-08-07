@@ -86,7 +86,7 @@ The client for [react-native-passkey](https://github.com/f-23/react-native-passk
 
 ```ts
 import { getPasskeyPrfOutput } from "@category-labs/mera";
-import { reactNativeWebAuthnClient } from "@category-labs/mera/react-native-passkey";
+import { reactNativeWebAuthnClient } from "@category-labs/mera/react-native-webauthn-client";
 
 const { prfOutput } = await getPasskeyPrfOutput({
   rpId: "account.example.com",

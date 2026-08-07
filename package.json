@@ -34,9 +34,9 @@
       "types": "./dist/viem.d.ts",
       "default": "./dist/viem.js"
     },
-    "./react-native-passkey": {
-      "types": "./dist/react-native-passkey.d.ts",
-      "default": "./dist/react-native-passkey.js"
+    "./react-native-webauthn-client": {
+      "types": "./dist/react-native-webauthn-client.d.ts",
+      "default": "./dist/react-native-webauthn-client.js"
     }
   },
   "sideEffects": false,

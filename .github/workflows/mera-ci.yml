@@ -19,11 +19,12 @@ permissions:
 jobs:
   # Classifies a PR's changed files so later jobs can skip work the change
   # cannot affect: `library` covers everything the root package build/tests
-  # depend on, `demo` adds both demo apps on top of that (they compile against
-  # the library's dist/), `package` adds the packaged root files that
-  # scripts/verify-tarball.mjs requires in the tarball, and `docs` is
-  # independent of library code. Runs only on pull_request; on push and manual
-  # dispatch the gated jobs run unconditionally.
+  # depend on, `demo` adds both web demo apps and `mobile` adds the Expo app on
+  # top of that (all three compile against the library's dist/), `package` adds
+  # the packaged root files that scripts/verify-tarball.mjs requires in the
+  # tarball, and `docs` is independent of library code. Runs only on
+  # pull_request; on push and manual dispatch the gated jobs run
+  # unconditionally.
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
@@ -33,6 +34,7 @@ jobs:
     outputs:
       library: ${{ steps.filter.outputs.library }}
       demo: ${{ steps.filter.outputs.demo }}
+      mobile: ${{ steps.filter.outputs.mobile }}
       package: ${{ steps.filter.outputs.package }}
       docs: ${{ steps.filter.outputs.docs }}
     steps:
@@ -45,13 +47,14 @@ jobs:
           gh api --paginate "$PR_URL/files" --jq '.[].filename' > changed-files.txt
 
           matches() { grep -qE "$1" changed-files.txt && echo true || echo false; }
-          library='^(src/|test/|scripts/|package\.json$|package-lock\.json$|tsconfig\.json$|tsconfig\.test\.json$|playwright\.config\.ts$|\.nvmrc$|\.github/workflows/)'
+          library='^(src/|test/|scripts/|package\.json$|package-lock\.json$|tsconfig\.[^/]*json$|playwright\.config\.ts$|\.nvmrc$|\.github/workflows/)'
           packaged='^(README\.md|LICENSE-MIT|LICENSE-APACHE)$'
           shared='^(\.nvmrc$|\.github/workflows/)'
 
           {
             echo "library=$(matches "$library")"
             echo "demo=$(matches "$library|^demo/|^prf-demo/")"
+            echo "mobile=$(matches "$library|^demo-mobile/")"
             echo "package=$(matches "$library|$packaged")"
             echo "docs=$(matches "$shared|^docs/")"
           } >> "$GITHUB_OUTPUT"
@@ -150,6 +153,48 @@ jobs:
       - name: Build PRF demo
         run: npm run build
         working-directory: prf-demo
+
+  mobile:
+    name: Mobile demo
+    runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.mobile == 'true') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          check-latest: true
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            demo-mobile/package-lock.json
+
+      - name: Install library dependencies
+        run: npm ci
+
+      # Installing the app packs the library from the repo root without running
+      # its prepack, so dist/ has to exist first; demo-mobile/.npmrc explains
+      # why that fails silently until the app tries to import the library.
+      - name: Build library
+        run: npm run build
+
+      - name: Install mobile demo dependencies
+        run: npm ci
+        working-directory: demo-mobile
+
+      - name: Typecheck mobile demo
+        run: npm run typecheck
+        working-directory: demo-mobile
+
+      # Bundling is what proves the library resolves through Metro, which
+      # nothing else covers. Android needs no macOS runner.
+      - name: Bundle mobile demo
+        run: npx expo export --platform android --output-dir /tmp/mobile-demo-bundle
+        working-directory: demo-mobile
 
   docs:
     name: Docs

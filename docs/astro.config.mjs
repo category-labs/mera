@@ -161,6 +161,7 @@ export default defineConfig({
               items: [
                 "reference/create-passkey-with-prf-output",
                 "reference/get-passkey-prf-output",
+                "reference/web-authn-client",
               ],
             },
             {

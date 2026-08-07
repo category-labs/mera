@@ -115,23 +115,14 @@ async function createPasskeyWallet(): Promise<ConnectedWallet> {
 }
 
 async function openPasskeyWallet(): Promise<ConnectedWallet> {
-  // Pin to the passkey created on this device when we know it; otherwise fall
-  // back to a discoverable credential so a freshly synced device still works.
-  const known = currentPasskeyWallet();
-  const { prfOutput, credentialId } = await getPasskeyPrfOutput({
-    rpId,
-    credential: known?.credentialId
-      ? { credentialId: known.credentialId, transports: known.transports }
-      : undefined,
-  });
+  // No credential is pinned, so every discoverable passkey for the host is on
+  // offer, a phone-created one included. Pinning the local record would hide
+  // every passkey but the last one this browser used.
+  const { prfOutput, credentialId } = await getPasskeyPrfOutput({ rpId });
 
-  // The ceremony reports which credential was actually used; keep transports
-  // only when it matches the current local record.
-  rememberPasskeyWallet({
-    credentialId,
-    transports:
-      known?.credentialId === credentialId ? known?.transports : undefined,
-  });
+  // The ceremony reports which credential answered. The record pins it for a
+  // later reveal, which must not offer a different passkey's phrase.
+  rememberPasskeyWallet({ credentialId });
 
   return buildPasskeyWallet(prfOutput, credentialId);
 }

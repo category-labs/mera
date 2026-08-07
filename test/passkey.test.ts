@@ -182,28 +182,26 @@ test("PRF output helpers reject an explicit salt of the wrong length", async () 
 });
 
 test("passkey helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavailable", async () => {
-  // WebAuthn availability is checked before Web Crypto, so a credentials stub
-  // must be present for the crypto failure to be reachable.
-  await withStubbedGlobal("navigator", { credentials: {} }, async () => {
-    await withStubbedGlobal("crypto", undefined, async () => {
-      const user = { name: "nad", displayName: "nad" };
-      const prfSalt = new Uint8Array(32);
+  // The internal challenge is generated before the ceremony starts, so the
+  // crypto failure is reachable without a credentials stub.
+  await withStubbedGlobal("crypto", undefined, async () => {
+    const user = { name: "nad", displayName: "nad" };
+    const prfSalt = new Uint8Array(32);
 
-      await expect(
-        getPasskeyPrfOutput({
-          rpId: "example.com",
-          prfSalt,
-        }),
-      ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
+    await expect(
+      getPasskeyPrfOutput({
+        rpId: "example.com",
+        prfSalt,
+      }),
+    ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
 
-      await expect(
-        createPasskeyWithPrfOutput({
-          rp: { id: "example.com", name: "Mera Test" },
-          user,
-          prfSalt,
-        }),
-      ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
-    });
+    await expect(
+      createPasskeyWithPrfOutput({
+        rp: { id: "example.com", name: "Mera Test" },
+        user,
+        prfSalt,
+      }),
+    ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
   });
 });
 

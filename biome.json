@@ -12,7 +12,10 @@
       "!playwright-report",
       "!test-results",
       "!demo/network/evm/out",
-      "!demo/network/evm/cache"
+      "!demo/network/evm/cache",
+      "!demo-mobile/.expo",
+      "!demo-mobile/ios",
+      "!demo-mobile/android"
     ]
   },
   "formatter": {

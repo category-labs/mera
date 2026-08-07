@@ -27,6 +27,16 @@ In the table, `✓` means a live PRF create + get cycle has been confirmed end-t
 | Dashlane                 | Chrome                            | Desktop                     | Not supported (2026-06-01) |                                              |
 | Proton Pass              | Chrome                            | Desktop                     | ✓                          | Latest public version (2026-06)              |
 
+## Native apps
+
+The table covers browsers. A native app reaches the same passkeys through the platform's own API: AuthenticationServices on iOS, which gained PRF in iOS 18, and Credential Manager on Android, where Google Password Manager and 1Password both supply it. Both hand an app a passkey only for a relying party the domain has delegated to it, through `apple-app-site-association` and `assetlinks.json`. The relying party ID decides the PRF output, so an app that names the same host as the web page derives the same accounts.
+
+One native combination is confirmed so far: 1Password on a Pixel 9a returned PRF output for an assertion, reaching the account a browser had created on the same host (2026-08). Creation through a native API is not confirmed on any provider.
+
+[WebAuthnClient](/reference/web-authn-client/) is how mera runs on those APIs, and the repository's `demo-mobile` app is a working example.
+
+On cross-device sign-in, where a phone answers a ceremony started on another machine, avoid iOS 18.0 through 18.3 as the phone: Corbado reports PRF data loss there, fixed in 18.4. For mera, losing PRF output means losing the account derived from it.
+
 ## The desktop Chrome complication
 
 On desktop Chrome, only passkeys saved to Google Password Manager carry PRF. The local profile authenticator lacks [`hmac-secret`](https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html#sctn-hmac-secret-extension), the [CTAP](https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html) primitive behind PRF.

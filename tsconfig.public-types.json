@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "isolatedDeclarations": false,
+    "rootDir": ".",
+    // The public API must type in runtimes without the DOM, so this drops the
+    // DOM libs the library itself builds against. skipLibCheck has to be off:
+    // it would skip the dist declarations this exists to check.
+    "types": [],
+    "skipLibCheck": false,
+    "lib": ["ES2022", "ESNext.Disposable"]
+  },
+  // The entry point and, through it, every declaration it imports. All of them
+  // are the library's own, so nothing here depends on a dependency's types.
+  // dist/viem.d.ts stays out: it imports viem, whose types are viem's to define.
+  "include": ["dist/index.d.ts"],
+  // tsc excludes outDir by default, and outDir is the inherited dist/, which
+  // would drop the one file this checks.
+  "exclude": []
+}

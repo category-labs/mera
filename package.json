@@ -28,11 +28,11 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "default": "./dist/index.js"
     },
     "./viem": {
       "types": "./dist/viem.d.ts",
-      "import": "./dist/viem.js"
+      "default": "./dist/viem.js"
     }
   },
   "sideEffects": false,
@@ -51,7 +51,7 @@
     "build": "tsc",
     "prepack": "npm run build",
     "check": "biome check .",
-    "check:pack": "npm run build && node scripts/verify-tarball.mjs && publint --strict",
+    "check:pack": "npm run build && tsc -p tsconfig.public-types.json && node scripts/verify-tarball.mjs && publint --strict",
     "format": "biome format --write .",
     "lint": "biome lint .",
     "test": "npm run build && tsc -p tsconfig.test.json && playwright test",

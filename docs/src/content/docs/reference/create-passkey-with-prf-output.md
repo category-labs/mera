@@ -26,7 +26,7 @@ const { credentialId, prfSalt, prfOutput } = await createPasskeyWithPrfOutput({
 
 ### options.rp
 
-- Type: `PublicKeyCredentialRpEntity & { id: string }`
+- Type: `{ id: string; name: string }`
 - Required, including `rp.id`
 
 Relying party identity, passed to WebAuthn. `rp.id` lets the fallback ceremony target the same relying party.
@@ -55,9 +55,16 @@ Human-readable display name for the authenticator UI.
 ### options.timeout
 
 - Type: `number`
-- Optional; browser defaults apply when omitted
+- Optional; platform defaults apply when omitted
 
 WebAuthn timeout in milliseconds, applied to each ceremony.
+
+### options.webAuthnClient
+
+- Type: `WebAuthnClient`
+- Optional; defaults to `browserWebAuthnClient`
+
+Client that runs the ceremony. [WebAuthnClient](/reference/web-authn-client/) covers supplying one for a runtime without `navigator.credentials`.
 
 ## Returns
 
@@ -65,9 +72,9 @@ WebAuthn timeout in milliseconds, applied to each ceremony.
 
 ## Errors
 
-- [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not enable PRF, or did not return PRF output on the fallback ceremony.
+- [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator reported no PRF support and returned no create-time output, returned an output that is not 32 bytes, or returned none on the fallback ceremony.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): an explicit `prfSalt` is not 32 bytes.
-- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the page is not in a secure context, or the runtime lacks Web Crypto.
+- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the runtime provides no `crypto.getRandomValues`.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## Notes

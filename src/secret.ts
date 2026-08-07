@@ -14,7 +14,8 @@ import type {
   PasskeyCredentialTransport,
   PasskeySecretVault,
 } from "./types.js";
-import { getCrypto, randomBytes } from "./webcrypto.js";
+import type { WebAuthnClient } from "./webauthn.js";
+import { getSubtleCrypto, randomBytes } from "./webcrypto.js";
 
 const PRF_SALT_LENGTH = 32;
 const NONCE_LENGTH = 12;
@@ -37,16 +38,12 @@ async function deriveEncryptionKey(
     throw new MeraError("INPUT_INVALID", "PRF output must be 32 bytes");
   }
 
-  const crypto = getCrypto();
-  const material = await crypto.subtle.importKey(
-    "raw",
-    prfOutput,
-    "HKDF",
-    false,
-    ["deriveKey"],
-  );
+  const subtle = getSubtleCrypto();
+  const material = await subtle.importKey("raw", prfOutput, "HKDF", false, [
+    "deriveKey",
+  ]);
 
-  return crypto.subtle.deriveKey(
+  return subtle.deriveKey(
     {
       name: "HKDF",
       hash: "SHA-256",
@@ -115,7 +112,7 @@ type CreateSecretVaultOptions = {
  *
  * @returns A JSON-safe secret vault.
  * @throws MeraError with code `INPUT_INVALID` when the PRF output is not 32 bytes.
- * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.getRandomValues` or `crypto.subtle` is unavailable.
  * @internal
  */
 async function createSecretVault({
@@ -128,7 +125,7 @@ async function createSecretVault({
   // one.
   const nonce = randomBytes(NONCE_LENGTH);
 
-  const ciphertext = await getCrypto().subtle.encrypt(
+  const ciphertext = await getSubtleCrypto().encrypt(
     {
       name: "AES-GCM",
       iv: nonce,
@@ -182,9 +179,9 @@ function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
  * @param options - Passkey creation inputs and secret bytes.
  * @returns A JSON-safe secret vault containing the new credential metadata.
  * @remarks
- * Invokes `navigator.credentials.create()` and shows one user-verification
- * prompt. On authenticators that do not evaluate PRF during creation, also
- * invokes `navigator.credentials.get()`, which shows a second.
+ * Runs one creation ceremony and shows one user-verification prompt. On
+ * authenticators that do not evaluate PRF during creation, also runs an
+ * assertion, which shows a second.
  *
  * A fresh random PRF salt is generated internally and stored in the returned
  * vault.
@@ -197,7 +194,7 @@ function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
  * thrown error does not carry its metadata.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF or return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when `secret` is empty.
- * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.getRandomValues` or `crypto.subtle` is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function createSecretVaultWithNewPasskey({
@@ -205,6 +202,7 @@ async function createSecretVaultWithNewPasskey({
   user,
   secret,
   timeout,
+  webAuthnClient,
 }: CreateSecretVaultWithNewPasskeyOptions): Promise<PasskeySecretVault> {
   const secretCopy = copyNonEmptySecret(secret);
   let prfOutput: Uint8Array<ArrayBuffer> | undefined;
@@ -214,6 +212,7 @@ async function createSecretVaultWithNewPasskey({
       rp,
       user,
       ...(timeout !== undefined ? { timeout } : {}),
+      ...(webAuthnClient !== undefined ? { webAuthnClient } : {}),
       prfSalt: randomBytes(PRF_SALT_LENGTH),
     });
     prfOutput = credential.prfOutput;
@@ -231,14 +230,13 @@ async function createSecretVaultWithNewPasskey({
  * @param options - Passkey assertion inputs and secret bytes.
  * @returns A JSON-safe secret vault containing the selected credential metadata.
  * @remarks
- * Invokes `navigator.credentials.get()` and shows one user-verification
- * prompt.
+ * Runs one assertion ceremony and shows one user-verification prompt.
  *
  * A fresh random PRF salt is generated internally and stored in the returned
  * vault.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when `secret` is empty, or `credential.credentialId` is empty or not canonical base64url.
- * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.getRandomValues` or `crypto.subtle` is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function createSecretVaultWithExistingPasskey({
@@ -246,6 +244,7 @@ async function createSecretVaultWithExistingPasskey({
   credential,
   secret,
   timeout,
+  webAuthnClient,
 }: CreateSecretVaultWithExistingPasskeyOptions): Promise<PasskeySecretVault> {
   const secretCopy = copyNonEmptySecret(secret);
   // Copied before async WebAuthn work starts.
@@ -261,6 +260,7 @@ async function createSecretVaultWithExistingPasskey({
       ...(credentialCopy !== undefined ? { credential: credentialCopy } : {}),
       prfSalt,
       ...(timeout !== undefined ? { timeout } : {}),
+      ...(webAuthnClient !== undefined ? { webAuthnClient } : {}),
     });
     prfOutput = evaluated.prfOutput;
 
@@ -298,7 +298,7 @@ type DecryptSecretVaultOptions = {
  * @returns The decrypted secret bytes in a fresh allocation.
  * @throws MeraError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url.
  * @throws MeraError with code `DECRYPT_FAILED` when AES-GCM authentication fails.
- * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.subtle` is unavailable.
  * @internal
  */
 async function decryptSecretVault({
@@ -310,11 +310,12 @@ async function decryptSecretVault({
   const ciphertext = base64UrlDecode(vault.ciphertext);
 
   // Only the decrypt call sits in the try: its catch maps every failure to
-  // DECRYPT_FAILED, so getCrypto's CRYPTO_UNAVAILABLE must be raised first.
-  const crypto = getCrypto();
+  // DECRYPT_FAILED, so getSubtleCrypto's CRYPTO_UNAVAILABLE must be raised
+  // first.
+  const subtle = getSubtleCrypto();
 
   try {
-    const plaintext = await crypto.subtle.decrypt(
+    const plaintext = await subtle.decrypt(
       {
         name: "AES-GCM",
         iv: nonce,
@@ -404,8 +405,13 @@ type DecryptSecretVaultWithPasskeyOptions = {
   rpId: string;
   /** Secret vault to decrypt. */
   vault: PasskeySecretVault;
-  /** WebAuthn timeout in milliseconds. Browser defaults apply when omitted. */
+  /** WebAuthn timeout in milliseconds. Platform defaults apply when omitted. */
   timeout?: number;
+  /**
+   * Client that runs the WebAuthn ceremony. Defaults to
+   * `browserWebAuthnClient`, which calls `navigator.credentials`.
+   */
+  webAuthnClient?: WebAuthnClient;
 };
 
 /**
@@ -414,18 +420,19 @@ type DecryptSecretVaultWithPasskeyOptions = {
  * @param options - Relying party ID and vault.
  * @returns The decrypted secret bytes in a fresh allocation.
  * @remarks
- * Invokes `navigator.credentials.get()` and shows one user-verification
- * prompt. The assertion is restricted to the credential stored in the vault.
+ * Runs one assertion ceremony and shows one user-verification prompt. The
+ * assertion is restricted to the credential stored in the vault.
  * @throws MeraError with code `VAULT_FORMAT_INVALID` when the vault's required structure, version, or encoded data is invalid.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `DECRYPT_FAILED` when AES-GCM authentication fails.
- * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.getRandomValues` or `crypto.subtle` is unavailable.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function decryptSecretVaultWithPasskey({
   rpId,
   vault,
   timeout,
+  webAuthnClient,
 }: DecryptSecretVaultWithPasskeyOptions): Promise<Uint8Array<ArrayBuffer>> {
   const parsedVault = parseSecretVault(vault);
   const { prfOutput } = await getPasskeyPrfOutput({
@@ -433,6 +440,7 @@ async function decryptSecretVaultWithPasskey({
     credential: parsedVault.credential,
     prfSalt: base64UrlDecode(parsedVault.prfSalt),
     ...(timeout !== undefined ? { timeout } : {}),
+    ...(webAuthnClient !== undefined ? { webAuthnClient } : {}),
   });
 
   try {

@@ -44,7 +44,7 @@ npm test
 npm run build
 ```
 
-The mobile demo installs the library as a packed copy of `dist/`, which installing does not build, so build it first. Typecheck the app, and bundle it to check that Metro resolves everything:
+Build the library before installing the mobile demo. Then typecheck and bundle the app to check that Metro resolves everything:
 
 ```sh
 npm run build

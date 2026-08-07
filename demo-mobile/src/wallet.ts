@@ -27,7 +27,6 @@ type PasskeyWallet = {
   credentialId: string;
   session: Secp256k1SigningSession;
   source: "passkey" | "cache";
-  lock(): void;
 };
 
 async function createAccount(): Promise<PasskeyWallet> {
@@ -85,7 +84,6 @@ function toWallet(
       credentialId,
       session,
       source,
-      lock: () => session.end(),
     };
   } finally {
     seed.fill(0);

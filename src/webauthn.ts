@@ -123,11 +123,7 @@ const browserWebAuthnClient: WebAuthnClient = {
     const credential = await navigator.credentials.create({
       publicKey: {
         rp: request.rp,
-        user: {
-          id: request.user.id,
-          name: request.user.name,
-          displayName: request.user.displayName,
-        },
+        user: request.user,
         challenge: request.challenge,
         pubKeyCredParams: request.algorithms.map((alg) => ({
           type: "public-key" as const,

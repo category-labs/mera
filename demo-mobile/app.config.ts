@@ -3,11 +3,6 @@ import type { ExpoConfig } from "expo/config";
 /** The WebAuthn relying party. MERA_RP_ID selects another deployment. */
 const rpId = process.env.MERA_RP_ID ?? "mera-demo.up.railway.app";
 
-/** The demo network the web app trades on. State is wiped on every restart. */
-const evmRpcUrl =
-  process.env.MERA_EVM_RPC_URL ??
-  "https://evm-network-production.up.railway.app";
-
 // The association files served by rpId contain this identifier.
 const applicationId = "xyz.category.mera.demo";
 
@@ -40,7 +35,7 @@ const config: ExpoConfig = {
     ],
   ],
   // Keeps the runtime ceremony aligned with the associated domain.
-  extra: { evmRpcUrl, rpId },
+  extra: { rpId },
 };
 
 export default config;

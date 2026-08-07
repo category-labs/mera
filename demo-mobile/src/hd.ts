@@ -12,14 +12,7 @@ const PRF_OUTPUT_LENGTH = 32;
 // convention).
 const evmPath = (index: number): string => `m/44'/60'/0'/0/${index}`;
 
-/**
- * Converts a 32-byte WebAuthn PRF output into the BIP-39 mnemonic that every
- * standard HD wallet derives from.
- *
- * This mapping is the one the web demo uses (demo/src/hd.ts). Change it here
- * and the app derives different addresses than the web app from the same
- * passkey.
- */
+/** Matches the PRF-to-mnemonic mapping in demo/src/hd.ts. */
 function prfOutputToMnemonic(prfOutput: Uint8Array): string {
   if (prfOutput.length !== PRF_OUTPUT_LENGTH) {
     throw new Error("PRF output must be 32 bytes");

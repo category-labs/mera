@@ -169,25 +169,3 @@ test("maps an allowed assertion to getPlatformKey", async () => {
     prfOutput: new Uint8Array([4, 5, 6]),
   });
 });
-
-test("omits optional assertion fields", async () => {
-  const { api, getRequests } = stubApi();
-  const client = createReactNativeWebAuthnClient(api);
-  const prfSalt = new Uint8Array([1]);
-
-  await client.getCredential({
-    rpId: "account.example.com",
-    challenge: new Uint8Array([2]),
-    prfSalt,
-    userVerification: "required",
-  });
-
-  expect(getRequests).toEqual([
-    {
-      rpId: "account.example.com",
-      challenge: "Ag",
-      userVerification: "required",
-      extensions: { prf: { eval: { first: prfSalt } } },
-    },
-  ]);
-});

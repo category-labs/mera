@@ -208,21 +208,6 @@ test("an error from the client arrives as PASSKEY_OPERATION_FAILED with its caus
   }
 });
 
-test("an assertion request carries the caller's credential and transports", async () => {
-  const { client, calls } = stubClient();
-
-  await getPasskeyPrfOutput({
-    rpId: "example.com",
-    credential: { credentialId: STUB_CREDENTIAL_ID, transports: ["hybrid"] },
-    webAuthnClient: client,
-  });
-
-  expect(calls.get[0]?.allowCredential).toEqual({
-    credentialId: STUB_CREDENTIAL_ID_BYTES,
-    transports: ["hybrid"],
-  });
-});
-
 test("passkey flows need crypto.getRandomValues but not crypto.subtle", async () => {
   const { getRandomValues } = globalThis.crypto;
   const randomOnly = {

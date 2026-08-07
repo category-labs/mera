@@ -198,21 +198,15 @@ function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function createSecretVaultWithNewPasskey({
-  rp,
-  user,
   secret,
-  timeout,
-  webAuthnClient,
+  ...passkeyOptions
 }: CreateSecretVaultWithNewPasskeyOptions): Promise<PasskeySecretVault> {
   const secretCopy = copyNonEmptySecret(secret);
   let prfOutput: Uint8Array<ArrayBuffer> | undefined;
 
   try {
     const credential = await createPasskeyWithPrfOutput({
-      rp,
-      user,
-      ...(timeout !== undefined ? { timeout } : {}),
-      ...(webAuthnClient !== undefined ? { webAuthnClient } : {}),
+      ...passkeyOptions,
       prfSalt: randomBytes(PRF_SALT_LENGTH),
     });
     prfOutput = credential.prfOutput;
@@ -240,11 +234,9 @@ async function createSecretVaultWithNewPasskey({
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function createSecretVaultWithExistingPasskey({
-  rpId,
   credential,
   secret,
-  timeout,
-  webAuthnClient,
+  ...passkeyOptions
 }: CreateSecretVaultWithExistingPasskeyOptions): Promise<PasskeySecretVault> {
   const secretCopy = copyNonEmptySecret(secret);
   // Copied before async WebAuthn work starts.
@@ -256,11 +248,9 @@ async function createSecretVaultWithExistingPasskey({
   try {
     const prfSalt = randomBytes(PRF_SALT_LENGTH);
     const evaluated = await getPasskeyPrfOutput({
-      rpId,
+      ...passkeyOptions,
       ...(credentialCopy !== undefined ? { credential: credentialCopy } : {}),
       prfSalt,
-      ...(timeout !== undefined ? { timeout } : {}),
-      ...(webAuthnClient !== undefined ? { webAuthnClient } : {}),
     });
     prfOutput = evaluated.prfOutput;
 
@@ -429,18 +419,14 @@ type DecryptSecretVaultWithPasskeyOptions = {
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function decryptSecretVaultWithPasskey({
-  rpId,
   vault,
-  timeout,
-  webAuthnClient,
+  ...passkeyOptions
 }: DecryptSecretVaultWithPasskeyOptions): Promise<Uint8Array<ArrayBuffer>> {
   const parsedVault = parseSecretVault(vault);
   const { prfOutput } = await getPasskeyPrfOutput({
-    rpId,
+    ...passkeyOptions,
     credential: parsedVault.credential,
     prfSalt: base64UrlDecode(parsedVault.prfSalt),
-    ...(timeout !== undefined ? { timeout } : {}),
-    ...(webAuthnClient !== undefined ? { webAuthnClient } : {}),
   });
 
   try {

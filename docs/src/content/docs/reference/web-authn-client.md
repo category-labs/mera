@@ -49,11 +49,9 @@ Errors from react-native-passkey surface as the `cause` of mera's [`PASSKEY_OPER
 
 ## Notes
 
-Every ceremony parameter arrives in the request. Binary values cross in both directions as `Uint8Array`. A client converts those bytes to the shape its platform expects and returns credential IDs and PRF output as `Uint8Array`.
+Binary values cross in both directions as `Uint8Array`. A client converts those bytes to the shape its platform expects and returns credential IDs and PRF output as `Uint8Array`.
 
 A PRF output that is not 32 bytes fails with [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable). Anything a client throws surfaces as [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed) with the original error as its `cause`.
-
-Passkey functions need `crypto.getRandomValues`. Secret-vault functions also need `crypto.subtle`.
 
 ## See also
 

@@ -2,7 +2,6 @@ import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { fetchBalance } from "./src/chain";
 import { rpId } from "./src/config";
 import { clearCachedPrfResult } from "./src/prfCache";
 import {
@@ -18,7 +17,6 @@ const SIGNED_MESSAGE = "mera mobile demo";
 
 export default function App() {
   const [wallet, setWallet] = useState<PasskeyWallet>();
-  const [balance, setBalance] = useState<string>();
   const [signature, setSignature] = useState<string>();
   const [mnemonic, setMnemonic] = useState<string>();
   const [status, setStatus] = useState<string>();
@@ -38,21 +36,19 @@ export default function App() {
 
   function clearAccount() {
     setWallet(undefined);
-    setBalance(undefined);
     setSignature(undefined);
     setMnemonic(undefined);
   }
 
-  async function showAccount(connected: PasskeyWallet, done: string) {
+  function showAccount(connected: PasskeyWallet, done: string) {
     setWallet(connected);
     setStatus(done);
-    setBalance(await fetchBalance(connected.address));
   }
 
   const connect = () =>
     run("Unlocking…", async () => {
       const connected = await signIn();
-      await showAccount(
+      showAccount(
         connected,
         connected.source === "cache"
           ? "Signed in from this device, with no passkey prompt."
@@ -62,7 +58,7 @@ export default function App() {
 
   const create = () =>
     run("Creating the passkey…", async () => {
-      await showAccount(
+      showAccount(
         await createAccount(),
         "Created a passkey and signed in. The web demo signs into this same address with it.",
       );
@@ -81,7 +77,7 @@ export default function App() {
     });
 
   const lock = (connected: PasskeyWallet) => {
-    connected.lock();
+    connected.session.end();
     clearAccount();
     setStatus("Locked. The signing key is zeroed.");
   };
@@ -89,7 +85,7 @@ export default function App() {
   const forget = (connected: PasskeyWallet) =>
     run("Clearing the cache…", async () => {
       await clearCachedPrfResult();
-      connected.lock();
+      connected.session.end();
       clearAccount();
       setStatus("Cache cleared. The next sign-in runs a passkey ceremony.");
     });
@@ -111,7 +107,6 @@ export default function App() {
           {wallet ? (
             <>
               <Field label="Address" value={wallet.address} mono />
-              <Field label="Balance" value={balance ?? "…"} />
               <Field
                 label="Unlocked by"
                 value={wallet.source === "cache" ? "This device" : "Passkey"}

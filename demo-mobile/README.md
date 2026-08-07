@@ -17,10 +17,10 @@ and accounts because mera generates a fresh user handle for each creation.
 
 mera runs its WebAuthn ceremonies through a
 [`WebAuthnClient`](https://mera.category.xyz/reference/web-authn-client/), which
-defaults to `navigator.credentials`. React Native has no such object, so
-[src/passkeyClient.ts](src/passkeyClient.ts) implements the same two ceremonies
-over [react-native-passkey](https://github.com/f-23/react-native-passkey): iOS
-AuthenticationServices and Android Credential Manager. The adapter converts
+defaults to `navigator.credentials`. The app supplies mera's
+`reactNativeWebAuthnClient`, backed by
+[react-native-passkey](https://github.com/f-23/react-native-passkey): iOS
+AuthenticationServices and Android Credential Manager. The client converts
 each byte field to the shape the native module expects and uses platform-key
 entry points so an iOS security key cannot answer without PRF output.
 

@@ -14,10 +14,9 @@
     "skipLibCheck": false,
     "lib": ["ES2022", "ESNext.Disposable"]
   },
-  // The entry point and, through it, every declaration it imports. All of them
-  // are the library's own, so nothing here depends on a dependency's types.
+  // The DOM-free entry points and, through them, every declaration they import.
   // dist/viem.d.ts stays out: it imports viem, whose types are viem's to define.
-  "include": ["dist/index.d.ts"],
+  "include": ["dist/index.d.ts", "dist/react-native-passkey.d.ts"],
   // tsc excludes outDir by default, and outDir is the inherited dist/, which
   // would drop the one file this checks.
   "exclude": []

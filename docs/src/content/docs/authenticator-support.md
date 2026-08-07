@@ -33,7 +33,7 @@ The table covers browsers. A native app reaches the same passkeys through the pl
 
 One native combination is confirmed so far: 1Password on a Pixel 9a returned PRF output for an assertion, reaching the account a browser had created on the same host (2026-08). Creation through a native API is not confirmed on any provider.
 
-[WebAuthnClient](/reference/web-authn-client/) is how mera runs on those APIs, and the repository's `demo-mobile` app is a working example.
+[`reactNativeWebAuthnClient`](/reference/web-authn-client/#reactnativewebauthnclient) runs those APIs through react-native-passkey. The repository's `demo-mobile` app uses it.
 
 On cross-device sign-in, where a phone answers a ceremony started on another machine, avoid iOS 18.0 through 18.3 as the phone: Corbado reports PRF data loss there, fixed in 18.4. For mera, losing PRF output means losing the account derived from it.
 

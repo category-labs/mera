@@ -8,11 +8,11 @@ import {
   type PasskeyPrfResult,
   type Secp256k1SigningSession,
 } from "@category-labs/mera";
+import { reactNativeWebAuthnClient } from "@category-labs/mera/react-native-passkey";
 import { toViemAccount } from "@category-labs/mera/viem";
 import type { PasskeyError } from "react-native-passkey";
 import { rpId } from "./config";
 import { deriveEvmPrivateKey, mnemonicToSeed, prfOutputToMnemonic } from "./hd";
-import { nativePasskeyClient } from "./passkeyClient";
 import { cachePrfResult, readCachedPrfResult } from "./prfCache";
 
 // Matches the web demo's passkey labels. Neither value affects the PRF.
@@ -39,7 +39,7 @@ async function createAccount(): Promise<PasskeyWallet> {
   const created = await createPasskeyWithPrfOutput({
     rp: { id: rpId, name: RP_NAME },
     user: { name: USER_NAME, displayName: accountLabel() },
-    webAuthnClient: nativePasskeyClient,
+    webAuthnClient: reactNativeWebAuthnClient,
   });
   // Cached before toWallet, which zeroes prfOutput.
   await cachePrfResult(created);
@@ -61,7 +61,7 @@ async function signIn(): Promise<PasskeyWallet> {
 
   const asserted = await getPasskeyPrfOutput({
     rpId,
-    webAuthnClient: nativePasskeyClient,
+    webAuthnClient: reactNativeWebAuthnClient,
   });
   await cachePrfResult(asserted);
 
@@ -114,7 +114,7 @@ async function revealMnemonic(wallet: PasskeyWallet): Promise<string> {
   const { prfOutput } = await getPasskeyPrfOutput({
     rpId,
     credential: { credentialId: wallet.credentialId },
-    webAuthnClient: nativePasskeyClient,
+    webAuthnClient: reactNativeWebAuthnClient,
   });
 
   try {

@@ -33,6 +33,10 @@
     "./viem": {
       "types": "./dist/viem.d.ts",
       "default": "./dist/viem.js"
+    },
+    "./react-native-passkey": {
+      "types": "./dist/react-native-passkey.d.ts",
+      "default": "./dist/react-native-passkey.js"
     }
   },
   "sideEffects": false,
@@ -63,9 +67,13 @@
     "@scure/base": "2.2.0"
   },
   "peerDependencies": {
+    "react-native-passkey": "^3.5.0",
     "viem": "^2.28.0"
   },
   "peerDependenciesMeta": {
+    "react-native-passkey": {
+      "optional": true
+    },
     "viem": {
       "optional": true
     }
@@ -75,6 +83,7 @@
     "@playwright/test": "1.62.0",
     "@types/node": "24.13.3",
     "publint": "0.3.22",
+    "react-native-passkey": "3.5.0",
     "typescript": "7.0.2",
     "viem": "2.55.10"
   },

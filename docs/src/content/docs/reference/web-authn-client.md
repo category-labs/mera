@@ -80,9 +80,29 @@ const timedClient: WebAuthnClient = {
 };
 ```
 
-## Runtimes without a DOM
+## reactNativeWebAuthnClient
 
-A non-browser client converts each byte field to the shape its platform bridge expects and converts results back to `Uint8Array`. The [mobile demo adapter](https://github.com/category-labs/mera/blob/main/demo-mobile/src/passkeyClient.ts) shows this for AuthenticationServices on iOS and Credential Manager on Android.
+The client for [react-native-passkey](https://github.com/f-23/react-native-passkey) `^3.5.0`. It lives in a separate entry point, so the root package loads no React Native code:
+
+```ts
+import { getPasskeyPrfOutput } from "@category-labs/mera";
+import { reactNativeWebAuthnClient } from "@category-labs/mera/react-native-passkey";
+
+const { prfOutput } = await getPasskeyPrfOutput({
+  rpId: "account.example.com",
+  webAuthnClient: reactNativeWebAuthnClient,
+});
+```
+
+The client calls `createPlatformKey` and `getPlatformKey`. The platform-only choice prevents iOS from offering a security key, whose response carries no PRF output. Android still uses Credential Manager.
+
+Challenges, user handles, and credential IDs cross the native bridge as base64url. The PRF salt stays a `Uint8Array`, which both platform bridges accept. Results return to mera as `Uint8Array`, and malformed PRF byte values fail with [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable).
+
+Errors from react-native-passkey surface as the `cause` of mera's [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed). The package's `PasskeyError` type describes that cause.
+
+## Other runtimes without a DOM
+
+A non-browser client converts each byte field to the shape its platform bridge expects and converts results back to `Uint8Array`.
 
 Passkey functions need `crypto.getRandomValues`. Secret-vault functions also need `crypto.subtle`. [Authenticator support](/authenticator-support/#native-apps) lists the native PRF requirements and tested combinations.
 

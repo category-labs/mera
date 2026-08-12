@@ -3,74 +3,16 @@ import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { base64UrlDecode, base64UrlEncode, copyBytes } from "./encoding.js";
 import { isMeraError, MeraError } from "./errors.js";
 import type {
-  CreatePasskeyWithPrfOutputResult,
   PasskeyCredentialMetadata,
   PasskeyCredentialTransport,
-  PasskeyPrfResult,
   PasskeyRelyingParty,
 } from "./types.js";
-import {
-  browserWebAuthnClient,
-  type WebAuthnAllowCredential,
-  type WebAuthnClient,
-} from "./webauthn.js";
+import { browserWebAuthnClient, type WebAuthnClient } from "./webauthn.js";
 import { randomBytes } from "./webcrypto.js";
 
 const DEFAULT_PRF_SALT = sha256(utf8ToBytes("mera.prf.salt.v1"));
 
 const PASSKEY_COSE_ALGORITHMS = [-7, -257];
-
-/** Inputs for creating a passkey and obtaining its first WebAuthn PRF output. */
-type CreatePasskeyWithPrfOutputOptions = {
-  /**
-   * Relying party identity passed to WebAuthn. `id` is required so the
-   * fallback assertion can target the same relying party.
-   */
-  rp: PasskeyRelyingParty;
-  /** User identity passed to WebAuthn. */
-  user: {
-    /** User name displayed or stored by the authenticator. */
-    name: string;
-    /** Human-readable display name for the authenticator UI. */
-    displayName: string;
-  };
-  /** WebAuthn timeout in milliseconds. Platform defaults apply when omitted. */
-  timeout?: number;
-  /**
-   * 32-byte PRF salt evaluated during creation, or by the fallback assertion.
-   * Defaults to the fixed salt documented on {@link getPasskeyPrfOutput}.
-   */
-  prfSalt?: Uint8Array;
-  /**
-   * Client that runs the WebAuthn ceremonies. Defaults to the built-in browser
-   * client, which calls `navigator.credentials`.
-   */
-  webAuthnClient?: WebAuthnClient;
-};
-
-/** Inputs for requesting the first WebAuthn PRF output from a passkey. */
-type GetPasskeyPrfOutputOptions = {
-  /** Relying party ID for the WebAuthn assertion. */
-  rpId: string;
-  /**
-   * Credential metadata to restrict the assertion to one passkey. When
-   * omitted, WebAuthn may choose any discoverable credential for the relying
-   * party.
-   */
-  credential?: PasskeyCredentialMetadata;
-  /**
-   * PRF salt as 32 raw bytes. Defaults to the fixed salt documented on
-   * {@link getPasskeyPrfOutput}.
-   */
-  prfSalt?: Uint8Array;
-  /** WebAuthn timeout in milliseconds. Platform defaults apply when omitted. */
-  timeout?: number;
-  /**
-   * Client that runs the WebAuthn ceremony. Defaults to the built-in browser
-   * client, which calls `navigator.credentials`.
-   */
-  webAuthnClient?: WebAuthnClient;
-};
 
 /**
  * Creates a discoverable, user-verified passkey that requires WebAuthn PRF
@@ -105,7 +47,7 @@ async function createPasskeyWithPrfOutput({
   timeout,
   prfSalt,
   webAuthnClient = browserWebAuthnClient,
-}: CreatePasskeyWithPrfOutputOptions): Promise<CreatePasskeyWithPrfOutputResult> {
+}: createPasskeyWithPrfOutput.Options): Promise<createPasskeyWithPrfOutput.Result> {
   try {
     validatePrfSalt(prfSalt);
 
@@ -168,6 +110,46 @@ async function createPasskeyWithPrfOutput({
   }
 }
 
+declare namespace createPasskeyWithPrfOutput {
+  /** Inputs for creating a passkey and obtaining its first WebAuthn PRF output. */
+  type Options = {
+    /**
+     * Relying party identity passed to WebAuthn. `id` is required so the
+     * fallback assertion can target the same relying party.
+     */
+    rp: PasskeyRelyingParty;
+    /** User identity passed to WebAuthn. */
+    user: {
+      /** User name displayed or stored by the authenticator. */
+      name: string;
+      /** Human-readable display name for the authenticator UI. */
+      displayName: string;
+    };
+    /** WebAuthn timeout in milliseconds. Platform defaults apply when omitted. */
+    timeout?: number;
+    /**
+     * 32-byte PRF salt evaluated during creation, or by the fallback assertion.
+     * Defaults to the fixed salt documented on {@link getPasskeyPrfOutput}.
+     */
+    prfSalt?: Uint8Array;
+    /**
+     * Client that runs the WebAuthn ceremonies. Defaults to the built-in browser
+     * client, which calls `navigator.credentials`.
+     */
+    webAuthnClient?: WebAuthnClient;
+  };
+
+  /** Result of creating a passkey together with its first PRF output. */
+  type Result = PasskeyCredentialMetadata & {
+    /**
+     * PRF salt that WebAuthn evaluated. Always 32 bytes, in a fresh allocation.
+     */
+    readonly prfSalt: Uint8Array<ArrayBuffer>;
+    /** First WebAuthn PRF output for `prfSalt`. Always 32 bytes. */
+    readonly prfOutput: Uint8Array<ArrayBuffer>;
+  };
+}
+
 /**
  * Requests a passkey PRF evaluation and returns the first output.
  *
@@ -203,7 +185,7 @@ async function getPasskeyPrfOutput({
   prfSalt,
   timeout,
   webAuthnClient = browserWebAuthnClient,
-}: GetPasskeyPrfOutputOptions): Promise<PasskeyPrfResult> {
+}: getPasskeyPrfOutput.Options): Promise<getPasskeyPrfOutput.Result> {
   try {
     validatePrfSalt(prfSalt);
 
@@ -243,6 +225,40 @@ async function getPasskeyPrfOutput({
   }
 }
 
+declare namespace getPasskeyPrfOutput {
+  /** Inputs for requesting the first WebAuthn PRF output from a passkey. */
+  type Options = {
+    /** Relying party ID for the WebAuthn assertion. */
+    rpId: string;
+    /**
+     * Credential metadata to restrict the assertion to one passkey. When
+     * omitted, WebAuthn may choose any discoverable credential for the relying
+     * party.
+     */
+    credential?: PasskeyCredentialMetadata;
+    /**
+     * PRF salt as 32 raw bytes. Defaults to the fixed salt documented on
+     * {@link getPasskeyPrfOutput}.
+     */
+    prfSalt?: Uint8Array;
+    /** WebAuthn timeout in milliseconds. Platform defaults apply when omitted. */
+    timeout?: number;
+    /**
+     * Client that runs the WebAuthn ceremony. Defaults to the built-in browser
+     * client, which calls `navigator.credentials`.
+     */
+    webAuthnClient?: WebAuthnClient;
+  };
+
+  /** Result of a passkey assertion with the WebAuthn PRF extension. */
+  type Result = {
+    /** Credential ID selected by the platform, as canonical unpadded base64url. */
+    readonly credentialId: string;
+    /** First PRF output from WebAuthn. Always 32 bytes. */
+    readonly prfOutput: Uint8Array<ArrayBuffer>;
+  };
+}
+
 function toCredentialMetadata(
   credentialId: string,
   transports: readonly PasskeyCredentialTransport[] | undefined,
@@ -262,7 +278,7 @@ function toCredentialMetadata(
  */
 function toAllowCredential(
   credential: PasskeyCredentialMetadata,
-): WebAuthnAllowCredential {
+): WebAuthnClient.AllowCredential {
   return {
     credentialId: base64UrlDecode(credential.credentialId, {
       name: "credential.credentialId",
@@ -288,7 +304,6 @@ function copyPrfOutput(prfOutput: Uint8Array): Uint8Array<ArrayBuffer> {
   return copyBytes(prfOutput);
 }
 
-export type { CreatePasskeyWithPrfOutputOptions, GetPasskeyPrfOutputOptions };
 export {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,

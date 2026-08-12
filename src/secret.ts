@@ -1,16 +1,11 @@
 import { base64UrlDecode, base64UrlEncode, copyBytes } from "./encoding.js";
 import { MeraError } from "./errors.js";
-import type {
-  CreatePasskeyWithPrfOutputOptions,
-  GetPasskeyPrfOutputOptions,
-} from "./passkey.js";
 import {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
   toCredentialMetadata,
 } from "./passkey.js";
 import type {
-  CreatePasskeyWithPrfOutputResult,
   PasskeyCredentialTransport,
   PasskeySecretVault,
 } from "./types.js";
@@ -90,7 +85,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /** Inputs for `createSecretVault`. */
 type CreateSecretVaultOptions = {
   /** Credential metadata plus the PRF salt and PRF output that key this secret. */
-  credential: CreatePasskeyWithPrfOutputResult;
+  credential: createPasskeyWithPrfOutput.Result;
   /** Secret bytes to encrypt. */
   secret: Uint8Array<ArrayBuffer>;
 };
@@ -144,7 +139,7 @@ async function createSecretVault({
 
 /** Inputs for creating a secret vault together with a new passkey. */
 type CreateSecretVaultWithNewPasskeyOptions = Omit<
-  CreatePasskeyWithPrfOutputOptions,
+  createPasskeyWithPrfOutput.Options,
   "prfSalt"
 > & {
   /** Secret bytes to encrypt. Any non-empty length. */
@@ -153,7 +148,7 @@ type CreateSecretVaultWithNewPasskeyOptions = Omit<
 
 /** Inputs for creating a secret vault with an existing passkey. */
 type CreateSecretVaultWithExistingPasskeyOptions = Omit<
-  GetPasskeyPrfOutputOptions,
+  getPasskeyPrfOutput.Options,
   "prfSalt"
 > & {
   /** Secret bytes to encrypt. Any non-empty length. */
@@ -387,7 +382,7 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
 
 /** Inputs for decrypting a secret vault with a passkey. */
 type DecryptSecretVaultWithPasskeyOptions = Omit<
-  GetPasskeyPrfOutputOptions,
+  getPasskeyPrfOutput.Options,
   "credential" | "prfSalt"
 > & {
   /** Secret vault to decrypt. */

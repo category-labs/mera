@@ -1,4 +1,4 @@
-import type { PasskeyPrfResult } from "@category-labs/mera";
+import type { getPasskeyPrfOutput } from "@category-labs/mera";
 import { base64urlnopad } from "@scure/base";
 import {
   deleteItemAsync,
@@ -18,12 +18,14 @@ const ITEM_OPTIONS = {
 
 const PRF_OUTPUT_LENGTH = 32;
 
-type StoredPrfResult = Pick<PasskeyPrfResult, "credentialId"> & {
+type StoredPrfResult = Pick<getPasskeyPrfOutput.Result, "credentialId"> & {
   prfOutput: string;
 };
 
 /** Storage failures, declined authentication, and malformed data throw. */
-async function readStoredPrfResult(): Promise<PasskeyPrfResult | undefined> {
+async function readStoredPrfResult(): Promise<
+  getPasskeyPrfOutput.Result | undefined
+> {
   const stored = await getItemAsync(KEY, ITEM_OPTIONS);
 
   if (stored === null) {
@@ -47,7 +49,9 @@ async function readStoredPrfResult(): Promise<PasskeyPrfResult | undefined> {
   return { credentialId, prfOutput: bytes };
 }
 
-async function storePrfResult(result: PasskeyPrfResult): Promise<void> {
+async function storePrfResult(
+  result: getPasskeyPrfOutput.Result,
+): Promise<void> {
   const stored: StoredPrfResult = {
     credentialId: result.credentialId,
     prfOutput: base64urlnopad.encode(result.prfOutput),

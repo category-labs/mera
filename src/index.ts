@@ -3,10 +3,6 @@ export { getSolanaAddress } from "./chains/solana.js";
 export { createEd25519SigningSession } from "./ed25519.js";
 export type { MeraErrorCode } from "./errors.js";
 export { isMeraError, MeraError } from "./errors.js";
-export type {
-  CreatePasskeyWithPrfOutputOptions,
-  GetPasskeyPrfOutputOptions,
-} from "./passkey.js";
 export { createPasskeyWithPrfOutput, getPasskeyPrfOutput } from "./passkey.js";
 export { createSecp256k1SigningSession } from "./secp256k1.js";
 export type {
@@ -21,24 +17,15 @@ export {
   parseSecretVault,
 } from "./secret.js";
 export type {
-  CreatePasskeyWithPrfOutputResult,
   CreateSigningSessionOptions,
   Ed25519SigningSession,
   EvmAddress,
   PasskeyCredentialMetadata,
   PasskeyCredentialTransport,
-  PasskeyPrfResult,
   PasskeyRelyingParty,
   PasskeySecretVault,
   Secp256k1Signature,
   Secp256k1SigningSession,
   SolanaAddress,
 } from "./types.js";
-export type {
-  WebAuthnAllowCredential,
-  WebAuthnClient,
-  WebAuthnCreateCredentialRequest,
-  WebAuthnCreateCredentialResult,
-  WebAuthnGetCredentialRequest,
-  WebAuthnGetCredentialResult,
-} from "./webauthn.js";
+export type { WebAuthnClient } from "./webauthn.js";

@@ -25,7 +25,7 @@ const { credentialId, prfSalt, prfOutput } = await createPasskeyWithPrfOutput({
 
 ## Parameters
 
-`options` is a `CreatePasskeyWithPrfOutputOptions`.
+`options` is a `createPasskeyWithPrfOutput.Options`.
 
 ### options.rp
 
@@ -72,9 +72,9 @@ Client that runs the ceremonies. [WebAuthnClient](/reference/web-authn-client/) 
 ## Returns
 
 ```ts
-import type { CreatePasskeyWithPrfOutputResult } from "@category-labs/mera";
+import type { createPasskeyWithPrfOutput } from "@category-labs/mera";
 
-type ReturnType = Promise<CreatePasskeyWithPrfOutputResult>;
+type ReturnType = Promise<createPasskeyWithPrfOutput.Result>;
 ```
 
 - `credentialId` (`string`): the new credential ID as canonical unpadded base64url.

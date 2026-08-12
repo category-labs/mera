@@ -5,7 +5,6 @@ import {
   getEvmAddress,
   getPasskeyPrfOutput,
   isMeraError,
-  type PasskeyPrfResult,
   type Secp256k1SigningSession,
 } from "@category-labs/mera";
 import { reactNativeWebAuthnClient } from "@category-labs/mera/react-native-webauthn-client";
@@ -63,7 +62,7 @@ async function restoreStoredAccount(): Promise<PasskeyWallet | undefined> {
 function toWallet({
   credentialId,
   prfOutput,
-}: PasskeyPrfResult): PasskeyWallet {
+}: getPasskeyPrfOutput.Result): PasskeyWallet {
   const seed = mnemonicToSeed(prfOutputToMnemonic(prfOutput));
   prfOutput.fill(0);
   // The session copies what it is given, so this array is the demo's to clear.

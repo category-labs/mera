@@ -56,7 +56,7 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 - Use strict typing and avoid `any`.
 - Prefer `type` aliases unless an `interface` is clearly better.
 - Exported functions should have explicit return types.
-- Keep central type files for durable shared/public data shapes. Define public single-function option bags near the implementation as named `<FunctionName>Options` types used directly in the signature, and avoid moving them into the central type file.
+- Keep central type files for durable shared/public data shapes. When a function or public contract owns two or more named types, put them in a merged `declare namespace` beside it, using names such as `functionName.Options` and `functionName.Result` directly in its signature. Keep a lone function-owned type near the implementation as a prefixed name such as `<FunctionName>Options`; do not create a namespace with one member or keep parallel aliases for namespaced types.
 - Keep exports grouped at the end of hand-written TypeScript files instead of scattering `export` keywords through declarations.
 - Use runtime validation at string and wire boundaries, where TypeScript cannot protect callers.
 - Do not add runtime checks for typed internal invariants that TypeScript already proves, such as required callbacks or disallowed fields within SDK-only control flow.

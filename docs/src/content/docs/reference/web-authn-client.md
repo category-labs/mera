@@ -10,39 +10,34 @@ The built-in browser client calls `navigator.credentials`. Apps on other platfor
 ## Members
 
 ```ts
-import type {
-  WebAuthnCreateCredentialRequest,
-  WebAuthnCreateCredentialResult,
-  WebAuthnGetCredentialRequest,
-  WebAuthnGetCredentialResult,
-} from "@category-labs/mera";
+import type { WebAuthnClient as MeraWebAuthnClient } from "@category-labs/mera";
 
 // ---cut---
 type WebAuthnClient = {
   readonly createCredential: (
-    request: WebAuthnCreateCredentialRequest,
-  ) => Promise<WebAuthnCreateCredentialResult>;
+    request: MeraWebAuthnClient.CreateCredentialRequest,
+  ) => Promise<MeraWebAuthnClient.CreateCredentialResult>;
   readonly getCredential: (
-    request: WebAuthnGetCredentialRequest,
-  ) => Promise<WebAuthnGetCredentialResult>;
+    request: MeraWebAuthnClient.GetCredentialRequest,
+  ) => Promise<MeraWebAuthnClient.GetCredentialResult>;
 };
 ```
 
-Related types: [`WebAuthnCreateCredentialRequest`](#webauthncreatecredentialrequest), [`WebAuthnCreateCredentialResult`](#webauthncreatecredentialresult), [`WebAuthnGetCredentialRequest`](#webauthngetcredentialrequest), and [`WebAuthnGetCredentialResult`](#webauthngetcredentialresult).
+Related types: [`WebAuthnClient.CreateCredentialRequest`](#webauthnclientcreatecredentialrequest), [`WebAuthnClient.CreateCredentialResult`](#webauthnclientcreatecredentialresult), [`WebAuthnClient.GetCredentialRequest`](#webauthnclientgetcredentialrequest), and [`WebAuthnClient.GetCredentialResult`](#webauthnclientgetcredentialresult).
 
-### WebAuthnCreateCredentialRequest
+### WebAuthnClient.CreateCredentialRequest
 
 The relying party, user, challenge, credential policy, and PRF salt for a creation ceremony.
 
-### WebAuthnCreateCredentialResult
+### WebAuthnClient.CreateCredentialResult
 
 The new credential ID, reported transports, PRF support flag, and optional PRF output.
 
-### WebAuthnGetCredentialRequest
+### WebAuthnClient.GetCredentialRequest
 
 The relying party ID, challenge, optional allowed credential, and PRF salt for an assertion ceremony.
 
-### WebAuthnGetCredentialResult
+### WebAuthnClient.GetCredentialResult
 
 The credential ID that answered and its optional PRF output.
 

@@ -24,7 +24,7 @@ const { credentialId, prfOutput } = await getPasskeyPrfOutput({
 
 ## Parameters
 
-`options` is a `GetPasskeyPrfOutputOptions`.
+`options` is a `getPasskeyPrfOutput.Options`.
 
 ### options.rpId
 
@@ -64,9 +64,9 @@ Client that runs the ceremony. [WebAuthnClient](/reference/web-authn-client/) co
 ## Returns
 
 ```ts
-import type { PasskeyPrfResult } from "@category-labs/mera";
+import type { getPasskeyPrfOutput } from "@category-labs/mera";
 
-type ReturnType = Promise<PasskeyPrfResult>;
+type ReturnType = Promise<getPasskeyPrfOutput.Result>;
 ```
 
 - `credentialId` (`string`): the selected credential ID as canonical unpadded base64url.

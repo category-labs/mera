@@ -50,24 +50,6 @@ type PasskeyCredentialMetadata = {
   readonly transports?: readonly PasskeyCredentialTransport[];
 };
 
-/** Result of a passkey assertion with the WebAuthn PRF extension. */
-type PasskeyPrfResult = {
-  /** Credential ID selected by the platform, as canonical unpadded base64url. */
-  readonly credentialId: string;
-  /** First PRF output from WebAuthn. Always 32 bytes. */
-  readonly prfOutput: Uint8Array<ArrayBuffer>;
-};
-
-/** Result of creating a passkey together with its first PRF output. */
-type CreatePasskeyWithPrfOutputResult = PasskeyCredentialMetadata & {
-  /**
-   * PRF salt that WebAuthn evaluated. Always 32 bytes, in a fresh allocation.
-   */
-  readonly prfSalt: Uint8Array<ArrayBuffer>;
-  /** First WebAuthn PRF output for `prfSalt`. Always 32 bytes. */
-  readonly prfOutput: Uint8Array<ArrayBuffer>;
-};
-
 /**
  * Versioned JSON-safe vault holding one secret encrypted behind a passkey.
  * The secret bytes are opaque to the library.
@@ -146,13 +128,11 @@ type Ed25519SigningSession = SigningSession & {
 };
 
 export type {
-  CreatePasskeyWithPrfOutputResult,
   CreateSigningSessionOptions,
   Ed25519SigningSession,
   EvmAddress,
   PasskeyCredentialMetadata,
   PasskeyCredentialTransport,
-  PasskeyPrfResult,
   PasskeyRelyingParty,
   PasskeySecretVault,
   Secp256k1Signature,

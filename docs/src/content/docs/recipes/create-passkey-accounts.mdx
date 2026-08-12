@@ -34,9 +34,9 @@ Every call creates a new passkey.
 The app can store the credential metadata and pass it back on the next sign-in, so the browser reuses the same passkey instead of offering a choice.
 
 ```ts
-import type { CreatePasskeyWithPrfOutputResult } from "@category-labs/mera";
+import type { createPasskeyWithPrfOutput } from "@category-labs/mera";
 
-declare const created: CreatePasskeyWithPrfOutputResult;
+declare const created: createPasskeyWithPrfOutput.Result;
 
 // ---cut---
 localStorage.setItem(

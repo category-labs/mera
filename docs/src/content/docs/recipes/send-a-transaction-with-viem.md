@@ -20,6 +20,9 @@ const { prfOutput } = await getPasskeyPrfOutput({ rpId });
 The seed and path come from the same mapping [Create passkey accounts](/recipes/create-passkey-accounts/) uses ([Keys and accounts](/concepts/entropy-keys-and-accounts/) introduces the standards).
 
 ```ts
+declare const prfOutput: Uint8Array;
+
+// ---cut---
 import { HDKey } from "@scure/bip32";
 import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
@@ -37,6 +40,12 @@ if (node.privateKey === null) throw new Error("derivation produced no key");
 `toViemAccount` lives in the `@category-labs/mera/viem` entry point, which requires the optional `viem` peer dependency.
 
 ```ts
+import { HDKey } from "@scure/bip32";
+
+const node = HDKey.fromMasterSeed(crypto.getRandomValues(new Uint8Array(32)));
+if (node.privateKey === null) throw new Error("derivation produced no key");
+
+// ---cut---
 import { createSecp256k1SigningSession } from "@category-labs/mera";
 import { toViemAccount } from "@category-labs/mera/viem";
 
@@ -50,6 +59,13 @@ const account = toViemAccount(session);
 ## Send the transaction
 
 ```ts
+import type { Secp256k1SigningSession } from "@category-labs/mera";
+import type { LocalAccount } from "viem";
+
+declare const account: LocalAccount;
+declare const session: Secp256k1SigningSession;
+
+// ---cut---
 import { createWalletClient, http, parseEther } from "viem";
 import { sepolia } from "viem/chains";
 

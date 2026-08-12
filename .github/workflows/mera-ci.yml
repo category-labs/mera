@@ -43,14 +43,13 @@ jobs:
           matches() { grep -qE "$1" changed-files.txt && echo true || echo false; }
           library='^(src/|test/|scripts/|package\.json$|package-lock\.json$|tsconfig\.[^/]*json$|playwright\.config\.ts$|\.nvmrc$|\.github/workflows/)'
           packaged='^(README\.md|LICENSE-MIT|LICENSE-APACHE)$'
-          shared='^(\.nvmrc$|\.github/workflows/)'
 
           {
             echo "library=$(matches "$library")"
             echo "demo=$(matches "$library|^demo/|^prf-demo/")"
             echo "mobile=$(matches "$library|^demo-mobile/")"
             echo "package=$(matches "$library|$packaged")"
-            echo "docs=$(matches "$shared|^docs/")"
+            echo "docs=$(matches "$library|^docs/")"
           } >> "$GITHUB_OUTPUT"
 
   check:
@@ -196,7 +195,15 @@ jobs:
           node-version-file: .nvmrc
           check-latest: true
           cache: npm
-          cache-dependency-path: docs/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            docs/package-lock.json
+
+      - name: Install library dependencies
+        run: npm ci
+
+      - name: Build library
+        run: npm run build
 
       - name: Install docs dependencies
         run: npm ci

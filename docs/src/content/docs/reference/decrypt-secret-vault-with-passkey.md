@@ -65,7 +65,11 @@ Client that runs the ceremony. [WebAuthnClient](/reference/web-authn-client/) co
 
 ## Returns
 
-`Promise<Uint8Array>`: the decrypted secret bytes as a fresh allocation.
+```ts
+export type ReturnType = Promise<Uint8Array<ArrayBuffer>>;
+```
+
+The decrypted secret bytes as a fresh allocation.
 
 ## Errors
 

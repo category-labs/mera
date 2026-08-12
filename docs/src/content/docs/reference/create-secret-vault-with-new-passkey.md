@@ -14,6 +14,9 @@ import { createSecretVaultWithNewPasskey } from "@category-labs/mera";
 ## Usage
 
 ```ts
+import { createSecretVaultWithNewPasskey } from "@category-labs/mera";
+
+// ---cut---
 const secret = new TextEncoder().encode("the secret to protect");
 try {
   const vault = await createSecretVaultWithNewPasskey({
@@ -75,7 +78,13 @@ Client that runs the ceremonies. [WebAuthnClient](/reference/web-authn-client/) 
 
 ## Returns
 
-`Promise<PasskeySecretVault>`: a JSON-safe vault with the new credential's metadata and a fresh random 32-byte PRF salt. The [secret vault format](/reference/secret-vault-format/) page documents every field.
+```ts
+import type { PasskeySecretVault } from "@category-labs/mera";
+
+type ReturnType = Promise<PasskeySecretVault>;
+```
+
+A JSON-safe vault with `version`, `credential`, `prfSalt`, `nonce`, and `ciphertext`. It contains the new credential's metadata and a fresh random 32-byte PRF salt. The [secret vault format](/reference/secret-vault-format/) page documents every field.
 
 ## Errors
 

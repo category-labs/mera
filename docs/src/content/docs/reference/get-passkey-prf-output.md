@@ -14,6 +14,9 @@ import { getPasskeyPrfOutput } from "@category-labs/mera";
 ## Usage
 
 ```ts
+import { getPasskeyPrfOutput } from "@category-labs/mera";
+
+// ---cut---
 const { credentialId, prfOutput } = await getPasskeyPrfOutput({
   rpId: "account.example.com",
 });
@@ -60,7 +63,16 @@ Client that runs the ceremony. [WebAuthnClient](/reference/web-authn-client/) co
 
 ## Returns
 
-`Promise<PasskeyPrfResult>`: the credential ID (canonical unpadded base64url) and the 32-byte PRF output. When `credential` is omitted, the result may identify any discoverable credential for the relying party.
+```ts
+import type { PasskeyPrfResult } from "@category-labs/mera";
+
+type ReturnType = Promise<PasskeyPrfResult>;
+```
+
+- `credentialId` (`string`): the selected credential ID as canonical unpadded base64url.
+- `prfOutput` (`Uint8Array<ArrayBuffer>`): the 32-byte PRF output.
+
+When `credential` is omitted, the result may identify any discoverable credential for the relying party.
 
 ## Errors
 

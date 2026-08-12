@@ -57,7 +57,13 @@ viem nonce manager forwarded to the account. viem clients use it to assign trans
 
 ## Returns
 
-A viem `LocalAccount` with `source: "mera"`, accepted anywhere viem takes an account.
+```ts
+import type { LocalAccount } from "viem";
+
+type ReturnType = LocalAccount<"mera">;
+```
+
+A viem [`LocalAccount`](https://viem.sh/docs/accounts/local) with `source: "mera"`, accepted anywhere viem takes an account.
 
 ### address
 

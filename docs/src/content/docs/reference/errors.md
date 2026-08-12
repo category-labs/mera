@@ -8,7 +8,10 @@ The library uses `MeraError` for its documented failure modes. It carries a stab
 ## MeraError
 
 ```ts
-class MeraError extends Error {
+import type { MeraErrorCode } from "@category-labs/mera";
+
+// ---cut---
+declare class MeraError extends Error {
   readonly code: MeraErrorCode;
 }
 ```

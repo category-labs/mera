@@ -34,6 +34,11 @@ Every call creates a new passkey.
 The app can store the credential metadata and pass it back on the next sign-in, so the browser reuses the same passkey instead of offering a choice.
 
 ```ts
+import type { CreatePasskeyWithPrfOutputResult } from "@category-labs/mera";
+
+declare const created: CreatePasskeyWithPrfOutputResult;
+
+// ---cut---
 localStorage.setItem(
   "app.derivedCredential",
   JSON.stringify({
@@ -48,6 +53,9 @@ localStorage.setItem(
 ## Sign in
 
 ```ts
+const rpId = "account.example.com";
+
+// ---cut---
 import { getPasskeyPrfOutput } from "@category-labs/mera";
 
 const stored = localStorage.getItem("app.derivedCredential");
@@ -69,6 +77,9 @@ localStorage.setItem("app.derivedCredential", JSON.stringify(record));
 Turn the PRF output into a [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed.
 
 ```ts
+declare const prfOutput: Uint8Array;
+
+// ---cut---
 import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 
@@ -132,12 +143,40 @@ function deriveSolanaAccount(seed: Uint8Array, index: number) {
 Build the account list from these helpers:
 
 ```ts
+import type {
+  Ed25519SigningSession,
+  EvmAddress,
+  Secp256k1SigningSession,
+  SolanaAddress,
+} from "@category-labs/mera";
+
+declare const seed: Uint8Array;
+declare function deriveEvmAccount(
+  seed: Uint8Array,
+  index: number,
+): { session: Secp256k1SigningSession; address: EvmAddress };
+declare function deriveSolanaAccount(
+  seed: Uint8Array,
+  index: number,
+): { session: Ed25519SigningSession; address: SolanaAddress };
+
+// ---cut---
 const accounts = [deriveEvmAccount(seed, 0), deriveSolanaAccount(seed, 0)];
 ```
 
 ## End the sessions
 
 ```ts
+import type {
+  Ed25519SigningSession,
+  Secp256k1SigningSession,
+} from "@category-labs/mera";
+
+declare const accounts: Array<{
+  session: Ed25519SigningSession | Secp256k1SigningSession;
+}>;
+
+// ---cut---
 for (const account of accounts) {
   account.session.end();
 }

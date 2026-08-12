@@ -38,6 +38,9 @@ A private key is encrypted the same way: pass its raw bytes as `secret` instead 
 The unlock runs one ceremony, pinned automatically to the credential stored in the vault:
 
 ```ts
+const rpId = "account.example.com";
+
+// ---cut---
 import {
   decryptSecretVaultWithPasskey,
   parseSecretVault,
@@ -60,5 +63,4 @@ async function unlockPhrase(): Promise<string> {
 - [Secret vaults](/concepts/secret-vaults/): how a vault works and when to use one.
 - [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/): encrypt another secret with the same passkey.
 - [Secret vault format](/reference/secret-vault-format/): the stored JSON, field by field.
-
 

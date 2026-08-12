@@ -74,7 +74,13 @@ Client that runs the ceremony. [WebAuthnClient](/reference/web-authn-client/) co
 
 ## Returns
 
-`Promise<PasskeySecretVault>`: a JSON-safe vault with the selected credential's metadata and a fresh random 32-byte PRF salt. The [secret vault format](/reference/secret-vault-format/) page documents every field.
+```ts
+import type { PasskeySecretVault } from "@category-labs/mera";
+
+type ReturnType = Promise<PasskeySecretVault>;
+```
+
+A JSON-safe vault with `version`, `credential`, `prfSalt`, `nonce`, and `ciphertext`. It contains the selected credential's metadata and a fresh random 32-byte PRF salt. The [secret vault format](/reference/secret-vault-format/) page documents every field.
 
 ## Errors
 

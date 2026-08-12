@@ -124,6 +124,13 @@ svg.mera-diagram {
   height: auto;
 }
 
+/* The Twoslash script sets a viewport-sized max height on each popup. Scroll
+   the popup itself so long types stay within that bound. */
+.expressive-code .twoslash-popup-container {
+  margin-top: 0;
+  overflow: auto;
+}
+
 .mera-diagram text {
   font-family: var(--sl-font);
   font-size: 15px;

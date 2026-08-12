@@ -43,6 +43,12 @@ secp256k1 private key. Must be exactly 32 bytes and a valid scalar, an integer i
 
 ## Returns
 
+```ts
+import type { Secp256k1SigningSession } from "@category-labs/mera";
+
+type ReturnType = Secp256k1SigningSession;
+```
+
 A live [`Secp256k1SigningSession`](/reference/secp256k1-signing-session/).
 
 ## Errors

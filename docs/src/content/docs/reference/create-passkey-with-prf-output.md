@@ -14,6 +14,9 @@ import { createPasskeyWithPrfOutput } from "@category-labs/mera";
 ## Usage
 
 ```ts
+import { createPasskeyWithPrfOutput } from "@category-labs/mera";
+
+// ---cut---
 const { credentialId, prfSalt, prfOutput } = await createPasskeyWithPrfOutput({
   rp: { id: "account.example.com", name: "Example" },
   user: { name: "account@example.com", displayName: "Example account" },
@@ -68,7 +71,16 @@ Client that runs the ceremonies. [WebAuthnClient](/reference/web-authn-client/) 
 
 ## Returns
 
-`Promise<CreatePasskeyWithPrfOutputResult>`. Credential metadata (`credentialId`, `transports` when reported) plus the 32-byte `prfSalt` that was evaluated and the 32-byte `prfOutput`.
+```ts
+import type { CreatePasskeyWithPrfOutputResult } from "@category-labs/mera";
+
+type ReturnType = Promise<CreatePasskeyWithPrfOutputResult>;
+```
+
+- `credentialId` (`string`): the new credential ID as canonical unpadded base64url.
+- `transports` (`readonly PasskeyCredentialTransport[] | undefined`): authenticator transports reported by the platform, when available.
+- `prfSalt` (`Uint8Array<ArrayBuffer>`): the 32-byte salt that WebAuthn evaluated.
+- `prfOutput` (`Uint8Array<ArrayBuffer>`): the 32-byte PRF output for `prfSalt`.
 
 ## Errors
 

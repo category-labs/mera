@@ -43,6 +43,12 @@ Ed25519 private key (the 32-byte seed).
 
 ## Returns
 
+```ts
+import type { Ed25519SigningSession } from "@category-labs/mera";
+
+type ReturnType = Ed25519SigningSession;
+```
+
 A live [`Ed25519SigningSession`](/reference/ed25519-signing-session/).
 
 ## Errors

@@ -55,9 +55,10 @@ npm run check
 
 Running it on a device needs Xcode or Android Studio, a passkey provider with PRF, and the domain association files described in [demo-mobile/README.md](./demo-mobile/README.md).
 
-Build the documentation website from its package directory. Run both web demo builds above first so their generated files are present:
+Build the library before installing the documentation website. TypeScript examples compile against the built package. Run both web demo builds above first so their generated files are present:
 
 ```sh
+npm run build
 cd docs
 npm ci
 npm run build

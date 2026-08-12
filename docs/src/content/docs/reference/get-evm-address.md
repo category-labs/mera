@@ -38,7 +38,13 @@ A secp256k1 public key, compressed (33 bytes) or uncompressed (65 bytes). Normal
 
 ## Returns
 
-An `EvmAddress`: the EIP-55 mixed-case checksummed address as a `0x`-prefixed string. `EvmAddress` is the structural type `` `0x${string}` ``.
+```ts
+import type { EvmAddress } from "@category-labs/mera";
+
+type ReturnType = EvmAddress;
+```
+
+The EIP-55 mixed-case checksummed address as a `0x`-prefixed string. `EvmAddress` is the structural type `` `0x${string}` ``.
 
 ## Errors
 

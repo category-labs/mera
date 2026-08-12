@@ -14,6 +14,9 @@ import { parseSecretVault } from "@category-labs/mera";
 ## Usage
 
 ```ts
+import { parseSecretVault } from "@category-labs/mera";
+
+// ---cut---
 const vault = parseSecretVault(localStorage.getItem("vault"));
 ```
 
@@ -28,7 +31,13 @@ The secret vault as JSON text or an untrusted object. Strings are JSON-parsed fi
 
 ## Returns
 
-A validated `PasskeySecretVault`. Its credential ID, PRF salt, nonce, and ciphertext are canonical base64url with checked lengths (salt 32 bytes, nonce 12 bytes, ciphertext at least the 16-byte GCM tag). Unknown fields are dropped.
+```ts
+import type { PasskeySecretVault } from "@category-labs/mera";
+
+type ReturnType = PasskeySecretVault;
+```
+
+A validated vault with `version`, `credential`, `prfSalt`, `nonce`, and `ciphertext`. Its credential ID, PRF salt, nonce, and ciphertext are canonical base64url with checked lengths (salt 32 bytes, nonce 12 bytes, ciphertext at least the 16-byte GCM tag). Unknown fields are dropped. The [secret vault format](/reference/secret-vault-format/) page documents every field.
 
 ## Errors
 

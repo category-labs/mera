@@ -10,6 +10,14 @@ The built-in browser client calls `navigator.credentials`. Apps on other platfor
 ## Members
 
 ```ts
+import type {
+  WebAuthnCreateCredentialRequest,
+  WebAuthnCreateCredentialResult,
+  WebAuthnGetCredentialRequest,
+  WebAuthnGetCredentialResult,
+} from "@category-labs/mera";
+
+// ---cut---
 type WebAuthnClient = {
   readonly createCredential: (
     request: WebAuthnCreateCredentialRequest,
@@ -19,6 +27,24 @@ type WebAuthnClient = {
   ) => Promise<WebAuthnGetCredentialResult>;
 };
 ```
+
+Related types: [`WebAuthnCreateCredentialRequest`](#webauthncreatecredentialrequest), [`WebAuthnCreateCredentialResult`](#webauthncreatecredentialresult), [`WebAuthnGetCredentialRequest`](#webauthngetcredentialrequest), and [`WebAuthnGetCredentialResult`](#webauthngetcredentialresult).
+
+### WebAuthnCreateCredentialRequest
+
+The relying party, user, challenge, credential policy, and PRF salt for a creation ceremony.
+
+### WebAuthnCreateCredentialResult
+
+The new credential ID, reported transports, PRF support flag, and optional PRF output.
+
+### WebAuthnGetCredentialRequest
+
+The relying party ID, challenge, optional allowed credential, and PRF salt for an assertion ceremony.
+
+### WebAuthnGetCredentialResult
+
+The credential ID that answered and its optional PRF output.
 
 Requests and results use `Uint8Array` for binary values. When creation enables PRF but returns no output, mera calls `getCredential` with the same client and salt.
 

@@ -53,6 +53,9 @@ mera uses a stable PRF salt for this call, so a later sign-in reproduces the sam
 The PRF output is the root of every account. This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) to a phrase and a [seed](/concepts/entropy-keys-and-accounts/#deterministic-derivation), then derives keys with [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki).
 
 ```ts
+declare const prfOutput: Uint8Array;
+
+// ---cut---
 import { HDKey } from "@scure/bip32";
 import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
@@ -68,6 +71,12 @@ if (node.privateKey === null) throw new Error("derivation produced no key");
 ## Sign
 
 ```ts
+import { HDKey } from "@scure/bip32";
+
+const node = HDKey.fromMasterSeed(crypto.getRandomValues(new Uint8Array(32)));
+if (node.privateKey === null) throw new Error("derivation produced no key");
+
+// ---cut---
 import {
   createSecp256k1SigningSession,
   getEvmAddress,
@@ -90,6 +99,9 @@ session.end();
 A later visit reproduces the same account.
 
 ```ts
+const rpId = "account.example.com";
+
+// ---cut---
 import { getPasskeyPrfOutput } from "@category-labs/mera";
 
 const { prfOutput } = await getPasskeyPrfOutput({

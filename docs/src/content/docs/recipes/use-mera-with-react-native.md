@@ -36,6 +36,18 @@ if (typeof globalThis.crypto?.getRandomValues !== "function") {
 Load the polyfill before any code that imports mera:
 
 ```ts
+// @filename: src/polyfills.ts
+import { getRandomValues } from "expo-crypto";
+
+if (typeof globalThis.crypto?.getRandomValues !== "function") {
+  Object.defineProperty(globalThis, "crypto", {
+    configurable: true,
+    value: { ...globalThis.crypto, getRandomValues },
+  });
+}
+
+// @filename: index.ts
+// ---cut---
 import "./src/polyfills";
 ```
 

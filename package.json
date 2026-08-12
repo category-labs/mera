@@ -1,6 +1,6 @@
 {
   "name": "@category-labs/mera",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Accounts on any chain and platform, from a passkey",
   "keywords": [
     "passkey",

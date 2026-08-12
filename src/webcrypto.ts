@@ -1,30 +1,28 @@
 import { MeraError } from "./errors.js";
 
-/**
- * Returns cryptographically random bytes from Web Crypto.
- *
- * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
- * @internal
- */
 function randomBytes(length: number): Uint8Array<ArrayBuffer> {
+  const crypto = globalThis.crypto;
+
+  if (!crypto?.getRandomValues) {
+    throw new MeraError(
+      "CRYPTO_UNAVAILABLE",
+      "crypto.getRandomValues is unavailable",
+    );
+  }
+
   const output = new Uint8Array(length);
-  getCrypto().getRandomValues(output);
+  crypto.getRandomValues(output);
   return output;
 }
 
-/**
- * Returns the host Web Crypto implementation.
- *
- * @returns `globalThis.crypto` when Web Crypto is available.
- * @throws MeraError with code `CRYPTO_UNAVAILABLE` when Web Crypto is unavailable.
- * @internal
- */
-function getCrypto(): Crypto {
-  if (!globalThis.crypto?.subtle || !globalThis.crypto.getRandomValues) {
-    throw new MeraError("CRYPTO_UNAVAILABLE", "Web Crypto is unavailable");
+function getSubtleCrypto(): SubtleCrypto {
+  const subtle = globalThis.crypto?.subtle;
+
+  if (!subtle) {
+    throw new MeraError("CRYPTO_UNAVAILABLE", "crypto.subtle is unavailable");
   }
 
-  return globalThis.crypto;
+  return subtle;
 }
 
-export { getCrypto, randomBytes };
+export { getSubtleCrypto, randomBytes };

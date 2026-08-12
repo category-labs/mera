@@ -28,8 +28,17 @@ export type {
   PasskeyCredentialMetadata,
   PasskeyCredentialTransport,
   PasskeyPrfResult,
+  PasskeyRelyingParty,
   PasskeySecretVault,
   Secp256k1Signature,
   Secp256k1SigningSession,
   SolanaAddress,
 } from "./types.js";
+export type {
+  WebAuthnAllowCredential,
+  WebAuthnClient,
+  WebAuthnCreateCredentialRequest,
+  WebAuthnCreateCredentialResult,
+  WebAuthnGetCredentialRequest,
+  WebAuthnGetCredentialResult,
+} from "./webauthn.js";

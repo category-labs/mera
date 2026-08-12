@@ -7,6 +7,7 @@ import {
   getEvmAddress,
   getPasskeyPrfOutput,
   isMeraError,
+  type PasskeyCredentialMetadata,
   parseSecretVault,
   type Secp256k1SigningSession,
 } from "@category-labs/mera";
@@ -18,7 +19,7 @@ import {
   mnemonicToSeed,
   prfOutputToMnemonic,
 } from "./hd";
-import { currentPasskeyWallet, rememberPasskeyWallet } from "./passkeyWallet";
+import { rememberPasskeyWallet } from "./passkeyWallet";
 
 type AccountMode = "vault" | "passkey";
 
@@ -37,8 +38,8 @@ type Account = {
  */
 type ConnectedWallet = {
   mode: AccountMode;
-  /** Credential to pin when re-running a ceremony for this wallet; passkey mode only, absent otherwise. */
-  credentialId?: string;
+  /** Credential to pin when re-running a ceremony; passkey mode only. */
+  credential?: PasskeyCredentialMetadata;
   account: Account;
   lock(): void;
 };
@@ -87,53 +88,45 @@ function accountFromSeed(seed: Uint8Array): Account {
  */
 function buildPasskeyWallet(
   prfOutput: Uint8Array,
-  credentialId: string,
+  credential: PasskeyCredentialMetadata,
 ): ConnectedWallet {
   const seed = mnemonicToSeed(prfOutputToMnemonic(prfOutput));
   prfOutput.fill(0);
   const account = accountFromSeed(seed);
   return {
     mode: "passkey",
-    credentialId,
+    credential,
     account,
     lock: () => account.session.end(),
   };
 }
 
 async function createPasskeyWallet(): Promise<ConnectedWallet> {
-  const credential = await createPasskeyWithPrfOutput({
+  const created = await createPasskeyWithPrfOutput({
     rp: { id: rpId, name: RP_NAME },
     user: { name: DEFAULT_USER, displayName: passkeyLabel() },
   });
+  const credential: PasskeyCredentialMetadata = {
+    credentialId: created.credentialId,
+    ...(created.transports !== undefined
+      ? { transports: created.transports }
+      : {}),
+  };
 
-  rememberPasskeyWallet({
-    credentialId: credential.credentialId,
-    transports: credential.transports,
-  });
+  rememberPasskeyWallet(credential);
 
-  return buildPasskeyWallet(credential.prfOutput, credential.credentialId);
+  return buildPasskeyWallet(created.prfOutput, credential);
 }
 
 async function openPasskeyWallet(): Promise<ConnectedWallet> {
-  // Pin to the passkey created on this device when we know it; otherwise fall
-  // back to a discoverable credential so a freshly synced device still works.
-  const known = currentPasskeyWallet();
-  const { prfOutput, credentialId } = await getPasskeyPrfOutput({
-    rpId,
-    credential: known?.credentialId
-      ? { credentialId: known.credentialId, transports: known.transports }
-      : undefined,
-  });
+  // Omit `credential` so the platform can offer any synced passkey.
+  const { prfOutput, credentialId } = await getPasskeyPrfOutput({ rpId });
+  const credential = { credentialId };
 
-  // The ceremony reports which credential was actually used; keep transports
-  // only when it matches the current local record.
-  rememberPasskeyWallet({
-    credentialId,
-    transports:
-      known?.credentialId === credentialId ? known?.transports : undefined,
-  });
+  // Pin the selected credential for recovery-phrase reveal.
+  rememberPasskeyWallet(credential);
 
-  return buildPasskeyWallet(prfOutput, credentialId);
+  return buildPasskeyWallet(prfOutput, credential);
 }
 
 // ----- Vault mode: one passkey encrypts one seed phrase the account derives from
@@ -235,24 +228,17 @@ async function connect(
  * Transient secret bytes are zeroed; the returned string cannot be.
  */
 async function revealMnemonic(
-  wallet: Pick<ConnectedWallet, "mode" | "credentialId">,
+  wallet: Pick<ConnectedWallet, "mode" | "credential">,
 ): Promise<string> {
   if (wallet.mode === "vault") {
     return decryptStoredVaultPhrase();
   }
 
-  const record = currentPasskeyWallet();
   const { prfOutput } = await getPasskeyPrfOutput({
     rpId,
-    credential: wallet.credentialId
-      ? {
-          credentialId: wallet.credentialId,
-          transports:
-            record?.credentialId === wallet.credentialId
-              ? record?.transports
-              : undefined,
-        }
-      : undefined,
+    ...(wallet.credential !== undefined
+      ? { credential: wallet.credential }
+      : {}),
   });
 
   try {

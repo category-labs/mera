@@ -11,6 +11,13 @@ Developers can use mera to:
 - keep account derivation and recovery choices in the application;
 - use the same passkey across web, iOS, and Android applications tied to the same domain.
 
+## Supported platforms
+
+- Web browsers
+- React Native on iOS 18 or later and Android 9 or later
+
+See [authenticator support](https://mera.category.xyz/authenticator-support/) for browser and OS support.
+
 ## Documentation and demos
 
 Installation, guides, compatibility information, the security model, the API reference, and the live demos are on the [mera documentation website](https://mera.category.xyz/). The [passkey PRF model](https://mera.category.xyz/prf-demo/) shows how stable PRF output determines account data.
@@ -25,7 +32,7 @@ Installation, guides, compatibility information, the security model, the API ref
 
 ## Status
 
-mera is in preview. The API may change before 1.0. Category Labs has completed an internal security review. The documentation describes its [security model](https://mera.category.xyz/concepts/security-model/) and [known authenticator support](https://mera.category.xyz/authenticator-support/).
+mera is in preview. The API may change before 1.0. Category Labs has completed an internal security review. The documentation describes its [security model](https://mera.category.xyz/concepts/security-model/).
 
 ## Contributing
 

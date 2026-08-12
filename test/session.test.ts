@@ -8,13 +8,13 @@ function sharedBytes(values: number[]): Uint8Array {
   return bytes;
 }
 
-test("derives the public key from the stored private-key snapshot", () => {
+test("derives the public key from its stored private-key copy", () => {
   const privateKey = sharedBytes([1, 2, 3, 4]);
   const original = new Uint8Array(privateKey);
-  let snapshot: Uint8Array | undefined;
+  let privateKeyCopy: Uint8Array | undefined;
 
   const { use, end, publicKey } = createSigningKey(privateKey, (value) => {
-    snapshot = value;
+    privateKeyCopy = value;
     const derived = new Uint8Array(value);
     privateKey.fill(9);
     return derived;
@@ -22,30 +22,30 @@ test("derives the public key from the stored private-key snapshot", () => {
 
   // The caller's buffer keeps the callback's mutation.
   expect(privateKey).toEqual(new Uint8Array(4).fill(9));
-  expect(snapshot).not.toBe(privateKey);
-  expect(snapshot?.buffer).not.toBe(privateKey.buffer);
-  expect(snapshot?.buffer).toBeInstanceOf(ArrayBuffer);
+  expect(privateKeyCopy).not.toBe(privateKey);
+  expect(privateKeyCopy?.buffer).not.toBe(privateKey.buffer);
+  expect(privateKeyCopy?.buffer).toBeInstanceOf(ArrayBuffer);
   expect(publicKey).toEqual(original);
   expect(use()).toEqual(original);
   end();
-  expect(snapshot).toEqual(new Uint8Array(4));
+  expect(privateKeyCopy).toEqual(new Uint8Array(4));
   expectError(() => use(), "SESSION_ENDED");
 });
 
-test("zeroes the stored private-key snapshot when validation fails", () => {
+test("clears the stored private-key copy when validation fails", () => {
   const privateKey = sharedBytes([1, 2, 3, 4]);
-  let snapshot: Uint8Array | undefined;
+  let privateKeyCopy: Uint8Array | undefined;
 
   expect(() => {
     createSigningKey(privateKey, (value) => {
-      snapshot = value;
+      privateKeyCopy = value;
       throw new Error("invalid test key");
     });
   }).toThrow("invalid test key");
 
   expect(privateKey).toEqual(new Uint8Array([1, 2, 3, 4]));
-  expect(snapshot).not.toBe(privateKey);
-  expect(snapshot?.buffer).not.toBe(privateKey.buffer);
-  expect(snapshot?.buffer).toBeInstanceOf(ArrayBuffer);
-  expect(snapshot).toEqual(new Uint8Array(4));
+  expect(privateKeyCopy).not.toBe(privateKey);
+  expect(privateKeyCopy?.buffer).not.toBe(privateKey.buffer);
+  expect(privateKeyCopy?.buffer).toBeInstanceOf(ArrayBuffer);
+  expect(privateKeyCopy).toEqual(new Uint8Array(4));
 });

@@ -10,6 +10,29 @@ function copyBytes(value: Uint8Array): Uint8Array<ArrayBuffer> {
   return new Uint8Array(value);
 }
 
+function normalizeByteArray(
+  value: ArrayBuffer | ArrayBufferView | ArrayLike<number>,
+  options: { name: string; code: MeraErrorCode },
+): Uint8Array {
+  if (ArrayBuffer.isView(value)) {
+    return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+  }
+
+  if (value instanceof ArrayBuffer) {
+    return new Uint8Array(value);
+  }
+
+  return Uint8Array.from(value, (byte) => {
+    if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
+      throw new MeraError(
+        options.code,
+        `${options.name} must contain only byte values (integers 0-255)`,
+      );
+    }
+    return byte;
+  });
+}
+
 /**
  * Encodes bytes as canonical unpadded base64url.
  *
@@ -67,4 +90,4 @@ function base64UrlDecode(
   return bytes;
 }
 
-export { base64UrlDecode, base64UrlEncode, copyBytes };
+export { base64UrlDecode, base64UrlEncode, copyBytes, normalizeByteArray };

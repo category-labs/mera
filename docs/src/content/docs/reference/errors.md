@@ -45,7 +45,7 @@ WebAuthn failed, was cancelled, returned an unexpected credential, or the creden
 
 ### CRYPTO_UNAVAILABLE
 
-Web Crypto is unavailable. In practice this means the page is running outside a secure context (HTTPS, or `localhost` during development), or in a runtime without `globalThis.crypto`.
+A Web Crypto primitive is unavailable. The passkey APIs need `crypto.getRandomValues`; the secret-vault APIs also need `crypto.subtle` (requires HTTPS or `localhost` during development).
 
 ### PRF_UNAVAILABLE
 

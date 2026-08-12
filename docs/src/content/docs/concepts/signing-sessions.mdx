@@ -22,7 +22,7 @@ A session uses an in-memory private key and doesn't contact an authenticator.
 
 Construction copies the key into a session-owned snapshot. Ending the session zeroes that copy and is permanent. An ended session throws on signing, and new signatures require a new session.
 
-Sessions also support `using` declarations: disposal calls `end()` when the scope exits, so a session can be bound to a block instead of a manual call.
+Sessions also support `using` declarations: disposal calls `end()` when the scope exits, so a session can be bound to a block instead of a manual call. Support depends on the JavaScript runtime.
 
 <SessionLifecycle />
 

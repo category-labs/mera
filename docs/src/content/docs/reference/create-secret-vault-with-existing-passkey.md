@@ -3,7 +3,7 @@ title: createSecretVaultWithExistingPasskey
 description: Encrypts one secret into a vault using an existing passkey and a fresh random salt.
 ---
 
-Evaluates an existing passkey and encrypts one secret into a vault. Runs one `navigator.credentials.get()` [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts).
+Evaluates an existing passkey and encrypts one secret into a vault. Runs one [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts) ceremony.
 
 ## Import
 
@@ -61,9 +61,16 @@ Secret bytes to encrypt. Any non-empty length.
 ### options.timeout
 
 - Type: `number`
-- Optional; browser defaults apply when omitted
+- Optional; platform defaults apply when omitted
 
 WebAuthn timeout in milliseconds.
+
+### options.webAuthnClient
+
+- Type: `WebAuthnClient`
+- Optional; defaults to the built-in browser client
+
+Client that runs the ceremony. [WebAuthnClient](/reference/web-authn-client/) covers supplying one for a runtime without `navigator.credentials`.
 
 ## Returns
 
@@ -73,7 +80,7 @@ WebAuthn timeout in milliseconds.
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not return a usable 32-byte PRF output.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `secret` is empty, or `credential.credentialId` is empty or not canonical base64url.
-- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the page is not in a secure context, or the runtime lacks Web Crypto.
+- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the runtime provides no `crypto.getRandomValues` or `crypto.subtle`.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## See also

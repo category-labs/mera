@@ -327,7 +327,7 @@ function TradingCard({
           ? account.wallet
           : {
               mode: account.mode,
-              credentialId: currentPasskeyWallet()?.credentialId,
+              credential: currentPasskeyWallet(),
             };
       setPhrase(await revealMnemonic(target));
     } catch (caught) {

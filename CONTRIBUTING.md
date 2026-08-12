@@ -24,7 +24,7 @@ npm test            # library build, test typecheck, and Playwright tests
 npm run check:pack  # publishable package contents, exports, and types
 ```
 
-`npm run check` applies to every change; biome verifies formatting and lint across the repository, including CSS and SVG files, and `npm run format` fixes the formatting failures it reports. Run `npm test` for library or test changes. Run `npm run check:pack` when packaged files, exports, types, or package metadata change.
+`npm run check` applies to every change; biome verifies formatting and lint across the repository, including CSS and SVG files, and `npm run format` fixes the formatting failures it reports. Run `npm test` for library or test changes. Run `npm run check:pack` when packaged files, exports, types, or package metadata change; it also typechecks the built public types without the DOM libs, so they stay usable from React Native.
 
 The demo compiles against the built library and writes to `docs/public/demo`, where the documentation website serves it at `/demo/`:
 
@@ -44,7 +44,18 @@ npm test
 npm run build
 ```
 
-Build the documentation website from its package directory. Run both demo builds above first so their generated files are present:
+Build the library before installing the mobile demo. Then typecheck and bundle the app to check that Metro resolves everything:
+
+```sh
+npm run build
+cd demo-mobile
+npm ci
+npm run check
+```
+
+Running it on a device needs Xcode or Android Studio, a passkey provider with PRF, and the domain association files described in [demo-mobile/README.md](./demo-mobile/README.md).
+
+Build the documentation website from its package directory. Run both web demo builds above first so their generated files are present:
 
 ```sh
 cd docs

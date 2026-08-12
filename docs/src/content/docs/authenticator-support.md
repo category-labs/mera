@@ -27,6 +27,10 @@ In the table, `✓` means a live PRF create + get cycle has been confirmed end-t
 | Dashlane                 | Chrome                            | Desktop                     | Not supported (2026-06-01) |                                              |
 | Proton Pass              | Chrome                            | Desktop                     | ✓                          | Latest public version (2026-06)              |
 
+## Native apps
+
+Native apps can use PRF on iOS 18 or later and Android 9 or later.
+
 ## The desktop Chrome complication
 
 On desktop Chrome, only passkeys saved to Google Password Manager carry PRF. The local profile authenticator lacks [`hmac-secret`](https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html#sctn-hmac-secret-extension), the [CTAP](https://fidoalliance.org/specs/fido-v2.2-ps-20250714/fido-client-to-authenticator-protocol-v2.2-ps-20250714.html) primitive behind PRF.

@@ -7,14 +7,13 @@ const DEFAULT_PRF_SALT = hexToBytes(
   "896d46ac4ac191885c46137439db7bb52fb05cff3ecd34af7cdae0a1e0c00db9",
 );
 
-// Canonical unpadded base64url of the [1, 2, 3, 4] rawId every
-// stubPublicKeyCredential result reports.
-const STUB_CREDENTIAL_ID = "AQIDBA";
+const CREDENTIAL_ID_BYTES = new Uint8Array([1, 2, 3, 4]);
+const CREDENTIAL_ID_BASE64URL = "AQIDBA";
 
 // WebAuthn credential stub for navigator.credentials fakes: `prf` becomes the
 // client extension results, and `transports` adds a create-style response
-// implementing getTransports (otherwise the response is empty, like an
-// assertion's).
+// implementing getTransports (otherwise the response is empty, as it is after
+// sign-in).
 function stubPublicKeyCredential({
   prf,
   transports,
@@ -24,7 +23,7 @@ function stubPublicKeyCredential({
 }) {
   return {
     type: "public-key",
-    rawId: new Uint8Array([1, 2, 3, 4]).buffer,
+    rawId: new Uint8Array(CREDENTIAL_ID_BYTES).buffer,
     response:
       transports !== undefined ? { getTransports: () => transports } : {},
     getClientExtensionResults: () => ({ prf }),
@@ -80,10 +79,11 @@ async function withStubbedGlobal<T>(
 }
 
 export {
+  CREDENTIAL_ID_BASE64URL,
+  CREDENTIAL_ID_BYTES,
   DEFAULT_PRF_SALT,
   expectError,
   readEvaluatedPrfSalt,
-  STUB_CREDENTIAL_ID,
   stubPublicKeyCredential,
   withStubbedGlobal,
 };

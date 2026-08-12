@@ -1,17 +1,4 @@
-import type { PasskeyCredentialTransport } from "@category-labs/mera";
-
-/**
- * Non-secret metadata for a passkey wallet created on this device.
- *
- * It holds no key material. The app uses it to pin the right passkey with
- * `allowCredentials` on the next same-device sign-in instead of showing every
- * discoverable credential. A fresh device has no record and falls back to a
- * discoverable sign-in.
- */
-type PasskeyWalletRecord = {
-  credentialId: string;
-  transports?: readonly PasskeyCredentialTransport[];
-};
+import type { PasskeyCredentialMetadata as PasskeyWalletRecord } from "@category-labs/mera";
 
 const STORAGE_KEY = "mera.demo.passkeyWallet";
 

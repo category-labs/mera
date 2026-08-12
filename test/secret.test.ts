@@ -11,11 +11,13 @@ import {
   decryptSecretVaultWithPasskey,
   parseSecretVault,
 } from "../dist/secret.js";
+import type { WebAuthnClient } from "../dist/webauthn.js";
 import {
+  CREDENTIAL_ID_BASE64URL,
+  CREDENTIAL_ID_BYTES,
   DEFAULT_PRF_SALT,
   expectError,
   readEvaluatedPrfSalt,
-  STUB_CREDENTIAL_ID,
   stubPublicKeyCredential,
   withStubbedGlobal,
 } from "./helpers.js";
@@ -33,7 +35,7 @@ async function createTestVault(
 ): Promise<PasskeySecretVault> {
   return createSecretVault({
     credential: {
-      credentialId: STUB_CREDENTIAL_ID,
+      credentialId: CREDENTIAL_ID_BASE64URL,
       transports: ["internal"],
       prfSalt: PRF_SALT,
       prfOutput: PRF_OUTPUT,
@@ -58,16 +60,16 @@ test("creates a secret vault and decrypts the exact bytes", async () => {
 });
 
 test("secret-vault creation rejects an empty secret before prompting", async () => {
-  let ceremonyCount = 0;
+  let passkeyRequestCount = 0;
   const navigator = {
     credentials: {
       async create() {
-        ceremonyCount += 1;
+        passkeyRequestCount += 1;
         throw new Error("creation must not start");
       },
       async get() {
-        ceremonyCount += 1;
-        throw new Error("assertion must not start");
+        passkeyRequestCount += 1;
+        throw new Error("passkey request must not start");
       },
     },
   };
@@ -89,10 +91,10 @@ test("secret-vault creation rejects an empty secret before prompting", async () 
     ).rejects.toMatchObject({ code: "INPUT_INVALID" });
   });
 
-  expect(ceremonyCount).toBe(0);
+  expect(passkeyRequestCount).toBe(0);
 });
 
-test("secret-vault creation preserves PRF failures and caller-owned secrets", async () => {
+test("secret-vault creation keeps PRF errors and does not change input secrets", async () => {
   const newPasskeySecret = new Uint8Array(SECRET);
   const existingPasskeySecret = new Uint8Array(SECRET);
   const navigator = {
@@ -127,7 +129,7 @@ test("secret-vault creation preserves PRF failures and caller-owned secrets", as
   expect(existingPasskeySecret).toEqual(SECRET);
 });
 
-test("createSecretVaultWithNewPasskey owns a random salt and snapshots the secret", async () => {
+test("createSecretVaultWithNewPasskey uses a fresh salt and copies the secret", async () => {
   let releaseCreation: (() => void) | undefined;
   const creationGate = new Promise<void>((resolve) => {
     releaseCreation = resolve;
@@ -167,7 +169,7 @@ test("createSecretVaultWithNewPasskey owns a random salt and snapshots the secre
     }
 
     expect(vault.credential).toEqual({
-      credentialId: STUB_CREDENTIAL_ID,
+      credentialId: CREDENTIAL_ID_BASE64URL,
       transports: ["internal"],
     });
     expect(vault.prfSalt).not.toBe(
@@ -179,10 +181,10 @@ test("createSecretVaultWithNewPasskey owns a random salt and snapshots the secre
   });
 });
 
-test("createSecretVaultWithExistingPasskey snapshots inputs and preserves transports", async () => {
-  let releaseAssertion: (() => void) | undefined;
-  const assertionGate = new Promise<void>((resolve) => {
-    releaseAssertion = resolve;
+test("createSecretVaultWithExistingPasskey copies inputs and keeps transports", async () => {
+  let releaseRequest: (() => void) | undefined;
+  const requestGate = new Promise<void>((resolve) => {
+    releaseRequest = resolve;
   });
   let evaluatedSalt: Uint8Array<ArrayBuffer> | undefined;
 
@@ -190,7 +192,7 @@ test("createSecretVaultWithExistingPasskey snapshots inputs and preserves transp
     credentials: {
       async get({ publicKey }: CredentialRequestOptions) {
         evaluatedSalt = readEvaluatedPrfSalt(publicKey);
-        await assertionGate;
+        await requestGate;
         return stubPublicKeyCredential({
           prf: { results: { first: evaluatedSalt?.buffer } },
         });
@@ -200,7 +202,7 @@ test("createSecretVaultWithExistingPasskey snapshots inputs and preserves transp
 
   await withStubbedGlobal("navigator", navigator, async () => {
     const transports: PasskeyCredentialTransport[] = ["usb"];
-    const credential = { credentialId: STUB_CREDENTIAL_ID, transports };
+    const credential = { credentialId: CREDENTIAL_ID_BASE64URL, transports };
     const secret = new Uint8Array(SECRET);
     const pending = createSecretVaultWithExistingPasskey({
       rpId: "example.com",
@@ -211,7 +213,7 @@ test("createSecretVaultWithExistingPasskey snapshots inputs and preserves transp
     credential.credentialId = "BQYHCA";
     transports[0] = "nfc";
     secret.fill(0);
-    releaseAssertion?.();
+    releaseRequest?.();
 
     const vault = await pending;
     if (evaluatedSalt === undefined) {
@@ -219,7 +221,7 @@ test("createSecretVaultWithExistingPasskey snapshots inputs and preserves transp
     }
 
     expect(vault.credential).toEqual({
-      credentialId: STUB_CREDENTIAL_ID,
+      credentialId: CREDENTIAL_ID_BASE64URL,
       transports: ["usb"],
     });
     await expect(
@@ -243,7 +245,7 @@ test("decryptSecretVaultWithPasskey rejects a malformed vault without prompting"
     credentials: {
       async get() {
         asserted = true;
-        throw new Error("assertion must not start");
+        throw new Error("passkey request must not start");
       },
     },
   };
@@ -271,6 +273,41 @@ test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavaila
       decryptSecretVault({ vault, prfOutput: PRF_OUTPUT }),
     ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
   });
+});
+
+test("createSecretVaultWithNewPasskey needs crypto.subtle after passkey creation", async () => {
+  const { getRandomValues } = globalThis.crypto;
+  const randomOnly = {
+    getRandomValues: getRandomValues.bind(globalThis.crypto),
+  };
+  let passkeyCreated = false;
+  const webAuthnClient: WebAuthnClient = {
+    async createCredential({ prfSalt }) {
+      passkeyCreated = true;
+      return {
+        credentialId: new Uint8Array(CREDENTIAL_ID_BYTES),
+        transports: ["internal"],
+        prfEnabled: true,
+        prfOutput: new Uint8Array(prfSalt),
+      };
+    },
+    async getCredential() {
+      throw new Error("sign-in must not start");
+    },
+  };
+
+  await withStubbedGlobal("crypto", randomOnly, async () => {
+    await expect(
+      createSecretVaultWithNewPasskey({
+        rp: { id: "example.com", name: "Mera Test" },
+        user: { name: "nad", displayName: "nad" },
+        secret: new Uint8Array([1, 2, 3]),
+        webAuthnClient,
+      }),
+    ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
+  });
+
+  expect(passkeyCreated).toBe(true);
 });
 
 test("zeroes the PRF output and secret handed to Web Crypto", async () => {
@@ -310,9 +347,8 @@ test("zeroes the PRF output and secret handed to Web Crypto", async () => {
     },
   };
 
-  // The orchestrators own the zeroing, so the assertion runs against them
-  // rather than against createSecretVault and decryptSecretVault, whose inputs
-  // stay caller-owned.
+  // The passkey functions clear these buffers. Test them instead of the
+  // lower-level functions, which leave input buffers unchanged.
   const navigator = {
     credentials: {
       async create({ publicKey }: CredentialCreationOptions) {
@@ -354,7 +390,7 @@ test("zeroes the PRF output and secret handed to Web Crypto", async () => {
   }
 });
 
-test("secret vault encryption is independent of credential metadata and PRF salt", async () => {
+test("changing the credential ID or PRF salt does not change decryption", async () => {
   const vault = await createTestVault();
   const edited = parseSecretVault({
     ...vault,
@@ -367,13 +403,13 @@ test("secret vault encryption is independent of credential metadata and PRF salt
   ).resolves.toEqual(SECRET);
 });
 
-test("parseSecretVault round-trips canonical vault JSON", async () => {
+test("parseSecretVault reads valid vault JSON without changing its data", async () => {
   const vault = await createTestVault();
 
   expect(parseSecretVault(JSON.stringify(vault))).toEqual(vault);
 });
 
-test("parseSecretVault drops fields outside the v1 schema", async () => {
+test("parseSecretVault drops fields outside the v1 format", async () => {
   const vault = await createTestVault();
 
   expect(

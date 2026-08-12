@@ -95,7 +95,7 @@ test("PRF output helpers use the default salt when prfSalt is omitted", async ({
         user: { name: "nad", displayName: "nad" },
       });
 
-      // Omission uses the same stable salt for returning assertions.
+      // Omission uses the same stable salt for later sign-ins.
       const repeated = await mera.getPasskeyPrfOutput({
         rpId: "localhost",
         credential: created,
@@ -125,7 +125,7 @@ test("PRF output helpers use the default salt when prfSalt is omitted", async ({
   });
 });
 
-test("secret-vault orchestrators create independent vaults and decrypt them", async ({
+test("secret-vault functions create separate vaults and decrypt them", async ({
   page,
 }) => {
   await withVirtualAuthenticator(page, async () => {

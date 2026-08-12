@@ -147,6 +147,7 @@ export default defineConfig({
           label: "Recipes",
           items: [
             "recipes/create-passkey-accounts",
+            "recipes/use-mera-with-react-native",
             "recipes/send-a-transaction-with-viem",
             "recipes/use-an-existing-secret",
           ],
@@ -161,6 +162,7 @@ export default defineConfig({
               items: [
                 "reference/create-passkey-with-prf-output",
                 "reference/get-passkey-prf-output",
+                "reference/web-authn-client",
               ],
             },
             {

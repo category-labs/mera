@@ -34,11 +34,14 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 ### Documentation and Examples
 
 - Documentation prose is technical writing held to a hard bar: simple, concise, and detailed at once. Every sentence must add information; cut sentences that only set up, restate, or editorialize on what adjacent sentences already show.
+- Comments and JSDoc must add information beyond a symbol's name, type, and nearby code. Omit them when the code already states the contract.
+- Prefer names that carry stable context over comments that explain it. When a comment remains useful after renaming, keep only the fact the name cannot express.
 - Public SDK functions should have complete, accurate JSDoc.
 - Use appropriate JSDoc tags to describe the API contract, return behavior, input constraints, observable side effects, and failure modes.
 - Document security-sensitive behavior explicitly, especially for key material, randomness, WebAuthn prompts, encryption nonces, storage formats, and mutation/zeroing behavior.
 - Document thrown `MeraError` codes with the appropriate JSDoc tag.
 - Examples should be runnable, concise, and focused on library behavior, not on provider boilerplate.
+- Give each demo a clear teaching goal. Keep only the code, UI, configuration, and documentation needed to teach or run that workflow.
 - In examples, a value's meaning lives in a descriptive variable name (`recipient`, `privateKey`), never in a comment. Extract inline literals to named variables, delete comments that restate a name, and move provenance worth keeping into surrounding prose.
 - The root README is a nontechnical project overview. Installation, examples, compatibility, security details, API documentation, and the demo live on the documentation website.
 - Keep documentation prose neutral: name keys, secrets, and passkeys plainly ("the passkey", "one encrypted secret") rather than attributing them to the reader ("your passkey", "a secret you provide" / "you own").

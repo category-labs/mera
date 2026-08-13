@@ -62,9 +62,9 @@
     "test:e2e": "npm test -- --project chromium-e2e"
   },
   "dependencies": {
-    "@noble/curves": "2.2.0",
-    "@noble/hashes": "2.2.0",
-    "@scure/base": "2.2.0"
+    "@noble/curves": "2.3.0",
+    "@noble/hashes": "2.3.0",
+    "@scure/base": "2.3.0"
   },
   "peerDependencies": {
     "react-native-passkey": "3.6.1",
@@ -79,13 +79,13 @@
     }
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.6",
-    "@playwright/test": "1.62.0",
+    "@biomejs/biome": "2.5.8",
+    "@playwright/test": "1.62.1",
     "@types/node": "24.13.3",
-    "publint": "0.3.22",
+    "publint": "0.3.23",
     "react-native-passkey": "3.6.1",
     "typescript": "7.0.2",
-    "viem": "2.55.10"
+    "viem": "2.55.13"
   },
   "engines": {
     "node": ">=24"

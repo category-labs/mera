@@ -78,7 +78,7 @@ jobs:
         run: npm run check
 
   test:
-    name: Test
+    name: Library tests
     runs-on: ubuntu-latest
     # On non-PR events `changes` is skipped, which would skip dependents too;
     # `!cancelled()` keeps them eligible so the event check can run everything.

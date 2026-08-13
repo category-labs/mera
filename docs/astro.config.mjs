@@ -148,6 +148,7 @@ export default defineConfig({
           items: [
             "recipes/create-passkey-accounts",
             "recipes/use-mera-with-react-native",
+            "recipes/use-mera-with-chrome-extensions",
             "recipes/send-a-transaction-with-viem",
             "recipes/use-an-existing-secret",
           ],

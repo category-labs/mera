@@ -35,6 +35,20 @@ npm ci
 npm run build
 ```
 
+The Chrome side-panel demo builds as an unpacked extension. Its tests check the
+manifest, stored data, network boundary, trade limits, and side-panel entry
+page:
+
+```sh
+cd demo-extension
+npm ci
+npm test
+```
+
+The unpacked files are written to `demo-extension/dist`. Load that directory
+from `chrome://extensions` after enabling Developer mode. The extension needs
+Chrome 122 or later.
+
 The passkey PRF model also compiles against the built library. It writes to `docs/public/prf-demo`, where the website serves it as a standalone page at `/prf-demo/`:
 
 ```sh

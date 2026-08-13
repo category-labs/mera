@@ -26,6 +26,8 @@ Installation, guides, compatibility information, the security model, the API ref
 
 - [`src/`](./src/) contains the library source.
 - [`demo/`](./demo/) contains the live demo application source.
+- [`demo-extension/`](./demo-extension/) contains the unpacked Chrome side-panel demo.
+- [`demo-mobile/`](./demo-mobile/) contains the Expo mobile demo.
 - [`prf-demo/`](./prf-demo/) contains the standalone passkey PRF model.
 - [`docs/`](./docs/) contains the documentation website.
 - [`test/`](./test/) contains the library test suite.

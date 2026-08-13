@@ -1,5 +1,5 @@
 {
-  "name": "mera-monorepo",
+  "name": "@category-labs/mera-workspace",
   "private": true,
   "workspaces": [
     "library",

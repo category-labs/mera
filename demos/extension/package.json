@@ -1,5 +1,5 @@
 {
-  "name": "mera-demo-extension",
+  "name": "@category-labs/mera-demo-extension",
   "private": true,
   "version": "0.1.0",
   "type": "module",

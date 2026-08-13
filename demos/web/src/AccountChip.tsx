@@ -1,6 +1,6 @@
+import { truncateAddress } from "@category-labs/mera-demo-shared/ui";
 import type { ReactElement } from "react";
 import { NETWORK_NAME } from "./chains/evm";
-import { truncateAddress } from "./ui";
 import { useCopyButton } from "./useCopyButton";
 
 type AccountChipProps = {

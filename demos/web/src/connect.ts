@@ -11,14 +11,14 @@ import {
   parseSecretVault,
   type Secp256k1SigningSession,
 } from "@category-labs/mera";
-import { BaseError as ViemError } from "viem";
-import { saveCachedAccount } from "./account";
 import {
   deriveEvmPrivateKey,
   isValidMnemonic,
   mnemonicToSeed,
   prfOutputToMnemonic,
-} from "./hd";
+} from "@category-labs/mera-demo-shared/hd";
+import { BaseError as ViemError } from "viem";
+import { saveCachedAccount } from "./account";
 import { rememberPasskeyWallet } from "./passkeyWallet";
 
 type AccountMode = "vault" | "passkey";

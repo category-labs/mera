@@ -47,7 +47,7 @@ jobs:
 
           {
             echo "library=$(matches "$library")"
-            echo "demo=$(matches "$library|^demos/(web|extension|prf)/")"
+            echo "demo=$(matches "$library|^demos/(web|extension|prf|shared)/")"
             echo "mobile=$(matches "$library|^demos/mobile/")"
             echo "package=$(matches "$library|$packaged")"
             echo "docs=$(matches "$library|^docs/")"
@@ -129,7 +129,7 @@ jobs:
         run: corepack enable npm
 
       - name: Install dependencies
-        run: npm ci --include-workspace-root -w library -w demos/web -w demos/extension -w demos/prf
+        run: npm ci --include-workspace-root -w library -w demos/web -w demos/extension -w demos/prf -w demos/shared
 
       - name: Install Playwright browser
         run: npm exec -w demos/extension -- playwright install --with-deps chromium

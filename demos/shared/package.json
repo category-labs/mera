@@ -1,0 +1,21 @@
+{
+  "name": "@category-labs/mera-demo-shared",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./amount": "./src/amount.ts",
+    "./hd": "./src/hd.ts",
+    "./ui": "./src/ui.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@scure/bip32": "^2.3.0",
+    "@scure/bip39": "^2.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}

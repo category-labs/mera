@@ -11,8 +11,7 @@
   },
   "dependencies": {
     "@category-labs/mera": "*",
-    "@scure/bip32": "^2.3.0",
-    "@scure/bip39": "^2.3.0",
+    "@category-labs/mera-demo-shared": "*",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "viem": "2.55.13"

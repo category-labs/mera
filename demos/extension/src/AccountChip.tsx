@@ -1,5 +1,5 @@
+import { truncateAddress } from "@category-labs/mera-demo-shared/ui";
 import { type ReactElement, useState } from "react";
-import { truncateAddress } from "./ui";
 
 type Props = {
   address: `0x${string}` | null;

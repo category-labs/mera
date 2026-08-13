@@ -1,3 +1,9 @@
+import { parseDecimalAmount } from "@category-labs/mera-demo-shared/amount";
+import {
+  CASH_SYMBOL,
+  formatCash,
+  formatShares,
+} from "@category-labs/mera-demo-shared/ui";
 import {
   type ReactElement,
   useCallback,
@@ -10,7 +16,6 @@ import {
   accountAddress,
   clearCachedAccount,
 } from "./account";
-import { parseDecimalAmount } from "./amount";
 import { ConnectPanel } from "./ConnectPanel";
 import { type EvmContext, fundAccount } from "./chains/evm";
 import {
@@ -40,7 +45,6 @@ import {
 import { NewsTicker } from "./NewsTicker";
 import { CHART_WINDOW_SECONDS, PriceChart } from "./PriceChart";
 import { currentPasskeyWallet } from "./passkeyWallet";
-import { CASH_SYMBOL, formatCash, formatShares } from "./ui";
 import { WalletBackup } from "./WalletBackup";
 
 const REFRESH_MS = 5_000;

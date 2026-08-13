@@ -1,0 +1,47 @@
+body {
+  min-width: 280px;
+  padding: 16px;
+}
+
+.extension-app {
+  width: 100%;
+  max-width: 420px;
+  margin: 8px auto 0;
+}
+
+.account-links {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.backup.warning {
+  background: var(--surface);
+}
+
+@media (max-width: 340px) {
+  body {
+    padding: 10px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .stock-head,
+  .send-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .stock-quote {
+    justify-items: start;
+  }
+
+  .send-btn {
+    width: 100%;
+  }
+
+  .mnemonic-grid {
+    grid-template-columns: 1fr;
+  }
+}

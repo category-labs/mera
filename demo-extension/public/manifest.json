@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "mera paper trading demo",
+  "version": "0.1.0",
+  "description": "A local side-panel demo for mera passkey accounts and fictional trades.",
+  "minimum_chrome_version": "122",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1IDE0S0fHY0HRumnoKkZ/BncpdcdsN1QnbbJR67jkJIIOR6hYrIzIzgSE/2XHUM9iFnvxs2j5imdxvBF81kCmhYg1nPWRr3uq2xVIgonJ6BJTgvnc9CwLRL+Rz+1IVLMTuDmB8XXzqxY7sfbvCnWi3qv0nx8dqqldd/YO2e31YnUsE+c8wGDhD/09Pe6NuGlN956Q1VDlE7AOiZydpi9C9VC31l6xhWO6N6Zpt0GHiqNo7vF88aRS9uOcMH1FFWCFGpC5iVb4S2dRnAe/rkHqFZzix63X6sxA3XDAzK1UAsa78+69Ggtjmne7x5FKeNLzJ2tp2Cd2ubpRPKQi+BQEwIDAQAB",
+  "permissions": ["sidePanel"],
+  "host_permissions": ["https://mera.category.xyz/*"],
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Open mera trading demo",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html?panel=1"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src https://evm-network-production.up.railway.app; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
+  }
+}

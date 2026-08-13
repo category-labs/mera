@@ -46,7 +46,7 @@ jobs:
 
           {
             echo "library=$(matches "$library")"
-            echo "demo=$(matches "$library|^demo/|^prf-demo/")"
+            echo "demo=$(matches "$library|^demo/|^demo-extension/|^prf-demo/")"
             echo "mobile=$(matches "$library|^demo-mobile/")"
             echo "package=$(matches "$library|$packaged")"
             echo "docs=$(matches "$library|^docs/")"
@@ -119,6 +119,7 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             demo/package-lock.json
+            demo-extension/package-lock.json
             prf-demo/package-lock.json
 
       - name: Install library dependencies
@@ -134,6 +135,18 @@ jobs:
       - name: Build demo
         run: npm run build
         working-directory: demo
+
+      - name: Install extension demo dependencies
+        run: npm ci
+        working-directory: demo-extension
+
+      - name: Install Playwright browser for extension tests
+        run: npm exec -- playwright install --with-deps chromium
+        working-directory: demo-extension
+
+      - name: Test Chrome side-panel demo
+        run: npm test
+        working-directory: demo-extension
 
       - name: Install PRF demo dependencies
         run: npm ci

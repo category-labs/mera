@@ -1,5 +1,5 @@
+import { priceAt, TICKER } from "@category-labs/mera-demo-shared/market";
 import { type ReactElement, useMemo } from "react";
-import { priceAt, TICKER } from "./market";
 
 // The chart shows this much history; the header's delta uses the same window
 // so the number and the shape always tell one story.

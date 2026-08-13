@@ -1,5 +1,5 @@
+import { priceAt, TICKER } from "@category-labs/mera-demo-shared/market";
 import { type ReactElement, useMemo } from "react";
-import { priceAt, TICKER } from "./market";
 
 const CHART_WINDOW_SECONDS = 1800;
 const SAMPLE_SECONDS = 5;

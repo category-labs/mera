@@ -1,6 +1,26 @@
 import type { PasskeyCredentialMetadata } from "@category-labs/mera";
 import { parseDecimalAmount } from "@category-labs/mera-demo-shared/amount";
+import {
+  costBasisAfterBuy,
+  costBasisAfterSell,
+} from "@category-labs/mera-demo-shared/costBasis";
 import { prfOutputToMnemonic } from "@category-labs/mera-demo-shared/hd";
+import {
+  buyShares,
+  COMPANY_NAME,
+  type Fill,
+  type Portfolio,
+  priceAt,
+  readPortfolio,
+  sellShares,
+  TICKER,
+  UNIT,
+} from "@category-labs/mera-demo-shared/market";
+import {
+  DEMO_RPC_URL,
+  type EvmContext,
+  fundAccount,
+} from "@category-labs/mera-demo-shared/network";
 import {
   CASH_SYMBOL,
   formatCash,
@@ -17,19 +37,7 @@ import {
 import { isAddressEqual } from "viem";
 import type { AccountState } from "./account";
 import { RECOVERY_VISIBLE_MS } from "./config";
-import {
-  buyShares,
-  COMPANY_NAME,
-  type Fill,
-  type Portfolio,
-  priceAt,
-  readPortfolio,
-  sellShares,
-  TICKER,
-  UNIT,
-} from "./market";
 import { NewsTicker } from "./NewsTicker";
-import { type EvmContext, fundAccount } from "./network";
 import { CHART_WINDOW_SECONDS, PriceChart } from "./PriceChart";
 import {
   isSidePanel,
@@ -219,7 +227,7 @@ function TradingPanel({
   useEffect(() => {
     if (address === null || funded.current === address || evm === null) return;
     funded.current = address;
-    void fundAccount(address).then(refresh).catch(reportError);
+    void fundAccount(DEMO_RPC_URL, address).then(refresh).catch(reportError);
   }, [address, evm, refresh, reportError]);
 
   useEffect(() => {
@@ -356,7 +364,7 @@ function TradingPanel({
           return;
         }
         setFill({ ...result, spent: amountWei });
-        updateBasis(basis + amountWei);
+        updateBasis(costBasisAfterBuy(basis, amountWei));
       } else {
         const shares =
           amountWei >= (portfolio.shares * price) / UNIT
@@ -368,11 +376,7 @@ function TradingPanel({
           return;
         }
         setFill(result);
-        updateBasis(
-          result.shares >= portfolio.shares
-            ? 0n
-            : basis - (basis * result.shares) / portfolio.shares,
-        );
+        updateBasis(costBasisAfterSell(basis, result.shares, portfolio.shares));
       }
       setAmount("");
       await refresh();
@@ -434,7 +438,7 @@ function TradingPanel({
     setPending("funding");
     setError(null);
     try {
-      await fundAccount(address);
+      await fundAccount(DEMO_RPC_URL, address);
       await refresh();
     } catch (caught) {
       reportError(caught);

@@ -1,3 +1,7 @@
+import {
+  type EvmContext,
+  resolveEvmContext,
+} from "@category-labs/mera-demo-shared/network";
 import { type ReactElement, useEffect, useState } from "react";
 import { AccountChip } from "./AccountChip";
 import {
@@ -5,7 +9,7 @@ import {
   accountAddress,
   loadCachedAccount,
 } from "./account";
-import { type EvmContext, resolveEvmContext } from "./chains/evm";
+import { RPC_URL } from "./config";
 import { describeError } from "./connect";
 import { TradingCard } from "./TradingCard";
 
@@ -54,7 +58,7 @@ function App(): ReactElement {
   useEffect(
     () =>
       retryingResolve(
-        resolveEvmContext,
+        () => resolveEvmContext({ rpcUrl: RPC_URL }),
         (context) => {
           setEvmContext(context);
           // Clear the failure once a retry lands, or the error line would

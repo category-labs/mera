@@ -1,5 +1,5 @@
 import type { PasskeyCredentialMetadata } from "@category-labs/mera";
-import { MAX_UINT256 } from "./config";
+import { MAX_UINT256 } from "@category-labs/mera-demo-shared/validation";
 
 type StoredAccount = {
   address: `0x${string}`;

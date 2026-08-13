@@ -1,11 +1,17 @@
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  isJsonRpcBody,
+  jsonRpcResult,
+} from "@category-labs/mera-demo-shared/network";
+import {
+  assertDemoChainId,
+  validateTradeAmount,
+} from "@category-labs/mera-demo-shared/validation";
 import { expect, test } from "@playwright/test";
 import { DEMO_CHAIN_ID } from "../src/config";
-import { isJsonRpcBody, jsonRpcResult } from "../src/network";
 import { isCredential, isStoredAccount } from "../src/storage";
-import { assertDemoChainId, validateTradeAmount } from "../src/validation";
 import { extensionIdFromKey } from "./extension-id";
 
 const extensionDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");

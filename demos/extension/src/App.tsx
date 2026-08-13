@@ -1,4 +1,9 @@
 import {
+  DEMO_RPC_URL,
+  type EvmContext,
+  resolveEvmContext,
+} from "@category-labs/mera-demo-shared/network";
+import {
   type ReactElement,
   useCallback,
   useEffect,
@@ -7,8 +12,7 @@ import {
 } from "react";
 import { AccountChip } from "./AccountChip";
 import { type AccountState, accountAddress } from "./account";
-import type { EvmContext } from "./network";
-import { resolveEvmContext } from "./network";
+import { DEMO_CHAIN_ID } from "./config";
 import { loadAccount } from "./storage";
 import { TradingPanel } from "./TradingPanel";
 import { describeError } from "./wallet";
@@ -55,7 +59,10 @@ function App(): ReactElement {
     let timer: number | undefined;
     async function connectNetwork(): Promise<void> {
       try {
-        const context = await resolveEvmContext();
+        const context = await resolveEvmContext({
+          rpcUrl: DEMO_RPC_URL,
+          expectedChainId: DEMO_CHAIN_ID,
+        });
         if (!stopped) {
           setEvm(context);
           setEvmError(null);

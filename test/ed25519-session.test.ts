@@ -30,6 +30,16 @@ test("signs messages and ends the session", async () => {
   });
 });
 
+test("produces deterministic signatures", async () => {
+  using firstSession = createEd25519SigningSession({ privateKey: RFC_SECRET });
+  using secondSession = createEd25519SigningSession({ privateKey: RFC_SECRET });
+  const message = new TextEncoder().encode("mera demo");
+  const first = await firstSession.signMessage(message);
+  const second = await secondSession.signMessage(message);
+
+  expect(first).toEqual(second);
+});
+
 test("rejects a wrong-length private key and leaves the caller's buffer unmodified", () => {
   const buffer = new Uint8Array(31).fill(7);
 

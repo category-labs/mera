@@ -78,6 +78,26 @@ async function withStubbedGlobal<T>(
   }
 }
 
+// Forwards Web Crypto unchanged while recording the randomness requested by fn.
+async function withCountedRandomness<T>(
+  fn: () => T | Promise<T>,
+): Promise<{ result: T; calls: number; bytesDrawn: number }> {
+  const crypto = globalThis.crypto;
+  let calls = 0;
+  let bytesDrawn = 0;
+  const countingCrypto = {
+    subtle: crypto.subtle,
+    getRandomValues(array: Uint8Array<ArrayBuffer>): Uint8Array<ArrayBuffer> {
+      calls += 1;
+      bytesDrawn += array.byteLength;
+      return crypto.getRandomValues(array);
+    },
+  };
+
+  const result = await withStubbedGlobal("crypto", countingCrypto, fn);
+  return { result, calls, bytesDrawn };
+}
+
 export {
   CREDENTIAL_ID_BASE64URL,
   CREDENTIAL_ID_BYTES,
@@ -85,5 +105,6 @@ export {
   expectError,
   readEvaluatedPrfSalt,
   stubPublicKeyCredential,
+  withCountedRandomness,
   withStubbedGlobal,
 };

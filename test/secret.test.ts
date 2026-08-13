@@ -19,6 +19,7 @@ import {
   expectError,
   readEvaluatedPrfSalt,
   stubPublicKeyCredential,
+  withCountedRandomness,
   withStubbedGlobal,
 } from "./helpers.js";
 
@@ -43,6 +44,13 @@ async function createTestVault(
     secret,
   });
 }
+
+test("createSecretVault draws one 12-byte nonce from crypto.getRandomValues", async () => {
+  const { calls, bytesDrawn } = await withCountedRandomness(createTestVault);
+
+  expect(calls).toBe(1);
+  expect(bytesDrawn).toBe(12);
+});
 
 test("creates a secret vault and decrypts the exact bytes", async () => {
   const vault = await createTestVault();

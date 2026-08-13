@@ -14,7 +14,10 @@ Developers can use mera to:
 ## Supported platforms
 
 - Web browsers
+- Chrome extensions
 - React Native on iOS 18 or later and Android 9 or later
+
+The same approach can be used in native applications.
 
 See [authenticator support](https://mera.category.xyz/authenticator-support/) for browser and OS support.
 
@@ -25,10 +28,7 @@ Installation, guides, compatibility information, the security model, the API ref
 ## Repository
 
 - [`library/`](./library/) contains the published package and its tests.
-- [`demos/web/`](./demos/web/) contains the live demo application source.
-- [`demos/extension/`](./demos/extension/) contains the unpacked Chrome side-panel demo.
-- [`demos/mobile/`](./demos/mobile/) contains the Expo mobile demo.
-- [`demos/prf/`](./demos/prf/) contains the standalone passkey PRF model.
+- [`demos/`](./demos/) contains web, Chrome extension, and mobile demos, and a model of how a passkey determines account data.
 - [`docs/`](./docs/) contains the documentation website.
 
 ## Status

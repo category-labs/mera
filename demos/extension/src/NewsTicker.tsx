@@ -1,5 +1,5 @@
+import { priceAt } from "@category-labs/mera-demo-shared/market";
 import type { ReactElement } from "react";
-import { priceAt } from "./market";
 
 const ROTATE_SECONDS = 90;
 const FLAT_THRESHOLD_WEI = 15n * 10n ** 16n;

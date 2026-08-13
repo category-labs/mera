@@ -1,6 +1,6 @@
+import { NETWORK_NAME } from "@category-labs/mera-demo-shared/network";
 import { truncateAddress } from "@category-labs/mera-demo-shared/ui";
 import type { ReactElement } from "react";
-import { NETWORK_NAME } from "./chains/evm";
 import { useCopyButton } from "./useCopyButton";
 
 type AccountChipProps = {

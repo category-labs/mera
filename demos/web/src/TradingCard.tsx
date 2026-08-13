@@ -1,5 +1,24 @@
 import { parseDecimalAmount } from "@category-labs/mera-demo-shared/amount";
 import {
+  costBasisAfterBuy,
+  costBasisAfterSell,
+} from "@category-labs/mera-demo-shared/costBasis";
+import {
+  buyShares,
+  COMPANY_NAME,
+  type Fill,
+  type Portfolio,
+  priceAt,
+  readPortfolio,
+  sellShares,
+  TICKER,
+  UNIT,
+} from "@category-labs/mera-demo-shared/market";
+import {
+  type EvmContext,
+  fundAccount,
+} from "@category-labs/mera-demo-shared/network";
+import {
   CASH_SYMBOL,
   formatCash,
   formatShares,
@@ -17,7 +36,7 @@ import {
   clearCachedAccount,
 } from "./account";
 import { ConnectPanel } from "./ConnectPanel";
-import { type EvmContext, fundAccount } from "./chains/evm";
+import { RPC_URL } from "./config";
 import {
   type AccountMode,
   type ConnectedWallet,
@@ -25,23 +44,7 @@ import {
   describeError,
   revealMnemonic,
 } from "./connect";
-import {
-  costBasisAfterBuy,
-  costBasisAfterSell,
-  loadCostBasis,
-  saveCostBasis,
-} from "./costBasis";
-import {
-  buyShares,
-  COMPANY_NAME,
-  type Fill,
-  type Portfolio,
-  priceAt,
-  readPortfolio,
-  sellShares,
-  TICKER,
-  UNIT,
-} from "./market";
+import { loadCostBasis, saveCostBasis } from "./costBasis";
 import { NewsTicker } from "./NewsTicker";
 import { CHART_WINDOW_SECONDS, PriceChart } from "./PriceChart";
 import { currentPasskeyWallet } from "./passkeyWallet";
@@ -156,7 +159,7 @@ function TradingCard({
   useEffect(() => {
     if (address === null || funded.current === address) return;
     funded.current = address;
-    fundAccount(address)
+    fundAccount(RPC_URL, address)
       .catch(() => {
         // A failed top-up surfaces through the balance read; the button
         // below offers a retry once the network is back.
@@ -309,7 +312,7 @@ function TradingCard({
     setFunding(true);
     setTradeError(null);
     try {
-      await fundAccount(address);
+      await fundAccount(RPC_URL, address);
       await refresh();
     } catch (caught) {
       setTradeError(describeError(caught));

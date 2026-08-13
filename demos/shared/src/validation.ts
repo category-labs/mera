@@ -1,4 +1,4 @@
-import { MAX_UINT256 } from "./config";
+const MAX_UINT256 = 2n ** 256n - 1n;
 
 function validateTradeAmount(value: bigint): void {
   if (value <= 0n || value > MAX_UINT256) {
@@ -14,4 +14,4 @@ function assertDemoChainId(actual: number, expected: number): void {
   }
 }
 
-export { assertDemoChainId, validateTradeAmount };
+export { assertDemoChainId, MAX_UINT256, validateTradeAmount };

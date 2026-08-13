@@ -5,15 +5,21 @@
   "type": "module",
   "exports": {
     "./amount": "./src/amount.ts",
+    "./costBasis": "./src/costBasis.ts",
     "./hd": "./src/hd.ts",
-    "./ui": "./src/ui.ts"
+    "./market": "./src/market.ts",
+    "./network": "./src/network.ts",
+    "./ui": "./src/ui.ts",
+    "./validation": "./src/validation.ts"
   },
   "scripts": {
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@category-labs/mera": "*",
     "@scure/bip32": "^2.3.0",
-    "@scure/bip39": "^2.3.0"
+    "@scure/bip39": "^2.3.0",
+    "viem": "2.55.13"
   },
   "devDependencies": {
     "typescript": "^7.0.2"

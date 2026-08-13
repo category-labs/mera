@@ -1,5 +1,5 @@
+import { priceAt } from "@category-labs/mera-demo-shared/market";
 import type { ReactElement } from "react";
-import { priceAt } from "./market";
 
 const ROTATE_SECONDS = 90;
 // Price moves smaller than this over a rotation read as "flat".

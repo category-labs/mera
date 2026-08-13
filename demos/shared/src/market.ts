@@ -8,14 +8,11 @@ import {
   keccak256,
   parseEventLogs,
 } from "viem";
-import { MAX_UINT256, RPC_URL } from "./config";
 import type { EvmContext } from "./network";
-import { validateTradeAmount } from "./validation";
+import { MAX_UINT256, validateTradeAmount } from "./validation";
 
 const COMPANY_NAME = "Nad Computer Company";
 const TICKER = "NAD";
-const UNIT = 10n ** 18n;
-const BASE_PRICE = 40n * UNIT;
 
 const MARKET_ABI = [
   {
@@ -50,16 +47,29 @@ const MARKET_ABI = [
   },
 ] as const;
 
-type Portfolio = { cash: bigint; shares: bigint };
-type Fill = { side: "buy" | "sell"; shares: bigint };
+// ----- Price mirror ----------------------------------------------------------
+// Mirror of DemoStock.priceAt, kept in lockstep with the contract: same
+// constants, same integer math, so the chart's history matches what the
+// contract charges. Quotes and trades still read the chain; the mirror only
+// draws history, which one eth_call per point would make needlessly slow.
 
+const UNIT = 10n ** 18n;
+const BASE_PRICE = 40n * UNIT;
+
+/** Signed unit noise in [-1e18, 1e18], deterministic per (layerId, bucket). */
 function noise(layerId: bigint, bucket: bigint): bigint {
-  const hash = BigInt(
+  const hashed = BigInt(
     keccak256(encodePacked(["uint256", "uint256"], [layerId, bucket])),
   );
-  return (hash % (2n * UNIT + 1n)) - UNIT;
+  return (hashed % (2n * UNIT + 1n)) - UNIT;
 }
 
+/**
+ * One layer of piecewise-linear value noise, continuous in `timestamp`: the
+ * unit noise at the enclosing bucket's two boundaries, linearly interpolated
+ * by how far `timestamp` sits into the bucket, scaled to
+ * [-amplitude, amplitude].
+ */
 function noiseLayerAt(
   timestamp: bigint,
   layerId: bigint,
@@ -67,23 +77,41 @@ function noiseLayerAt(
   amplitude: bigint,
 ): bigint {
   const bucket = timestamp / period;
-  const start = noise(layerId, bucket);
-  const end = noise(layerId, bucket + 1n);
-  return (
-    (amplitude * (start + ((end - start) * (timestamp % period)) / period)) /
-    UNIT
-  );
+  const startNoise = noise(layerId, bucket);
+  const endNoise = noise(layerId, bucket + 1n);
+  const interpolated =
+    startNoise + ((endNoise - startNoise) * (timestamp % period)) / period;
+  return (amplitude * interpolated) / UNIT;
 }
 
+/**
+ * Share price at Unix `timestamp` (seconds), in native wei per whole share.
+ * A slow drift, a medium swing, and a fast wiggle layer on the base price,
+ * so the result stays within 40 +/- 9.10 DEMOCASH and is always positive.
+ */
 function priceAt(timestamp: bigint): bigint {
-  return (
-    BASE_PRICE +
-    noiseLayerAt(timestamp, 1n, 28800n, 6n * UNIT) +
-    noiseLayerAt(timestamp, 2n, 600n, (5n * UNIT) / 2n) +
-    noiseLayerAt(timestamp, 3n, 45n, (3n * UNIT) / 5n) +
-    noiseLayerAt(timestamp, 4n, 5n, (3n * UNIT) / 20n)
-  );
+  const slowDrift = noiseLayerAt(timestamp, 1n, 28800n, 6n * UNIT);
+  const mediumSwing = noiseLayerAt(timestamp, 2n, 600n, (5n * UNIT) / 2n);
+  const fastWiggle = noiseLayerAt(timestamp, 3n, 45n, (3n * UNIT) / 5n);
+  const fastJitter = noiseLayerAt(timestamp, 4n, 5n, (3n * UNIT) / 20n);
+  return BASE_PRICE + slowDrift + mediumSwing + fastWiggle + fastJitter;
 }
+
+// ----- Portfolio and trades ----------------------------------------------------
+
+/** One account's market state, all in wei-scale bigints. */
+type Portfolio = {
+  /** Native balance, presented as DEMOCASH. */
+  cash: bigint;
+  /** Share balance (18 decimals). */
+  shares: bigint;
+};
+
+/** A mined trade: the exact share amount from the contract's Transfer event. */
+type Fill = {
+  side: "buy" | "sell";
+  shares: bigint;
+};
 
 async function readPortfolio(
   evm: EvmContext,
@@ -104,13 +132,29 @@ async function readPortfolio(
   return { cash, shares };
 }
 
+/**
+ * A viem wallet client that signs with the session; writes go out as raw
+ * transactions, which is the only send path the demo network's guard
+ * forwards.
+ */
+function marketClient(session: Secp256k1SigningSession, evm: EvmContext) {
+  return createWalletClient({
+    account: toViemAccount(session),
+    chain: evm.chain,
+    transport: http(evm.rpcUrl),
+  });
+}
+
+// The Transfer event carries the exact share amount; recomputing it from the
+// price would drift a block behind the fill.
 async function minedShares(
   evm: EvmContext,
   hash: `0x${string}`,
 ): Promise<bigint> {
   const receipt = await evm.publicClient.waitForTransactionReceipt({ hash });
-  if (receipt.status !== "success")
+  if (receipt.status !== "success") {
     throw new Error("The market rejected the trade. Try a different amount.");
+  }
   const [transfer] = parseEventLogs({
     abi: MARKET_ABI,
     eventName: "Transfer",
@@ -128,19 +172,14 @@ async function minedShares(
 async function buyShares(
   session: Secp256k1SigningSession,
   evm: EvmContext,
-  value: bigint,
+  valueWei: bigint,
 ): Promise<Fill> {
-  validateTradeAmount(value);
-  const client = createWalletClient({
-    account: toViemAccount(session),
-    chain: evm.chain,
-    transport: http(RPC_URL),
-  });
-  const hash = await client.writeContract({
+  validateTradeAmount(valueWei);
+  const hash = await marketClient(session, evm).writeContract({
     address: evm.marketAddress,
     abi: MARKET_ABI,
     functionName: "buy",
-    value,
+    value: valueWei,
   });
   return { side: "buy", shares: await minedShares(evm, hash) };
 }
@@ -151,12 +190,7 @@ async function sellShares(
   shares: bigint,
 ): Promise<Fill> {
   validateTradeAmount(shares);
-  const client = createWalletClient({
-    account: toViemAccount(session),
-    chain: evm.chain,
-    transport: http(RPC_URL),
-  });
-  const hash = await client.writeContract({
+  const hash = await marketClient(session, evm).writeContract({
     address: evm.marketAddress,
     abi: MARKET_ABI,
     functionName: "sell",

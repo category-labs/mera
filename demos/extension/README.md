@@ -9,7 +9,7 @@ Build mera from the repository root, then build the extension:
 ```sh
 npm ci
 npm run build
-npm run build -w mera-demo-extension
+npm run build -w demos/extension
 ```
 
 Open `chrome://extensions`, enable Developer mode, choose **Load unpacked**,
@@ -34,7 +34,7 @@ Pass `mera.category.xyz`, without `https://` or a path, as `rp.id` when creating
 Run from the repository root:
 
 ```sh
-npm test -w mera-demo-extension
+npm test -w demos/extension
 ```
 
 The suite builds the extension and tests its manifest, storage, network rules,

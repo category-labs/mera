@@ -12,10 +12,7 @@
     "verbatimModuleSyntax": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "types": ["vitest/globals"],
-    "paths": {
-      "@category-labs/mera": ["../../library/dist/index.d.ts"]
-    }
+    "types": ["vitest/globals"]
   },
   "include": ["src", "vite.config.ts"]
 }

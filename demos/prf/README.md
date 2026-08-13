@@ -10,14 +10,14 @@ Build the mera library before starting or building this app:
 ```sh
 npm ci
 npm run build
-npm run dev -w mera-prf-demo
+npm run dev -w demos/prf
 ```
 
 The production build writes to `docs/public/prf-demo/`:
 
 ```sh
-npm test -w mera-prf-demo
-npm run build -w mera-prf-demo
+npm test -w demos/prf
+npm run build -w demos/prf
 ```
 
 ## Embed

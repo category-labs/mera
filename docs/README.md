@@ -5,9 +5,9 @@ The documentation website, built with [Astro Starlight](https://starlight.astro.
 ```sh
 npm ci
 npm run build
-npm run dev -w mera-docs      # local dev server
-npm run build -w mera-docs    # static site in docs/dist/
-npm run preview -w mera-docs  # serve the built site
+npm run dev -w docs      # local dev server
+npm run build -w docs    # static site in docs/dist/
+npm run preview -w docs  # serve the built site
 ```
 
 `npm run build:site` builds the library, both embedded demos, and the production documentation site in deployment order.

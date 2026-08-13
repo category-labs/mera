@@ -29,8 +29,5 @@
     "typescript": "5.9.3",
     "unist-util-visit": "^5.1.0",
     "viem": "2.55.13"
-  },
-  "engines": {
-    "node": ">=24"
   }
 }

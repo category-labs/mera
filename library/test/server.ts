@@ -20,7 +20,7 @@ const contentTypes: Record<string, string> = {
 // specifiers, so we map them to files the server already serves.
 const importMap = JSON.stringify({
   imports: {
-    "@category-labs/mera": "/dist/index.js",
+    "@category-labs/mera": "/library/dist/index.js",
     "@noble/curves/ed25519.js": "/node_modules/@noble/curves/ed25519.js",
     "@noble/curves/secp256k1.js": "/node_modules/@noble/curves/secp256k1.js",
     "@noble/hashes/hmac.js": "/node_modules/@noble/hashes/hmac.js",
@@ -32,8 +32,9 @@ const importMap = JSON.stringify({
 });
 
 const indexHtml = `<!doctype html><html><head><script type="importmap">${importMap}</script></head><body><main id="app"></main></body></html>`;
-const libraryPath = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const repositoryPath = resolve(libraryPath, "..");
+const repositoryPath = resolve(
+  fileURLToPath(new URL("../..", import.meta.url)),
+);
 
 export async function startTestServer(): Promise<{
   url: string;
@@ -43,11 +44,8 @@ export async function startTestServer(): Promise<{
     try {
       const url = new URL(request.url ?? "/", "http://localhost");
       const pathname = url.pathname === "/" ? "/index.html" : url.pathname;
-      const servedRoot = pathname.startsWith("/node_modules/")
-        ? repositoryPath
-        : libraryPath;
-      const filePath = resolve(join(servedRoot, normalize(pathname)));
-      const relativePath = relative(servedRoot, filePath);
+      const filePath = resolve(join(repositoryPath, normalize(pathname)));
+      const relativePath = relative(repositoryPath, filePath);
 
       if (
         relativePath === ".." ||

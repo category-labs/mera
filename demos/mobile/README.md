@@ -79,11 +79,11 @@ From the repository root:
 ```bash
 npm ci
 npm run build
-npm run prebuild -w mera-demo-mobile
-npm run ios -w mera-demo-mobile
+npm run prebuild -w demos/mobile
+npm run ios -w demos/mobile
 ```
 
-Run `npm run android -w mera-demo-mobile` instead for Android.
+Run `npm run android -w demos/mobile` instead for Android.
 
 The root install links the local library workspace. Rebuild the library after
 changing it:

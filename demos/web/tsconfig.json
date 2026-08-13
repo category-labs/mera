@@ -12,11 +12,7 @@
     "moduleDetection": "force",
     "verbatimModuleSyntax": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "paths": {
-      "@category-labs/mera": ["../../library/dist/index.d.ts"],
-      "@category-labs/mera/viem": ["../../library/dist/viem.d.ts"]
-    }
+    "noUnusedParameters": true
   },
   "include": ["src"]
 }

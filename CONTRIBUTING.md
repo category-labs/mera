@@ -34,21 +34,21 @@ Workspace commands run from the repository root. The web demo compiles against t
 
 ```sh
 npm run build
-npm run dev -w mera-demo
-npm run build -w mera-demo
+npm run dev -w demos/web
+npm run build -w demos/web
 ```
 
 The Chrome side-panel demo writes its unpacked extension to `demos/extension/dist`:
 
 ```sh
-npm test -w mera-demo-extension
+npm test -w demos/extension
 ```
 
 The passkey PRF model writes to `docs/public/prf-demo`:
 
 ```sh
-npm test -w mera-prf-demo
-npm run build -w mera-prf-demo
+npm test -w demos/prf
+npm run build -w demos/prf
 ```
 
 Typecheck and bundle the mobile demo to check Metro resolution:

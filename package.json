@@ -10,15 +10,15 @@
     "build": "npm run build -w @category-labs/mera",
     "check": "biome check .",
     "check:all": "npm run check && npm test && npm run test:demos && npm run check:mobile && npm run check:docs && npm run check:pack",
-    "check:docs": "npm run build && npm run build -w mera-docs",
-    "check:mobile": "npm run build && npm run check -w mera-demo-mobile",
+    "check:docs": "npm run build && npm run build -w docs",
+    "check:mobile": "npm run build && npm run check -w demos/mobile",
     "check:pack": "npm run check:pack -w @category-labs/mera",
     "format": "biome format --write .",
     "lint": "biome lint .",
     "test": "npm test -w @category-labs/mera",
-    "test:demos": "npm run build && npm run build -w mera-demo && npm test -w mera-demo-extension && npm test -w mera-prf-demo && npm run build -w mera-prf-demo",
+    "test:demos": "npm run build && npm run build -w demos/web && npm test -w demos/extension && npm test -w demos/prf && npm run build -w demos/prf",
     "test:e2e": "npm run test:e2e -w @category-labs/mera",
-    "build:site": "npm run build && npm run build -w mera-demo && npm test -w mera-prf-demo && npm run build -w mera-prf-demo && npm run build -w mera-docs"
+    "build:site": "npm run build && npm run build -w demos/web && npm run build -w demos/prf && npm run build -w docs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.8",

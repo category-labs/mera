@@ -1,5 +1,5 @@
 {
-  "name": "mera-demo-mobile",
+  "name": "@category-labs/mera-demo-mobile",
   "private": true,
   "version": "0.1.0",
   "main": "index.ts",

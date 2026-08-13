@@ -39,16 +39,19 @@ jobs:
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Use repository npm version
+        run: corepack enable npm
 
-      - name: Build
-        run: npm run build
+      - name: Install dependencies
+        run: npm ci --include-workspace-root -w @category-labs/mera
+
+      - name: Verify package
+        run: npm run check:pack
 
       - name: Validate release version and refuse to republish
         run: |
-          name=$(node -p "require('./package.json').name")
-          version=$(node -p "require('./package.json').version")
+          name=$(node -p "require('./library/package.json').name")
+          version=$(node -p "require('./library/package.json').version")
           if [ "$GITHUB_REF_NAME" != "v${version}" ]; then
             echo "::error::Tag ${GITHUB_REF_NAME} does not match package version ${version}."
             exit 1
@@ -59,7 +62,7 @@ jobs:
           fi
 
       - name: Publish
-        run: npm publish --provenance
+        run: npm publish -w @category-labs/mera --provenance
 
   dry-run:
     name: Dry-run publish (no registry write)
@@ -75,11 +78,16 @@ jobs:
           node-version-file: .nvmrc
           package-manager-cache: false
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Use repository npm version
+        run: corepack enable npm
 
-      - name: Build
-        run: npm run build
+      - name: Install dependencies
+        run: npm ci --include-workspace-root -w @category-labs/mera
+
+      - name: Verify package
+        run: npm run check:pack
 
       - name: Publish (dry-run)
-        run: npm publish --dry-run
+        # npm 12 otherwise rejects the already-published version during a
+        # nonwriting dry run.
+        run: npm publish -w @category-labs/mera --dry-run --force

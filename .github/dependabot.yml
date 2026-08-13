@@ -1,10 +1,9 @@
-# Weekly version updates for the root library's npm dependencies and the
-# SHA-pinned actions in CI. The private demo/ app is intentionally not covered.
+# Weekly version updates for the npm workspace graph and SHA-pinned CI actions.
 version: 2
 
 updates:
-  # Root library package: runtime dependencies (the shipped surface) and the
-  # build/test/lint toolchain, grouped separately.
+  # Dependabot resolves every workspace from the single root lockfile. Groups
+  # keep independent framework stacks in separate pull requests.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -18,12 +17,44 @@ updates:
       include: "scope"
     groups:
       library-runtime:
-        dependency-type: "production"
+        patterns:
+          - "@noble/*"
+          - "@scure/*"
+          - "react-native-passkey"
+          - "viem"
         update-types:
           - "minor"
           - "patch"
-      library-tooling:
-        dependency-type: "development"
+      vite-demos:
+        patterns:
+          - "@playwright/test"
+          - "@vitejs/*"
+          - "vite"
+          - "vitest"
+        update-types:
+          - "minor"
+          - "patch"
+      expo-mobile:
+        patterns:
+          - "@expo/*"
+          - "@react-native/*"
+          - "expo"
+          - "expo-*"
+          - "react-native"
+          - "react-native-*"
+        update-types:
+          - "minor"
+          - "patch"
+      astro-docs:
+        patterns:
+          - "@astrojs/*"
+          - "@ec-ts/*"
+          - "@expressive-code/*"
+          - "astro"
+          - "expressive-code"
+          - "expressive-code-*"
+          - "sharp"
+          - "unist-util-visit"
         update-types:
           - "minor"
           - "patch"

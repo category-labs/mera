@@ -10,7 +10,7 @@ Participation in the project is governed by [CODE_OF_CONDUCT.md](./CODE_OF_CONDU
 
 ## Development
 
-The repository requires Node.js 24 or newer and npm. Install the root dependencies before running library checks:
+The repository requires Node.js 24 or newer and npm 12. Install every workspace from the root:
 
 ```sh
 npm ci
@@ -19,77 +19,64 @@ npm ci
 Run the checks relevant to the change:
 
 ```sh
-npm run check       # lint and format checks for the repository
-npm test            # library build, test typecheck, and Playwright tests
-npm run check:pack  # publishable package contents, exports, and types
+npm run check         # repository lint and format checks
+npm test              # library tests
+npm run test:demos    # web, extension, and PRF demos
+npm run check:mobile  # mobile typecheck and Android export
+npm run check:docs    # documentation snippets and site build
+npm run check:pack    # package contents, exports, and public types
+npm run check:all     # every check above
 ```
 
 `npm run check` applies to every change; biome verifies formatting and lint across the repository, including CSS and SVG files, and `npm run format` fixes the formatting failures it reports. Run `npm test` for library or test changes. Run `npm run check:pack` when packaged files, exports, types, or package metadata change; it also typechecks the built public types without the DOM libs, so they stay usable from React Native.
 
-The demo compiles against the built library and writes to `docs/public/demo`, where the documentation website serves it at `/demo/`:
+Workspace commands run from the repository root. The web demo compiles against the built library and writes to `docs/public/demo`:
 
 ```sh
 npm run build
-cd demo
-npm ci
-npm run build
+npm run dev -w mera-demo
+npm run build -w mera-demo
 ```
 
-The Chrome side-panel demo builds as an unpacked extension. Its tests check the
-manifest, stored data, network boundary, trade limits, and side-panel entry
-page:
+The Chrome side-panel demo writes its unpacked extension to `demos/extension/dist`:
 
 ```sh
-cd demo-extension
-npm ci
-npm test
+npm test -w mera-demo-extension
 ```
 
-The unpacked files are written to `demo-extension/dist`. Load that directory
-from `chrome://extensions` after enabling Developer mode. The extension needs
-Chrome 122 or later.
-
-The passkey PRF model also compiles against the built library. It writes to `docs/public/prf-demo`, where the website serves it as a standalone page at `/prf-demo/`:
+The passkey PRF model writes to `docs/public/prf-demo`:
 
 ```sh
-cd prf-demo
-npm ci
-npm test
-npm run build
+npm test -w mera-prf-demo
+npm run build -w mera-prf-demo
 ```
 
-Build the library before installing the mobile demo. Then typecheck and bundle the app to check that Metro resolves everything:
+Typecheck and bundle the mobile demo to check Metro resolution:
 
 ```sh
-npm run build
-cd demo-mobile
-npm ci
-npm run check
+npm run check:mobile
 ```
 
-Running it on a device needs Xcode or Android Studio, a passkey provider with PRF, and the domain association files described in [demo-mobile/README.md](./demo-mobile/README.md).
+Running it on a device needs Xcode or Android Studio, a passkey provider with PRF, and the domain association files described in [demos/mobile/README.md](./demos/mobile/README.md).
 
-Build the library before installing the documentation website. TypeScript examples compile against the built package. Run both web demo builds above first so their generated files are present:
+Build the complete production site, including both embedded demos:
 
 ```sh
-npm run build
-cd docs
-npm ci
-npm run build
+npm run build:site
 ```
 
 ## Releases
 
 A GitHub workflow publishes the library to npm as `@category-labs/mera`. A release takes three steps: merge the version bump, push a matching tag, then create the GitHub release that carries the notes for the version.
 
-Bump `version` in `package.json` and merge that change to `main`. Then tag the merge commit:
+Bump `version` in `library/package.json` and merge that change to `main`. If a pre-1.0 minor bump falls outside the consumers' current range, update their `@category-labs/mera` ranges in the same change. Then tag the merge commit:
 
 ```sh
 git tag v0.2.0
 git push origin v0.2.0
 ```
 
-The tag starts the workflow, which builds and publishes in the same job, so the provenance attestation covers the artifact it built. Publishing fails if the tag does not read `v<version>` from `package.json`, or if that version is already on npm. Both checks run before any registry write.
+The tag starts the workflow, which builds and publishes in the same job, so the provenance attestation covers the artifact it built. Publishing fails if the tag does not read `v<version>` from `library/package.json`, or if that version is already on npm. Both checks run before any registry write.
 
 The workflow authenticates through npm trusted publishing, and the repository holds no npm token. npm accepts the publish only when its trusted publisher for the package names this repository and the workflow file, so renaming either means updating the setting on npmjs.com.
 

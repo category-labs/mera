@@ -1,8 +1,8 @@
 dist/
 node_modules/
-demo/network/evm/out/
-demo/network/evm/cache/
-demo/.env
+demos/web/network/evm/out/
+demos/web/network/evm/cache/
+demos/web/.env
 docs/public/demo/
 docs/public/prf-demo/
 .astro/

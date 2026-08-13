@@ -41,13 +41,14 @@ jobs:
           gh api --paginate "$PR_URL/files" --jq '.[].filename' > changed-files.txt
 
           matches() { grep -qE "$1" changed-files.txt && echo true || echo false; }
-          library='^(src/|test/|scripts/|package\.json$|package-lock\.json$|tsconfig\.[^/]*json$|playwright\.config\.ts$|\.nvmrc$|\.github/workflows/)'
-          packaged='^(README\.md|LICENSE-MIT|LICENSE-APACHE)$'
+          graph='^(package\.json|package-lock\.json|\.nvmrc|\.github/workflows/)'
+          library="^library/|$graph"
+          packaged='^(LICENSE-MIT|LICENSE-APACHE)$'
 
           {
             echo "library=$(matches "$library")"
-            echo "demo=$(matches "$library|^demo/|^demo-extension/|^prf-demo/")"
-            echo "mobile=$(matches "$library|^demo-mobile/")"
+            echo "demo=$(matches "$library|^demos/(web|extension|prf)/")"
+            echo "mobile=$(matches "$library|^demos/mobile/")"
             echo "package=$(matches "$library|$packaged")"
             echo "docs=$(matches "$library|^docs/")"
           } >> "$GITHUB_OUTPUT"
@@ -67,8 +68,11 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
+      - name: Use repository npm version
+        run: corepack enable npm
+
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --workspaces=false
 
       - name: Run Biome checks
         run: npm run check
@@ -92,11 +96,14 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
+      - name: Use repository npm version
+        run: corepack enable npm
+
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --include-workspace-root -w @category-labs/mera
 
       - name: Install Playwright browser
-        run: npm exec -- playwright install --with-deps chromium
+        run: npm exec -w @category-labs/mera -- playwright install --with-deps chromium
 
       - name: Run tests
         run: npm test
@@ -116,49 +123,19 @@ jobs:
           node-version-file: .nvmrc
           check-latest: true
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            demo/package-lock.json
-            demo-extension/package-lock.json
-            prf-demo/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install library dependencies
-        run: npm ci
+      - name: Use repository npm version
+        run: corepack enable npm
 
-      - name: Build library
-        run: npm run build
+      - name: Install dependencies
+        run: npm ci --include-workspace-root -w @category-labs/mera -w mera-demo -w mera-demo-extension -w mera-prf-demo
 
-      - name: Install demo dependencies
-        run: npm ci
-        working-directory: demo
+      - name: Install Playwright browser
+        run: npm exec -w mera-demo-extension -- playwright install --with-deps chromium
 
-      - name: Build demo
-        run: npm run build
-        working-directory: demo
-
-      - name: Install extension demo dependencies
-        run: npm ci
-        working-directory: demo-extension
-
-      - name: Install Playwright browser for extension tests
-        run: npm exec -- playwright install --with-deps chromium
-        working-directory: demo-extension
-
-      - name: Test Chrome side-panel demo
-        run: npm test
-        working-directory: demo-extension
-
-      - name: Install PRF demo dependencies
-        run: npm ci
-        working-directory: prf-demo
-
-      - name: Test PRF demo
-        run: npm test
-        working-directory: prf-demo
-
-      - name: Build PRF demo
-        run: npm run build
-        working-directory: prf-demo
+      - name: Test demos
+        run: npm run test:demos
 
   mobile:
     name: Mobile demo
@@ -175,23 +152,16 @@ jobs:
           node-version-file: .nvmrc
           check-latest: true
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            demo-mobile/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install library dependencies
-        run: npm ci
+      - name: Use repository npm version
+        run: corepack enable npm
 
-      - name: Build library
-        run: npm run build
-
-      - name: Install mobile demo dependencies
-        run: npm ci
-        working-directory: demo-mobile
+      - name: Install dependencies
+        run: npm ci --include-workspace-root -w @category-labs/mera -w mera-demo-mobile
 
       - name: Check mobile demo
-        run: npm run check
-        working-directory: demo-mobile
+        run: npm run check:mobile
 
   docs:
     name: Docs
@@ -208,27 +178,21 @@ jobs:
           node-version-file: .nvmrc
           check-latest: true
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            docs/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install library dependencies
-        run: npm ci
+      - name: Use repository npm version
+        run: corepack enable npm
 
-      - name: Build library
-        run: npm run build
-
-      - name: Install docs dependencies
-        run: npm ci
-        working-directory: docs
+      - name: Install dependencies
+        run: npm ci --include-workspace-root -w @category-labs/mera -w mera-docs
 
       - name: Audit docs dependencies
-        run: npm audit --audit-level=moderate
-        working-directory: docs
+        # Expo/Metro currently reports advisories with no nonbreaking fix.
+        continue-on-error: true
+        run: npm audit -w mera-docs --audit-level=moderate
 
       - name: Build docs
-        run: npm run build
-        working-directory: docs
+        run: npm run check:docs
 
   package:
     name: Publish check
@@ -247,8 +211,11 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
+      - name: Use repository npm version
+        run: corepack enable npm
+
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --include-workspace-root -w @category-labs/mera
 
       - name: Verify package contents, exports, and types
         run: npm run check:pack

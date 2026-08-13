@@ -133,6 +133,6 @@ A mobile app can store the credential ID and PRF output in secure device storage
 
 ## See also
 
-- [React Native mobile demo](https://github.com/category-labs/mera/tree/main/demo-mobile): a full app that stores the credential ID and PRF output in secure device storage.
+- [React Native mobile demo](https://github.com/category-labs/mera/tree/main/demos/mobile): a full app that stores the credential ID and PRF output in secure device storage.
 - [WebAuthnClient](/reference/web-authn-client/): the client contract and React Native client errors.
 - [Authenticator support](/authenticator-support/): browser and operating system support.

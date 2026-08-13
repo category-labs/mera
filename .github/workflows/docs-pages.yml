@@ -46,7 +46,7 @@ jobs:
         run: npm ci --include-workspace-root -w library -w demos/web -w demos/prf -w docs
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
       # Astro's cache stays disabled. Restoring an older content-layer store can
       # emit module imports that no longer resolve, and this site does not use

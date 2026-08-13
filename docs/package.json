@@ -11,15 +11,15 @@
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.2.2",
-    "@astrojs/starlight": "^0.41.3",
+    "@astrojs/starlight": "^0.41.7",
     "@category-labs/mera": "file:..",
     "@ec-ts/twoslash": "1.0.0",
     "@expressive-code/core": "0.44.1",
-    "@fontsource-variable/jetbrains-mono": "^5.2.8",
-    "@noble/hashes": "2.2.0",
-    "@scure/bip32": "2.2.0",
-    "@scure/bip39": "2.2.0",
-    "astro": "^7.1.6",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@noble/hashes": "2.3.0",
+    "@scure/bip32": "2.3.0",
+    "@scure/bip39": "2.3.0",
+    "astro": "^7.2.1",
     "expo-crypto": "57.0.1",
     "expo-modules-core": "57.0.10",
     "expressive-code": "0.44.1",
@@ -28,7 +28,7 @@
     "sharp": "^0.35.3",
     "typescript": "5.9.3",
     "unist-util-visit": "^5.1.0",
-    "viem": "2.55.10"
+    "viem": "2.55.13"
   },
   "engines": {
     "node": ">=24"

@@ -1,0 +1,32 @@
+{
+  "name": "mera-demo-extension",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "npm run build && playwright test",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@category-labs/mera": "^0.2.0",
+    "@scure/bip32": "^2.3.0",
+    "@scure/bip39": "^2.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "viem": "2.55.13"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.0.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

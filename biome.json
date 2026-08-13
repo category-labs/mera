@@ -11,11 +11,11 @@
       "!.claude/worktrees",
       "!**/playwright-report",
       "!**/test-results",
-      "!demo/network/evm/out",
-      "!demo/network/evm/cache",
-      "!demo-mobile/.expo",
-      "!demo-mobile/ios",
-      "!demo-mobile/android"
+      "!demos/web/network/evm/out",
+      "!demos/web/network/evm/cache",
+      "!demos/mobile/.expo",
+      "!demos/mobile/ios",
+      "!demos/mobile/android"
     ]
   },
   "formatter": {

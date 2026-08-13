@@ -1,0 +1,89 @@
+{
+  "name": "@category-labs/mera",
+  "version": "0.2.0",
+  "description": "Accounts on any chain and platform, from a passkey",
+  "keywords": [
+    "passkey",
+    "webauthn",
+    "prf",
+    "secp256k1",
+    "ed25519",
+    "ethereum",
+    "evm",
+    "solana",
+    "signing",
+    "crypto"
+  ],
+  "homepage": "https://mera.category.xyz",
+  "bugs": {
+    "url": "https://github.com/category-labs/mera/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/category-labs/mera.git",
+    "directory": "library"
+  },
+  "license": "(MIT OR Apache-2.0)",
+  "author": "Category Labs",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./viem": {
+      "types": "./dist/viem.d.ts",
+      "default": "./dist/viem.js"
+    },
+    "./react-native-webauthn-client": {
+      "types": "./dist/react-native-webauthn-client.d.ts",
+      "default": "./dist/react-native-webauthn-client.js"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepack": "npm run build",
+    "check:pack": "npm run build && tsc -p tsconfig.public-types.json && node scripts/verify-tarball.mjs && publint --strict",
+    "test": "npm run build && tsc -p tsconfig.test.json && playwright test",
+    "test:e2e": "npm test -- --project chromium-e2e"
+  },
+  "dependencies": {
+    "@noble/curves": "2.3.0",
+    "@noble/hashes": "2.3.0",
+    "@scure/base": "2.3.0"
+  },
+  "peerDependencies": {
+    "react-native-passkey": "3.6.1",
+    "viem": "^2.28.0"
+  },
+  "peerDependenciesMeta": {
+    "react-native-passkey": {
+      "optional": true
+    },
+    "viem": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@types/node": "24.13.3",
+    "publint": "0.3.23",
+    "react-native-passkey": "3.6.1",
+    "typescript": "7.0.2",
+    "viem": "2.55.13"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

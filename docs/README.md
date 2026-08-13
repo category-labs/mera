@@ -1,16 +1,16 @@
 # mera docs
 
-The documentation website, built with [Astro Starlight](https://starlight.astro.build). Build the library before installing the docs because TypeScript examples compile against the local package.
+The documentation website, built with [Astro Starlight](https://starlight.astro.build). TypeScript examples compile against the local library workspace.
 
 ```sh
 npm ci
 npm run build
-cd docs
-npm ci
-npm run dev      # local dev server
-npm run build    # static site in dist/
-npm run preview  # serve the built site
+npm run dev -w mera-docs      # local dev server
+npm run build -w mera-docs    # static site in docs/dist/
+npm run preview -w mera-docs  # serve the built site
 ```
+
+`npm run build:site` builds the library, both embedded demos, and the production documentation site in deployment order.
 
 Pages live in `src/content/docs/` as Markdown/MDX. Twoslash checks every TypeScript and TSX block and adds type and JSDoc details on hover. Hidden setup before `// ---cut---` keeps each short example valid on its own.
 

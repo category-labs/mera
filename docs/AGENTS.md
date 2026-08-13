@@ -45,14 +45,14 @@ Each section states its own kind of fact: what an input must be under Parameters
 
 Parameters use subheadings and lists, never wide tables. The content column is narrow; a five-column table does not survive it. Tables are reserved for genuinely tabular data, like the authenticator matrix.
 
-Source of truth is the JSDoc in `src/`. Write reference prose from it. When the JSDoc is silent, inspect the implementation and tests.
+Source of truth is the JSDoc in `library/src/`. Write reference prose from it. When the JSDoc is silent, inspect the implementation and tests.
 
 ## Recipes
 
 - Title with a verb: "Encrypt a recovery phrase" rather than "Recovery phrase encryption".
 - One goal per page. Prerequisites in the first paragraph.
 - Code blocks are complete and pasteable in order. A reader who pastes every block top to bottom ends with working code.
-- Code adapted from `demo/src/` is an app-side pattern. Say so. Derivation schemes, storage, and transport belong to the app, and the recipe's framing must keep the library/app boundary visible.
+- Code adapted from `demos/web/src/` is an app-side pattern. Say so. Derivation schemes, storage, and transport belong to the app, and the recipe's framing must keep the library/app boundary visible.
 
 ## Voice
 
@@ -112,11 +112,11 @@ Design rationale meets the same bar: keep the why only when it changes what the 
 - A bracketed name followed by parentheses, `[Symbol.dispose]()`, is markdown link syntax and renders as a link with an empty target. Escape the opening bracket: `\[Symbol.dispose]()`.
 - Link the first mention of a spec'd name on each page to its spec (BIP-32/BIP-39/BIP-44 to the bips repo, SLIP-0010 to the slips repo, WebAuthn to the W3C spec, CTAP and `hmac-secret` to the FIDO spec); later mentions on the page stay plain.
 - Never reference sections by number; name the thing and link it.
-- `npm run build` must pass before a PR.
+- `npm run check:docs` from the repository root must pass before a PR.
 
 ## Before opening a PR
 
-1. `npm run build` passes.
+1. `npm run check:docs` passes from the repository root.
 2. New pages appear in the sidebar; no sidebar entry points at a missing page.
 3. Examples compile against the current public API, with no undefined identifiers.
 4. Every error code mentioned links to the errors page.

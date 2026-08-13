@@ -6,12 +6,12 @@ on:
       - main
     paths:
       - docs/**
-      - demo/**
-      - prf-demo/**
-      - src/**
+      - demos/web/**
+      - demos/prf/**
+      - library/**
       - package.json
       - package-lock.json
-      - tsconfig.json
+      - .nvmrc
       - .github/workflows/docs-pages.yml
   workflow_dispatch:
 
@@ -37,36 +37,29 @@ jobs:
           node-version-file: .nvmrc
           check-latest: true
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            demo/package-lock.json
-            prf-demo/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      # The demo build writes to docs/public/demo, which the site serves at
-      # /demo/. The PRF model writes to docs/public/prf-demo. The library has
-      # to exist first because both apps compile against dist/.
-      - name: Build the demos into the site
-        run: |
-          npm ci
-          npm run build
-          npm --prefix demo ci
-          npm --prefix demo run build
-          npm --prefix prf-demo ci
-          npm --prefix prf-demo run test
-          npm --prefix prf-demo run build
+      - name: Use repository npm version
+        run: corepack enable npm
 
-      - name: Build and upload docs
-        uses: withastro/action@e84f40bd8d2caa9e768ec82ad30dd81f0b280853 # v6.1.2
-        with:
-          path: docs
-          node-version: 24
-          # The action restores node_modules/.astro from any older commit's
-          # cache; a stale content-layer store makes the build emit module
-          # imports that no longer resolve. The cache only holds optimized
-          # remote images, which this site does not use.
-          cache: "false"
+      - name: Install dependencies
+        run: npm ci --include-workspace-root -w @category-labs/mera -w mera-demo -w mera-prf-demo -w mera-docs
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+
+      # Astro's cache stays disabled. Restoring an older content-layer store can
+      # emit module imports that no longer resolve, and this site does not use
+      # the optimized remote-image cache.
+      - name: Build site
+        run: npm run build:site
         env:
           DOCS_SITE: https://mera.category.xyz
+
+      - name: Upload site
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: docs/dist
 
   deploy:
     name: Deploy

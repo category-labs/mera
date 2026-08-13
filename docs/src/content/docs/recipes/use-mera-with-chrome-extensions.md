@@ -54,7 +54,7 @@ window.opener.postMessage(prfOutput, "chrome-extension://EXTENSION_ID");
 
 ## Check out the demo
 
-The [Chrome extension demo](https://github.com/category-labs/mera/tree/main/demo-extension) binds passkeys to `mera.category.xyz`. It opens a page on that host and receives the PRF output with `postMessage`. A `key` in the demo manifest fixes the extension ID, and the page posts only to that ID.
+The [Chrome extension demo](https://github.com/category-labs/mera/tree/main/demos/extension) binds passkeys to `mera.category.xyz`. It opens a page on that host and receives the PRF output with `postMessage`. A `key` in the demo manifest fixes the extension ID, and the page posts only to that ID.
 
 ## See also
 

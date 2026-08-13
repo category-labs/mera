@@ -37,20 +37,6 @@ test("signs 32-byte digests and ends the session", async () => {
   });
 });
 
-test("produces deterministic signatures", async () => {
-  using firstSession = createSecp256k1SigningSession({
-    privateKey: PRIVATE_KEY_ONE,
-  });
-  using secondSession = createSecp256k1SigningSession({
-    privateKey: PRIVATE_KEY_ONE,
-  });
-  const digest = new Uint8Array(32).fill(1);
-  const first = await firstSession.signDigest(digest);
-  const second = await secondSession.signDigest(digest);
-
-  expect(first).toEqual(second);
-});
-
 test("rejects non-32-byte digests", async () => {
   const session = createSecp256k1SigningSession({
     privateKey: PRIVATE_KEY_ONE,

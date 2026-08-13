@@ -22,7 +22,7 @@
     "react": "19.2.8",
     "react-native": "0.86.2",
     "react-native-passkey": "3.6.1",
-    "react-native-safe-area-context": "~5.7.0"
+    "react-native-safe-area-context": "~5.8.1"
   },
   "devDependencies": {
     "@types/react": "~19.2.18",

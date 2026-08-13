@@ -17,7 +17,7 @@ Developers can use mera to:
 - Chrome extensions
 - React Native on iOS 18 or later and Android 9 or later
 
-The same approach can be used in native applications.
+Native applications can reuse passkeys created with mera through the platform's WebAuthn APIs.
 
 See [authenticator support](https://mera.category.xyz/authenticator-support/) for browser and OS support.
 

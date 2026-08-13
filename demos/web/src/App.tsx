@@ -1,9 +1,9 @@
+import { AccountChip } from "@category-labs/mera-demo-shared/AccountChip";
 import {
   type EvmContext,
   resolveEvmContext,
 } from "@category-labs/mera-demo-shared/network";
 import { type ReactElement, useEffect, useState } from "react";
-import { AccountChip } from "./AccountChip";
 import {
   type AccountState,
   accountAddress,

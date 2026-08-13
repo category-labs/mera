@@ -1,8 +1,10 @@
-import { priceAt } from "@category-labs/mera-demo-shared/market";
 import type { ReactElement } from "react";
+import { priceAt } from "./market";
 
 const ROTATE_SECONDS = 90;
+// Price moves smaller than this over a rotation read as "flat".
 const FLAT_THRESHOLD_WEI = 15n * 10n ** 16n;
+
 const HEADLINES = {
   up: [
     "Nad Computer ships a keyboard with a working escape key; pros rejoice",
@@ -36,9 +38,18 @@ const HEADLINES = {
   ],
 } as const;
 
-type Props = { now: number };
+type NewsTickerProps = {
+  /** Unix seconds; picks the rotation window and its sentiment. */
+  now: number;
+};
 
-function NewsTicker({ now }: Props): ReactElement {
+/**
+ * One fictional headline matched to the price's direction over the current
+ * 90-second window. Both the sentiment and the pick derive from the clock,
+ * so every viewer reads the same news and re-renders rotate it with no
+ * state or timers of its own.
+ */
+function NewsTicker({ now }: NewsTickerProps): ReactElement {
   const bucket = Math.floor(now / ROTATE_SECONDS);
   const change =
     priceAt(BigInt(bucket * ROTATE_SECONDS)) -
@@ -50,11 +61,15 @@ function NewsTicker({ now }: Props): ReactElement {
         ? "down"
         : "flat";
   const options = HEADLINES[sentiment];
+  // Knuth's multiplicative hash (32-bit) spreads consecutive buckets across
+  // the list; a plain multiply would overflow 2^53 and lose the low bits the
+  // modulo reads.
   const hash = Math.imul(bucket, 2654435761) >>> 0;
+  const headline = options[hash % options.length] ?? options[0];
   return (
     <p className="news">
       <span className="news-tag">News</span>
-      {options[hash % options.length] ?? options[0]}
+      {headline}
     </p>
   );
 }

@@ -26,6 +26,11 @@
   box-sizing: border-box;
 }
 
+/* body and `#root` form a flex-column chain that hands the viewport height down
+   to `.app`, so `.app` can pin its footer content to the bottom of the page.
+   Horizontal centering stays on `.app` itself (`margin-inline: auto`): React
+   mounts into `<div id="root">` between body and `.app`, so centering applied
+   to body would center that full-width container instead. */
 body {
   margin: 0;
   min-height: 100vh;
@@ -58,6 +63,7 @@ h1 {
   letter-spacing: -0.01em;
 }
 
+/* Title row: app name on the left, account chip on the right. */
 .app-head {
   display: flex;
   align-items: center;
@@ -72,6 +78,8 @@ h1 {
   gap: 2px;
 }
 
+/* Network line under the address: the dot turns green once the network
+   context resolves. */
 .chip-network {
   display: inline-flex;
   align-items: center;
@@ -123,6 +131,7 @@ input:focus-visible {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
+/* Card */
 .card {
   display: grid;
   gap: 16px;
@@ -133,6 +142,8 @@ input:focus-visible {
   box-shadow: var(--shadow);
 }
 
+/* Trading surface shell: the card and the footer content below it. Flexing
+   lets footer content push itself to the page bottom with `margin-top: auto`. */
 .account-shell {
   display: flex;
   flex-direction: column;
@@ -140,6 +151,7 @@ input:focus-visible {
   gap: 14px;
 }
 
+/* Connect area under the market data, divided from it like `.holdings`. */
 .connect-cta {
   display: grid;
   gap: 12px;
@@ -147,6 +159,7 @@ input:focus-visible {
   border-top: 1px solid var(--border);
 }
 
+/* Footer links under the trading card: add funds, export, sign out. */
 .account-links {
   display: flex;
   justify-content: center;
@@ -210,6 +223,7 @@ input:focus-visible {
   text-align: right;
 }
 
+/* Segmented control */
 .segmented {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -244,6 +258,7 @@ input:focus-visible {
   cursor: default;
 }
 
+/* Fields */
 .field {
   display: grid;
   gap: 6px;
@@ -264,6 +279,7 @@ input:focus-visible {
   gap: 8px;
 }
 
+/* Buttons */
 .actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -346,6 +362,9 @@ input:focus-visible {
   margin: 0;
   font-size: 13px;
   line-height: 1.4;
+  /* Error text can embed long unbroken tokens (URLs, hex payloads), which
+     would widen the card's grid track and force horizontal scrolling; see
+     `.break` for the same fix on the signed-transaction display. */
   overflow-wrap: anywhere;
 }
 
@@ -362,6 +381,7 @@ input:focus-visible {
     ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
+/* Stock header: company and ticker on the left, live quote on the right. */
 .stock-head {
   display: flex;
   align-items: start;
@@ -414,6 +434,7 @@ input:focus-visible {
   color: var(--down);
 }
 
+/* Price chart */
 .chart {
   display: block;
   width: 100%;
@@ -426,6 +447,7 @@ input:focus-visible {
   fill: var(--muted);
 }
 
+/* Fake newsroom line under the chart. */
 .news {
   display: flex;
   align-items: baseline;
@@ -448,6 +470,7 @@ input:focus-visible {
   color: var(--muted);
 }
 
+/* Cash and position rows. */
 .holdings {
   display: grid;
   gap: 8px;
@@ -484,6 +507,7 @@ input:focus-visible {
   color: var(--down);
 }
 
+/* Trade form */
 .trade {
   display: grid;
   gap: 12px;

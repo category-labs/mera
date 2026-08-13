@@ -1,5 +1,5 @@
+import { useCopyButton } from "@category-labs/mera-demo-shared/useCopyButton";
 import type { ReactElement } from "react";
-import { useCopyButton } from "./useCopyButton";
 
 type WalletBackupProps = {
   /** The revealed recovery phrase to display (12 or 24 words). */

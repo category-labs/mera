@@ -16,11 +16,16 @@ import {
   TICKER,
   UNIT,
 } from "@category-labs/mera-demo-shared/market";
+import { NewsTicker } from "@category-labs/mera-demo-shared/NewsTicker";
 import {
   DEMO_RPC_URL,
   type EvmContext,
   fundAccount,
 } from "@category-labs/mera-demo-shared/network";
+import {
+  CHART_WINDOW_SECONDS,
+  PriceChart,
+} from "@category-labs/mera-demo-shared/PriceChart";
 import {
   CASH_SYMBOL,
   formatCash,
@@ -37,8 +42,6 @@ import {
 import { isAddressEqual } from "viem";
 import type { AccountState } from "./account";
 import { RECOVERY_VISIBLE_MS } from "./config";
-import { NewsTicker } from "./NewsTicker";
-import { CHART_WINDOW_SECONDS, PriceChart } from "./PriceChart";
 import {
   isSidePanel,
   openPasskeyTab,

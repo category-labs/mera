@@ -14,10 +14,15 @@ import {
   TICKER,
   UNIT,
 } from "@category-labs/mera-demo-shared/market";
+import { NewsTicker } from "@category-labs/mera-demo-shared/NewsTicker";
 import {
   type EvmContext,
   fundAccount,
 } from "@category-labs/mera-demo-shared/network";
+import {
+  CHART_WINDOW_SECONDS,
+  PriceChart,
+} from "@category-labs/mera-demo-shared/PriceChart";
 import {
   CASH_SYMBOL,
   formatCash,
@@ -45,8 +50,6 @@ import {
   revealMnemonic,
 } from "./connect";
 import { loadCostBasis, saveCostBasis } from "./costBasis";
-import { NewsTicker } from "./NewsTicker";
-import { CHART_WINDOW_SECONDS, PriceChart } from "./PriceChart";
 import { currentPasskeyWallet } from "./passkeyWallet";
 import { WalletBackup } from "./WalletBackup";
 

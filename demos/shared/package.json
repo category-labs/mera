@@ -4,12 +4,17 @@
   "version": "0.1.0",
   "type": "module",
   "exports": {
+    "./AccountChip": "./src/AccountChip.tsx",
     "./amount": "./src/amount.ts",
+    "./base.css": "./src/base.css",
     "./costBasis": "./src/costBasis.ts",
     "./hd": "./src/hd.ts",
     "./market": "./src/market.ts",
     "./network": "./src/network.ts",
+    "./NewsTicker": "./src/NewsTicker.tsx",
+    "./PriceChart": "./src/PriceChart.tsx",
     "./ui": "./src/ui.ts",
+    "./useCopyButton": "./src/useCopyButton.ts",
     "./validation": "./src/validation.ts"
   },
   "scripts": {
@@ -19,9 +24,11 @@
     "@category-labs/mera": "*",
     "@scure/bip32": "^2.3.0",
     "@scure/bip39": "^2.3.0",
+    "react": "19.2.8",
     "viem": "2.55.13"
   },
   "devDependencies": {
+    "@types/react": "^19.2.18",
     "typescript": "^7.0.2"
   }
 }

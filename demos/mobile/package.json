@@ -11,7 +11,7 @@
     "check": "tsc && expo export --platform android --output-dir .expo/export"
   },
   "dependencies": {
-    "@category-labs/mera": "^0.2.0",
+    "@category-labs/mera": "*",
     "@scure/base": "^2.3.0",
     "@scure/bip32": "^2.3.0",
     "@scure/bip39": "^2.3.0",

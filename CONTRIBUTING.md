@@ -69,7 +69,7 @@ npm run build:site
 
 A GitHub workflow publishes the library to npm as `@category-labs/mera`. A release takes three steps: merge the version bump, push a matching tag, then create the GitHub release that carries the notes for the version.
 
-Bump `version` in `library/package.json` and merge that change to `main`. If a pre-1.0 minor bump falls outside the consumers' current range, update their `@category-labs/mera` ranges in the same change. Then tag the merge commit:
+Bump `version` in `library/package.json` and merge that change to `main`. Then tag the merge commit:
 
 ```sh
 git tag v0.2.0

@@ -43,7 +43,7 @@ jobs:
         run: corepack enable npm
 
       - name: Install dependencies
-        run: npm ci --include-workspace-root -w @category-labs/mera
+        run: npm ci --include-workspace-root -w library
 
       - name: Verify package
         run: npm run check:pack
@@ -62,7 +62,7 @@ jobs:
           fi
 
       - name: Publish
-        run: npm publish -w @category-labs/mera --provenance
+        run: npm publish -w library --provenance
 
   dry-run:
     name: Dry-run publish (no registry write)
@@ -82,7 +82,7 @@ jobs:
         run: corepack enable npm
 
       - name: Install dependencies
-        run: npm ci --include-workspace-root -w @category-labs/mera
+        run: npm ci --include-workspace-root -w library
 
       - name: Verify package
         run: npm run check:pack
@@ -90,4 +90,4 @@ jobs:
       - name: Publish (dry-run)
         # npm 12 otherwise rejects the already-published version during a
         # nonwriting dry run.
-        run: npm publish -w @category-labs/mera --dry-run --force
+        run: npm publish -w library --dry-run --force

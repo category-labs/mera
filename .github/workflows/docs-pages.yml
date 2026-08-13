@@ -43,7 +43,7 @@ jobs:
         run: corepack enable npm
 
       - name: Install dependencies
-        run: npm ci --include-workspace-root -w @category-labs/mera -w demos/web -w demos/prf -w docs
+        run: npm ci --include-workspace-root -w library -w demos/web -w demos/prf -w docs
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5

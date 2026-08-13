@@ -7,9 +7,13 @@ import {
   type PasskeyCredentialMetadata,
   type Secp256k1SigningSession,
 } from "@category-labs/mera";
+import {
+  deriveEvmPrivateKey,
+  mnemonicToSeed,
+  prfOutputToMnemonic,
+} from "@category-labs/mera-demo-shared/hd";
 import { BaseError as ViemError } from "viem";
 import { RP_ID } from "./config";
-import { deriveEvmPrivateKey, mnemonicToSeed, prfOutputToMnemonic } from "./hd";
 
 type Wallet = {
   address: `0x${string}`;

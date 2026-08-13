@@ -8,6 +8,7 @@ on:
       - docs/**
       - demos/web/**
       - demos/prf/**
+      - demos/shared/**
       - library/**
       - package.json
       - package-lock.json
@@ -43,7 +44,7 @@ jobs:
         run: corepack enable npm
 
       - name: Install dependencies
-        run: npm ci --include-workspace-root -w library -w demos/web -w demos/prf -w docs
+        run: npm ci --include-workspace-root -w library -w demos/web -w demos/prf -w demos/shared -w docs
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0

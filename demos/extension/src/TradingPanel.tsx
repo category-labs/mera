@@ -1,4 +1,11 @@
 import type { PasskeyCredentialMetadata } from "@category-labs/mera";
+import { parseDecimalAmount } from "@category-labs/mera-demo-shared/amount";
+import { prfOutputToMnemonic } from "@category-labs/mera-demo-shared/hd";
+import {
+  CASH_SYMBOL,
+  formatCash,
+  formatShares,
+} from "@category-labs/mera-demo-shared/ui";
 import {
   type ReactElement,
   type RefObject,
@@ -9,9 +16,7 @@ import {
 } from "react";
 import { isAddressEqual } from "viem";
 import type { AccountState } from "./account";
-import { parseDecimalAmount } from "./amount";
 import { RECOVERY_VISIBLE_MS } from "./config";
-import { prfOutputToMnemonic } from "./hd";
 import {
   buyShares,
   COMPANY_NAME,
@@ -37,7 +42,6 @@ import {
   saveAccount,
   saveCostBasis,
 } from "./storage";
-import { CASH_SYMBOL, formatCash, formatShares } from "./ui";
 import {
   createWallet,
   describeError,

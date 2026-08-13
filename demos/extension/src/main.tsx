@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import "./base.css";
+import "@category-labs/mera-demo-shared/base.css";
 import "./styles.css";
 
 const root = document.getElementById("root");

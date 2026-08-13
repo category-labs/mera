@@ -1,3 +1,4 @@
+import { AccountChip } from "@category-labs/mera-demo-shared/AccountChip";
 import {
   DEMO_RPC_URL,
   type EvmContext,
@@ -10,7 +11,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { AccountChip } from "./AccountChip";
 import { type AccountState, accountAddress } from "./account";
 import { DEMO_CHAIN_ID } from "./config";
 import { loadAccount } from "./storage";

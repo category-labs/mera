@@ -1,8 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>mera</title>
-  <rect width="128" height="128" rx="28" fill="#ff5500" />
-  <path
-    d="M27 91V39h18v7c5-6 12-9 20-9 9 0 16 4 20 11 6-7 14-11 24-11 16 0 25 10 25 28v26h-19V68c0-9-3-14-10-14-8 0-13 6-13 17v20H73V68c0-9-3-14-10-14-8 0-13 6-13 17v20H27Z"
-    fill="#fff"
-  />
+  <rect width="64" height="64" fill="#fcfcfa" />
+  <text
+    x="32"
+    y="47"
+    font-family="Georgia,serif"
+    font-style="italic"
+    font-size="46"
+    text-anchor="middle"
+    fill="#1a1a1a"
+  >
+    m
+  </text>
 </svg>

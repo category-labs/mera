@@ -1,14 +1,19 @@
-# mera React Native passkey demo
+# mera React Native trading demo
 
-An Expo app that shows how to use mera passkeys on iOS and Android.
+An Expo app with the same paper-trading market as the web demo and the Chrome
+extension: a fictional stock on a private demo network, traded from a
+passkey-derived account.
 
 The app can:
 
-- create a passkey;
-- sign in with a passkey;
-- derive an EVM account from the passkey's PRF output;
-- keep the signing key in a session;
-- store the account on the device;
+- show the live NAD market with no account;
+- create a passkey here or sign in with one from the web demo, deriving the
+  same address;
+- fund the account with play money from the demo network's faucet;
+- buy and sell shares, signing silently with the session key;
+- track the position's profit and loss;
+- store the account on the device and unlock it with a biometric check
+  instead of a passkey prompt;
 - reveal the recovery phrase after another passkey request.
 
 ## Requirements
@@ -94,17 +99,21 @@ npm run build
 
 ## Account storage and locking
 
-After creating or signing in with a passkey, the demo saves the credential ID
-and PRF output in the device's secure storage. [src/prfStore.ts](src/prfStore.ts)
+After creating or signing in with a passkey, the demo saves the PRF output in
+the device's secure storage, gated by a biometric or device credential, and
+the account's address beside it, ungated. [src/storage.ts](src/storage.ts)
 contains the storage code.
 
-The app can then restore the account without asking for the passkey again.
-Reading the stored value requires a biometric or device credential.
+A launch reads only the ungated address, so the market and the balances render
+with no prompt. The first trade asks for the biometric or device credential,
+reads the stored PRF output, and derives the signing key; no passkey prompt
+appears.
 
-**Lock** ends the signing session but keeps the stored value. **Clear stored
-account** ends the session and removes the stored value. It does not delete the
-passkey from the passkey provider. **Reveal recovery phrase** asks for the
-passkey again.
+**Lock** ends the signing session but keeps the stored account. **Sign out**
+ends the session and removes the stored account. It does not delete the
+passkey from the passkey provider, and the position's cost basis stays for the
+next sign-in. **Export account** asks for the passkey again and shows the
+recovery phrase.
 
 SecureStore data may remain after an iOS app is removed and installed again.
 Android removes it when the app is removed.

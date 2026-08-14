@@ -12,17 +12,19 @@
   },
   "dependencies": {
     "@category-labs/mera": "*",
+    "@category-labs/mera-demo-shared": "*",
     "@scure/base": "^2.3.0",
-    "@scure/bip32": "^2.3.0",
-    "@scure/bip39": "^2.3.0",
     "expo": "~57.0.12",
+    "expo-clipboard": "~57.0.1",
     "expo-constants": "~57.0.10",
     "expo-crypto": "~57.0.1",
     "expo-secure-store": "~57.0.1",
     "react": "19.2.8",
     "react-native": "0.86.2",
     "react-native-passkey": "3.6.1",
-    "react-native-safe-area-context": "~5.8.1"
+    "react-native-safe-area-context": "~5.8.1",
+    "react-native-svg": "15.15.4",
+    "viem": "2.55.13"
   },
   "devDependencies": {
     "@types/react": "~19.2.18",

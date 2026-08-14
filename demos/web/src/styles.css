@@ -568,6 +568,53 @@ a {
   color: var(--accent);
 }
 
+/* Passkey tab: a centered sign-in layout instead of the trading page's
+   top-aligned header + card. */
+.app.signin {
+  margin-block: auto;
+  flex: 0 0 auto;
+  gap: 22px;
+  width: min(400px, 100%);
+}
+
+.signin-brand {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.signin-mark {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+h1.signin-title {
+  font-size: 26px;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.signin-to {
+  display: block;
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--muted);
+}
+
+.signin .card {
+  gap: 14px;
+  padding: 22px;
+}
+
+.signin .btn.primary {
+  width: 100%;
+}
+
 /* Embedded in the post's iframe: drop the viewport-filling height and big
    margins so the demo hugs its content and `embed.ts` can report a tight
    height. Standalone (opened in its own tab) keeps the centered full layout. */

@@ -6,6 +6,7 @@ import {
 } from "@category-labs/mera";
 import { type ReactElement, StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import favicon from "../../../docs/public/favicon.svg";
 import "./styles.css";
 
 const RP_ID = "mera.category.xyz";
@@ -151,23 +152,6 @@ function copyFor(action: Action | null): SignInCopy {
   }
 }
 
-function MeraMark({ className }: { className?: string }): ReactElement {
-  return (
-    <svg
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 128 128"
-      aria-hidden="true"
-    >
-      <rect width="128" height="128" rx="28" fill="#ff5500" />
-      <path
-        d="M27 91V39h18v7c5-6 12-9 20-9 9 0 16 4 20 11 6-7 14-11 24-11 16 0 25 10 25 28v26h-19V68c0-9-3-14-10-14-8 0-13 6-13 17v20H73V68c0-9-3-14-10-14-8 0-13 6-13 17v20H27Z"
-        fill="#fff"
-      />
-    </svg>
-  );
-}
-
 function ExtensionPasskeyPage(): ReactElement {
   const params = new URLSearchParams(location.search);
   const action = parseAction(params.get("action"));
@@ -207,7 +191,7 @@ function ExtensionPasskeyPage(): ReactElement {
   return (
     <main className="app signin">
       <header className="signin-brand">
-        <MeraMark className="signin-mark" />
+        <img className="signin-mark" src={favicon} alt="" />
         <h1 className="signin-title">
           {copy.title}
           {copy.destination !== "" && (

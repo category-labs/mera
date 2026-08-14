@@ -585,10 +585,9 @@ a {
 }
 
 .signin-mark {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
-  box-shadow: var(--shadow);
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--border);
 }
 
 h1.signin-title {

@@ -199,13 +199,119 @@ async function sellShares(
   return { side: "sell", shares: await minedShares(evm, hash) };
 }
 
-export type { Fill, Portfolio };
+// ----- Trade policy -----------------------------------------------------------
+// Client-side trading rules; every demo applies the same ones.
+
+type Side = "buy" | "sell";
+
+// How often the demos re-read the portfolio.
+const REFRESH_MS = 5_000;
+// Cash kept out of Max buys so the account can always pay a trade's network
+// fee; at the demo network's gas prices this covers hundreds of trades.
+const FEE_RESERVE_WEI = 10n ** 16n;
+// One cent, the display resolution: sells that would leave less than this
+// behind sell the whole position instead.
+const CENT_WEI = 10n ** 16n;
+// Cash below this offers the 10,000 DEMOCASH top-up; the guard enforces the
+// same threshold, so the button cannot inflate a healthy account.
+const LOW_CASH_WEI = 100n * UNIT;
+
+/** Wei to a plain decimal cash string floored to cents, e.g. "9999.99". */
+function cashInput(wei: bigint): string {
+  const cents = wei / CENT_WEI;
+  return `${cents / 100n}.${(cents % 100n).toString().padStart(2, "0")}`;
+}
+
+/**
+ * The Max amount for the trade input. Buys offer the cash minus the fee
+ * reserve. Sells offer the whole position; a position worth less than a cent
+ * still offers one cent, because flooring it to "0.00" would parse to
+ * nothing and leave the position unsellable from Max.
+ */
+function maxTradeInput({
+  side,
+  price,
+  portfolio,
+}: {
+  side: Side;
+  price: bigint;
+  portfolio: Portfolio;
+}): string {
+  if (side === "buy") {
+    return cashInput(
+      portfolio.cash > FEE_RESERVE_WEI ? portfolio.cash - FEE_RESERVE_WEI : 0n,
+    );
+  }
+  const positionValue = (portfolio.shares * price) / UNIT;
+  if (positionValue > 0n && positionValue < CENT_WEI) {
+    return cashInput(CENT_WEI);
+  }
+  return cashInput(positionValue);
+}
+
+/**
+ * Whether the portfolio can pay for the trade. Buys must leave the fee
+ * reserve behind. Sells cannot exceed the position (with a cent of slack for
+ * price movement between render and submit), must round to at least one
+ * share-wei at the current price, and still need the reserve for the trade's
+ * network fee.
+ */
+function coversTrade({
+  side,
+  amountWei,
+  price,
+  portfolio,
+}: {
+  side: Side;
+  amountWei: bigint;
+  price: bigint;
+  portfolio: Portfolio;
+}): boolean {
+  if (side === "buy") return amountWei + FEE_RESERVE_WEI <= portfolio.cash;
+  const positionValue = (portfolio.shares * price) / UNIT;
+  return (
+    positionValue > 0n &&
+    (amountWei * UNIT) / price > 0n &&
+    amountWei <= positionValue + CENT_WEI &&
+    portfolio.cash >= FEE_RESERVE_WEI
+  );
+}
+
+/**
+ * Shares a sell of `amountWei` moves at `price`. A Max sell, or an amount
+ * within a cent of the whole position, sells all of it, so no dust the
+ * display would round to 0.00 is left behind.
+ */
+function sharesToSell({
+  amountWei,
+  price,
+  heldShares,
+  sellAll,
+}: {
+  amountWei: bigint;
+  price: bigint;
+  heldShares: bigint;
+  sellAll: boolean;
+}): bigint {
+  const shares = (amountWei * UNIT) / price;
+  if (sellAll || ((heldShares - shares) * price) / UNIT < CENT_WEI) {
+    return heldShares;
+  }
+  return shares;
+}
+
+export type { Fill, Portfolio, Side };
 export {
   buyShares,
   COMPANY_NAME,
+  coversTrade,
+  LOW_CASH_WEI,
+  maxTradeInput,
   priceAt,
+  REFRESH_MS,
   readPortfolio,
   sellShares,
+  sharesToSell,
   TICKER,
   UNIT,
 };

@@ -1,18 +1,31 @@
 import { setStringAsync } from "expo-clipboard";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-/** Copies text to the clipboard; `copied` holds for 1.2 s after each copy. */
+/**
+ * Copies text to the clipboard; `copied` holds for 1.2 s after each copy.
+ * After unmount, a pending copy changes nothing.
+ */
 function useCopyButton(): {
   copied: boolean;
   copy: (text: string) => Promise<void>;
 } {
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const mounted = useRef(true);
 
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      clearTimeout(timer.current);
+    };
+  }, []);
 
   const copy = useCallback(async (text: string) => {
     await setStringAsync(text);
+    // The write can outlive the component; a timer set now would leak past
+    // the cleanup that already ran.
+    if (!mounted.current) return;
     setCopied(true);
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setCopied(false), 1_200);

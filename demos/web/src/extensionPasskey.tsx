@@ -4,7 +4,7 @@ import {
   isMeraError,
   type PasskeyCredentialMetadata,
 } from "@category-labs/mera";
-import { type ReactElement, StrictMode, useState } from "react";
+import { type ReactElement, StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
@@ -111,13 +111,76 @@ async function requestPrf(
   };
 }
 
+type SignInCopy = {
+  title: string;
+  destination: string;
+  button: string;
+  documentTitle: string;
+};
+
+function copyFor(action: Action | null): SignInCopy {
+  switch (action) {
+    case "create":
+      return {
+        title: "Create an account",
+        destination: "for the mera demo extension",
+        button: "Create account",
+        documentTitle: "Create an account for the mera demo extension",
+      };
+    case "recovery":
+      return {
+        title: "Reveal the recovery phrase",
+        destination: "for the mera demo extension",
+        button: "Reveal phrase",
+        documentTitle: "Reveal the recovery phrase",
+      };
+    case "get":
+      return {
+        title: "Sign in",
+        destination: "to the extension",
+        button: "Sign in",
+        documentTitle: "Sign in to the extension",
+      };
+    case null:
+      return {
+        title: "mera demo extension",
+        destination: "",
+        button: "",
+        documentTitle: "mera demo extension",
+      };
+  }
+}
+
+function MeraMark({ className }: { className?: string }): ReactElement {
+  return (
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 128 128"
+      aria-hidden="true"
+    >
+      <rect width="128" height="128" rx="28" fill="#ff5500" />
+      <path
+        d="M27 91V39h18v7c5-6 12-9 20-9 9 0 16 4 20 11 6-7 14-11 24-11 16 0 25 10 25 28v26h-19V68c0-9-3-14-10-14-8 0-13 6-13 17v20H73V68c0-9-3-14-10-14-8 0-13 6-13 17v20H27Z"
+        fill="#fff"
+      />
+    </svg>
+  );
+}
+
 function ExtensionPasskeyPage(): ReactElement {
   const params = new URLSearchParams(location.search);
   const action = parseAction(params.get("action"));
   const opened = window.opener !== null;
   const credential = parseCredential();
+  const copy = copyFor(action);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const ready = action !== null && opened;
+
+  useEffect(() => {
+    document.title = copy.documentTitle;
+  }, [copy.documentTitle]);
 
   async function run(): Promise<void> {
     if (action === null) return;
@@ -141,37 +204,31 @@ function ExtensionPasskeyPage(): ReactElement {
     }
   }
 
-  const label =
-    action === "create"
-      ? "Create account"
-      : action === "recovery"
-        ? "Reveal phrase"
-        : "Continue";
-
   return (
-    <main className="app">
-      <header className="app-head">
-        <h1>mera demo</h1>
+    <main className="app signin">
+      <header className="signin-brand">
+        <MeraMark className="signin-mark" />
+        <h1 className="signin-title">
+          {copy.title}
+          {copy.destination !== "" && (
+            <span className="signin-to">{copy.destination}</span>
+          )}
+        </h1>
       </header>
       <section className="card">
-        <p>
-          {action === "recovery"
-            ? "The next passkey check reveals the recovery phrase."
-            : "Use a passkey to continue."}
-        </p>
-        {action === null || !opened ? (
-          <p className="status error">
-            This passkey tab is missing its opener.
-          </p>
-        ) : (
+        {ready ? (
           <button
             className="btn primary"
             type="button"
             disabled={pending}
             onClick={() => void run()}
           >
-            {pending ? "Waiting for passkey…" : label}
+            {pending ? "Waiting for passkey…" : copy.button}
           </button>
+        ) : (
+          <p className="status error">
+            This passkey tab is missing its opener.
+          </p>
         )}
         {error && <p className="status error">{error}</p>}
       </section>

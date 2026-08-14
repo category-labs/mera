@@ -12,6 +12,9 @@ import { assertDemoChainId } from "./validation";
 // on it holds value.
 const DEMO_RPC_URL = "https://evm-network-production.up.railway.app";
 
+// The chain id the demo network reports.
+const DEMO_CHAIN_ID = 31337;
+
 const NETWORK_NAME = "Demo Network";
 
 type EvmContext = {
@@ -132,6 +135,7 @@ async function fundAccount(rpcUrl: string, address: Address): Promise<void> {
 
 export type { EvmContext };
 export {
+  DEMO_CHAIN_ID,
   DEMO_RPC_URL,
   fundAccount,
   isJsonRpcBody,

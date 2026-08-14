@@ -25,6 +25,12 @@ type ChartGeometry = {
   low: number;
 };
 
+// Grid prices, pruned to the drawn window. A redraw resamples the whole
+// window at eight keccak hashes per sample, which stalls JIT-less engines
+// when repeated every second; a grid price never changes, so a redraw
+// computes only the samples that newly entered the window.
+const gridPrices = new Map<number, bigint>();
+
 /**
  * Lays out the last CHART_WINDOW_SECONDS of the stock price as SVG path data
  * in the CHART_WIDTH by CHART_HEIGHT space. History comes from the price
@@ -38,8 +44,17 @@ function chartGeometry(livePrice: bigint, now: number): ChartGeometry {
   // the price noise across the whole line and making it visibly shimmer.
   const start =
     Math.ceil((now - CHART_WINDOW_SECONDS) / SAMPLE_SECONDS) * SAMPLE_SECONDS;
+  // Dropping t >= now also clears samples ahead of a clock that moved back.
+  for (const t of gridPrices.keys()) {
+    if (t < start || t >= now) gridPrices.delete(t);
+  }
   for (let t = start; t < now; t += SAMPLE_SECONDS) {
-    points.push({ t, price: priceAt(BigInt(t)) });
+    let price = gridPrices.get(t);
+    if (price === undefined) {
+      price = priceAt(BigInt(t));
+      gridPrices.set(t, price);
+    }
+    points.push({ t, price });
   }
   points.push({ t: now, price: livePrice });
 

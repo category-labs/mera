@@ -1,4 +1,5 @@
 import { parseDecimalAmount } from "@category-labs/mera-demo-shared/amount";
+import { CHART_WINDOW_SECONDS } from "@category-labs/mera-demo-shared/chart";
 import {
   costBasisAfterBuy,
   costBasisAfterSell,
@@ -19,10 +20,7 @@ import {
   type EvmContext,
   fundAccount,
 } from "@category-labs/mera-demo-shared/network";
-import {
-  CHART_WINDOW_SECONDS,
-  PriceChart,
-} from "@category-labs/mera-demo-shared/PriceChart";
+import { PriceChart } from "@category-labs/mera-demo-shared/PriceChart";
 import {
   CASH_SYMBOL,
   formatCash,

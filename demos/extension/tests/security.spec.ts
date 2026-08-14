@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  DEMO_CHAIN_ID,
   isJsonRpcBody,
   jsonRpcResult,
 } from "@category-labs/mera-demo-shared/network";
@@ -10,7 +11,6 @@ import {
   validateTradeAmount,
 } from "@category-labs/mera-demo-shared/validation";
 import { expect, test } from "@playwright/test";
-import { DEMO_CHAIN_ID } from "../src/config";
 import { isCredential, isStoredAccount } from "../src/storage";
 import { extensionIdFromKey } from "./extension-id";
 

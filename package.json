@@ -24,6 +24,12 @@
     "@biomejs/biome": "2.5.8",
     "typescript": "5.9.3"
   },
+  "overrides": {
+    "expressive-code-twoslash@0.6.1": {
+      "@expressive-code/core": ">=0.44.1",
+      "expressive-code": ">=0.44.1"
+    }
+  },
   "engines": {
     "node": ">=24"
   },

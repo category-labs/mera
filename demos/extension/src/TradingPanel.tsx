@@ -9,11 +9,17 @@ import { prfOutputToMnemonic } from "@category-labs/mera-demo-shared/hd";
 import {
   buyShares,
   COMPANY_NAME,
+  coversTrade,
   type Fill,
+  LOW_CASH_WEI,
+  maxTradeInput,
   type Portfolio,
   priceAt,
+  REFRESH_MS,
   readPortfolio,
+  type Side,
   sellShares,
+  sharesToSell,
   TICKER,
   UNIT,
 } from "@category-labs/mera-demo-shared/market";
@@ -60,11 +66,6 @@ import {
   walletFromPrf,
 } from "./wallet";
 
-const REFRESH_MS = 5_000;
-const FEE_RESERVE_WEI = 10n ** 16n;
-const CENT_WEI = 10n ** 16n;
-const LOW_CASH_WEI = 100n * UNIT;
-
 type Props = {
   evm: EvmContext | null;
   evmError: string | null;
@@ -99,7 +100,8 @@ function TradingPanel({
         ? account.address
         : account.wallet.address;
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
-  const [side, setSide] = useState<"buy" | "sell">("buy");
+  const [side, setSide] = useState<Side>("buy");
+  const [sellAll, setSellAll] = useState(false);
   const [amount, setAmount] = useState("");
   const [pending, setPending] = useState<PendingAction>(null);
   const [error, setError] = useState<string | null>(null);
@@ -188,6 +190,7 @@ function TradingPanel({
     setBasis(address ? loadCostBasis(address) : 0n);
     setPortfolio(null);
     setAmount("");
+    setSellAll(false);
     setFill(null);
     hideRecovery();
   }, [address, hideRecovery]);
@@ -259,28 +262,14 @@ function TradingPanel({
   const covered =
     amountWei !== null &&
     portfolio !== null &&
-    (side === "buy"
-      ? amountWei + FEE_RESERVE_WEI <= portfolio.cash
-      : positionValue !== null &&
-        estimatedShares !== null &&
-        estimatedShares > 0n &&
-        amountWei <= positionValue + CENT_WEI &&
-        portfolio.cash >= FEE_RESERVE_WEI);
-
-  function cashInput(wei: bigint): string {
-    const cents = wei / CENT_WEI;
-    return `${cents / 100n}.${(cents % 100n).toString().padStart(2, "0")}`;
-  }
+    coversTrade({ side, amountWei, price, portfolio });
 
   function fillMax(): void {
     if (portfolio === null) return;
-    const value =
-      side === "buy"
-        ? portfolio.cash > FEE_RESERVE_WEI
-          ? portfolio.cash - FEE_RESERVE_WEI
-          : 0n
-        : (positionValue ?? 0n);
-    setAmount(cashInput(value));
+    setAmount(maxTradeInput({ side, price, portfolio }));
+    // Max on the sell side means the whole position: converting its stale
+    // cash figure back to shares at a moved price can strand dust.
+    setSellAll(side === "sell");
     setError(null);
   }
 
@@ -367,10 +356,12 @@ function TradingPanel({
         setFill({ ...result, spent: amountWei });
         updateBasis(costBasisAfterBuy(basis, amountWei));
       } else {
-        const shares =
-          amountWei >= (portfolio.shares * price) / UNIT
-            ? portfolio.shares
-            : (amountWei * UNIT) / price;
+        const shares = sharesToSell({
+          amountWei,
+          price,
+          heldShares: portfolio.shares,
+          sellAll,
+        });
         const result = await sellShares(wallet.session, evm, shares);
         if (!operationIsCurrent(epoch, viaTab)) {
           wallet.lock();
@@ -380,6 +371,7 @@ function TradingPanel({
         updateBasis(costBasisAfterSell(basis, result.shares, portfolio.shares));
       }
       setAmount("");
+      setSellAll(false);
       await refresh();
     } catch (caught) {
       if (!operationIsCurrent(epoch, viaTab)) {
@@ -603,7 +595,10 @@ function TradingPanel({
                   role="tab"
                   aria-selected={side === value}
                   disabled={busy}
-                  onClick={() => setSide(value)}
+                  onClick={() => {
+                    setSide(value);
+                    setSellAll(false);
+                  }}
                 >
                   {value === "buy" ? "Buy" : "Sell"}
                 </button>
@@ -634,7 +629,10 @@ function TradingPanel({
                     inputMode="decimal"
                     placeholder="100.00"
                     disabled={busy}
-                    onChange={(event) => setAmount(event.target.value)}
+                    onChange={(event) => {
+                      setAmount(event.target.value);
+                      setSellAll(false);
+                    }}
                   />
                 </label>
                 <button

@@ -1,4 +1,8 @@
-import { type Fill, TICKER } from "@category-labs/mera-demo-shared/market";
+import {
+  type Fill,
+  type Side,
+  TICKER,
+} from "@category-labs/mera-demo-shared/market";
 import {
   CASH_SYMBOL,
   formatCash,
@@ -8,8 +12,6 @@ import type { ReactElement } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Button, LinkButton } from "./Button";
 import { palette, text } from "./theme";
-
-type Side = "buy" | "sell";
 
 type TradeFormProps = {
   side: Side;
@@ -164,5 +166,4 @@ const styles = StyleSheet.create({
   trade: { gap: 12 },
 });
 
-export type { Side };
 export { TradeForm };

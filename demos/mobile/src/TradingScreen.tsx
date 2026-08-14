@@ -7,11 +7,17 @@ import {
 import {
   buyShares,
   COMPANY_NAME,
+  coversTrade,
   type Fill,
+  LOW_CASH_WEI,
+  maxTradeInput,
   type Portfolio,
   priceAt,
+  REFRESH_MS,
   readPortfolio,
+  type Side,
   sellShares,
+  sharesToSell,
   TICKER,
   UNIT,
 } from "@category-labs/mera-demo-shared/market";
@@ -37,7 +43,7 @@ import { NewsTicker } from "./NewsTicker";
 import { PriceChart } from "./PriceChart";
 import { RecoveryPhrase } from "./RecoveryPhrase";
 import { clearStoredAccount, loadCostBasis, saveCostBasis } from "./storage";
-import { type Side, TradeForm } from "./TradeForm";
+import { TradeForm } from "./TradeForm";
 import { palette } from "./theme";
 import {
   createAccount,
@@ -47,17 +53,6 @@ import {
   unlockStoredWallet,
   type Wallet,
 } from "./wallet";
-
-const REFRESH_MS = 5_000;
-// Cash kept out of Max buys so the account can always pay a trade's network
-// fee; at the demo network's gas prices this covers hundreds of trades.
-const FEE_RESERVE_WEI = 10n ** 16n;
-// Cash below this offers the 10,000 DEMOCASH top-up; the guard enforces the
-// same threshold, so the button cannot inflate a healthy account.
-const LOW_CASH_WEI = 100n * UNIT;
-// One cent, the display resolution: sells that would leave less than this
-// behind sell the whole position instead.
-const CENT_WEI = 10n ** 16n;
 
 type Pending = "create" | "signin" | "trade" | "recovery" | "funding";
 
@@ -233,18 +228,10 @@ function TradingScreen({
     pnl !== null && basis > 0n ? Number((pnl * 10_000n) / basis) / 100 : null;
 
   const amountWei = parseDecimalAmount(amount, 18);
-  // Buys must leave the fee reserve behind; sells cannot exceed the position
-  // (with a cent of slack for price movement between render and submit) and
-  // still need the reserve for the trade's network fee.
   const covered =
     portfolio !== null &&
     amountWei !== null &&
-    (side === "buy"
-      ? amountWei + FEE_RESERVE_WEI <= portfolio.cash
-      : positionValue !== null &&
-        positionValue > 0n &&
-        amountWei <= positionValue + CENT_WEI &&
-        portfolio.cash >= FEE_RESERVE_WEI);
+    coversTrade({ side, amountWei, price, portfolio });
   const canTrade = covered && !busy;
 
   const estimatedShares =
@@ -261,22 +248,10 @@ function TradingScreen({
         ? "Buy"
         : "Sell";
 
-  // Wei to a plain decimal cash string, floored to cents.
-  function cashInput(wei: bigint): string {
-    const cents = wei / CENT_WEI;
-    return `${cents / 100n}.${(cents % 100n).toString().padStart(2, "0")}`;
-  }
-
   function fillMax(): void {
     if (portfolio === null) return;
     setTradeError(null);
-    const wei =
-      side === "buy"
-        ? portfolio.cash > FEE_RESERVE_WEI
-          ? portfolio.cash - FEE_RESERVE_WEI
-          : 0n
-        : (positionValue ?? 0n);
-    setAmount(cashInput(wei));
+    setAmount(maxTradeInput({ side, price, portfolio }));
     // Max on the sell side means the whole position: converting its stale
     // cash figure back to shares at a moved price can strand dust.
     setSellAll(side === "sell");
@@ -339,16 +314,12 @@ function TradingScreen({
         setFill({ ...result, spent: amountWei });
         applyBasis(costBasisAfterBuy(basis, amountWei));
       } else {
-        let shares = (amountWei * UNIT) / price;
-        // A Max sell, or a typed amount within a cent of the whole position,
-        // sells all of it, so no dust the display would round to 0.00 is
-        // left behind.
-        if (
-          sellAll ||
-          ((portfolio.shares - shares) * price) / UNIT < CENT_WEI
-        ) {
-          shares = portfolio.shares;
-        }
+        const shares = sharesToSell({
+          amountWei,
+          price,
+          heldShares: portfolio.shares,
+          sellAll,
+        });
         const result = await sellShares(wallet.session, evm, shares);
         setFill(result);
         applyBasis(costBasisAfterSell(basis, result.shares, portfolio.shares));

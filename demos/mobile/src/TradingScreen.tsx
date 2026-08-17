@@ -54,7 +54,14 @@ import {
   type Wallet,
 } from "./wallet";
 
-type Pending = "create" | "signin" | "trade" | "recovery" | "funding";
+type Pending =
+  | "create"
+  | "signin"
+  | "opening:create"
+  | "opening:signin"
+  | "trade"
+  | "recovery"
+  | "funding";
 
 type TradingScreenProps = {
   /** `null` while the stored account is still being read at launch. */
@@ -115,10 +122,13 @@ function TradingScreen({
   const readGeneration = useRef(0);
 
   // Switches to `next` and drops everything scoped to the previous account.
-  function adoptAccount(next: AccountState): void {
+  function adoptAccount(
+    next: AccountState,
+    portfolio: Portfolio | null = null,
+  ): void {
     readGeneration.current += 1;
     onAccountChange(next);
-    setPortfolio(null);
+    setPortfolio(portfolio);
     setAmount("");
     setSellAll(false);
     setFill(null);
@@ -180,12 +190,16 @@ function TradingScreen({
   useEffect(() => {
     if (address === null || funded.current === address) return;
     funded.current = address;
+    setPending("funding");
     fundAccount(DEMO_RPC_URL, address)
       .catch(() => {
         // A failed top-up surfaces through the balance read; the button
         // below offers a retry once the network is back.
       })
-      .finally(() => void refresh());
+      .finally(() => {
+        setPending(null);
+        void refresh();
+      });
   }, [address, refresh]);
 
   useEffect(() => {
@@ -263,12 +277,33 @@ function TradingScreen({
     try {
       const wallet =
         action === "create" ? await createAccount() : await signIn();
-      adoptAccount({ status: "unlocked", wallet });
+      // Fund and read the account before adopting it, so the connect buttons
+      // give way to settled balances instead of placeholders that fill in
+      // one network round trip at a time. On failure the account is adopted
+      // without a portfolio and the poll's read error reports the cause.
+      setPending(`opening:${action}`);
+      let portfolio: Portfolio | null = null;
+      if (evm !== null) {
+        funded.current = wallet.address; // the auto-fund effect must not repeat this
+        try {
+          await fundAccount(DEMO_RPC_URL, wallet.address);
+          portfolio = await readPortfolio(evm, wallet.address);
+        } catch {
+          // Adopt anyway; the account exists even when the network misbehaves.
+        }
+      }
+      adoptAccount({ status: "unlocked", wallet }, portfolio);
     } catch (caught) {
       setTradeError(describeError(caught));
     } finally {
       setPending(null);
     }
+  }
+
+  function connectLabel(action: "create" | "signin", idle: string): string {
+    if (pending === action) return "Waiting for passkey…";
+    if (pending === `opening:${action}`) return "Opening account…";
+    return idle;
   }
 
   async function submit(): Promise<void> {
@@ -426,15 +461,13 @@ function TradingScreen({
         {account === null ? null : account.status === "none" ? (
           <View style={styles.connect}>
             <Button
-              title={
-                pending === "create" ? "Waiting for passkey…" : "Create account"
-              }
+              title={connectLabel("create", "Create account")}
               primary
               disabled={busy || evm === null}
               onPress={() => void connect("create")}
             />
             <Button
-              title={pending === "signin" ? "Waiting for passkey…" : "Sign in"}
+              title={connectLabel("signin", "Sign in")}
               disabled={busy || evm === null}
               onPress={() => void connect("signin")}
             />

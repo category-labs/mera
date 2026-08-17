@@ -79,6 +79,8 @@ type Props = {
 type PendingAction =
   | "create"
   | "signin"
+  | "opening:create"
+  | "opening:signin"
   | "trade"
   | "recovery"
   | "funding"
@@ -115,6 +117,26 @@ function TradingPanel({
   const [copied, setCopied] = useState(false);
   const funded = useRef<string | null>(null);
   const busy = pending !== null;
+
+  // Polling, funding, and trades all refresh, so reads overlap. Only the
+  // newest may commit: a slow pre-funding snapshot would otherwise overwrite
+  // fresh balances, and its zero shares would trip the basis reset below and
+  // erase the saved basis.
+  const readGeneration = useRef(0);
+
+  // Switches to `next` and drops everything scoped to the previous account.
+  function adoptAccount(
+    next: AccountState,
+    portfolio: Portfolio | null = null,
+  ): void {
+    readGeneration.current += 1;
+    onAccountChange(next);
+    setPortfolio(portfolio);
+    setAmount("");
+    setSellAll(false);
+    setFill(null);
+    setError(null);
+  }
 
   function operationIsCurrent(
     epoch: number,
@@ -183,17 +205,20 @@ function TradingPanel({
   const refresh = useCallback(async (): Promise<void> => {
     setNow(Math.floor(Date.now() / 1000));
     if (evm === null || address === null) return;
-    setPortfolio(await readPortfolio(evm, address));
+    const generation = ++readGeneration.current;
+    try {
+      const read = await readPortfolio(evm, address);
+      if (generation !== readGeneration.current) return;
+      setPortfolio(read);
+    } catch (caught) {
+      if (generation !== readGeneration.current) return;
+      throw caught;
+    }
   }, [address, evm]);
 
   useEffect(() => {
     setBasis(address ? loadCostBasis(address) : 0n);
-    setPortfolio(null);
-    setAmount("");
-    setSellAll(false);
-    setFill(null);
-    hideRecovery();
-  }, [address, hideRecovery]);
+  }, [address]);
 
   useEffect(() => {
     function hideWhenPanelHides(): void {
@@ -231,7 +256,15 @@ function TradingPanel({
   useEffect(() => {
     if (address === null || funded.current === address || evm === null) return;
     funded.current = address;
-    void fundAccount(DEMO_RPC_URL, address).then(refresh).catch(reportError);
+    // The network context can resolve while a user action is already
+    // pending; the functional updates leave such an action's state alone.
+    setPending((current) => current ?? "funding");
+    void fundAccount(DEMO_RPC_URL, address)
+      .then(refresh)
+      .catch(reportError)
+      .finally(() =>
+        setPending((current) => (current === "funding" ? null : current)),
+      );
   }, [address, evm, refresh, reportError]);
 
   useEffect(() => {
@@ -297,13 +330,36 @@ function TradingPanel({
         wallet.lock();
         return;
       }
-      storeWallet(wallet);
+      // Fund and read the account before adopting it, so the connect buttons
+      // give way to settled balances instead of placeholders that fill in
+      // one network round trip at a time.
+      setPending(`opening:${action}`);
+      funded.current = wallet.address; // the auto-fund effect must not repeat this
+      let portfolio: Portfolio | null = null;
+      try {
+        await fundAccount(DEMO_RPC_URL, wallet.address);
+        portfolio = await readPortfolio(evm, wallet.address);
+      } catch {
+        // Adopt anyway; the account exists even when the network misbehaves.
+      }
+      if (!operationIsCurrent(epoch, viaTab)) {
+        wallet.lock();
+        return;
+      }
+      saveAccount({ address: wallet.address, credential: wallet.credential });
+      adoptAccount({ status: "unlocked", wallet }, portfolio);
     } catch (caught) {
       wallet?.lock();
       if (operationIsCurrent(epoch, viaTab)) setError(describeError(caught));
     } finally {
       setPending(null);
     }
+  }
+
+  function connectLabel(action: "create" | "signin", idle: string): string {
+    if (pending === action) return "Waiting for passkey…";
+    if (pending === `opening:${action}`) return "Opening account…";
+    return idle;
   }
 
   function updateBasis(value: bigint): void {
@@ -422,7 +478,7 @@ function TradingPanel({
     try {
       clearAccount();
     } finally {
-      onAccountChange({ status: "none" });
+      adoptAccount({ status: "none" });
     }
   }
 
@@ -538,9 +594,7 @@ function TradingPanel({
                 disabled={busy || evm === null}
                 onClick={() => void connect("create")}
               >
-                {pending === "create"
-                  ? "Waiting for passkey…"
-                  : "Create account"}
+                {connectLabel("create", "Create account")}
               </button>
               <button
                 className="btn"
@@ -548,7 +602,7 @@ function TradingPanel({
                 disabled={busy || evm === null}
                 onClick={() => void connect("signin")}
               >
-                {pending === "signin" ? "Waiting for passkey…" : "Sign in"}
+                {connectLabel("signin", "Sign in")}
               </button>
             </div>
             {error && <p className="status error">{error}</p>}

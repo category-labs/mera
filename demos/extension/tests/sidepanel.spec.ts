@@ -10,6 +10,7 @@ const extensionDir = resolve(
   "../dist",
 );
 const rpcUrl = "https://evm-network-production.up.railway.app/";
+const fundedBalance = "0x21e19e0c9bab2400000";
 const marketAddress = "0x1111111111111111111111111111111111111111";
 const transactionHash = `0x${"12".repeat(32)}`;
 const blockHash = `0x${"34".repeat(32)}`;
@@ -25,15 +26,16 @@ async function expectedExtensionId(): Promise<string> {
   return extensionIdFromKey(manifest.key);
 }
 
-function rpcResult(method: string): unknown {
+function rpcResult(method: string, funded: boolean): unknown {
   switch (method) {
     case "eth_chainId":
       return "0x7a69";
     case "demo_market":
       return { address: marketAddress };
     case "demo_fundAccount":
+      return fundedBalance;
     case "eth_getBalance":
-      return "0x21e19e0c9bab2400000";
+      return funded ? fundedBalance : "0x0";
     case "eth_call":
       return `0x${"0".repeat(64)}`;
     case "eth_getTransactionCount":
@@ -195,17 +197,19 @@ test("runs the side-panel account lifecycle", async () => {
     ],
   });
   try {
+    let funded = false;
     await context.route(rpcUrl, async (route) => {
       const body = route.request().postDataJSON() as {
         id: unknown;
         method: string;
       };
+      if (body.method === "demo_fundAccount") funded = true;
       await route.fulfill({
         contentType: "application/json",
         body: JSON.stringify({
           jsonrpc: "2.0",
           id: body.id,
-          result: rpcResult(body.method),
+          result: rpcResult(body.method, funded),
         }),
       });
     });
@@ -244,6 +248,11 @@ test("runs the side-panel account lifecycle", async () => {
     );
     await page.getByRole("button", { name: "Create account" }).click();
     await expect(page.getByRole("button", { name: /^0x/u })).toBeVisible();
+    // The panel adopts the account only after funding it and reading the
+    // portfolio, so the account view appears with the balance already set.
+    expect(await page.locator(".holding-value").first().textContent()).toBe(
+      "10,000.00",
+    );
     await expect(page.getByRole("button", { name: "Lock" })).toBeEnabled();
     const storedAccount = await page.evaluate(() =>
       localStorage.getItem("mera.extension.account.v1"),
@@ -392,17 +401,19 @@ test("opens a passkey tab from the side panel", async () => {
     ],
   });
   try {
+    let funded = false;
     await context.route(rpcUrl, async (route) => {
       const body = route.request().postDataJSON() as {
         id: unknown;
         method: string;
       };
+      if (body.method === "demo_fundAccount") funded = true;
       await route.fulfill({
         contentType: "application/json",
         body: JSON.stringify({
           jsonrpc: "2.0",
           id: body.id,
-          result: rpcResult(body.method),
+          result: rpcResult(body.method, funded),
         }),
       });
     });

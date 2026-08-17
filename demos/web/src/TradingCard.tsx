@@ -100,10 +100,20 @@ function TradingCard({
 
   const address = accountAddress(account);
 
+  // Polling, foregrounding, funding, and trades all refresh, so reads
+  // overlap. Only the newest may commit: a slow pre-funding snapshot would
+  // otherwise overwrite fresh balances, and its zero shares would trip the
+  // basis reset below and erase the saved basis.
+  const readGeneration = useRef(0);
+
   // Switches to `next` and drops everything scoped to the previous account.
-  function adoptAccount(next: AccountState): void {
+  function adoptAccount(
+    next: AccountState,
+    portfolio: Portfolio | null = null,
+  ): void {
+    readGeneration.current += 1;
     onAccountChange(next);
-    setPortfolio(null);
+    setPortfolio(portfolio);
     setAmount("");
     setSellAll(false);
     setFill(null);
@@ -138,10 +148,14 @@ function TradingCard({
   const refresh = useCallback(async () => {
     setNow(Math.floor(Date.now() / 1000));
     if (evm === null || address === null) return;
+    const generation = ++readGeneration.current;
     try {
-      setPortfolio(await readPortfolio(evm, address));
+      const read = await readPortfolio(evm, address);
+      if (generation !== readGeneration.current) return;
+      setPortfolio(read);
       setReadError(null);
     } catch (caught) {
+      if (generation !== readGeneration.current) return;
       setReadError(describeError(caught));
     }
   }, [evm, address]);
@@ -153,13 +167,36 @@ function TradingCard({
   useEffect(() => {
     if (address === null || funded.current === address) return;
     funded.current = address;
+    setFunding(true);
     fundAccount(RPC_URL, address)
       .catch(() => {
         // A failed top-up surfaces through the balance read; the button
         // below offers a retry once the network is back.
       })
-      .finally(() => void refresh());
+      .finally(() => {
+        setFunding(false);
+        void refresh();
+      });
   }, [address, refresh]);
+
+  // Funds and reads a freshly connected account before adopting it, so the
+  // connect panel gives way to settled balances instead of placeholders that
+  // fill in one network round trip at a time. On failure the account is
+  // adopted without a portfolio and the poll's read error reports the cause.
+  async function openAccount(wallet: ConnectedWallet): Promise<void> {
+    let portfolio: Portfolio | null = null;
+    const nextAddress = wallet.account.address;
+    if (evm !== null) {
+      funded.current = nextAddress; // the auto-fund effect must not repeat this
+      try {
+        await fundAccount(RPC_URL, nextAddress);
+        portfolio = await readPortfolio(evm, nextAddress);
+      } catch {
+        // Adopt anyway; the account exists even when the network misbehaves.
+      }
+    }
+    adoptAccount({ status: "unlocked", wallet }, portfolio);
+  }
 
   useEffect(() => {
     const tick = window.setInterval(
@@ -359,9 +396,7 @@ function TradingCard({
           <ConnectPanel
             key={connectMode}
             mode={connectMode}
-            onConnected={(wallet) =>
-              adoptAccount({ status: "unlocked", wallet })
-            }
+            onConnected={openAccount}
           />
         ) : (
           <>

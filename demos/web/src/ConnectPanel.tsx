@@ -12,18 +12,27 @@ import {
 
 type ConnectPanelProps = {
   mode: AccountMode;
-  onConnected: (wallet: ConnectedWallet) => void;
+  onConnected: (wallet: ConnectedWallet) => Promise<void>;
+};
+
+// The action a click started, and how far it has come: the passkey ceremony,
+// then the awaited `onConnected`.
+type ConnectBusy = {
+  action: "create" | "signin";
+  phase: "passkey" | "opening";
 };
 
 /**
  * The connect area under the market data. Passkey mode offers explicit
  * create and sign-in actions; new passkeys are created under a fixed default
- * name. Vault mode imports or creates a phrase-backed account. Mount with
- * `key={mode}` so switching modes resets the local state.
+ * name. Vault mode imports or creates a phrase-backed account. The panel
+ * stays busy until `onConnected` settles, so the parent can load the account
+ * before this panel gives way to it. Mount with `key={mode}` so switching
+ * modes resets the local state.
  */
 function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
   const [secret, setSecret] = useState("");
-  const [busy, setBusy] = useState<"create" | "signin" | null>(null);
+  const [busy, setBusy] = useState<ConnectBusy | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const trimmedSecret = secret.trim();
@@ -35,15 +44,24 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
   }
 
   async function run(action: "create" | "signin") {
-    setBusy(action);
+    setBusy({ action, phase: "passkey" });
     setError(null);
     try {
-      onConnected(await connect(mode, action, secret));
+      const wallet = await connect(mode, action, secret);
+      setBusy({ action, phase: "opening" });
+      await onConnected(wallet);
     } catch (caught) {
       setError(describeError(caught));
     } finally {
       setBusy(null);
     }
+  }
+
+  function actionLabel(action: "create" | "signin", idle: string): string {
+    if (busy === null || busy.action !== action) return idle;
+    return busy.phase === "passkey"
+      ? "Waiting for passkey…"
+      : "Opening account…";
   }
 
   if (mode === "vault") {
@@ -87,7 +105,7 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
             onClick={() => void run("create")}
             disabled={busy !== null || !secretValid}
           >
-            {busy === "create" ? "Waiting for passkey…" : "Open account"}
+            {actionLabel("create", "Open account")}
           </button>
           <button
             type="button"
@@ -95,7 +113,7 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
             onClick={() => void run("signin")}
             disabled={busy !== null}
           >
-            {busy === "signin" ? "Waiting for passkey…" : "Sign in"}
+            {actionLabel("signin", "Sign in")}
           </button>
         </div>
         {error && <p className="status error">{error}</p>}
@@ -112,7 +130,7 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
           onClick={() => void run("create")}
           disabled={busy !== null}
         >
-          {busy === "create" ? "Waiting for passkey…" : "Create account"}
+          {actionLabel("create", "Create account")}
         </button>
         <button
           type="button"
@@ -120,7 +138,7 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
           onClick={() => void run("signin")}
           disabled={busy !== null}
         >
-          {busy === "signin" ? "Waiting for passkey…" : "Sign in"}
+          {actionLabel("signin", "Sign in")}
         </button>
       </div>
       {error && <p className="status error">{error}</p>}

@@ -2,6 +2,8 @@
 
 Accounts on any chain and platform, from a passkey.
 
+![The mera web demo in mobile Safari: creating an account with a passkey, then trading on a demo network.](./.github/assets/web-demo.gif)
+
 mera is a TypeScript library for building passkey accounts. It gives applications authenticator-bound entropy and signing sessions that zero their keys when ended, while leaving account derivation, recovery, storage, and product flows under application control.
 
 Developers can use mera to:
@@ -22,8 +24,6 @@ Native applications can reuse passkeys created with mera through the platform's 
 See [authenticator support](https://mera.category.xyz/authenticator-support/) for browser and OS support.
 
 ## Documentation and demos
-
-![The mera web demo in mobile Safari: creating an account with a passkey, then trading on a demo network.](./.github/assets/web-demo.gif)
 
 Installation, guides, compatibility information, the security model, the API reference, and the live demos are on the [mera documentation website](https://mera.category.xyz/). The [passkey PRF model](https://mera.category.xyz/prf-demo/) shows how stable PRF output determines account data.
 

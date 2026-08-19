@@ -77,7 +77,7 @@
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",
-    "@types/node": "24.13.3",
+    "@types/node": "26.2.0",
     "publint": "0.3.23",
     "react-native-passkey": "3.6.1",
     "typescript": "7.0.2",

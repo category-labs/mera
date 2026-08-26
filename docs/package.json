@@ -21,7 +21,7 @@
     "@scure/bip39": "2.3.0",
     "astro": "^7.2.1",
     "expo-crypto": "57.0.1",
-    "expo-modules-core": "57.0.10",
+    "expo-modules-core": "57.0.11",
     "expressive-code": "0.44.1",
     "expressive-code-twoslash": "0.6.1",
     "react-native-passkey": "3.6.1",

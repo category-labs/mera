@@ -4,8 +4,7 @@ A private, disposable network the demo runs against, one Railway service for
 the `evm/` directory. The network holds no real value: state is wiped on
 every restart, and the house stakes accounts with play money on demand.
 
-`evm/` runs anvil from the
-[monad-foundry fork](https://github.com/category-labs/foundry) with
+`evm/` runs anvil from [Foundry](https://getfoundry.sh) with
 `--network monad` behind a guard server (`evm/server.mts`). The guard
 forwards the `eth_*`, `net_*`, and `web3_*` namespaces, refuses anvil's
 cheat methods, and adds three behaviors of its own:

@@ -1,5 +1,5 @@
-# Private EVM network for the demo: anvil from the monad-foundry fork behind
-# a guard server. The guard owns the public port, forwards ordinary JSON-RPC,
+# Private EVM network for the demo: anvil from Foundry behind a guard
+# server. The guard owns the public port, forwards ordinary JSON-RPC,
 # refuses anvil's cheat methods, and funds accounts through demo_fundAccount
 # (see server.mts). State is in memory only; a restart resets every balance,
 # which the demo heals by asking for funds again on the next balance poll.
@@ -7,7 +7,7 @@ FROM node:24-alpine
 
 # The alpine (musl) build must run on an alpine base; the linux build is glibc.
 RUN apk add --no-cache ca-certificates curl \
-  && curl -fsSL https://github.com/category-labs/foundry/releases/download/v1.7.1-monad-v1.0.0/foundry_v1.7.1-monad-v1.0.0_alpine_amd64.tar.gz \
+  && curl -fsSL https://github.com/foundry-rs/foundry/releases/download/v1.8.1/foundry_v1.8.1_alpine_amd64.tar.gz \
     | tar -xz -C /usr/local/bin anvil
 
 COPY server.mts demoStock.mts /srv/

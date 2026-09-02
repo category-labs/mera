@@ -24,7 +24,7 @@
     "react-native-passkey": "3.6.1",
     "react-native-safe-area-context": "~5.8.1",
     "react-native-svg": "15.15.4",
-    "viem": "2.55.13"
+    "viem": "2.55.19"
   },
   "devDependencies": {
     "@types/react": "~19.2.18",

@@ -81,6 +81,6 @@
     "publint": "0.3.23",
     "react-native-passkey": "3.6.1",
     "typescript": "7.0.2",
-    "viem": "2.55.13"
+    "viem": "2.55.19"
   }
 }

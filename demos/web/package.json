@@ -14,7 +14,7 @@
     "@category-labs/mera-demo-shared": "*",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "viem": "2.55.13"
+    "viem": "2.56.3"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

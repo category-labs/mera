@@ -59,9 +59,9 @@
     "test:e2e": "npm test -- --project chromium-e2e"
   },
   "dependencies": {
-    "@noble/curves": "2.3.0",
-    "@noble/hashes": "2.3.0",
-    "@scure/base": "2.3.0"
+    "@noble/curves": "2.4.0",
+    "@noble/hashes": "2.4.0",
+    "@scure/base": "2.4.0"
   },
   "peerDependencies": {
     "react-native-passkey": "3.6.1",
@@ -81,6 +81,6 @@
     "publint": "0.3.23",
     "react-native-passkey": "3.6.1",
     "typescript": "7.0.2",
-    "viem": "2.55.13"
+    "viem": "2.56.3"
   }
 }

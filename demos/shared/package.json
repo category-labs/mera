@@ -24,10 +24,10 @@
   },
   "dependencies": {
     "@category-labs/mera": "*",
-    "@scure/bip32": "^2.3.0",
-    "@scure/bip39": "^2.3.0",
+    "@scure/bip32": "^2.4.0",
+    "@scure/bip39": "^2.4.0",
     "react": "19.2.8",
-    "viem": "2.55.13"
+    "viem": "2.56.3"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",

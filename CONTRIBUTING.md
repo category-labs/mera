@@ -21,7 +21,7 @@ Run the checks relevant to the change:
 ```sh
 npm run check         # repository lint and format checks
 npm test              # library tests
-npm run test:demos    # web, extension, and PRF demos
+npm run test:demos    # web, Vue, extension, and PRF demos
 npm run check:mobile  # mobile typecheck and Android export
 npm run check:docs    # documentation snippets and site build
 npm run check:pack    # package contents, exports, and public types
@@ -37,6 +37,16 @@ npm run build
 npm run dev -w demos/web
 npm run build -w demos/web
 ```
+
+The Vue 3 demo uses the same shared market and account-derivation helpers. It runs independently of the React web demo and writes its build to `demos/vue/dist`:
+
+```sh
+npm run build
+npm run dev -w demos/vue
+npm run build -w demos/vue
+```
+
+Both web demos use the hosted disposable demo network by default. `VITE_EVM_RPC_URL` can point the Vue demo at a local demo network; a regular public RPC does not provide its `demo_market` and `demo_fundAccount` methods. Passkeys are bound to the host where they were created.
 
 The Chrome side-panel demo writes its unpacked extension to `demos/extension/dist`:
 

@@ -16,7 +16,7 @@
     "format": "biome format --write .",
     "lint": "biome lint .",
     "test": "npm test -w library",
-    "test:demos": "npm run build && npm run build -w demos/web && npm test -w demos/extension && npm test -w demos/prf && npm run build -w demos/prf",
+    "test:demos": "npm run build && npm run build -w demos/web && npm run build -w demos/vue && npm test -w demos/extension && npm test -w demos/prf && npm run build -w demos/prf",
     "test:e2e": "npm run test:e2e -w library",
     "build:site": "npm run build && npm run build -w demos/web && npm run build -w demos/prf && npm run build -w docs"
   },

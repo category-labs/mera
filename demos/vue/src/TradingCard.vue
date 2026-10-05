@@ -79,6 +79,7 @@ const account = defineModel<AccountState>("account", { required: true });
 const SIDES: readonly Side[] = ["buy", "sell"];
 
 const connectMode = ref<AccountMode>("passkey");
+const connecting = ref(false);
 
 const portfolio = shallowRef<Portfolio | null>(null);
 const readError = ref<string | null>(null);
@@ -114,6 +115,9 @@ function adoptAccount(
 ): void {
   readGeneration += 1;
   account.value = next;
+  // The connect panel unmounts on adoption, and Vue drops the busyChange
+  // it emits after that, so the flag is cleared here.
+  connecting.value = false;
   portfolio.value = nextPortfolio;
   amount.value = "";
   sellAll.value = false;
@@ -311,10 +315,11 @@ function chooseSide(next: Side): void {
   tradeError.value = null;
 }
 
-function onAmountInput(event: Event): void {
-  amount.value = (event.target as HTMLInputElement).value;
+// Typing retires the sell-all intent and the last fill shown under the
+// estimate. Max sets the amount from code, which fires no input event, so its
+// sell-all intent survives.
+function onAmountInput(): void {
   sellAll.value = false;
-  // A new amount retires the last fill for the estimate.
   fill.value = null;
 }
 
@@ -473,6 +478,7 @@ function signOut(): void {
         :key="connectMode"
         :mode="connectMode"
         :on-connected="openAccount"
+        @busy-change="connecting = $event"
       />
       <template v-else>
         <div class="holdings">
@@ -525,7 +531,7 @@ function signOut(): void {
               </span>
               <input
                 id="trade-amount"
-                :value="amount"
+                v-model="amount"
                 placeholder="100.00"
                 inputmode="decimal"
                 spellcheck="false"
@@ -591,6 +597,7 @@ function signOut(): void {
         v-if="account.status === 'none'"
         type="button"
         class="mode-switch"
+        :disabled="connecting"
         @click="connectMode = connectMode === 'passkey' ? 'vault' : 'passkey'"
       >
         {{

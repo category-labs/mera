@@ -26,8 +26,13 @@
   cursor: pointer;
 }
 
-.mode-switch:hover {
+.mode-switch:hover:not(:disabled) {
   color: var(--accent);
+}
+
+.mode-switch:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .framework-badge {

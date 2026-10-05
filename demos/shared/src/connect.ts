@@ -62,9 +62,10 @@ function passkeyLabel(): string {
 }
 
 /**
- * Derives the demo's account (HD index 0) from a BIP-39 seed. The signing
- * session keeps its own copy of the key, so the seed and the derived key are
- * both zeroed before this returns or throws.
+ * Derives the demo's account (HD index 0) from a BIP-39 seed. The seed and
+ * the key copy the derivation hands back are zeroed before this returns or
+ * throws. The signing session keeps its own copy, and the HD key objects keep
+ * theirs until garbage collection.
  */
 function accountFromSeed(seed: Uint8Array): Account {
   let privateKey: Uint8Array | undefined;

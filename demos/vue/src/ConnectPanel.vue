@@ -33,6 +33,14 @@ const props = defineProps<{
   onConnected: (wallet: ConnectedWallet) => Promise<void>;
 }>();
 
+const emit = defineEmits<{
+  /**
+   * True from the click until the attempt settles. A mode switch meanwhile
+   * would mount a second panel whose connect could race this one.
+   */
+  busyChange: [busy: boolean];
+}>();
+
 const secret = ref("");
 const busy = ref<ConnectBusy | null>(null);
 const error = ref<string | null>(null);
@@ -48,6 +56,7 @@ function generate(): void {
 async function run(action: ConnectAction): Promise<void> {
   busy.value = { action, phase: "passkey" };
   error.value = null;
+  emit("busyChange", true);
   try {
     const wallet = await connect(props.mode, action, secret.value);
     busy.value = { action, phase: "opening" };
@@ -56,6 +65,7 @@ async function run(action: ConnectAction): Promise<void> {
     error.value = describeError(caught);
   } finally {
     busy.value = null;
+    emit("busyChange", false);
   }
 }
 

@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import {
-  createMnemonic,
-  isValidMnemonic,
-} from "@category-labs/mera-demo-shared/hd";
-import { computed, onBeforeUnmount, ref } from "vue";
-import {
   type AccountMode,
   type ConnectedWallet,
   connect,
   describeError,
-} from "./connect";
+} from "@category-labs/mera-demo-shared/connect";
+import {
+  createMnemonic,
+  isValidMnemonic,
+} from "@category-labs/mera-demo-shared/hd";
+import { computed, ref } from "vue";
 
 type ConnectAction = "create" | "signin";
 
@@ -33,11 +33,6 @@ const props = defineProps<{
   onConnected: (wallet: ConnectedWallet) => Promise<void>;
 }>();
 
-const emit = defineEmits<{
-  /** True from the click until the action settles, for disabling mode switching. */
-  busyChange: [busy: boolean];
-}>();
-
 const secret = ref("");
 const busy = ref<ConnectBusy | null>(null);
 const error = ref<string | null>(null);
@@ -45,36 +40,22 @@ const error = ref<string | null>(null);
 const trimmedSecret = computed(() => secret.value.trim());
 const secretValid = computed(() => isValidMnemonic(trimmedSecret.value));
 
-// A ceremony in flight when the panel unmounts (mode switch, parent teardown)
-// must not hand its wallet to a parent that no longer expects one.
-let disposed = false;
-onBeforeUnmount(() => {
-  disposed = true;
-});
-
-function generate() {
+function generate(): void {
   secret.value = createMnemonic();
   error.value = null;
 }
 
-async function run(action: ConnectAction) {
+async function run(action: ConnectAction): Promise<void> {
   busy.value = { action, phase: "passkey" };
   error.value = null;
-  emit("busyChange", true);
   try {
     const wallet = await connect(props.mode, action, secret.value);
-    if (disposed) {
-      // Nobody will adopt this wallet; zero its signing key now.
-      wallet.lock();
-      return;
-    }
     busy.value = { action, phase: "opening" };
     await props.onConnected(wallet);
   } catch (caught) {
-    if (!disposed) error.value = describeError(caught);
+    error.value = describeError(caught);
   } finally {
     busy.value = null;
-    if (!disposed) emit("busyChange", false);
   }
 }
 
@@ -87,73 +68,54 @@ function actionLabel(action: ConnectAction, idle: string): string {
 </script>
 
 <template>
-  <div v-if="mode === 'vault'" class="connect-cta">
-    <p class="hint">
-      The demo encrypts a recovery phrase in a vault that opens with the
-      passkey. Generate a fresh one rather than importing a phrase that holds
-      funds.
-    </p>
-    <label class="field">
-      <span class="field-head">
-        Recovery phrase
-        <button
-          type="button"
-          class="link small"
+  <div class="connect-cta">
+    <template v-if="mode === 'vault'">
+      <p class="hint">
+        The demo encrypts a recovery phrase in a vault that opens with the
+        passkey. Generate a fresh one rather than importing a phrase that holds
+        funds.
+      </p>
+      <div class="field">
+        <span class="field-head">
+          <label for="recovery-phrase">Recovery phrase</label>
+          <button
+            type="button"
+            class="link small"
+            :disabled="busy !== null"
+            @click="generate"
+          >
+            Generate
+          </button>
+        </span>
+        <input
+          id="recovery-phrase"
+          v-model="secret"
+          placeholder="Generate a recovery phrase, or paste one from a wallet app"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
           :disabled="busy !== null"
-          @click="generate"
-        >
-          Generate
-        </button>
-      </span>
-      <input
-        v-model="secret"
-        placeholder="Generate a recovery phrase, or paste one from a wallet app"
-        autocomplete="off"
-        autocorrect="off"
-        autocapitalize="off"
-        spellcheck="false"
-        :disabled="busy !== null"
-      />
-    </label>
-    <p v-if="trimmedSecret.length > 0 && !secretValid" class="status error">
-      That is not a valid recovery phrase.
-    </p>
+        />
+      </div>
+      <p v-if="trimmedSecret.length > 0 && !secretValid" class="status error">
+        That is not a valid recovery phrase.
+      </p>
+    </template>
     <div class="actions">
       <button
         type="button"
         class="btn primary"
-        :disabled="busy !== null || !secretValid"
-        @click="void run('create')"
+        :disabled="busy !== null || (mode === 'vault' && !secretValid)"
+        @click="run('create')"
       >
-        {{ actionLabel("create", "Open account") }}
+        {{ actionLabel("create", mode === "vault" ? "Open account" : "Create account") }}
       </button>
       <button
         type="button"
         class="btn"
         :disabled="busy !== null"
-        @click="void run('signin')"
-      >
-        {{ actionLabel("signin", "Sign in") }}
-      </button>
-    </div>
-    <p v-if="error" class="status error">{{ error }}</p>
-  </div>
-
-  <div v-else class="connect-cta">
-    <div class="actions">
-      <button
-        type="button"
-        class="btn primary"
-        :disabled="busy !== null"
-        @click="void run('create')"
-      >
-        {{ actionLabel("create", "Create account") }}
-      </button>
-      <button
-        type="button"
-        class="btn"
-        :disabled="busy !== null"
-        @click="void run('signin')"
+        @click="run('signin')"
       >
         {{ actionLabel("signin", "Sign in") }}
       </button>

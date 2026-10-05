@@ -1,14 +1,14 @@
 import {
-  createMnemonic,
-  isValidMnemonic,
-} from "@category-labs/mera-demo-shared/hd";
-import { type ReactElement, useState } from "react";
-import {
   type AccountMode,
   type ConnectedWallet,
   connect,
   describeError,
-} from "./connect";
+} from "@category-labs/mera-demo-shared/connect";
+import {
+  createMnemonic,
+  isValidMnemonic,
+} from "@category-labs/mera-demo-shared/hd";
+import { type ReactElement, useState } from "react";
 
 type ConnectPanelProps = {
   mode: AccountMode;

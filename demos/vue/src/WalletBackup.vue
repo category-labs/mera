@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useCopyButton } from "./shared/useCopyButton";
+import { useCopyButton } from "./useCopyButton";
 
 /**
  * Recovery-phrase display, shown in place of the account card.
  *
- * The phrase is held only by the caller's state while shown. `hide`, or
- * unmounting on lock, drops it. JS strings cannot be zeroed, so this is the
- * tightest lifetime achievable. Fresh user verification gates access while the
- * phrase is hidden.
+ * The phrase is held only by the caller's state while shown, and `hide`
+ * drops it. JS strings cannot be zeroed, so this is the tightest lifetime
+ * achievable. Fresh user verification gates access while the phrase is
+ * hidden.
  */
 const props = defineProps<{
   /** The revealed recovery phrase to display (12 or 24 words). */
@@ -46,7 +46,7 @@ const words = computed(() =>
         <span class="mono">{{ word }}</span>
       </li>
     </ol>
-    <button type="button" class="btn" @click="void copy(phrase)">
+    <button type="button" class="btn" @click="copy(phrase)">
       {{ copied ? "Copied" : "Copy phrase" }}
     </button>
   </section>

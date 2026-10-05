@@ -11,14 +11,14 @@ import {
   parseSecretVault,
   type Secp256k1SigningSession,
 } from "@category-labs/mera";
+import { BaseError as ViemError } from "viem";
+import { saveCachedAccount } from "./account";
 import {
   deriveEvmPrivateKey,
   isValidMnemonic,
   mnemonicToSeed,
   prfOutputToMnemonic,
-} from "@category-labs/mera-demo-shared/hd";
-import { BaseError as ViemError } from "viem";
-import { saveCachedAccount } from "./account";
+} from "./hd";
 import { rememberPasskeyWallet } from "./passkeyWallet";
 
 type AccountMode = "vault" | "passkey";
@@ -62,16 +62,18 @@ function passkeyLabel(): string {
 }
 
 /**
- * Derives the demo's account (HD index 0) from a BIP-39 seed and zeroes the
- * seed, so no caller retains it past the derivation.
+ * Derives the demo's account (HD index 0) from a BIP-39 seed. The signing
+ * session keeps its own copy of the key, so the seed and the derived key are
+ * both zeroed before this returns or throws.
  */
 function accountFromSeed(seed: Uint8Array): Account {
+  let privateKey: Uint8Array | undefined;
   try {
-    const session = createSecp256k1SigningSession({
-      privateKey: deriveEvmPrivateKey(seed, 0),
-    });
+    privateKey = deriveEvmPrivateKey(seed, 0);
+    const session = createSecp256k1SigningSession({ privateKey });
     return { session, address: getEvmAddress(session.publicKey) };
   } finally {
+    privateKey?.fill(0);
     seed.fill(0);
   }
 }
@@ -82,23 +84,27 @@ function accountFromSeed(seed: Uint8Array): Account {
  * Builds a passkey-mode wallet from a single PRF output.
  *
  * PRF output -> BIP-39 mnemonic -> seed -> account key; the PRF output and
- * the seed are zeroed before this returns. The mnemonic string is transient
- * and re-derivable from a fresh ceremony, which is how the export flow shows
- * it again.
+ * the seed are zeroed before this returns or throws. The mnemonic string is
+ * transient and re-derivable from a fresh ceremony, which is how the export
+ * flow shows it again.
  */
 function buildPasskeyWallet(
   prfOutput: Uint8Array,
   credential: PasskeyCredentialMetadata,
 ): ConnectedWallet {
-  const seed = mnemonicToSeed(prfOutputToMnemonic(prfOutput));
-  prfOutput.fill(0);
-  const account = accountFromSeed(seed);
-  return {
-    mode: "passkey",
-    credential,
-    account,
-    lock: () => account.session.end(),
-  };
+  try {
+    const account = accountFromSeed(
+      mnemonicToSeed(prfOutputToMnemonic(prfOutput)),
+    );
+    return {
+      mode: "passkey",
+      credential,
+      account,
+      lock: () => account.session.end(),
+    };
+  } finally {
+    prfOutput.fill(0);
+  }
 }
 
 async function createPasskeyWallet(): Promise<ConnectedWallet> {
@@ -106,27 +112,18 @@ async function createPasskeyWallet(): Promise<ConnectedWallet> {
     rp: { id: rpId, name: RP_NAME },
     user: { name: DEFAULT_USER, displayName: passkeyLabel() },
   });
-  const credential: PasskeyCredentialMetadata = {
+  return buildPasskeyWallet(created.prfOutput, {
     credentialId: created.credentialId,
     ...(created.transports !== undefined
       ? { transports: created.transports }
       : {}),
-  };
-
-  rememberPasskeyWallet(credential);
-
-  return buildPasskeyWallet(created.prfOutput, credential);
+  });
 }
 
 async function openPasskeyWallet(): Promise<ConnectedWallet> {
   // Omit `credential` so the platform can offer any synced passkey.
   const { prfOutput, credentialId } = await getPasskeyPrfOutput({ rpId });
-  const credential = { credentialId };
-
-  // Pin the selected credential for recovery-phrase reveal.
-  rememberPasskeyWallet(credential);
-
-  return buildPasskeyWallet(prfOutput, credential);
+  return buildPasskeyWallet(prfOutput, { credentialId });
 }
 
 // ----- Vault mode: one passkey encrypts one seed phrase the account derives from
@@ -195,7 +192,9 @@ function vaultWalletFromPhrase(phrase: string): ConnectedWallet {
 
 /**
  * Connects a wallet for the chosen mode and action with one passkey ceremony,
- * and caches the resulting account's public identity for the next page load.
+ * then stores the account's public identity for the next page load and, in
+ * passkey mode, the credential a recovery-phrase reveal asks for. When storing
+ * fails, the wallet is locked before the error propagates.
  *
  * `secret` is the recovery phrase a vault-backed account is created from; every
  * other path (passkey, or signing back into an existing secret vault) ignores
@@ -218,8 +217,16 @@ async function connect(
         ? await createPasskeyWallet()
         : await openPasskeyWallet();
   }
-  saveCachedAccount({ mode, address: wallet.account.address });
-  return wallet;
+  try {
+    if (wallet.credential !== undefined) {
+      rememberPasskeyWallet(wallet.credential);
+    }
+    saveCachedAccount({ mode, address: wallet.account.address });
+    return wallet;
+  } catch (error) {
+    wallet.lock();
+    throw error;
+  }
 }
 
 /**

@@ -24,11 +24,11 @@ const { copied, copy } = useCopyButton();
       type="button"
       class="chip-address mono"
       :title="address"
-      @click="void copy(address)"
+      @click="copy(address)"
     >
       {{ copied ? "Copied" : truncateAddress(address) }}
     </button>
-    <span :class="connected ? 'chip-network connected' : 'chip-network'">
+    <span class="chip-network" :class="{ connected }">
       {{ NETWORK_NAME }}
     </span>
   </div>

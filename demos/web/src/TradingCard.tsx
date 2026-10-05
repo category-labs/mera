@@ -119,6 +119,7 @@ function TradingCard({
     setFill(null);
     setTradeError(null);
     setReadError(null);
+    setBackupError(null);
   }
 
   // Cash invested in the open position; localStorage so P&L survives reloads.

@@ -29,7 +29,7 @@ Installation instructions, guides, compatibility details, the security model, AP
 ## Repository
 
 - [`library/`](./library/) contains the published package and its tests.
-- [`demos/`](./demos/) includes web, Chrome extension, and mobile demos, as well as a model illustrating how a passkey determines account data.
+- [`demos/`](./demos/) includes web (React and Vue), Chrome extension, and mobile demos, as well as a model illustrating how a passkey determines account data.
 - [`docs/`](./docs/) contains the documentation website.
 
 ## Status

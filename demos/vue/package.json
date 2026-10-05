@@ -1,0 +1,22 @@
+{
+  "name": "@category-labs/mera-demo-vue",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc"
+  },
+  "dependencies": {
+    "@category-labs/mera-demo-shared": "*",
+    "vue": "3.5.43"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.9",
+    "typescript": "5.9.3",
+    "vite": "^8.3.2",
+    "vue-tsc": "^3.3.12"
+  }
+}

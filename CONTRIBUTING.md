@@ -21,7 +21,7 @@ Run the checks relevant to the change:
 ```sh
 npm run check         # repository lint and format checks
 npm test              # library tests
-npm run test:demos    # web, extension, and PRF demos
+npm run test:demos    # web, Vue, extension, and PRF demos
 npm run check:mobile  # mobile typecheck and Android export
 npm run check:docs    # documentation snippets and site build
 npm run check:pack    # package contents, exports, and public types
@@ -36,6 +36,14 @@ Workspace commands run from the repository root. The web demo compiles against t
 npm run build
 npm run dev -w demos/web
 npm run build -w demos/web
+```
+
+The Vue version of the web demo writes to `demos/vue/dist`:
+
+```sh
+npm run build
+npm run dev -w demos/vue
+npm run build -w demos/vue
 ```
 
 The Chrome side-panel demo writes its unpacked extension to `demos/extension/dist`:

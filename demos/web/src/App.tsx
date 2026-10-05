@@ -1,16 +1,16 @@
 import { AccountChip } from "@category-labs/mera-demo-shared/AccountChip";
 import {
+  type AccountState,
+  accountAddress,
+  loadCachedAccount,
+} from "@category-labs/mera-demo-shared/account";
+import { describeError } from "@category-labs/mera-demo-shared/connect";
+import {
   type EvmContext,
   resolveEvmContext,
 } from "@category-labs/mera-demo-shared/network";
 import { type ReactElement, useEffect, useState } from "react";
-import {
-  type AccountState,
-  accountAddress,
-  loadCachedAccount,
-} from "./account";
 import { RPC_URL } from "./config";
-import { describeError } from "./connect";
 import { TradingCard } from "./TradingCard";
 
 const RESOLVE_RETRY_MS = 5_000;

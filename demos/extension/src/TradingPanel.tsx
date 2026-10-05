@@ -666,9 +666,9 @@ function TradingPanel({
               }}
             >
               <div className="send-row">
-                <label className="field grow">
+                <div className="field grow">
                   <span className="field-head">
-                    Amount ({CASH_SYMBOL})
+                    <label htmlFor="trade-amount">Amount ({CASH_SYMBOL})</label>
                     <button
                       type="button"
                       className="link small"
@@ -679,6 +679,7 @@ function TradingPanel({
                     </button>
                   </span>
                   <input
+                    id="trade-amount"
                     value={amount}
                     inputMode="decimal"
                     placeholder="100.00"
@@ -688,7 +689,7 @@ function TradingPanel({
                       setSellAll(false);
                     }}
                   />
-                </label>
+                </div>
                 <button
                   className="btn primary send-btn"
                   type="submit"

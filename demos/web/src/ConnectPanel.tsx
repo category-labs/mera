@@ -72,9 +72,9 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
           passkey. Generate a fresh one rather than importing a phrase that
           holds funds.
         </p>
-        <label className="field">
+        <div className="field">
           <span className="field-head">
-            Recovery phrase
+            <label htmlFor="recovery-phrase">Recovery phrase</label>
             <button
               type="button"
               className="link small"
@@ -85,6 +85,7 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
             </button>
           </span>
           <input
+            id="recovery-phrase"
             value={secret}
             placeholder="Generate a recovery phrase, or paste one from a wallet app"
             autoComplete="off"
@@ -94,7 +95,7 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
             onChange={(event) => setSecret(event.target.value)}
             disabled={busy !== null}
           />
-        </label>
+        </div>
         {trimmedSecret.length > 0 && !secretValid && (
           <p className="status error">That is not a valid recovery phrase.</p>
         )}

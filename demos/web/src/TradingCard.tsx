@@ -459,9 +459,9 @@ function TradingCard({
               }}
             >
               <div className="send-row">
-                <label className="field grow">
+                <div className="field grow">
                   <span className="field-head">
-                    Amount ({CASH_SYMBOL})
+                    <label htmlFor="trade-amount">Amount ({CASH_SYMBOL})</label>
                     <button
                       type="button"
                       className="link small"
@@ -472,6 +472,7 @@ function TradingCard({
                     </button>
                   </span>
                   <input
+                    id="trade-amount"
                     value={amount}
                     placeholder="100.00"
                     inputMode="decimal"
@@ -484,7 +485,7 @@ function TradingCard({
                     }}
                     disabled={busy}
                   />
-                </label>
+                </div>
                 <button
                   type="submit"
                   className="btn primary send-btn"

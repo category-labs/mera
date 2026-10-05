@@ -2,7 +2,7 @@ import {
   createMnemonic,
   isValidMnemonic,
 } from "@category-labs/mera-demo-shared/hd";
-import { type ReactElement, useState } from "react";
+import { type ReactElement, useRef, useState } from "react";
 import {
   type AccountMode,
   type ConnectedWallet,
@@ -34,12 +34,18 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
   const [secret, setSecret] = useState("");
   const [busy, setBusy] = useState<ConnectBusy | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // The phrase input is uncontrolled: React copies a controlled input's value
+  // into its `value` attribute, which would put the phrase in the page's HTML,
+  // where CSS attribute selectors and DOM snapshots can read it.
+  const secretInput = useRef<HTMLInputElement>(null);
 
   const trimmedSecret = secret.trim();
   const secretValid = isValidMnemonic(trimmedSecret);
 
   function generate() {
-    setSecret(createMnemonic());
+    const phrase = createMnemonic();
+    if (secretInput.current) secretInput.current.value = phrase;
+    setSecret(phrase);
     setError(null);
   }
 
@@ -86,7 +92,7 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
           </span>
           <input
             id="recovery-phrase"
-            value={secret}
+            ref={secretInput}
             placeholder="Generate a recovery phrase, or paste one from a wallet app"
             autoComplete="off"
             autoCorrect="off"

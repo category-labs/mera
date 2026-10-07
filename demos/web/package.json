@@ -12,13 +12,13 @@
   "dependencies": {
     "@category-labs/mera": "*",
     "@category-labs/mera-demo-shared": "*",
-    "react": "19.2.8",
+    "react": "19.3.0",
     "react-dom": "19.2.8",
     "viem": "2.57.3"
   },
   "devDependencies": {
     "@types/node": "^24.19.1",
-    "@types/react": "~19.2.18",
+    "@types/react": "~19.3.0",
     "@types/react-dom": "~19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
     "typescript": "^7.0.2",

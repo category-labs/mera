@@ -26,11 +26,11 @@
     "@category-labs/mera": "*",
     "@scure/bip32": "^2.4.0",
     "@scure/bip39": "^2.4.0",
-    "react": "19.2.8",
+    "react": "19.3.0",
     "viem": "2.57.3"
   },
   "devDependencies": {
-    "@types/react": "~19.2.18",
+    "@types/react": "~19.3.0",
     "typescript": "^7.0.2"
   }
 }

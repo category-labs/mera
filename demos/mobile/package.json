@@ -19,7 +19,7 @@
     "expo-constants": "~57.0.20",
     "expo-crypto": "~57.0.3",
     "expo-secure-store": "~57.0.4",
-    "react": "19.2.8",
+    "react": "19.3.0",
     "react-native": "0.86.3",
     "react-native-passkey": "3.6.2",
     "react-native-safe-area-context": "~5.10.1",
@@ -27,7 +27,7 @@
     "viem": "2.57.3"
   },
   "devDependencies": {
-    "@types/react": "~19.2.18",
+    "@types/react": "~19.3.0",
     "typescript": "~6.0.3"
   }
 }

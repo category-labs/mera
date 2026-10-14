@@ -80,7 +80,10 @@ Serve this JSON from `https://account.example.com/.well-known/assetlinks.json`:
 ```json
 [
   {
-    "relation": ["delegate_permission/common.get_login_creds"],
+    "relation": [
+      "delegate_permission/common.get_login_creds",
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.example.app",
@@ -96,7 +99,7 @@ Replace the package name and fingerprint with those of the Android app. Include 
 keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android
 ```
 
-Both files must be public over HTTPS and return JSON without a redirect.
+Both files must be public over HTTPS and return JSON without a redirect. Android passkey creation fails with "RP ID cannot be validated" unless the Android file lists both relations. Google caches the file for up to an hour, so a change can take that long to reach a device.
 
 ## Use the React Native WebAuthn client
 

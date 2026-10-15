@@ -26,8 +26,8 @@
     "@category-labs/mera": "*",
     "@scure/bip32": "^2.4.0",
     "@scure/bip39": "^2.4.0",
-    "react": "19.2.8",
-    "viem": "2.57.3"
+    "react": "19.2.9",
+    "viem": "2.57.7"
   },
   "devDependencies": {
     "@types/react": "~19.2.18",

@@ -7,7 +7,7 @@ FROM node:24-alpine
 
 # The alpine (musl) build must run on an alpine base; the linux build is glibc.
 RUN apk add --no-cache ca-certificates curl \
-  && curl -fsSL https://github.com/foundry-rs/foundry/releases/download/v1.8.1/foundry_v1.8.1_alpine_amd64.tar.gz \
+  && curl -fsSL https://github.com/foundry-rs/foundry/releases/download/v1.8.5/foundry_v1.8.5_alpine_amd64.tar.gz \
     | tar -xz -C /usr/local/bin anvil
 
 COPY server.mts demoStock.mts /srv/

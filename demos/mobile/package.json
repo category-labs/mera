@@ -14,20 +14,20 @@
     "@category-labs/mera": "*",
     "@category-labs/mera-demo-shared": "*",
     "@scure/base": "^2.4.0",
-    "expo": "~57.0.26",
+    "expo": "~57.0.30",
     "expo-clipboard": "~57.0.2",
-    "expo-constants": "~57.0.20",
-    "expo-crypto": "~57.0.3",
+    "expo-constants": "~57.0.22",
+    "expo-crypto": "~57.0.4",
     "expo-secure-store": "~57.0.4",
-    "react": "19.2.8",
+    "react": "19.2.9",
     "react-native": "0.86.3",
     "react-native-passkey": "3.6.2",
     "react-native-safe-area-context": "~5.10.1",
     "react-native-svg": "15.15.5",
-    "viem": "2.57.3"
+    "viem": "2.57.7"
   },
   "devDependencies": {
     "@types/react": "~19.2.18",
-    "typescript": "~6.0.3"
+    "typescript": "~7.0.2"
   }
 }

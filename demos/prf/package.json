@@ -18,9 +18,9 @@
     "@scure/bip39": "^2.4.0"
   },
   "devDependencies": {
-    "@types/node": "^24.19.1",
+    "@types/node": "^24.19.2",
     "typescript": "^7.0.2",
-    "vite": "^8.3.2",
-    "vitest": "^4.1.11"
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
   }
 }

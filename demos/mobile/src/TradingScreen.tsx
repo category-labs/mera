@@ -158,17 +158,6 @@ function TradingScreen({
     saveCostBasis(address, next).catch(() => undefined);
   }
 
-  // A network restart wipes the chain, and with it the position; a basis
-  // left behind would report a loss on shares that no longer exist. Skip the
-  // reset while a trade is in flight: right after a buy mines, the basis is
-  // already updated while `portfolio` still shows the pre-trade zero shares.
-  useEffect(() => {
-    if (!busy && address !== null && portfolio?.shares === 0n && basis !== 0n) {
-      setBasis(0n);
-      saveCostBasis(address, 0n).catch(() => undefined);
-    }
-  }, [busy, portfolio, basis, address]);
-
   const refresh = useCallback(async () => {
     setNow(Math.floor(Date.now() / 1000));
     if (evm === null || address === null) return;
@@ -178,6 +167,12 @@ function TradingScreen({
       if (generation !== readGeneration.current) return;
       setPortfolio(read);
       setReadError(null);
+      // A fresh zero balance confirms the position was sold or the network
+      // restarted. A cached zero balance cannot reconcile a newer trade.
+      if (read.shares === 0n) {
+        setBasis(0n);
+        saveCostBasis(address, 0n).catch(() => undefined);
+      }
     } catch (caught) {
       if (generation !== readGeneration.current) return;
       setReadError(describeError(caught));
@@ -245,7 +240,7 @@ function TradingScreen({
   const covered =
     portfolio !== null &&
     amountWei !== null &&
-    coversTrade({ side, amountWei, price, portfolio });
+    coversTrade({ side, amountWei, price, portfolio, sellAll });
   const canTrade = covered && !busy;
 
   const estimatedShares =
@@ -361,6 +356,8 @@ function TradingScreen({
       }
       setAmount("");
       setSellAll(false);
+      // Balances stay unavailable until a post-trade read succeeds.
+      setPortfolio(null);
       await refresh();
     } catch (caught) {
       setTradeError(describeError(caught));

@@ -210,6 +210,12 @@ function TradingPanel({
       const read = await readPortfolio(evm, address);
       if (generation !== readGeneration.current) return;
       setPortfolio(read);
+      // A fresh zero balance confirms the position was sold or the network
+      // restarted. A cached zero balance cannot reconcile a newer trade.
+      if (read.shares === 0n) {
+        setBasis(0n);
+        saveCostBasis(address, 0n);
+      }
     } catch (caught) {
       if (generation !== readGeneration.current) return;
       throw caught;
@@ -268,13 +274,6 @@ function TradingPanel({
   }, [address, evm, refresh, reportError]);
 
   useEffect(() => {
-    if (!busy && address !== null && portfolio?.shares === 0n && basis !== 0n) {
-      setBasis(0n);
-      saveCostBasis(address, 0n);
-    }
-  }, [address, basis, busy, portfolio]);
-
-  useEffect(() => {
     if (phrase === null) return;
     const timer = window.setTimeout(hideRecovery, RECOVERY_VISIBLE_MS);
     return () => window.clearTimeout(timer);
@@ -295,7 +294,7 @@ function TradingPanel({
   const covered =
     amountWei !== null &&
     portfolio !== null &&
-    coversTrade({ side, amountWei, price, portfolio });
+    coversTrade({ side, amountWei, price, portfolio, sellAll });
 
   function fillMax(): void {
     if (portfolio === null) return;
@@ -428,6 +427,8 @@ function TradingPanel({
       }
       setAmount("");
       setSellAll(false);
+      // Balances stay unavailable until a post-trade read succeeds.
+      setPortfolio(null);
       await refresh();
     } catch (caught) {
       if (!operationIsCurrent(epoch, viaTab)) {

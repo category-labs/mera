@@ -254,20 +254,26 @@ function maxTradeInput({
  * reserve behind. Sells cannot exceed the position (with a cent of slack for
  * price movement between render and submit), must round to at least one
  * share-wei at the current price, and still need the reserve for the trade's
- * network fee.
+ * network fee. Max sells validate the held shares directly, independent of
+ * the input's cash value and quote rounding.
  */
 function coversTrade({
   side,
   amountWei,
   price,
   portfolio,
+  sellAll = false,
 }: {
   side: Side;
   amountWei: bigint;
   price: bigint;
   portfolio: Portfolio;
+  sellAll?: boolean;
 }): boolean {
   if (side === "buy") return amountWei + FEE_RESERVE_WEI <= portfolio.cash;
+  if (sellAll) {
+    return portfolio.shares > 0n && portfolio.cash >= FEE_RESERVE_WEI;
+  }
   const positionValue = (portfolio.shares * price) / UNIT;
   return (
     positionValue > 0n &&

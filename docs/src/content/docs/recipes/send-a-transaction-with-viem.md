@@ -3,7 +3,7 @@ title: Send a transaction with viem
 description: Send an EVM transaction from a passkey account with viem.
 ---
 
-mera exports an adapter function [toViemAccount](/reference/to-viem-account/) that adapts a [signing session](/concepts/signing-sessions/) into the account shape [viem](https://viem.sh) accepts, so viem signs and broadcasts while the key is owned by the session.
+[toViemAccount](/reference/to-viem-account/) adapts a [signing session](/concepts/signing-sessions/) into the account shape [viem](https://viem.sh) accepts, so viem signs and broadcasts while the session owns the key.
 
 ## Sign in
 

@@ -1,21 +1,17 @@
 ---
 title: Use mera with Chrome extensions
-description: Integration options for mera in Chrome extensions
+description: Choose the relying party ID and the page that runs passkey ceremonies in a Chrome extension.
 ---
 
-There are a few integration options for mera for Chrome extensions, each with its own trade-offs.
+A Chrome extension runs mera on its own pages. Two choices shape the integration: the relying party ID the passkeys belong to, and the page that runs the WebAuthn ceremony.
 
-## Integration options
+## Choose the relying party ID
 
-### The relying party ID
+An extension can use its own extension ID or the host of a website, such as `account.example.com`.
 
-The relying party ID decides who the passkeys belong to. For an extension, there are two options:
-- extension ID
-- host URL (e.g., a website such as account.example.com)
+With the **extension ID**, the passkeys work only inside the extension; a website or a mobile app cannot use them. The ID must also never change.
 
-With the **extension ID**, the passkey can only be used inside the extension. A website or a mobile app won't be able to reuse them. The ID must also never change.
-
-With a **URL**, the same passkeys work on the website and in the extension. Chrome 122+ lets the extension use them when the manifest lists that exact host:
+With a **host**, the same passkeys work on the website and in the extension. Chrome 122 and later let the extension use them when the manifest lists that exact host:
 
 ```json
 {
@@ -24,13 +20,13 @@ With a **URL**, the same passkeys work on the website and in the extension. Chro
 }
 ```
 
-### Running the WebAuthn ceremony
+## Choose where the ceremony runs
 
-The ceremony can run on an extension page or on the relying party website page.
+The ceremony runs on an extension page or on a page of the relying party's website.
 
-On an extension page, Chrome shows its own passkey prompt. Password managers that watch websites and intercept WebAuthn requests, such as 1Password, do not see prompts on extension pages, so the requests are handled by Chrome's own prompt, which may not allow routing to arbitrary authenticators. At the moment of writing, it only allowed authenticating with Chrome's built-in password manager or Apple Passwords (Platform's manager) and didn't allow routing to a browser extension. 
+On an extension page, Chrome shows its own passkey prompt. Password managers that intercept WebAuthn requests on websites, such as 1Password, never see it. As of 2026-08, the prompt offered only Chrome's built-in password manager and Apple Passwords. In the side panel, it often does not appear at all, and the request hangs.
 
-On the website, the extension opens a page. The page runs the ceremony and sends the [PRF output](/concepts/passkeys-and-prf/) back with `postMessage`. This way 3rd-party password managers like 1Password can intercept the request. The trade-off is that the host must serve that page and that the PRF output crosses a message channel, so both ends must pin who they talk to. The extension must accept a message only from the website origin, and only from the window it opened:
+On the website, the extension opens a page that runs the ceremony and sends the [PRF output](/concepts/passkeys-and-prf/) back with `postMessage`, so the password managers that intercept WebAuthn can answer. The host must serve that page, and the PRF output crosses a message channel, so both ends pin who they talk to. The extension accepts a message only from the website's origin, and only from the window it opened:
 
 ```ts
 const passkeyWindow = window.open("https://account.example.com/passkey");
@@ -41,7 +37,7 @@ window.addEventListener("message", (event) => {
 });
 ```
 
-The page must post only to the extension's origin, with the extension ID as a fixed string:
+The page posts only to the extension's origin, with the extension ID as a fixed string:
 
 ```ts
 declare const prfOutput: Uint8Array;
@@ -49,12 +45,9 @@ declare const prfOutput: Uint8Array;
 window.opener.postMessage(prfOutput, "chrome-extension://EXTENSION_ID");
 ```
 
-### Notes
-- When running a WebAuthn ceremony in the extension side panel, it often shows no prompt at all, and the request hangs.
+## The demo
 
-## Check out the demo
-
-The [Chrome extension demo](https://github.com/category-labs/mera/tree/main/demos/extension) binds passkeys to `mera.category.xyz`. It opens a page on that host and receives the PRF output with `postMessage`. A `key` in the demo manifest fixes the extension ID, and the page posts only to that ID.
+The [Chrome extension demo](https://github.com/category-labs/mera/tree/main/demos/extension) binds passkeys to `mera.category.xyz`. From the side panel, it opens a page on that host and receives the PRF output with `postMessage`. A `key` in the demo manifest fixes the extension ID, and the page posts only to that ID.
 
 ## See also
 

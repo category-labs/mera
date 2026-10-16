@@ -17,7 +17,6 @@
     "./network": "./src/network.ts",
     "./news": "./src/news.ts",
     "./NewsTicker": "./src/NewsTicker.tsx",
-    "./passkeyWallet": "./src/passkeyWallet.ts",
     "./position": "./src/position.ts",
     "./PriceChart": "./src/PriceChart.tsx",
     "./ui": "./src/ui.ts",

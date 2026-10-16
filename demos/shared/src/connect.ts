@@ -19,7 +19,6 @@ import {
   mnemonicToSeed,
   prfOutputToMnemonic,
 } from "./hd";
-import { rememberPasskeyWallet } from "./passkeyWallet";
 
 type AccountMode = "vault" | "passkey";
 
@@ -219,10 +218,11 @@ async function connect(
         : await openPasskeyWallet();
   }
   try {
-    if (wallet.credential !== undefined) {
-      rememberPasskeyWallet(wallet.credential);
-    }
-    saveCachedAccount({ mode, address: wallet.account.address });
+    saveCachedAccount({
+      mode,
+      address: wallet.account.address,
+      credential: wallet.credential,
+    });
     return wallet;
   } catch (error) {
     wallet.lock();

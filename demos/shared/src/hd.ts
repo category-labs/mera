@@ -26,10 +26,12 @@ const EVM_ACCOUNT_PATH = "m/44'/60'/0'/0/0";
 /**
  * The BIP-39 phrase with the PRF output as its 256 bits of entropy, so a
  * wallet app such as MetaMask that imports it derives the same addresses.
- * Zeroes `prfOutput`.
+ * Zeroes `prfOutput`. Throws unless it is 32 bytes: BIP-39 also accepts
+ * shorter entropy, which would open a different account.
  */
 function prfOutputToMnemonic(prfOutput: Uint8Array): string {
   try {
+    if (prfOutput.length !== 32) throw new Error("PRF output must be 32 bytes");
     return entropyToMnemonic(prfOutput, wordlist);
   } finally {
     prfOutput.fill(0);

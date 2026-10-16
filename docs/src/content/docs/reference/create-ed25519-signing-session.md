@@ -25,7 +25,7 @@ const message = new TextEncoder().encode("hello mera");
 const session = createEd25519SigningSession({ privateKey });
 
 const address = getSolanaAddress(session.publicKey);
-const signature = await session.signMessage(message);
+const signature = session.signMessage(message);
 
 session.end();
 ```

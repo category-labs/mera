@@ -63,7 +63,7 @@ function createSecp256k1SigningSession({
 
   return {
     publicKey,
-    async signDigest(digest32: Uint8Array): Promise<Secp256k1Signature> {
+    signDigest(digest32: Uint8Array): Secp256k1Signature {
       if (digest32.length !== 32) {
         throw new MeraError("INPUT_INVALID", "Digest must be 32 bytes");
       }

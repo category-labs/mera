@@ -89,7 +89,7 @@ const session = createSecp256k1SigningSession({
 const address = getEvmAddress(session.publicKey);
 
 const digest = new Uint8Array(32);
-const signature = await session.signDigest(digest);
+const signature = session.signDigest(digest);
 
 session.end();
 ```

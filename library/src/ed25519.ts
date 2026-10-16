@@ -39,7 +39,7 @@ function createEd25519SigningSession({
 
   return {
     publicKey,
-    async signMessage(message: Uint8Array): Promise<Uint8Array<ArrayBuffer>> {
+    signMessage(message: Uint8Array): Uint8Array<ArrayBuffer> {
       return ed25519.sign(message, use());
     },
     end,

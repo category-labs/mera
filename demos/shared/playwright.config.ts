@@ -2,7 +2,11 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "@playwright/test";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
-const vueUrl = "http://localhost:4174";
+// The demo workspaces the trading spec runs against, each on its own port.
+const demos = [
+  { name: "vue", port: 4174 },
+  { name: "web", port: 4173 },
+];
 
 export default defineConfig({
   testDir: "tests",
@@ -10,12 +14,15 @@ export default defineConfig({
   use: { trace: "retain-on-failure" },
   projects: [
     { name: "unit", testMatch: ["market.spec.ts", "position.spec.ts"] },
-    { name: "vue", testMatch: "trading.spec.ts", use: { baseURL: vueUrl } },
+    ...demos.map(({ name, port }) => ({
+      name,
+      testMatch: "trading.spec.ts",
+      use: { baseURL: `http://localhost:${port}` },
+    })),
   ],
-  webServer: {
-    command:
-      "npm run dev -w demos/vue -- --host localhost --port 4174 --strictPort",
+  webServer: demos.map(({ name, port }) => ({
+    command: `npm run dev -w demos/${name} -- --host localhost --port ${port} --strictPort`,
     cwd: repositoryRoot,
-    url: vueUrl,
-  },
+    url: `http://localhost:${port}`,
+  })),
 });

@@ -1,11 +1,19 @@
 import {
+  coversTrade,
+  draftOrder,
   type Fill,
+  maxDraft,
+  type Order,
+  orderShares,
+  type Portfolio,
   type Side,
   TICKER,
+  type TradeDraft,
 } from "@category-labs/mera-demo-shared/market";
+import type { positionReducer } from "@category-labs/mera-demo-shared/position";
 import {
   CASH_SYMBOL,
-  formatCash,
+  fillText,
   formatShares,
 } from "@category-labs/mera-demo-shared/ui";
 import type { ReactElement } from "react";
@@ -14,56 +22,80 @@ import { Button, LinkButton } from "./Button";
 import { palette, text } from "./theme";
 
 type TradeFormProps = {
-  side: Side;
-  amount: string;
-  busy: boolean;
-  canTrade: boolean;
-  maxDisabled: boolean;
-  submitLabel: string;
-  estimatedShares: bigint | null;
-  fill: (Fill & { spent?: bigint }) | null;
-  onAmountChange: (value: string) => void;
-  onMax: () => void;
-  onSideChange: (side: Side) => void;
-  onSubmit: () => void;
+  draft: TradeDraft;
+  onDraftChange: (next: TradeDraft) => void;
+  portfolio: Portfolio;
+  price: bigint;
+  stage: positionReducer.TradeStage | null;
+  /** The next trade first unlocks the stored key behind a biometric prompt. */
+  locked: boolean;
+  fill: Fill | null;
+  /** Another action holds the wallet, so the form takes no input. */
+  disabled: boolean;
+  onSubmit: (order: Order) => void;
 };
 
+const SIDES: readonly Side[] = ["buy", "sell"];
+
+/**
+ * The buy and sell form. It calls `onSubmit` with an order the portfolio
+ * covers, and takes no order while a trade is in flight.
+ */
 function TradeForm({
-  side,
-  amount,
-  busy,
-  canTrade,
-  maxDisabled,
-  submitLabel,
-  estimatedShares,
+  draft,
+  onDraftChange,
+  portfolio,
+  price,
+  stage,
+  locked,
   fill,
-  onAmountChange,
-  onMax,
-  onSideChange,
+  disabled,
   onSubmit,
 }: TradeFormProps): ReactElement {
+  const idle = stage === null && !disabled;
+  const order = draftOrder(draft);
+  const coveredOrder =
+    idle && order !== null && coversTrade({ order, price, portfolio })
+      ? order
+      : null;
+  const estimatedShares =
+    order === null
+      ? null
+      : orderShares({ order, price, heldShares: portfolio.shares });
+
+  function editAmount(side: Side, text: string): void {
+    onDraftChange({ kind: "amount", side, text });
+  }
+
+  function submitLabel(): string {
+    const buying = draft.side === "buy";
+    if (stage !== "sending") return buying ? "Buy" : "Sell";
+    if (locked) return "Unlocking…";
+    return buying ? "Buying…" : "Selling…";
+  }
+
   return (
     <View style={styles.trade}>
       <View style={styles.segmented}>
-        {(["buy", "sell"] as const).map((entry) => (
+        {SIDES.map((side) => (
           <Pressable
-            key={entry}
+            key={side}
             accessibilityRole="tab"
-            accessibilityState={{ selected: entry === side }}
-            disabled={busy}
-            onPress={() => onSideChange(entry)}
+            accessibilityState={{ selected: side === draft.side }}
+            disabled={disabled}
+            onPress={() => editAmount(side, draft.text)}
             style={[
               styles.segment,
-              entry === side ? styles.segmentActive : null,
+              side === draft.side ? styles.segmentActive : null,
             ]}
           >
             <Text
               style={[
                 styles.segmentLabel,
-                entry === side ? styles.segmentLabelActive : null,
+                side === draft.side ? styles.segmentLabelActive : null,
               ]}
             >
-              {entry === "buy" ? "Buy" : "Sell"}
+              {side === "buy" ? "Buy" : "Sell"}
             </Text>
           </Pressable>
         ))}
@@ -73,46 +105,44 @@ function TradeForm({
         <View style={styles.field}>
           <View style={styles.fieldHead}>
             <Text style={text.label}>Amount ({CASH_SYMBOL})</Text>
-            <LinkButton title="Max" disabled={maxDisabled} onPress={onMax} />
+            <LinkButton
+              title="Max"
+              disabled={!idle}
+              onPress={() =>
+                onDraftChange(maxDraft({ side: draft.side, price, portfolio }))
+              }
+            />
           </View>
           <TextInput
             accessibilityLabel={`Amount (${CASH_SYMBOL})`}
             autoCapitalize="none"
             autoCorrect={false}
-            editable={!busy}
+            editable={!disabled && stage !== "sending"}
             keyboardType="decimal-pad"
-            onChangeText={onAmountChange}
+            onChangeText={(text) => editAmount(draft.side, text)}
             placeholder="100.00"
             placeholderTextColor={palette.muted}
             style={styles.input}
-            value={amount}
+            value={draft.text}
           />
         </View>
         <View style={styles.submit}>
           <Button
-            title={submitLabel}
+            title={submitLabel()}
             primary
-            disabled={!canTrade}
-            onPress={onSubmit}
+            disabled={coveredOrder === null}
+            onPress={() => {
+              if (coveredOrder !== null) onSubmit(coveredOrder);
+            }}
           />
         </View>
       </View>
 
-      {estimatedShares !== null && fill === null ? (
+      {fill !== null ? (
+        <Text style={styles.ok}>{fillText(fill)}</Text>
+      ) : estimatedShares !== null ? (
         <Text style={text.hint}>
           ≈ {formatShares(estimatedShares)} {TICKER} at the current price
-        </Text>
-      ) : null}
-
-      {fill !== null ? (
-        <Text style={styles.ok}>
-          {fill.side === "buy"
-            ? `Bought ${formatShares(fill.shares)} ${TICKER}${
-                fill.spent === undefined
-                  ? ""
-                  : ` for ${formatCash(fill.spent)} ${CASH_SYMBOL}`
-              }`
-            : `Sold ${formatShares(fill.shares)} ${TICKER}`}
         </Text>
       ) : null}
     </View>

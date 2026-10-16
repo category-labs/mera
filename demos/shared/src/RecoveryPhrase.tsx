@@ -1,31 +1,27 @@
-import { useCopyButton } from "@category-labs/mera-demo-shared/useCopyButton";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
+import { useCopyButton } from "./hooks";
 
-type WalletBackupProps = {
-  /** The revealed recovery phrase to display (12 or 24 words). */
+type RecoveryPhraseProps = {
   phrase: string;
-  /** Return to the account view, dropping the phrase reference. */
   onHide: () => void;
+  /** Notices shown above the copy button. */
+  children?: ReactNode;
 };
 
 /**
- * Recovery-phrase display, shown in place of the account card.
- *
- * The phrase is held only by the caller's state while shown. `Hide`, or
- * unmounting on lock, drops it. JS strings cannot be zeroed, so this is the
- * tightest lifetime achievable. Fresh user verification gates access while the
- * phrase is hidden.
+ * The recovery phrase, shown in place of the account card. Only the caller's
+ * state holds the phrase; JS strings cannot be zeroed, so dropping it on Hide
+ * is the tightest lifetime available.
  */
-function WalletBackup({ phrase, onHide }: WalletBackupProps): ReactElement {
+function RecoveryPhrase({
+  phrase,
+  onHide,
+  children,
+}: RecoveryPhraseProps): ReactElement {
   const { copied, copy } = useCopyButton();
   const words = phrase
-    .trim()
-    .split(/\s+/)
-    .map((word, index) => ({
-      position: index + 1,
-      word,
-    }));
-
+    .split(" ")
+    .map((word, index) => ({ position: index + 1, word }));
   return (
     <section className="backup">
       <div className="backup-head">
@@ -46,6 +42,7 @@ function WalletBackup({ phrase, onHide }: WalletBackupProps): ReactElement {
           </li>
         ))}
       </ol>
+      {children}
       <button type="button" className="btn" onClick={() => void copy(phrase)}>
         {copied ? "Copied" : "Copy phrase"}
       </button>
@@ -53,4 +50,4 @@ function WalletBackup({ phrase, onHide }: WalletBackupProps): ReactElement {
   );
 }
 
-export { WalletBackup };
+export { RecoveryPhrase };

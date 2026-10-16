@@ -30,6 +30,12 @@ function formatPnl(pnl: bigint, basis: bigint): string {
   return `${formatSignedCash(pnl)} · ${percent < 0 ? "" : "+"}${percent.toFixed(2)}%`;
 }
 
+/** Formats an 18-decimal share amount with at most four fraction digits. */
+function formatShares(shares: bigint): string {
+  const scaled = Number(shares / 10n ** 14n) / 10_000;
+  return scaled.toLocaleString("en-US", { maximumFractionDigits: 4 });
+}
+
 /** The status line for a mined trade, e.g. "Bought 2.5 NAD for 100.00 DEMOCASH". */
 function fillText(fill: Fill): string {
   return fill.side === "buy"
@@ -40,12 +46,6 @@ function fillText(fill: Fill): string {
 /** Shortens a 0x address for display, e.g. "0x1234…cdef". */
 function truncateAddress(address: string): string {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
-}
-
-/** Formats an 18-decimal share amount with at most four fraction digits. */
-function formatShares(shares: bigint): string {
-  const scaled = Number(shares / 10n ** 14n) / 10_000;
-  return scaled.toLocaleString("en-US", { maximumFractionDigits: 4 });
 }
 
 export {

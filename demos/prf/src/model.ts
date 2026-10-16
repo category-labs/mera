@@ -33,18 +33,15 @@ const DEFAULT_INPUTS: ModelInputs = {
   passkey: "blue-yubikey",
 };
 
+// SLIP-0010 path m/44'/501'/0'/0'; every step is hardened.
 function deriveSolanaPrivateKey(seed: Uint8Array): Uint8Array {
-  const path = [44, 501, 0, 0];
   let node = hmac(sha512, utf8ToBytes("ed25519 seed"), seed);
-
-  for (const step of path) {
+  for (const index of [44, 501, 0, 0]) {
     const data = new Uint8Array(37);
     data.set(node.subarray(0, 32), 1);
-    new DataView(data.buffer).setUint32(33, (step + 0x80000000) >>> 0, false);
-    const next = hmac(sha512, node.subarray(32), data);
-    node = next;
+    new DataView(data.buffer).setUint32(33, (index + 0x80000000) >>> 0, false);
+    node = hmac(sha512, node.subarray(32), data);
   }
-
   return node.slice(0, 32);
 }
 

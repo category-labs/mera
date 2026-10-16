@@ -1,10 +1,11 @@
 import type { EvmAddress } from "@category-labs/mera";
+import { useCopyButton } from "@category-labs/mera-demo-shared/hooks";
 import { NETWORK_NAME } from "@category-labs/mera-demo-shared/network";
 import { truncateAddress } from "@category-labs/mera-demo-shared/ui";
+import { setStringAsync } from "expo-clipboard";
 import type { ReactElement } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { monoFont, palette } from "./theme";
-import { useCopyButton } from "./useCopyButton";
 
 type AccountChipProps = {
   address: EvmAddress | null;
@@ -18,7 +19,7 @@ type AccountChipProps = {
  * so the screen always says where trades settle.
  */
 function AccountChip({ address, connected }: AccountChipProps): ReactElement {
-  const { copied, copy } = useCopyButton();
+  const { copied, copy } = useCopyButton(setStringAsync);
   return (
     <View style={styles.chip}>
       {address !== null ? (

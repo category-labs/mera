@@ -1,49 +1,27 @@
-import { CHART_WINDOW_SECONDS } from "@category-labs/mera-demo-shared/chart";
+import { useNow, usePosition } from "@category-labs/mera-demo-shared/hooks";
 import {
-  COMPANY_NAME,
   type Fill,
   LOW_CASH_WEI,
   type Order,
   type Portfolio,
   placeOrder,
   priceAt,
-  REFRESH_MS,
   readPortfolio,
-  TICKER,
   type TradeDraft,
 } from "@category-labs/mera-demo-shared/market";
 import {
-  DEMO_RPC_URL,
   type EvmContext,
   fundAccount,
 } from "@category-labs/mera-demo-shared/network";
-import {
-  initialPositionState,
-  loadedPosition,
-  positionReducer,
-} from "@category-labs/mera-demo-shared/position";
-import {
-  CASH_SYMBOL,
-  formatCash,
-  formatSignedCash,
-} from "@category-labs/mera-demo-shared/ui";
-import {
-  type ReactElement,
-  useCallback,
-  useEffect,
-  useReducer,
-  useRef,
-  useState,
-} from "react";
+import { CASH_SYMBOL } from "@category-labs/mera-demo-shared/ui";
+import { type ReactElement, useEffect, useState } from "react";
 import { AppState, StyleSheet, Text, View } from "react-native";
-import { isAddressEqual } from "viem";
 import { type AccountState, accountAddress } from "./account";
 import { Button, LinkButton } from "./Button";
 import { Holdings } from "./Holdings";
-import { NewsTicker } from "./NewsTicker";
-import { PriceChart } from "./PriceChart";
 import { RecoveryPhrase } from "./RecoveryPhrase";
-import { clearStoredAccount, loadCostBasis, saveCostBasis } from "./storage";
+import { StockOverview } from "./StockOverview";
+import { clearStoredAccount, storedCostBasis } from "./storage";
 import { TradeForm } from "./TradeForm";
 import { palette, text } from "./theme";
 import {
@@ -60,24 +38,26 @@ type Pending =
   | "signin"
   | "opening:create"
   | "opening:signin"
-  | "recovery"
-  | "funding";
+  | "recovery";
 
 type TradingScreenProps = {
-  /** `null` while the stored account is still being read at launch. */
-  account: AccountState | null;
+  account: AccountState;
   evm: EvmContext | null;
   evmError: string | null;
   onAccountChange: (next: AccountState) => void;
 };
 
+const clearedDraft = (draft: TradeDraft): TradeDraft => ({
+  kind: "amount",
+  side: draft.side,
+  text: "",
+});
+
 /**
- * The always-on trading surface: the stock's price, chart, and fake newsroom
- * render for everyone (history comes from the price mirror, so they need no
- * network); the area below them depends on the account state. Unlocked
- * trades sign silently; the first trade while locked reads the stored PRF
- * output behind a biometric prompt, and a passkey prompt appears only at
- * connect and when exporting the recovery phrase.
+ * The trading surface. The stock renders for everyone; the area below it
+ * depends on the account. Trades sign without a prompt; the first trade while
+ * locked reads the stored PRF output behind a biometric prompt, and a passkey
+ * prompt appears only at connect and when exporting the recovery phrase.
  */
 function TradingScreen({
   account,
@@ -85,25 +65,14 @@ function TradingScreen({
   evmError,
   onAccountChange,
 }: TradingScreenProps): ReactElement {
-  const address = account === null ? null : accountAddress(account);
-  const [position, dispatch] = useReducer(
-    positionReducer,
-    initialPositionState,
+  const now = useNow();
+  // The mirror equals the on-chain price by construction.
+  const price = priceAt(BigInt(now));
+  const { position, loaded, stage, funding, fund, adopt, trade } = usePosition(
+    evm,
+    accountAddress(account),
+    storedCostBasis,
   );
-  // Reset during render rather than in an effect, so no frame shows the
-  // previous account's position.
-  if (position.address !== address) {
-    dispatch({
-      type: "accountChanged",
-      address,
-      basis: null,
-      portfolio: null,
-    });
-  }
-  const loaded = loadedPosition(position);
-  const stage = position.trade?.stage ?? null;
-  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
-
   const [draft, setDraft] = useState<TradeDraft>({
     kind: "amount",
     side: "buy",
@@ -112,16 +81,15 @@ function TradingScreen({
   const [pending, setPending] = useState<Pending | null>(null);
   const [fill, setFill] = useState<Fill | null>(null);
   const [tradeError, setTradeError] = useState<string | null>(null);
-
-  // Recovery phrase, revealed on demand by a fresh passkey ceremony. It lives
-  // only here while shown and replaces the card (Hide drops it); the demo
-  // never persists it.
+  // Revealed by a fresh passkey ceremony and never persisted. While shown, it
+  // takes over the card slot.
   const [phrase, setPhrase] = useState<string | null>(null);
   const [recoveryWarning, setRecoveryWarning] = useState(false);
   const [backupError, setBackupError] = useState<string | null>(null);
+  const busy = pending !== null || funding || stage === "sending";
 
-  // The phrase must not linger into the app switcher's snapshot: leaving the
-  // foreground drops it, and returning shows the account view again.
+  // Leaving the foreground drops the phrase, so it never lingers into the app
+  // switcher's snapshot.
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
       if (state !== "active") setPhrase(null);
@@ -129,122 +97,22 @@ function TradingScreen({
     return () => subscription.remove();
   }, []);
 
-  const busy = pending !== null || stage === "sending";
-
-  const operationId = useRef(0);
-
   // Switches to `next` and drops everything scoped to the previous account.
-  function adoptAccount(
-    next: AccountState,
-    portfolio: Portfolio | null = null,
-  ): void {
+  function switchAccount(next: AccountState): void {
     onAccountChange(next);
-    const nextAddress = accountAddress(next);
-    dispatch({
-      type: "accountChanged",
-      address: nextAddress,
-      basis: null,
-      portfolio,
-    });
-    setDraft((current) => ({ kind: "amount", side: current.side, text: "" }));
+    setDraft(clearedDraft);
     setFill(null);
     setTradeError(null);
+    setRecoveryWarning(false);
+    setBackupError(null);
   }
 
-  // The last fill and trade error describe the draft they came from.
+  // The fill and the error describe the draft they came from.
   function editDraft(next: TradeDraft): void {
     setDraft(next);
     setFill(null);
     setTradeError(null);
   }
-
-  const basisWrites = useRef(Promise.resolve());
-  useEffect(() => {
-    if (address === null) return;
-    let stale = false;
-    void basisWrites.current
-      .then(() => loadCostBasis(address))
-      .then((stored) => {
-        if (!stale) dispatch({ type: "basisLoaded", address, basis: stored });
-      });
-    return () => {
-      stale = true;
-    };
-  }, [address]);
-
-  useEffect(() => {
-    const current = position.address;
-    const value = position.basis;
-    if (current === null || value === null) return;
-    // SecureStore writes are asynchronous; preserve the reducer's update order.
-    basisWrites.current = basisWrites.current
-      .then(() => saveCostBasis(current, value))
-      .catch(() => undefined);
-  }, [position.address, position.basis]);
-
-  const refresh = useCallback(async () => {
-    setNow(Math.floor(Date.now() / 1000));
-    if (evm === null || address === null) return;
-    const requestId = ++operationId.current;
-    dispatch({ type: "readStarted", address, requestId });
-    try {
-      const read = await readPortfolio(evm, address);
-      dispatch({ type: "portfolioLoaded", requestId, portfolio: read });
-    } catch (caught) {
-      dispatch({
-        type: "refreshFailed",
-        requestId,
-        error: describeError(caught),
-      });
-    }
-  }, [evm, address]);
-
-  // Funding needs only an address and the guard no-ops above its threshold,
-  // so stored accounts refill after a network reset too.
-  const funded = useRef<string | null>(null);
-  useEffect(() => {
-    if (address === null || funded.current === address) return;
-    funded.current = address;
-    setPending("funding");
-    fundAccount(DEMO_RPC_URL, address)
-      .catch(() => {
-        // A failed top-up surfaces through the balance read; the button
-        // below offers a retry once the network is back.
-      })
-      .finally(() => {
-        setPending(null);
-        void refresh();
-      });
-  }, [address, refresh]);
-
-  useEffect(() => {
-    const tick = setInterval(
-      () => setNow(Math.floor(Date.now() / 1000)),
-      1_000,
-    );
-    return () => clearInterval(tick);
-  }, []);
-
-  useEffect(() => {
-    // The immediate call covers the moments the poll would miss by up to a
-    // tick: the network context resolving after mount, and account changes.
-    void refresh();
-    const interval = setInterval(() => void refresh(), REFRESH_MS);
-    // Refresh when the app returns to the foreground, so state that changed
-    // in the background appears without waiting for the next tick.
-    const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") void refresh();
-    });
-    return () => {
-      clearInterval(interval);
-      subscription.remove();
-    };
-  }, [refresh]);
-
-  // The quote is the mirror at the current second: it equals the on-chain
-  // price by construction and ticks without network reads.
-  const price = priceAt(BigInt(now));
-  const delta = price - priceAt(BigInt(now - CHART_WINDOW_SECONDS));
 
   async function connect(action: "create" | "signin"): Promise<void> {
     setPending(action);
@@ -252,22 +120,20 @@ function TradingScreen({
     try {
       const wallet =
         action === "create" ? await createAccount() : await signIn();
-      // Fund and read the account before adopting it, so the connect buttons
-      // give way to settled balances instead of placeholders that fill in
-      // one network round trip at a time. On failure the account is adopted
-      // without a portfolio and the poll's read error reports the cause.
+      // Fund and read the account first, so the connect buttons give way to
+      // settled balances.
       setPending(`opening:${action}`);
       let portfolio: Portfolio | null = null;
       if (evm !== null) {
-        funded.current = wallet.address; // the auto-fund effect must not repeat this
         try {
-          await fundAccount(DEMO_RPC_URL, wallet.address);
+          await fundAccount(evm, wallet.address);
           portfolio = await readPortfolio(evm, wallet.address);
         } catch {
-          // Adopt anyway; the account exists even when the network misbehaves.
+          // Show the account anyway; the balance reads report the failure.
         }
       }
-      adoptAccount({ status: "unlocked", wallet }, portfolio);
+      if (portfolio !== null) adopt(wallet.address, portfolio);
+      switchAccount({ status: "unlocked", wallet });
     } catch (caught) {
       setTradeError(describeError(caught));
     } finally {
@@ -281,86 +147,70 @@ function TradingScreen({
     return idle;
   }
 
+  // Reads the stored PRF output behind a biometric or device-credential
+  // prompt; signs out when it is gone or opens a different account.
+  async function unlock(address: Wallet["address"]): Promise<Wallet> {
+    const wallet = await unlockStoredWallet();
+    if (wallet?.address !== address) {
+      wallet?.session.end();
+      await clearStoredAccount();
+      switchAccount({ status: "none" });
+      throw new Error(
+        wallet === undefined
+          ? "The stored account is gone. Sign in again."
+          : "The stored key does not open this account. Sign in again.",
+      );
+    }
+    onAccountChange({ status: "unlocked", wallet });
+    return wallet;
+  }
+
   async function submit(order: Order): Promise<void> {
-    if (
-      loaded === null ||
-      evm === null ||
-      account === null ||
-      account.status === "none"
-    )
-      return;
-    const tradeId = ++operationId.current;
-    dispatch({ type: "tradeStarted", tradeId });
+    if (loaded === null || evm === null || account.status === "none") return;
     setTradeError(null);
     setFill(null);
     try {
-      let wallet: Wallet;
-      if (account.status === "locked") {
-        // Reading the stored PRF output asks for a biometric or device
-        // credential; the signing afterwards is silent.
-        const unlocked = await unlockStoredWallet();
-        if (unlocked === undefined) {
-          await clearStoredAccount();
-          adoptAccount({ status: "none" });
-          setTradeError("The stored account is gone. Sign in again.");
-          return;
-        }
-        if (!isAddressEqual(unlocked.address, account.address)) {
-          unlocked.session.end();
-          await clearStoredAccount();
-          adoptAccount({ status: "none" });
-          setTradeError(
-            "The stored key does not open this account. Sign in again.",
-          );
-          return;
-        }
-        wallet = unlocked;
-        onAccountChange({ status: "unlocked", wallet });
-      } else {
-        wallet = account.wallet;
-      }
-      const result = await placeOrder({
-        session: wallet.session,
-        evm,
-        order,
-        price,
-        heldShares: loaded.shares,
+      const filled = await trade(async () => {
+        const wallet =
+          account.status === "unlocked"
+            ? account.wallet
+            : await unlock(account.address);
+        return placeOrder({
+          session: wallet.session,
+          evm,
+          order,
+          price,
+          heldShares: loaded.shares,
+        });
       });
-      setFill(result);
-      dispatch({ type: "tradeConfirmed", tradeId, fill: result });
-      setDraft((current) => ({ kind: "amount", side: current.side, text: "" }));
-      await refresh();
+      setFill(filled);
+      setDraft(clearedDraft);
     } catch (caught) {
       setTradeError(describeError(caught));
-    } finally {
-      dispatch({ type: "tradeFinished", tradeId });
     }
   }
 
   async function addFunds(): Promise<void> {
-    if (address === null) return;
-    setPending("funding");
     setTradeError(null);
     try {
-      await fundAccount(DEMO_RPC_URL, address);
-      await refresh();
+      await fund();
     } catch (caught) {
       setTradeError(describeError(caught));
-    } finally {
-      setPending(null);
     }
   }
 
   async function revealBackup(): Promise<void> {
-    if (account === null || account.status === "none") return;
+    if (account.status === "none") return;
     setPending("recovery");
     setBackupError(null);
     try {
-      const credentialId =
-        account.status === "unlocked"
-          ? account.wallet.credentialId
-          : account.credentialId;
-      setPhrase(await revealMnemonic(credentialId));
+      setPhrase(
+        await revealMnemonic(
+          account.status === "unlocked"
+            ? account.wallet.credentialId
+            : account.credentialId,
+        ),
+      );
       setRecoveryWarning(false);
     } catch (caught) {
       setBackupError(describeError(caught));
@@ -370,7 +220,8 @@ function TradingScreen({
   }
 
   function lock(): void {
-    if (account === null || account.status !== "unlocked") return;
+    if (account.status !== "unlocked") return;
+    account.wallet.session.end();
     setRecoveryWarning(false);
     onAccountChange({
       status: "locked",
@@ -386,12 +237,10 @@ function TradingScreen({
       setTradeError(describeError(caught));
       return;
     }
-    setRecoveryWarning(false);
-    setBackupError(null);
-    adoptAccount({ status: "none" });
+    if (account.status === "unlocked") account.wallet.session.end();
+    switchAccount({ status: "none" });
   }
 
-  // The phrase takes over the card slot.
   if (phrase !== null) {
     return <RecoveryPhrase phrase={phrase} onHide={() => setPhrase(null)} />;
   }
@@ -399,25 +248,7 @@ function TradingScreen({
   return (
     <View style={styles.shell}>
       <View style={styles.card}>
-        <View style={styles.stockHead}>
-          <View style={styles.stockTitle}>
-            <Text style={styles.stockName}>{COMPANY_NAME}</Text>
-            <View style={styles.stockSymbol}>
-              <Text style={styles.stockSymbolLabel}>{TICKER}</Text>
-            </View>
-          </View>
-          <View style={styles.stockQuote}>
-            <Text style={styles.stockPrice}>{formatCash(price)}</Text>
-            <Text
-              style={[styles.stockDelta, delta < 0n ? styles.down : styles.up]}
-            >
-              {formatSignedCash(delta)} · 30m
-            </Text>
-          </View>
-        </View>
-
-        <PriceChart livePrice={price} now={now} />
-        <NewsTicker now={now} />
+        <StockOverview now={now} />
 
         {evmError !== null ? (
           <Text style={styles.error}>
@@ -425,7 +256,7 @@ function TradingScreen({
           </Text>
         ) : null}
 
-        {account === null ? null : account.status === "none" ? (
+        {account.status === "none" ? (
           <View style={styles.connect}>
             <Button
               title={connectLabel("create", "Create account")}
@@ -461,7 +292,7 @@ function TradingScreen({
                   stage={stage}
                   locked={account.status === "locked"}
                   fill={fill}
-                  disabled={pending !== null}
+                  disabled={pending !== null || funding}
                   onSubmit={(next) => void submit(next)}
                 />
               </>
@@ -476,15 +307,11 @@ function TradingScreen({
         )}
       </View>
 
-      {account !== null && account.status !== "none" ? (
+      {account.status !== "none" ? (
         <View style={styles.links}>
           {loaded !== null && loaded.cash < LOW_CASH_WEI ? (
             <LinkButton
-              title={
-                pending === "funding"
-                  ? "Adding funds…"
-                  : `Add 10,000 ${CASH_SYMBOL}`
-              }
+              title={funding ? "Adding funds…" : `Add 10,000 ${CASH_SYMBOL}`}
               disabled={busy}
               onPress={() => void addFunds()}
             />
@@ -573,7 +400,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
   },
-  down: { color: palette.down },
   error: { color: palette.error, fontSize: 13, lineHeight: 18 },
   links: {
     columnGap: 16,
@@ -583,48 +409,6 @@ const styles = StyleSheet.create({
     rowGap: 6,
   },
   shell: { gap: 14 },
-  stockDelta: {
-    fontSize: 12,
-    fontVariant: ["tabular-nums"],
-    fontWeight: "600",
-  },
-  stockHead: {
-    flexDirection: "row",
-    gap: 12,
-    justifyContent: "space-between",
-  },
-  stockName: {
-    color: palette.text,
-    fontSize: 16,
-    fontWeight: "600",
-    letterSpacing: -0.16,
-  },
-  stockPrice: {
-    color: palette.text,
-    fontSize: 24,
-    fontVariant: ["tabular-nums"],
-    fontWeight: "700",
-    letterSpacing: -0.48,
-  },
-  stockQuote: { alignItems: "flex-end", gap: 2 },
-  stockSymbol: {
-    backgroundColor: "rgba(255, 85, 0, 0.14)",
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  stockSymbolLabel: {
-    color: palette.accent,
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 0.4,
-  },
-  stockTitle: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-  },
-  up: { color: palette.up },
   warning: {
     backgroundColor: palette.surface2,
     borderColor: palette.border,

@@ -1,349 +1,193 @@
-import type { PasskeyCredentialMetadata } from "@category-labs/mera";
 import { AccountHoldings } from "@category-labs/mera-demo-shared/AccountHoldings";
-import { CHART_WINDOW_SECONDS } from "@category-labs/mera-demo-shared/chart";
-import { prfOutputToMnemonic } from "@category-labs/mera-demo-shared/hd";
 import {
-  COMPANY_NAME,
+  type AccountState,
+  accountAddress,
+  type CachedAccount,
+  clearCachedAccount,
+  saveCachedAccount,
+} from "@category-labs/mera-demo-shared/account";
+import {
+  type ConnectedWallet,
+  walletFromPrf,
+} from "@category-labs/mera-demo-shared/connect";
+import { costBasisStorage } from "@category-labs/mera-demo-shared/costBasisStorage";
+import { describeError } from "@category-labs/mera-demo-shared/errors";
+import { prfOutputToMnemonic } from "@category-labs/mera-demo-shared/hd";
+import { useNow, usePosition } from "@category-labs/mera-demo-shared/hooks";
+import {
   type Fill,
   LOW_CASH_WEI,
   type Order,
   type Portfolio,
   placeOrder,
   priceAt,
-  REFRESH_MS,
   readPortfolio,
-  TICKER,
   type TradeDraft,
 } from "@category-labs/mera-demo-shared/market";
-import { NewsTicker } from "@category-labs/mera-demo-shared/NewsTicker";
 import {
-  DEMO_RPC_URL,
   type EvmContext,
   fundAccount,
 } from "@category-labs/mera-demo-shared/network";
-import { PriceChart } from "@category-labs/mera-demo-shared/PriceChart";
-import {
-  initialPositionState,
-  loadedPosition,
-  positionReducer,
-} from "@category-labs/mera-demo-shared/position";
+import { RecoveryPhrase } from "@category-labs/mera-demo-shared/RecoveryPhrase";
+import { StockOverview } from "@category-labs/mera-demo-shared/StockOverview";
 import { TradeForm } from "@category-labs/mera-demo-shared/TradeForm";
-import {
-  CASH_SYMBOL,
-  formatCash,
-  formatSignedCash,
-} from "@category-labs/mera-demo-shared/ui";
+import { CASH_SYMBOL } from "@category-labs/mera-demo-shared/ui";
 import {
   type ReactElement,
-  type RefObject,
-  useCallback,
   useEffect,
-  useReducer,
+  useEffectEvent,
   useRef,
   useState,
 } from "react";
-import { isAddressEqual } from "viem";
-import { type AccountState, accountAddress } from "./account";
-import { RECOVERY_VISIBLE_MS } from "./config";
-import {
-  isSidePanel,
-  openPasskeyTab,
-  waitForPasskeyTab,
-} from "./passkey-window";
-import {
-  clearAccount,
-  loadCostBasis,
-  saveAccount,
-  saveCostBasis,
-} from "./storage";
-import {
-  createWallet,
-  describeError,
-  openWallet,
-  revealPhrase,
-  type Wallet,
-  walletFromPrf,
-} from "./wallet";
+import { passkeyTabOpen, requestPrf } from "./passkey";
 
-// The switch to `next`, with the cost basis this device stored for it.
-function accountChanged(
-  next: AccountState,
-  portfolio: Portfolio | null,
-): positionReducer.Event {
-  const nextAddress = accountAddress(next);
-  return {
-    type: "accountChanged",
-    address: nextAddress,
-    basis: nextAddress === null ? null : loadCostBasis(nextAddress),
-    portfolio,
-  };
-}
+const RECOVERY_VISIBLE_MS = 60_000;
 
 type Props = {
   evm: EvmContext | null;
   evmError: string | null;
   account: AccountState;
   onAccountChange(next: AccountState): void;
-  onLock(): void;
-  operationEpoch: RefObject<number>;
-  suppressHideLock: RefObject<boolean>;
 };
 
-type PendingAction =
+type Pending =
   | "create"
   | "signin"
   | "opening:create"
   | "opening:signin"
-  | "recovery"
-  | "funding"
-  | null;
+  | "recovery";
 
+const clearedDraft = (draft: TradeDraft): TradeDraft => ({
+  kind: "amount",
+  side: draft.side,
+  text: "",
+});
+
+const cachedAccount = (wallet: ConnectedWallet): CachedAccount => ({
+  mode: "passkey",
+  address: wallet.address,
+  credential: wallet.credential,
+});
+
+/**
+ * The side panel's trading surface. The account locks whenever the panel
+ * hides, and every ceremony, trade, or reveal still running across a lock
+ * drops its result, so a hidden panel never holds a live signing session or
+ * shows a recovery phrase.
+ */
 function TradingPanel({
   evm,
   evmError,
   account,
   onAccountChange,
-  onLock,
-  operationEpoch,
-  suppressHideLock,
 }: Props): ReactElement {
-  const address = accountAddress(account);
-  const [position, dispatch] = useReducer(
-    positionReducer,
-    initialPositionState,
+  const now = useNow();
+  // The mirror equals the on-chain price by construction.
+  const price = priceAt(BigInt(now));
+  const { position, loaded, stage, funding, fund, adopt, trade } = usePosition(
+    evm,
+    accountAddress(account),
+    costBasisStorage,
   );
-  // Reset during render rather than in an effect, so no frame shows the
-  // previous account's position.
-  if (position.address !== address) dispatch(accountChanged(account, null));
-  const loaded = loadedPosition(position);
-  const stage = position.trade?.stage ?? null;
   const [draft, setDraft] = useState<TradeDraft>({
     kind: "amount",
     side: "buy",
     text: "",
   });
-  const [pending, setPending] = useState<PendingAction>(null);
+  const [pending, setPending] = useState<Pending | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const statusError = error ?? position.readError;
   const [fill, setFill] = useState<Fill | null>(null);
-  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
   const [recoveryWarning, setRecoveryWarning] = useState(false);
   const [phrase, setPhrase] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const funded = useRef<string | null>(null);
-  const busy = pending !== null || stage === "sending";
+  // Counts locks, so an operation can tell whether one happened since it began.
+  const locks = useRef(0);
+  // The unlocked wallet, kept outside render so a lock that lands before the
+  // next render still ends its session.
+  const unlocked = useRef<ConnectedWallet | null>(null);
+  const busy = pending !== null || funding || stage === "sending";
+  const statusError = error ?? position.readError;
 
-  const operationId = useRef(0);
-
-  // Switches to `next` and drops everything scoped to the previous account.
-  function adoptAccount(
-    next: AccountState,
-    portfolio: Portfolio | null = null,
-  ): void {
-    onAccountChange(next);
-    dispatch(accountChanged(next, portfolio));
-    setDraft((current) => ({ kind: "amount", side: current.side, text: "" }));
-    setFill(null);
-    setError(null);
+  function unlockWith(wallet: ConnectedWallet): void {
+    unlocked.current = wallet;
+    onAccountChange({ status: "unlocked", wallet });
   }
 
-  // The last fill and error describe the draft they came from.
+  function lock(): void {
+    locks.current += 1;
+    setRecoveryWarning(false);
+    setPhrase(null);
+    const wallet = unlocked.current;
+    if (wallet === null) return;
+    unlocked.current = null;
+    wallet.session.end();
+    onAccountChange({ status: "locked", ...cachedAccount(wallet) });
+  }
+
+  const lockOnHide = useEffectEvent(lock);
+  useEffect(() => {
+    // The passkey tab hides the panel while its ceremony runs.
+    function onVisibilityChange(): void {
+      if (document.visibilityState === "hidden" && !passkeyTabOpen()) {
+        lockOnHide();
+      }
+    }
+    function onPageHide(): void {
+      lockOnHide();
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pagehide", onPageHide);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (phrase === null) return;
+    const timer = setTimeout(() => setPhrase(null), RECOVERY_VISIBLE_MS);
+    return () => clearTimeout(timer);
+  }, [phrase]);
+
+  // The fill and the error describe the draft they came from.
   function editDraft(next: TradeDraft): void {
     setDraft(next);
     setFill(null);
     setError(null);
   }
 
-  function operationIsCurrent(
-    epoch: number,
-    ignoreVisibility = false,
-  ): boolean {
-    return (
-      operationEpoch.current === epoch &&
-      (ignoreVisibility || document.visibilityState !== "hidden")
-    );
-  }
-
-  async function withPasskeyTab<T>(run: () => Promise<T>): Promise<T> {
-    suppressHideLock.current = true;
-    try {
-      return await run();
-    } finally {
-      suppressHideLock.current = false;
-    }
-  }
-
-  async function walletFromPasskeyTab(
-    action: "create" | "get",
-    credential?: PasskeyCredentialMetadata,
-  ): Promise<Wallet> {
-    const tab = openPasskeyTab(action, credential);
-    const message = await waitForPasskeyTab(tab);
-    if (message.kind !== "prf") {
-      throw new Error("The passkey tab returned no PRF output.");
-    }
-    return walletFromPrf(
-      message.material.prfOutput,
-      message.material.credential,
-    );
-  }
-
-  async function phraseFromPasskeyTab(
-    credential: PasskeyCredentialMetadata,
-  ): Promise<string> {
-    const tab = openPasskeyTab("recovery", credential);
-    const message = await waitForPasskeyTab(tab);
-    if (message.kind !== "prf") {
-      throw new Error("The passkey tab returned no PRF output.");
-    }
-    try {
-      return prfOutputToMnemonic(message.material.prfOutput);
-    } finally {
-      message.material.prfOutput.fill(0);
-    }
-  }
-
-  const hideRecovery = useCallback((): void => {
-    setRecoveryWarning(false);
-    setPhrase(null);
-    setCopied(false);
-  }, []);
-
-  const reportError = useCallback(
-    (caught: unknown): void => {
-      hideRecovery();
-      setError(describeError(caught));
-      onLock();
-    },
-    [hideRecovery, onLock],
-  );
-
-  const refresh = useCallback(async (): Promise<void> => {
-    setNow(Math.floor(Date.now() / 1000));
-    if (evm === null || address === null) return;
-    const requestId = ++operationId.current;
-    dispatch({ type: "readStarted", address, requestId });
-    try {
-      const read = await readPortfolio(evm, address);
-      dispatch({ type: "portfolioLoaded", requestId, portfolio: read });
-    } catch (caught) {
-      dispatch({
-        type: "refreshFailed",
-        requestId,
-        error: describeError(caught),
-      });
-    }
-  }, [address, evm]);
-
-  useEffect(() => {
-    const current = position.address;
-    const value = position.basis;
-    if (current === null || value === null) return;
-    try {
-      saveCostBasis(current, value);
-    } catch (caught) {
-      setError(describeError(caught));
-    }
-  }, [position.address, position.basis]);
-
-  useEffect(() => {
-    function hideWhenPanelHides(): void {
-      if (document.visibilityState === "hidden") hideRecovery();
-    }
-    document.addEventListener("visibilitychange", hideWhenPanelHides);
-    window.addEventListener("pagehide", hideRecovery);
-    return () => {
-      document.removeEventListener("visibilitychange", hideWhenPanelHides);
-      window.removeEventListener("pagehide", hideRecovery);
-    };
-  }, [hideRecovery]);
-
-  useEffect(() => {
-    if (account.status !== "unlocked") hideRecovery();
-  }, [account.status, hideRecovery]);
-
-  useEffect(() => {
-    void refresh();
-    const timer = window.setInterval(() => void refresh(), REFRESH_MS);
-    return () => window.clearInterval(timer);
-  }, [refresh]);
-
-  useEffect(() => {
-    const timer = window.setInterval(
-      () => setNow(Math.floor(Date.now() / 1000)),
-      1_000,
-    );
-    return () => window.clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    if (address === null || funded.current === address || evm === null) return;
-    funded.current = address;
-    // The network context can resolve while a user action is already
-    // pending; the functional updates leave such an action's state alone.
-    setPending((current) => current ?? "funding");
-    void fundAccount(DEMO_RPC_URL, address)
-      .then(refresh)
-      .catch(reportError)
-      .finally(() =>
-        setPending((current) => (current === "funding" ? null : current)),
-      );
-  }, [address, evm, refresh, reportError]);
-
-  useEffect(() => {
-    if (phrase === null) return;
-    const timer = window.setTimeout(hideRecovery, RECOVERY_VISIBLE_MS);
-    return () => window.clearTimeout(timer);
-  }, [hideRecovery, phrase]);
-
-  const price = priceAt(BigInt(now));
-  const delta = price - priceAt(BigInt(now - CHART_WINDOW_SECONDS));
-  function storeWallet(wallet: Wallet): void {
-    saveAccount({ address: wallet.address, credential: wallet.credential });
-    onAccountChange({ status: "unlocked", wallet });
-  }
-
   async function connect(action: "create" | "signin"): Promise<void> {
     if (evm === null) return;
-    const epoch = operationEpoch.current;
-    const viaTab = isSidePanel();
+    const started = locks.current;
     setPending(action);
     setError(null);
-    let wallet: Wallet | undefined;
+    let wallet: ConnectedWallet | undefined;
     try {
-      wallet = viaTab
-        ? await withPasskeyTab(() =>
-            walletFromPasskeyTab(action === "create" ? "create" : "get"),
-          )
-        : action === "create"
-          ? await createWallet()
-          : await openWallet();
-      if (!operationIsCurrent(epoch, viaTab)) {
-        wallet.lock();
-        return;
-      }
-      // Fund and read the account before adopting it, so the connect buttons
-      // give way to settled balances instead of placeholders that fill in
-      // one network round trip at a time.
+      wallet = walletFromPrf(
+        await requestPrf(action === "create" ? "create" : "get"),
+      );
+      if (locks.current !== started) return;
+      // Fund and read the account first, so the connect buttons give way to
+      // settled balances.
       setPending(`opening:${action}`);
-      funded.current = wallet.address; // the auto-fund effect must not repeat this
       let portfolio: Portfolio | null = null;
       try {
-        await fundAccount(DEMO_RPC_URL, wallet.address);
+        await fundAccount(evm, wallet.address);
         portfolio = await readPortfolio(evm, wallet.address);
       } catch {
-        // Adopt anyway; the account exists even when the network misbehaves.
+        // Show the account anyway; the balance reads report the failure.
       }
-      if (!operationIsCurrent(epoch, viaTab)) {
-        wallet.lock();
-        return;
-      }
-      saveAccount({ address: wallet.address, credential: wallet.credential });
-      adoptAccount({ status: "unlocked", wallet }, portfolio);
+      if (locks.current !== started) return;
+      saveCachedAccount(cachedAccount(wallet));
+      if (portfolio !== null) adopt(wallet.address, portfolio);
+      unlockWith(wallet);
+      setDraft(clearedDraft);
+      setFill(null);
+      // The account owns the session now.
+      wallet = undefined;
     } catch (caught) {
-      wallet?.lock();
-      if (operationIsCurrent(epoch, viaTab)) setError(describeError(caught));
+      if (locks.current === started) setError(describeError(caught));
     } finally {
+      wallet?.session.end();
       setPending(null);
     }
   }
@@ -354,181 +198,109 @@ function TradingPanel({
     return idle;
   }
 
-  async function trade(order: Order): Promise<void> {
+  // Restores the cached account's session with a ceremony pinned to its
+  // credential; null when a lock happened during the ceremony.
+  async function unlock(
+    locked: CachedAccount,
+    started: number,
+  ): Promise<ConnectedWallet | null> {
+    const wallet = walletFromPrf(await requestPrf("get", locked.credential));
+    if (locks.current !== started || wallet.address !== locked.address) {
+      wallet.session.end();
+      if (locks.current !== started) return null;
+      clearCachedAccount();
+      throw new Error("The passkey does not match the cached account.");
+    }
+    unlockWith(wallet);
+    return wallet;
+  }
+
+  async function submit(order: Order): Promise<void> {
     if (loaded === null || evm === null || account.status === "none") return;
-    const epoch = operationEpoch.current;
-    const viaTab = isSidePanel() && account.status === "locked";
-    const tradeId = ++operationId.current;
-    dispatch({ type: "tradeStarted", tradeId });
+    const started = locks.current;
     setError(null);
     setFill(null);
-    let wallet: Wallet | undefined;
     try {
-      if (account.status === "locked") {
-        wallet = viaTab
-          ? await withPasskeyTab(() =>
-              walletFromPasskeyTab("get", account.credential),
-            )
-          : await openWallet(account.credential);
-        if (!operationIsCurrent(epoch, viaTab)) {
-          wallet.lock();
-          return;
-        }
-        if (!isAddressEqual(wallet.address, account.address)) {
-          wallet.lock();
-          wallet = undefined;
-          clearAccount();
-          throw new Error("The passkey does not match the cached account.");
-        }
-        storeWallet(wallet);
-      } else {
-        wallet = account.wallet;
-      }
-      const result = await placeOrder({
-        session: wallet.session,
-        evm,
-        order,
-        price,
-        heldShares: loaded.shares,
-      });
-      // The trade is on chain even when the panel hid or locked meanwhile,
-      // and locking keeps the account, so its position still counts the fill.
-      dispatch({ type: "tradeConfirmed", tradeId, fill: result });
-      if (!operationIsCurrent(epoch, viaTab)) {
-        wallet.lock();
-        return;
-      }
-      setFill(result);
-      setDraft((current) => ({ kind: "amount", side: current.side, text: "" }));
-      await refresh();
-    } catch (caught) {
-      if (!operationIsCurrent(epoch, viaTab)) {
-        wallet?.lock();
-        return;
-      }
-      if (wallet !== undefined) {
-        wallet.lock();
-        onAccountChange({
-          status: "locked",
-          address: wallet.address,
-          credential: wallet.credential,
+      const filled = await trade(async () => {
+        const wallet =
+          account.status === "unlocked"
+            ? account.wallet
+            : await unlock(account, started);
+        if (wallet === null) return null;
+        return placeOrder({
+          session: wallet.session,
+          evm,
+          order,
+          price,
+          heldShares: loaded.shares,
         });
-      } else {
-        onLock();
-      }
-      setError(describeError(caught));
-    } finally {
-      dispatch({ type: "tradeFinished", tradeId });
+      });
+      // A lock during the trade keeps its fill in the position, but not on
+      // screen.
+      if (filled === null || locks.current !== started) return;
+      setFill(filled);
+      setDraft(clearedDraft);
+    } catch (caught) {
+      if (locks.current === started) setError(describeError(caught));
     }
   }
 
-  async function showPhrase(): Promise<void> {
+  async function revealPhrase(): Promise<void> {
     if (account.status === "none") return;
-    const epoch = operationEpoch.current;
-    const viaTab = isSidePanel();
+    const started = locks.current;
     const credential =
-      account.status === "locked"
-        ? account.credential
-        : account.wallet.credential;
+      account.status === "unlocked"
+        ? account.wallet.credential
+        : account.credential;
     setPending("recovery");
     setError(null);
     try {
-      const revealed = viaTab
-        ? await withPasskeyTab(() => phraseFromPasskeyTab(credential))
-        : await revealPhrase(credential);
-      if (!operationIsCurrent(epoch, viaTab)) return;
+      const { prfOutput } = await requestPrf("recovery", credential);
+      const revealed = prfOutputToMnemonic(prfOutput);
+      if (locks.current !== started) return;
       setPhrase(revealed);
       setRecoveryWarning(false);
     } catch (caught) {
-      if (operationIsCurrent(epoch, viaTab)) reportError(caught);
+      if (locks.current === started) setError(describeError(caught));
     } finally {
       setPending(null);
-    }
-  }
-
-  function signOut(): void {
-    try {
-      clearAccount();
-    } finally {
-      adoptAccount({ status: "none" });
     }
   }
 
   async function addFunds(): Promise<void> {
-    if (address === null) return;
-    setPending("funding");
     setError(null);
     try {
-      await fundAccount(DEMO_RPC_URL, address);
-      await refresh();
+      await fund();
     } catch (caught) {
-      reportError(caught);
-    } finally {
-      setPending(null);
+      setError(describeError(caught));
     }
   }
 
-  async function copyPhrase(): Promise<void> {
-    if (phrase === null) return;
-    try {
-      await navigator.clipboard.writeText(phrase);
-      setCopied(true);
-    } catch (caught) {
-      hideRecovery();
-      reportError(caught);
-    }
+  function signOut(): void {
+    unlocked.current?.session.end();
+    unlocked.current = null;
+    clearCachedAccount();
+    onAccountChange({ status: "none" });
+    setDraft(clearedDraft);
+    setFill(null);
+    setError(null);
   }
 
   if (phrase !== null) {
-    const words = phrase.split(/\s+/).map((word, index) => ({
-      position: index + 1,
-      word,
-    }));
     return (
       <div className="account-shell">
-        <section className="backup" aria-live="polite">
-          <div className="backup-head">
-            <span className="backup-title">Recovery phrase</span>
-            <button className="link" type="button" onClick={hideRecovery}>
-              Hide
-            </button>
-          </div>
-          <p className="hint">
-            Anyone with these {words.length} words controls the funds.
-            Compatible wallet apps, such as MetaMask, can recover the same
-            addresses.
-          </p>
+        <RecoveryPhrase phrase={phrase} onHide={() => setPhrase(null)}>
           <p className="status error">The phrase hides after 60 seconds.</p>
-          <ol className="mnemonic-grid">
-            {words.map(({ position, word }) => (
-              <li key={position}>
-                <span className="num">{position}</span>
-                <span className="mono">{word}</span>
-              </li>
-            ))}
-          </ol>
           <p className="hint">
             Copying exposes the phrase to applications that can read the
             clipboard.
           </p>
-          <button
-            className="btn"
-            type="button"
-            onClick={() => void copyPhrase()}
-          >
-            {copied ? "Copied" : "Copy phrase"}
-          </button>
-          <button
-            className="link"
-            type="button"
-            onClick={() => {
-              hideRecovery();
-              onLock();
-            }}
-          >
+        </RecoveryPhrase>
+        <div className="account-links">
+          <button className="link" type="button" onClick={lock}>
             Lock account
           </button>
-        </section>
+        </div>
       </div>
     );
   }
@@ -536,22 +308,7 @@ function TradingPanel({
   return (
     <div className="account-shell">
       <section className="card">
-        <div className="stock-head">
-          <div>
-            <span className="stock-name">{COMPANY_NAME}</span>
-            <span className="stock-symbol">{TICKER}</span>
-          </div>
-          <div className="stock-quote">
-            <span className="stock-price">{formatCash(price)}</span>
-            <span
-              className={delta < 0n ? "stock-delta down" : "stock-delta up"}
-            >
-              {formatSignedCash(delta)} · 30m
-            </span>
-          </div>
-        </div>
-        <PriceChart livePrice={price} now={now} />
-        <NewsTicker now={now} />
+        <StockOverview now={now} />
         {evmError && (
           <p className="status error">The market is unavailable: {evmError}</p>
         )}
@@ -599,8 +356,8 @@ function TradingPanel({
                   stage={stage}
                   locked={account.status === "locked"}
                   fill={fill}
-                  disabled={pending !== null}
-                  onSubmit={(order) => void trade(order)}
+                  disabled={pending !== null || funding}
+                  onSubmit={(order) => void submit(order)}
                 />
               </>
             )}
@@ -618,15 +375,13 @@ function TradingPanel({
               disabled={busy}
               onClick={() => void addFunds()}
             >
-              {pending === "funding"
-                ? "Adding funds…"
-                : `Add 10,000 ${CASH_SYMBOL}`}
+              {funding ? "Adding funds…" : `Add 10,000 ${CASH_SYMBOL}`}
             </button>
           )}
           <button
             className="link"
             type="button"
-            onClick={onLock}
+            onClick={lock}
             disabled={account.status === "locked"}
           >
             Lock
@@ -668,7 +423,7 @@ function TradingPanel({
               className="btn primary"
               type="button"
               disabled={busy}
-              onClick={() => void showPhrase()}
+              onClick={() => void revealPhrase()}
             >
               {pending === "recovery"
                 ? "Waiting for passkey…"

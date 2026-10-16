@@ -4,38 +4,20 @@ import {
   accountAddress,
   loadCachedAccount,
 } from "@category-labs/mera-demo-shared/account";
-import { describeError } from "@category-labs/mera-demo-shared/connect";
-import {
-  type EvmContext,
-  resolveEvmContext,
-  retryingResolve,
-} from "@category-labs/mera-demo-shared/network";
-import { type ReactElement, useEffect, useState } from "react";
-import { RPC_URL } from "./config";
+import { useEvmContext } from "@category-labs/mera-demo-shared/hooks";
+import { DEMO_RPC_URL } from "@category-labs/mera-demo-shared/network";
+import { type ReactElement, useState } from "react";
 import { TradingCard } from "./TradingCard";
 
+// Set in demos/web/.env to run against a local network.
+const RPC_URL = import.meta.env.VITE_EVM_RPC_URL ?? DEMO_RPC_URL;
+
 function App(): ReactElement {
-  const [evmContext, setEvmContext] = useState<EvmContext | null>(null);
-  const [evmError, setEvmError] = useState<string | null>(null);
+  const { evm, evmError } = useEvmContext(RPC_URL);
   const [account, setAccount] = useState<AccountState>(() => {
     const cached = loadCachedAccount();
     return cached ? { status: "locked", ...cached } : { status: "none" };
   });
-
-  useEffect(
-    () =>
-      retryingResolve(
-        () => resolveEvmContext({ rpcUrl: RPC_URL }),
-        (context) => {
-          setEvmContext(context);
-          // Clear the failure once a retry lands, or the error line would
-          // outlive the outage it reported.
-          setEvmError(null);
-        },
-        (error) => setEvmError(describeError(error)),
-      ),
-    [],
-  );
 
   return (
     <main className="app">
@@ -43,11 +25,11 @@ function App(): ReactElement {
         <h1>mera demo</h1>
         <AccountChip
           address={accountAddress(account)}
-          connected={evmContext !== null}
+          connected={evm !== null}
         />
       </header>
       <TradingCard
-        evm={evmContext}
+        evm={evm}
         evmError={evmError}
         account={account}
         onAccountChange={setAccount}

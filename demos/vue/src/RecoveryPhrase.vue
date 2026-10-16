@@ -1,32 +1,18 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useCopyButton } from "./useCopyButton";
+import { useCopyButton } from "./composables";
 
 /**
- * Recovery-phrase display, shown in place of the account card.
- *
- * The phrase is held only by the caller's state while shown, and `hide`
- * drops it. JS strings cannot be zeroed, so this is the tightest lifetime
- * achievable. Fresh user verification gates access while the phrase is
- * hidden.
+ * The recovery phrase, shown in place of the account card. Only the caller's
+ * state holds the phrase; JS strings cannot be zeroed, so dropping it on Hide
+ * is the tightest lifetime available.
  */
-const props = defineProps<{
-  /** The revealed recovery phrase to display (12 or 24 words). */
-  phrase: string;
-}>();
-
-const emit = defineEmits<{
-  /** Return to the account view, dropping the phrase reference. */
-  hide: [];
-}>();
+const { phrase } = defineProps<{ phrase: string }>();
+const emit = defineEmits<{ hide: [] }>();
 
 const { copied, copy } = useCopyButton();
-
 const words = computed(() =>
-  props.phrase
-    .trim()
-    .split(/\s+/)
-    .map((word, index) => ({ position: index + 1, word })),
+  phrase.split(" ").map((word, index) => ({ position: index + 1, word })),
 );
 </script>
 

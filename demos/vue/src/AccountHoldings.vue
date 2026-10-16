@@ -14,15 +14,15 @@ import { computed } from "vue";
  * or loss against the cost basis. House credits change cash, never the basis,
  * so refills cannot fake gains.
  */
-const props = defineProps<{
+const { position, price, settling } = defineProps<{
   position: LoadedPosition;
   price: bigint;
   /** A trade waits for the read that includes its fee, so cash shows "…". */
   settling: boolean;
 }>();
 
-const value = computed(() => (props.position.shares * props.price) / UNIT);
-const pnl = computed(() => value.value - props.position.basis);
+const value = computed(() => (position.shares * price) / UNIT);
+const pnl = computed(() => value.value - position.basis);
 </script>
 
 <template>

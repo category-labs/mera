@@ -1,9 +1,18 @@
 import type { EvmAddress } from "@category-labs/mera";
-import { costBasisAfterBuy, costBasisAfterSell } from "./costBasis";
 import type { Fill, Portfolio } from "./market";
 
 /** A position whose balances and cost basis are all known. */
 type LoadedPosition = Portfolio & { basis: bigint };
+
+/**
+ * Where a demo keeps each address's cost basis, the cash invested in the open
+ * position, so P&L survives reloads. Only the UI reads it; the chain stays
+ * the authority on balances.
+ */
+type CostBasisStore = {
+  load(address: EvmAddress): bigint;
+  save(address: EvmAddress, basis: bigint): void;
+};
 
 const initialPositionState: positionReducer.State = {
   address: null,
@@ -32,9 +41,6 @@ function positionReducer(
         balances: event.portfolio,
         basis: event.portfolio?.shares === 0n ? 0n : event.basis,
       };
-    case "basisLoaded":
-      if (state.address !== event.address || state.basis !== null) return state;
-      return { ...state, basis: event.basis };
     case "readStarted":
       // A read during the send can already include the trade; applying its
       // fill again would count those shares twice.
@@ -93,14 +99,14 @@ function positionReducer(
         fill.side === "buy"
           ? {
               shares: position.shares + fill.shares,
-              basis: costBasisAfterBuy(position.basis, fill.spent),
+              basis: position.basis + fill.spent,
             }
           : {
               shares:
                 position.shares > fill.shares
                   ? position.shares - fill.shares
                   : 0n,
-              basis: costBasisAfterSell(
+              basis: basisAfterSell(
                 position.basis,
                 fill.shares,
                 position.shares,
@@ -155,7 +161,6 @@ declare namespace positionReducer {
         basis: bigint | null;
         portfolio: Portfolio | null;
       }
-    | { type: "basisLoaded"; address: EvmAddress; basis: bigint }
     | { type: "readStarted"; address: EvmAddress; requestId: number }
     | { type: "portfolioLoaded"; requestId: number; portfolio: Portfolio }
     | { type: "refreshFailed"; requestId: number; error: string }
@@ -170,5 +175,11 @@ function loadedPosition(state: positionReducer.State): LoadedPosition | null {
   return { ...state.balances, basis: state.basis };
 }
 
-export type { LoadedPosition };
+// A sell releases basis in proportion to the shares sold, so the rest of the
+// position keeps its average cost.
+function basisAfterSell(basis: bigint, sold: bigint, held: bigint): bigint {
+  return sold >= held ? 0n : basis - (basis * sold) / held;
+}
+
+export type { CostBasisStore, LoadedPosition };
 export { initialPositionState, loadedPosition, positionReducer };

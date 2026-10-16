@@ -1,8 +1,12 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { chromium, expect, type Page, test } from "@playwright/test";
+import {
+  type BrowserContext,
+  test as base,
+  expect,
+  type Page,
+} from "@playwright/test";
 import { extensionIdFromKey } from "./extension-id";
 
 const extensionDir = resolve(
@@ -10,6 +14,7 @@ const extensionDir = resolve(
   "../dist",
 );
 const rpcUrl = "https://evm-network-production.up.railway.app/";
+const accountKey = "mera.demo.account";
 const fundedBalance = "0x21e19e0c9bab2400000";
 const marketAddress = "0x1111111111111111111111111111111111111111";
 const transactionHash = `0x${"12".repeat(32)}`;
@@ -19,12 +24,47 @@ const logsBloom = `0x${"00".repeat(256)}`;
 const transferTopic =
   "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
-async function expectedExtensionId(): Promise<string> {
-  const manifest = JSON.parse(
-    await readFile(resolve(extensionDir, "manifest.json"), "utf8"),
-  ) as { key: string };
-  return extensionIdFromKey(manifest.key);
-}
+const authenticator = (hasPrf: boolean) => ({
+  protocol: "ctap2" as const,
+  transport: "internal" as const,
+  hasResidentKey: true,
+  hasUserVerification: true,
+  isUserVerified: true,
+  automaticPresenceSimulation: true,
+  hasPrf,
+});
+
+// The unpacked extension in a fresh profile, against a mocked demo network.
+const test = base.extend<{ context: BrowserContext; extensionId: string }>({
+  context: async ({ playwright }, use) => {
+    const context = await playwright.chromium.launchPersistentContext("", {
+      channel: "chromium",
+      headless: true,
+      args: [
+        `--disable-extensions-except=${extensionDir}`,
+        `--load-extension=${extensionDir}`,
+      ],
+    });
+    let funded = false;
+    await context.route(rpcUrl, async (route) => {
+      const { id, method } = route.request().postDataJSON() as {
+        id: unknown;
+        method: string;
+      };
+      if (method === "demo_fundAccount") funded = true;
+      await route.fulfill({
+        json: { jsonrpc: "2.0", id, result: rpcResult(method, funded) },
+      });
+    });
+    await use(context);
+    await context.close();
+  },
+  extensionId: async ({ context }, use) => {
+    let [worker] = context.serviceWorkers();
+    worker ??= await context.waitForEvent("serviceworker");
+    await use(new URL(worker.url()).host);
+  },
+});
 
 function rpcResult(method: string, funded: boolean): unknown {
   switch (method) {
@@ -118,317 +158,215 @@ async function setVisibility(
   }, state);
 }
 
-async function delayNextCredentialResult(
+type Held = typeof globalThis & { releaseCredentialResult?: () => void };
+
+// Holds the next credential result until `releaseCredentialResult`, so a test
+// can hide the panel while a ceremony is still running.
+async function holdNextCredentialResult(
   page: Page,
   method: "create" | "get",
 ): Promise<void> {
-  await page.evaluate((credentialMethod) => {
-    type DelayedCredentialResult = typeof globalThis & {
-      releaseCredentialResult?: () => void;
-    };
-    const delay = async <T>(result: T): Promise<T> => {
-      await new Promise<void>((resolveDelay) => {
-        (globalThis as DelayedCredentialResult).releaseCredentialResult =
-          resolveDelay;
-      });
-      return result;
-    };
-    if (credentialMethod === "create") {
-      const create = navigator.credentials.create.bind(navigator.credentials);
-      Object.defineProperty(navigator.credentials, "create", {
-        configurable: true,
-        value: async (options?: CredentialCreationOptions) => {
-          Object.defineProperty(navigator.credentials, "create", {
-            configurable: true,
-            value: create,
-          });
-          return delay(await create(options));
-        },
-      });
-    } else {
-      const get = navigator.credentials.get.bind(navigator.credentials);
-      Object.defineProperty(navigator.credentials, "get", {
-        configurable: true,
-        value: async (options?: CredentialRequestOptions) => {
-          Object.defineProperty(navigator.credentials, "get", {
-            configurable: true,
-            value: get,
-          });
-          return delay(await get(options));
-        },
-      });
-    }
+  await page.evaluate((name) => {
+    const original = navigator.credentials[name].bind(navigator.credentials);
+    Object.defineProperty(navigator.credentials, name, {
+      configurable: true,
+      value: async (options: never) => {
+        Object.defineProperty(navigator.credentials, name, {
+          configurable: true,
+          value: original,
+        });
+        const result = await original(options);
+        await new Promise<void>((release) => {
+          (globalThis as Held).releaseCredentialResult = release;
+        });
+        return result;
+      },
+    });
   }, method);
 }
 
-async function waitForCredentialResult(page: Page): Promise<void> {
+async function waitForHeldCredentialResult(page: Page): Promise<void> {
   await expect
     .poll(() =>
-      page.evaluate(
-        () =>
-          typeof (
-            globalThis as typeof globalThis & {
-              releaseCredentialResult?: () => void;
-            }
-          ).releaseCredentialResult,
-      ),
+      page.evaluate(() => typeof (globalThis as Held).releaseCredentialResult),
     )
     .toBe("function");
 }
 
 async function releaseCredentialResult(page: Page): Promise<void> {
   await page.evaluate(() => {
-    const target = globalThis as typeof globalThis & {
-      releaseCredentialResult?: () => void;
-    };
-    target.releaseCredentialResult?.();
-    delete target.releaseCredentialResult;
+    (globalThis as Held).releaseCredentialResult?.();
+    delete (globalThis as Held).releaseCredentialResult;
   });
 }
 
-test("runs the side-panel account lifecycle", async () => {
-  const profile = await mkdtemp(resolve(tmpdir(), "mera-extension-test-"));
-  const context = await chromium.launchPersistentContext(profile, {
-    channel: "chromium",
-    headless: true,
-    args: [
-      `--disable-extensions-except=${extensionDir}`,
-      `--load-extension=${extensionDir}`,
-    ],
-  });
-  try {
-    let funded = false;
-    await context.route(rpcUrl, async (route) => {
-      const body = route.request().postDataJSON() as {
-        id: unknown;
-        method: string;
-      };
-      if (body.method === "demo_fundAccount") funded = true;
-      await route.fulfill({
-        contentType: "application/json",
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: body.id,
-          result: rpcResult(body.method, funded),
-        }),
-      });
-    });
-    let worker = context.serviceWorkers()[0];
-    worker ??= await context.waitForEvent("serviceworker");
-    const extensionId = new URL(worker.url()).host;
-    expect(extensionId).toBe(await expectedExtensionId());
-    const page = await context.newPage();
-    await page.clock.install();
-    await page.goto(`chrome-extension://${extensionId}/sidepanel.html`);
-    await expect(
-      page.getByRole("heading", { name: "mera demo" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Create account" }),
-    ).toBeEnabled();
-    await expect(
-      page.getByText("Runs on a demo network. Everything traded is fictional."),
-    ).toBeVisible();
+test("runs the side-panel account lifecycle", async ({
+  context,
+  extensionId,
+}) => {
+  const manifest = JSON.parse(
+    await readFile(resolve(extensionDir, "manifest.json"), "utf8"),
+  ) as { key: string };
+  expect(extensionId).toBe(extensionIdFromKey(manifest.key));
+  const page = await context.newPage();
+  await page.clock.install();
+  await page.goto(`chrome-extension://${extensionId}/sidepanel.html`);
+  await expect(page.getByRole("heading", { name: "mera demo" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Create account" }),
+  ).toBeEnabled();
+  await expect(
+    page.getByText("Runs on a demo network. Everything traded is fictional."),
+  ).toBeVisible();
 
-    const client = await context.newCDPSession(page);
-    await client.send("WebAuthn.enable");
-    const { authenticatorId } = await client.send(
-      "WebAuthn.addVirtualAuthenticator",
-      {
-        options: {
-          protocol: "ctap2",
-          transport: "internal",
-          hasResidentKey: true,
-          hasUserVerification: true,
-          isUserVerified: true,
-          automaticPresenceSimulation: true,
-          hasPrf: true,
-        },
-      },
-    );
-    await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page.getByRole("button", { name: /^0x/u })).toBeVisible();
-    // The panel adopts the account only after funding it and reading the
-    // portfolio, so the account view appears with the balance already set.
-    expect(await page.locator(".holding-value").first().textContent()).toBe(
-      "10,000.00",
-    );
-    await expect(page.getByRole("button", { name: "Lock" })).toBeEnabled();
-    const storedAccount = await page.evaluate(() =>
-      localStorage.getItem("mera.extension.account.v1"),
-    );
-    expect(storedAccount).not.toBeNull();
+  const client = await context.newCDPSession(page);
+  await client.send("WebAuthn.enable");
+  const { authenticatorId } = await client.send(
+    "WebAuthn.addVirtualAuthenticator",
+    { options: authenticator(true) },
+  );
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByRole("button", { name: /^0x/u })).toBeVisible();
+  // The panel adopts the account only after funding it and reading the
+  // portfolio, so the account view appears with the balance already set.
+  expect(await page.locator(".holding-value").first().textContent()).toBe(
+    "10,000.00",
+  );
+  await expect(page.getByRole("button", { name: "Lock" })).toBeEnabled();
+  const storedAccount = await page.evaluate(
+    (key) => localStorage.getItem(key),
+    accountKey,
+  );
+  expect(storedAccount).not.toBeNull();
 
-    await page.reload();
-    await expect(page.getByRole("button", { name: "Lock" })).toBeDisabled();
-    await expect(
-      page.getByRole("button", { name: "Export account" }),
-    ).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Lock" })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Export account" }),
+  ).toBeVisible();
 
-    const credentialSignCount = async (): Promise<number> => {
-      const result = await client.send("WebAuthn.getCredentials", {
-        authenticatorId,
-      });
-      return result.credentials.reduce(
-        (total, credential) => total + credential.signCount,
-        0,
-      );
-    };
-    const signCount = await credentialSignCount();
-    await page.getByPlaceholder("100.00").fill("1.00");
-    await expect(page.getByRole("button", { name: "Buy" })).toBeEnabled();
-    await page.getByRole("button", { name: "Buy" }).click();
-    await expect(
-      page.getByText("Bought 1 NAD for 1.00 DEMOCASH"),
-    ).toBeVisible();
-    await expect(page.getByRole("button", { name: "Lock" })).toBeEnabled();
-    await expect.poll(credentialSignCount).toBeGreaterThan(signCount);
-
-    const unlockedSignCount = await credentialSignCount();
-    await page.getByPlaceholder("100.00").fill("2.00");
-    await page.getByRole("button", { name: "Buy" }).click();
-    await expect(
-      page.getByText("Bought 1 NAD for 2.00 DEMOCASH"),
-    ).toBeVisible();
-    expect(await credentialSignCount()).toBe(unlockedSignCount);
-
-    await setVisibility(page, "hidden");
-    await expect(page.getByRole("button", { name: "Lock" })).toBeDisabled();
-    await setVisibility(page, "visible");
-
-    await page.evaluate(() => {
-      const raw = localStorage.getItem("mera.extension.account.v1");
-      if (raw === null) throw new Error("Missing stored account.");
-      const value = JSON.parse(raw) as Record<string, unknown>;
-      value.address = "0x2222222222222222222222222222222222222222";
-      localStorage.setItem("mera.extension.account.v1", JSON.stringify(value));
-    });
-    await page.reload();
-    await page.getByPlaceholder("100.00").fill("1.00");
-    await page.getByRole("button", { name: "Buy" }).click();
-    await expect(
-      page.getByText("does not match the cached account"),
-    ).toBeVisible();
-    await expect(page.getByRole("button", { name: "Lock" })).toBeDisabled();
-    await page.evaluate((raw) => {
-      if (raw !== null) localStorage.setItem("mera.extension.account.v1", raw);
-    }, storedAccount);
-    await page.reload();
-
-    await page.getByRole("button", { name: "Export account" }).click();
-    await expect(page.getByRole("alert")).toContainText(
-      "reveals the recovery phrase",
-    );
-    await page.getByRole("button", { name: "Reveal phrase" }).click();
-    await expect(page.getByText("Recovery phrase")).toBeVisible();
-    await page.clock.runFor(1);
-    await page.clock.runFor(60_001);
-    await expect(page.getByText("Recovery phrase")).not.toBeVisible();
-
-    await page.getByRole("button", { name: "Export account" }).click();
-    await delayNextCredentialResult(page, "get");
-    await page.getByRole("button", { name: "Reveal phrase" }).click();
-    await expect(
-      page.getByRole("button", { name: "Waiting for passkey…" }),
-    ).toBeVisible();
-    await waitForCredentialResult(page);
-    await setVisibility(page, "hidden");
-    await releaseCredentialResult(page);
-    await expect(page.getByText("Recovery phrase")).not.toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Export account" }),
-    ).toBeEnabled();
-    await page.reload();
-
-    await page.getByRole("button", { name: "Sign out" }).click();
-    await expect(
-      page.getByRole("button", { name: "Create account" }),
-    ).toBeVisible();
-    await page.reload();
-    await expect(page.getByRole("button", { name: "Lock" })).toHaveCount(0);
-
-    await delayNextCredentialResult(page, "create");
-    await page.getByRole("button", { name: "Create account" }).click();
-    await expect(
-      page.getByRole("button", { name: "Waiting for passkey…" }),
-    ).toBeVisible();
-    await waitForCredentialResult(page);
-    await setVisibility(page, "hidden");
-    await releaseCredentialResult(page);
-    await expect(
-      page.getByRole("button", { name: "Create account" }),
-    ).toBeEnabled();
-    await expect(page.getByRole("button", { name: /^0x/u })).toHaveCount(0);
-    expect(
-      await page.evaluate(() =>
-        localStorage.getItem("mera.extension.account.v1"),
-      ),
-    ).toBeNull();
-    await setVisibility(page, "visible");
-
-    await client.send("WebAuthn.removeVirtualAuthenticator", {
+  const credentialSignCount = async (): Promise<number> => {
+    const result = await client.send("WebAuthn.getCredentials", {
       authenticatorId,
     });
-    await client.send("WebAuthn.addVirtualAuthenticator", {
-      options: {
-        protocol: "ctap2",
-        transport: "internal",
-        hasResidentKey: true,
-        hasUserVerification: true,
-        isUserVerified: true,
-        automaticPresenceSimulation: true,
-        hasPrf: false,
-      },
-    });
-    await page.getByRole("button", { name: "Create account" }).click();
-    await expect(
-      page.getByText("doesn't support the WebAuthn PRF extension"),
-    ).toBeVisible();
-  } finally {
-    await context.close();
-    await rm(profile, { force: true, recursive: true });
-  }
+    return result.credentials.reduce(
+      (total, credential) => total + credential.signCount,
+      0,
+    );
+  };
+  const signCount = await credentialSignCount();
+  await page.getByPlaceholder("100.00").fill("1.00");
+  await expect(page.getByRole("button", { name: "Buy" })).toBeEnabled();
+  await page.getByRole("button", { name: "Buy" }).click();
+  await expect(page.getByText("Bought 1 NAD for 1.00 DEMOCASH")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Lock" })).toBeEnabled();
+  await expect.poll(credentialSignCount).toBeGreaterThan(signCount);
+
+  const unlockedSignCount = await credentialSignCount();
+  await page.getByPlaceholder("100.00").fill("2.00");
+  await page.getByRole("button", { name: "Buy" }).click();
+  await expect(page.getByText("Bought 1 NAD for 2.00 DEMOCASH")).toBeVisible();
+  expect(await credentialSignCount()).toBe(unlockedSignCount);
+
+  await setVisibility(page, "hidden");
+  await expect(page.getByRole("button", { name: "Lock" })).toBeDisabled();
+  await setVisibility(page, "visible");
+
+  await page.evaluate((key) => {
+    const raw = localStorage.getItem(key);
+    if (raw === null) throw new Error("Missing stored account.");
+    const value = JSON.parse(raw) as Record<string, unknown>;
+    value.address = "0x2222222222222222222222222222222222222222";
+    localStorage.setItem(key, JSON.stringify(value));
+  }, accountKey);
+  await page.reload();
+  await page.getByPlaceholder("100.00").fill("1.00");
+  await page.getByRole("button", { name: "Buy" }).click();
+  await expect(
+    page.getByText("does not match the cached account"),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Lock" })).toBeDisabled();
+  await page.evaluate(
+    ([key, raw]) => {
+      if (raw !== null) localStorage.setItem(key, raw);
+    },
+    [accountKey, storedAccount] as const,
+  );
+  await page.reload();
+
+  await page.getByRole("button", { name: "Export account" }).click();
+  await expect(page.getByRole("alert")).toContainText(
+    "reveals the recovery phrase",
+  );
+  await page.getByRole("button", { name: "Reveal phrase" }).click();
+  await expect(page.getByText("Recovery phrase")).toBeVisible();
+  await page.clock.runFor(1);
+  await page.clock.runFor(60_001);
+  await expect(page.getByText("Recovery phrase")).not.toBeVisible();
+
+  await page.getByRole("button", { name: "Export account" }).click();
+  await holdNextCredentialResult(page, "get");
+  await page.getByRole("button", { name: "Reveal phrase" }).click();
+  await expect(
+    page.getByRole("button", { name: "Waiting for passkey…" }),
+  ).toBeVisible();
+  await waitForHeldCredentialResult(page);
+  await setVisibility(page, "hidden");
+  await releaseCredentialResult(page);
+  await expect(page.getByText("Recovery phrase")).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Export account" }),
+  ).toBeEnabled();
+  await page.reload();
+
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(
+    page.getByRole("button", { name: "Create account" }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Lock" })).toHaveCount(0);
+
+  await holdNextCredentialResult(page, "create");
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(
+    page.getByRole("button", { name: "Waiting for passkey…" }),
+  ).toBeVisible();
+  await waitForHeldCredentialResult(page);
+  await setVisibility(page, "hidden");
+  await releaseCredentialResult(page);
+  await expect(
+    page.getByRole("button", { name: "Create account" }),
+  ).toBeEnabled();
+  await expect(page.getByRole("button", { name: /^0x/u })).toHaveCount(0);
+  expect(
+    await page.evaluate((key) => localStorage.getItem(key), accountKey),
+  ).toBeNull();
+  await setVisibility(page, "visible");
+
+  await client.send("WebAuthn.removeVirtualAuthenticator", {
+    authenticatorId,
+  });
+  await client.send("WebAuthn.addVirtualAuthenticator", {
+    options: authenticator(false),
+  });
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(
+    page.getByText("doesn't support the WebAuthn PRF extension"),
+  ).toBeVisible();
 });
 
-test("opens a passkey tab from the side panel", async () => {
-  const profile = await mkdtemp(resolve(tmpdir(), "mera-extension-tab-"));
-  const context = await chromium.launchPersistentContext(profile, {
-    channel: "chromium",
-    headless: true,
-    args: [
-      `--disable-extensions-except=${extensionDir}`,
-      `--load-extension=${extensionDir}`,
-    ],
-  });
-  try {
-    let funded = false;
-    await context.route(rpcUrl, async (route) => {
-      const body = route.request().postDataJSON() as {
-        id: unknown;
-        method: string;
-      };
-      if (body.method === "demo_fundAccount") funded = true;
+test("opens a passkey tab from the side panel", async ({
+  context,
+  extensionId,
+}) => {
+  await context.route(
+    (url) =>
+      url.origin === "https://mera.category.xyz" &&
+      url.pathname === "/demo/passkey.html",
+    async (route) => {
       await route.fulfill({
-        contentType: "application/json",
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: body.id,
-          result: rpcResult(body.method, funded),
-        }),
-      });
-    });
-    let worker = context.serviceWorkers()[0];
-    worker ??= await context.waitForEvent("serviceworker");
-    const extensionId = new URL(worker.url()).host;
-    const page = await context.newPage();
-    await context.route(
-      (url) =>
-        url.origin === "https://mera.category.xyz" &&
-        url.pathname === "/demo/passkey.html",
-      async (route) => {
-        await route.fulfill({
-          contentType: "text/html",
-          body: `<!doctype html>
+        contentType: "text/html",
+        body: `<!doctype html>
 <html>
   <body>
     <button>Create account</button>
@@ -475,34 +413,23 @@ test("opens a passkey tab from the side panel", async () => {
     </script>
   </body>
 </html>`,
-        });
-      },
-    );
-    await page.goto(`chrome-extension://${extensionId}/sidepanel.html?panel=1`);
-    await expect(
-      page.getByRole("button", { name: "Create account" }),
-    ).toBeEnabled();
+      });
+    },
+  );
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${extensionId}/sidepanel.html?panel=1`);
+  await expect(
+    page.getByRole("button", { name: "Create account" }),
+  ).toBeEnabled();
 
-    const popupPromise = context.waitForEvent("page");
-    await page.getByRole("button", { name: "Create account" }).click();
-    const popup = await popupPromise;
-    const client = await context.newCDPSession(popup);
-    await client.send("WebAuthn.enable");
-    await client.send("WebAuthn.addVirtualAuthenticator", {
-      options: {
-        protocol: "ctap2",
-        transport: "internal",
-        hasResidentKey: true,
-        hasUserVerification: true,
-        isUserVerified: true,
-        automaticPresenceSimulation: true,
-        hasPrf: true,
-      },
-    });
-    await popup.getByRole("button", { name: "Create account" }).click();
-    await expect(page.getByRole("button", { name: /^0x/u })).toBeVisible();
-  } finally {
-    await context.close();
-    await rm(profile, { force: true, recursive: true });
-  }
+  const popupPromise = context.waitForEvent("page");
+  await page.getByRole("button", { name: "Create account" }).click();
+  const popup = await popupPromise;
+  const client = await context.newCDPSession(popup);
+  await client.send("WebAuthn.enable");
+  await client.send("WebAuthn.addVirtualAuthenticator", {
+    options: authenticator(true),
+  });
+  await popup.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByRole("button", { name: /^0x/u })).toBeVisible();
 });

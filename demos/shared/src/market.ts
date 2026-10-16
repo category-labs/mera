@@ -3,56 +3,30 @@ import { toViemAccount } from "@category-labs/mera/viem";
 import {
   createWalletClient,
   encodePacked,
+  type Hash,
   http,
   isAddressEqual,
   keccak256,
+  parseAbi,
+  parseEther,
   parseEventLogs,
 } from "viem";
-import { parseDecimalAmount } from "./amount";
-import type { EvmContext } from "./network";
-import { MAX_UINT256, validateTradeAmount } from "./validation";
+import { demoChain, type EvmContext } from "./network";
 
 const COMPANY_NAME = "Nad Computer Company";
 const TICKER = "NAD";
 
-const MARKET_ABI = [
-  {
-    type: "function",
-    name: "buy",
-    stateMutability: "payable",
-    inputs: [],
-    outputs: [],
-  },
-  {
-    type: "function",
-    name: "sell",
-    stateMutability: "nonpayable",
-    inputs: [{ name: "shares", type: "uint256" }],
-    outputs: [],
-  },
-  {
-    type: "function",
-    name: "balanceOf",
-    stateMutability: "view",
-    inputs: [{ name: "", type: "address" }],
-    outputs: [{ type: "uint256" }],
-  },
-  {
-    type: "event",
-    name: "Transfer",
-    inputs: [
-      { indexed: true, name: "from", type: "address" },
-      { indexed: true, name: "to", type: "address" },
-      { indexed: false, name: "value", type: "uint256" },
-    ],
-  },
-] as const;
+const MARKET_ABI = parseAbi([
+  "function buy() payable",
+  "function sell(uint256 shares)",
+  "function balanceOf(address) view returns (uint256)",
+  "event Transfer(address indexed from, address indexed to, uint256 value)",
+]);
 
 // ----- Price mirror ----------------------------------------------------------
 // Mirror of DemoStock.priceAt, kept in lockstep with the contract: same
-// constants, same integer math, so the chart's history matches what the
-// contract charges. Quotes and trades still read the chain; the mirror only
-// draws history, which one eth_call per point would make needlessly slow.
+// constants, same integer math, so the quote and the chart match what the
+// contract charges without network reads.
 
 const UNIT = 10n ** 18n;
 const BASE_PRICE = 40n * UNIT;
@@ -88,7 +62,7 @@ function noiseLayerAt(
 /**
  * Share price at Unix `timestamp` (seconds), in native wei per whole share.
  * A slow drift, a medium swing, and a fast wiggle layer on the base price,
- * so the result stays within 40 +/- 9.10 DEMOCASH and is always positive.
+ * so the result stays within 40 +/- 9.25 DEMOCASH and is always positive.
  */
 function priceAt(timestamp: bigint): bigint {
   const slowDrift = noiseLayerAt(timestamp, 1n, 28800n, 6n * UNIT);
@@ -98,7 +72,7 @@ function priceAt(timestamp: bigint): bigint {
   return BASE_PRICE + slowDrift + mediumSwing + fastWiggle + fastJitter;
 }
 
-// ----- Portfolio and trades ----------------------------------------------------
+// ----- Portfolio and trades --------------------------------------------------
 
 /** One account's market state, all in wei-scale bigints. */
 type Portfolio = {
@@ -129,31 +103,57 @@ async function readPortfolio(
       args: [address],
     }),
   ]);
-  if (cash < 0n || shares < 0n || cash > MAX_UINT256 || shares > MAX_UINT256) {
-    throw new Error("The network returned an invalid portfolio.");
-  }
   return { cash, shares };
 }
 
 /**
- * A viem wallet client that signs with the session; writes go out as raw
- * transactions, which is the only send path the demo network's guard
- * forwards.
+ * Sends the order and waits for its fill: a buy spends `amountWei` of cash,
+ * and a sell sends the shares `orderShares` sizes at `price`. The session
+ * signs locally and the network receives raw transactions, the only send
+ * path the demo network's guard forwards.
  */
-function marketClient(session: Secp256k1SigningSession, evm: EvmContext) {
-  return createWalletClient({
+async function placeOrder({
+  session,
+  evm,
+  order,
+  price,
+  heldShares,
+}: {
+  session: Secp256k1SigningSession;
+  evm: EvmContext;
+  order: Order;
+  price: bigint;
+  heldShares: bigint;
+}): Promise<Fill> {
+  const wallet = createWalletClient({
     account: toViemAccount(session),
-    chain: evm.chain,
+    chain: demoChain,
     transport: http(evm.rpcUrl),
   });
+  const market = { address: evm.marketAddress, abi: MARKET_ABI } as const;
+  if (order.side === "buy") {
+    const hash = await wallet.writeContract({
+      ...market,
+      functionName: "buy",
+      value: order.amountWei,
+    });
+    return {
+      side: "buy",
+      shares: await filledShares(evm, hash),
+      spent: order.amountWei,
+    };
+  }
+  const hash = await wallet.writeContract({
+    ...market,
+    functionName: "sell",
+    args: [orderShares({ order, price, heldShares })],
+  });
+  return { side: "sell", shares: await filledShares(evm, hash) };
 }
 
 // The Transfer event carries the exact share amount; recomputing it from the
 // price would drift a block behind the fill.
-async function minedShares(
-  evm: EvmContext,
-  hash: `0x${string}`,
-): Promise<bigint> {
+async function filledShares(evm: EvmContext, hash: Hash): Promise<bigint> {
   const receipt = await evm.publicClient.waitForTransactionReceipt({ hash });
   if (receipt.status !== "success") {
     throw new Error("The market rejected the trade. Try a different amount.");
@@ -165,48 +165,11 @@ async function minedShares(
       isAddressEqual(log.address, evm.marketAddress),
     ),
   });
-  const shares = transfer?.args.value;
-  if (shares === undefined || shares <= 0n || shares > MAX_UINT256) {
-    throw new Error("The market returned an invalid fill.");
-  }
-  return shares;
+  if (transfer === undefined) throw new Error("The market returned no fill.");
+  return transfer.args.value;
 }
 
-async function buyShares(
-  session: Secp256k1SigningSession,
-  evm: EvmContext,
-  valueWei: bigint,
-): Promise<Fill> {
-  validateTradeAmount(valueWei);
-  const hash = await marketClient(session, evm).writeContract({
-    address: evm.marketAddress,
-    abi: MARKET_ABI,
-    functionName: "buy",
-    value: valueWei,
-  });
-  return {
-    side: "buy",
-    shares: await minedShares(evm, hash),
-    spent: valueWei,
-  };
-}
-
-async function sellShares(
-  session: Secp256k1SigningSession,
-  evm: EvmContext,
-  shares: bigint,
-): Promise<Fill> {
-  validateTradeAmount(shares);
-  const hash = await marketClient(session, evm).writeContract({
-    address: evm.marketAddress,
-    abi: MARKET_ABI,
-    functionName: "sell",
-    args: [shares],
-  });
-  return { side: "sell", shares: await minedShares(evm, hash) };
-}
-
-// ----- Trade policy -----------------------------------------------------------
+// ----- Trade policy ----------------------------------------------------------
 // Client-side trading rules; every demo applies the same ones.
 
 type Side = "buy" | "sell";
@@ -233,17 +196,20 @@ const FEE_RESERVE_WEI = 10n ** 16n;
 // One cent, the display resolution: sells that would leave less than this
 // behind sell the whole position instead.
 const CENT_WEI = 10n ** 16n;
-// Cash below this offers the 10,000 DEMOCASH top-up; the guard enforces the
-// same threshold, so the button cannot inflate a healthy account.
+// Cash below this offers the 10,000 DEMOCASH top-up; the faucet uses the same
+// threshold, so the button cannot inflate a healthy account.
 const LOW_CASH_WEI = 100n * UNIT;
+// A plain positive decimal with at most 18 fraction digits, the cash precision.
+const CASH_AMOUNT = /^(?:\d+(?:\.\d{0,18})?|\.\d{1,18})$/u;
 
 /** The order a draft places; null while its text is not a positive amount. */
 function draftOrder(draft: TradeDraft): Order | null {
   if (draft.kind === "sellAll") return { kind: "sellAll", side: "sell" };
-  const amountWei = parseDecimalAmount(draft.text, 18);
-  return amountWei === null
-    ? null
-    : { kind: "amount", side: draft.side, amountWei };
+  const text = draft.text.trim();
+  const amountWei = CASH_AMOUNT.test(text) ? parseEther(text) : 0n;
+  return amountWei > 0n
+    ? { kind: "amount", side: draft.side, amountWei }
+    : null;
 }
 
 /** Wei to a plain decimal cash string floored to cents, e.g. "9999.99". */
@@ -253,36 +219,10 @@ function cashInput(wei: bigint): string {
 }
 
 /**
- * The Max amount for the trade input. Buys offer the cash minus the fee
- * reserve. Sells offer the whole position; a position worth less than a cent
- * still offers one cent, because flooring it to "0.00" would parse to
- * nothing and leave the position unsellable from Max.
- */
-function maxTradeInput({
-  side,
-  price,
-  portfolio,
-}: {
-  side: Side;
-  price: bigint;
-  portfolio: Portfolio;
-}): string {
-  if (side === "buy") {
-    return cashInput(
-      portfolio.cash > FEE_RESERVE_WEI ? portfolio.cash - FEE_RESERVE_WEI : 0n,
-    );
-  }
-  const positionValue = (portfolio.shares * price) / UNIT;
-  if (positionValue > 0n && positionValue < CENT_WEI) {
-    return cashInput(CENT_WEI);
-  }
-  return cashInput(positionValue);
-}
-
-/**
- * The draft Max fills in. On the sell side it sells the whole position:
- * converting the Max cash figure back to shares at a moved price can strand
- * dust.
+ * The draft Max fills in. A buy offers the cash minus the fee reserve. A sell
+ * offers the whole position as a sell-all, since converting the cash figure
+ * back to shares at a moved price can strand dust; a position worth less than
+ * a cent offers one cent, because "0.00" would parse to nothing.
  */
 function maxDraft({
   side,
@@ -293,10 +233,17 @@ function maxDraft({
   price: bigint;
   portfolio: Portfolio;
 }): TradeDraft {
-  const text = maxTradeInput({ side, price, portfolio });
-  return side === "sell"
-    ? { kind: "sellAll", side, text }
-    : { kind: "amount", side, text };
+  if (side === "buy") {
+    const spendable =
+      portfolio.cash > FEE_RESERVE_WEI ? portfolio.cash - FEE_RESERVE_WEI : 0n;
+    return { kind: "amount", side, text: cashInput(spendable) };
+  }
+  const value = (portfolio.shares * price) / UNIT;
+  return {
+    kind: "sellAll",
+    side,
+    text: cashInput(value > 0n && value < CENT_WEI ? CENT_WEI : value),
+  };
 }
 
 /**
@@ -354,28 +301,6 @@ function orderShares({
     return heldShares;
   }
   return shares;
-}
-
-/**
- * Sends the order and waits for its fill: a buy sends `amountWei` of cash,
- * and a sell sends the shares `orderShares` sizes at `price`.
- */
-async function placeOrder({
-  session,
-  evm,
-  order,
-  price,
-  heldShares,
-}: {
-  session: Secp256k1SigningSession;
-  evm: EvmContext;
-  order: Order;
-  price: bigint;
-  heldShares: bigint;
-}): Promise<Fill> {
-  return order.side === "buy"
-    ? buyShares(session, evm, order.amountWei)
-    : sellShares(session, evm, orderShares({ order, price, heldShares }));
 }
 
 export type { Fill, Order, Portfolio, Side, TradeDraft };

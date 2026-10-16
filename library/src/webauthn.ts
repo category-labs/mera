@@ -35,7 +35,7 @@ declare namespace WebAuthnClient {
     userVerification: "required";
     attestation: "none";
     /** Timeout in milliseconds. Platform defaults apply when omitted. */
-    timeout?: number;
+    timeout?: number | undefined;
   };
 
   /** Outcome of one credential-creation ceremony. */
@@ -43,18 +43,18 @@ declare namespace WebAuthnClient {
     /** Credential ID of the new passkey, as raw bytes. */
     credentialId: Uint8Array;
     /** Authenticator transports reported for the new credential. */
-    transports?: readonly PasskeyCredentialTransport[];
+    transports?: readonly PasskeyCredentialTransport[] | undefined;
     /** Whether the authenticator enabled PRF for the new credential. */
     prfEnabled: boolean;
     /** First PRF output, when the authenticator evaluated the salt during creation. */
-    prfOutput?: Uint8Array;
+    prfOutput?: Uint8Array | undefined;
   };
 
   /** Credential an assertion is restricted to. */
   type AllowCredential = {
     credentialId: Uint8Array<ArrayBuffer>;
     /** Authenticator transports, which the platform reads as hints. */
-    transports?: readonly PasskeyCredentialTransport[];
+    transports?: readonly PasskeyCredentialTransport[] | undefined;
   };
 
   /** Ceremony parameters for asserting a passkey and evaluating its PRF. */
@@ -66,12 +66,12 @@ declare namespace WebAuthnClient {
      * Credential the assertion is restricted to. When omitted, any discoverable
      * credential for `rpId` may answer.
      */
-    allowCredential?: AllowCredential;
+    allowCredential?: AllowCredential | undefined;
     /** PRF salt to evaluate, as 32 raw bytes. */
     prfSalt: Uint8Array<ArrayBuffer>;
     userVerification: "required";
     /** Timeout in milliseconds. Platform defaults apply when omitted. */
-    timeout?: number;
+    timeout?: number | undefined;
   };
 
   /** Outcome of one assertion ceremony. */
@@ -79,7 +79,7 @@ declare namespace WebAuthnClient {
     /** Credential ID that answered, as raw bytes. */
     credentialId: Uint8Array;
     /** First PRF output for the requested salt. */
-    prfOutput?: Uint8Array;
+    prfOutput?: Uint8Array | undefined;
   };
 }
 
@@ -125,13 +125,12 @@ const browserWebAuthnClient: WebAuthnClient = {
     const prf = readPrfExtension(publicKeyCredential);
     const response =
       publicKeyCredential.response as AuthenticatorAttestationResponse;
-    const transports = response.getTransports?.();
 
     return {
       credentialId: new Uint8Array(publicKeyCredential.rawId),
-      ...(transports !== undefined ? { transports } : {}),
+      transports: response.getTransports?.(),
       prfEnabled: prf.enabled,
-      ...(prf.output !== undefined ? { prfOutput: prf.output } : {}),
+      prfOutput: prf.output,
     };
   },
 
@@ -171,7 +170,7 @@ const browserWebAuthnClient: WebAuthnClient = {
 
     return {
       credentialId: new Uint8Array(publicKeyCredential.rawId),
-      ...(prf.output !== undefined ? { prfOutput: prf.output } : {}),
+      prfOutput: prf.output,
     };
   },
 };

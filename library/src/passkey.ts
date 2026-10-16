@@ -64,7 +64,7 @@ async function createPasskeyWithPrfOutput({
       residentKey: "required",
       userVerification: "required",
       attestation: "none",
-      ...(timeout !== undefined ? { timeout } : {}),
+      timeout,
     });
 
     if (created.prfOutput === undefined && !created.prfEnabled) {
@@ -88,7 +88,7 @@ async function createPasskeyWithPrfOutput({
               credential: credentialMetadata,
               prfSalt: prfSaltCopy,
               webAuthnClient,
-              ...(timeout !== undefined ? { timeout } : {}),
+              timeout,
             })
           ).prfOutput;
 
@@ -118,17 +118,17 @@ declare namespace createPasskeyWithPrfOutput {
       displayName: string;
     };
     /** WebAuthn timeout in milliseconds. Platform defaults apply when omitted. */
-    timeout?: number;
+    timeout?: number | undefined;
     /**
      * 32-byte PRF salt evaluated during creation, or by the fallback assertion.
      * Defaults to the fixed salt documented on {@link getPasskeyPrfOutput}.
      */
-    prfSalt?: Uint8Array;
+    prfSalt?: Uint8Array | undefined;
     /**
      * Client that runs the WebAuthn ceremonies. Defaults to the built-in browser
      * client, which calls `navigator.credentials`.
      */
-    webAuthnClient?: WebAuthnClient;
+    webAuthnClient?: WebAuthnClient | undefined;
   };
 
   /** Result of creating a passkey together with its first PRF output. */
@@ -185,10 +185,8 @@ async function getPasskeyPrfOutput({
       challenge: randomBytes(32),
       prfSalt: prfSaltCopy,
       userVerification: "required",
-      ...(allowCredential !== undefined
-        ? { allowCredential: toAllowCredential(allowCredential) }
-        : {}),
-      ...(timeout !== undefined ? { timeout } : {}),
+      allowCredential: allowCredential && toAllowCredential(allowCredential),
+      timeout,
     });
 
     if (asserted.prfOutput === undefined) {
@@ -217,19 +215,19 @@ declare namespace getPasskeyPrfOutput {
      * omitted, WebAuthn may choose any discoverable credential for the relying
      * party.
      */
-    credential?: PasskeyCredentialMetadata;
+    credential?: PasskeyCredentialMetadata | undefined;
     /**
      * PRF salt as 32 raw bytes. Defaults to the fixed salt documented on
      * {@link getPasskeyPrfOutput}.
      */
-    prfSalt?: Uint8Array;
+    prfSalt?: Uint8Array | undefined;
     /** WebAuthn timeout in milliseconds. Platform defaults apply when omitted. */
-    timeout?: number;
+    timeout?: number | undefined;
     /**
      * Client that runs the WebAuthn ceremony. Defaults to the built-in browser
      * client, which calls `navigator.credentials`.
      */
-    webAuthnClient?: WebAuthnClient;
+    webAuthnClient?: WebAuthnClient | undefined;
   };
 
   /** Result of a passkey assertion with the WebAuthn PRF extension. */
@@ -241,6 +239,8 @@ declare namespace getPasskeyPrfOutput {
   };
 }
 
+// Leaves out absent transports, so returned metadata and vaults hold no
+// undefined field.
 function toCredentialMetadata(
   credentialId: string,
   transports: readonly PasskeyCredentialTransport[] | undefined,
@@ -266,9 +266,7 @@ function toAllowCredential(
       name: "credential.credentialId",
       minByteLength: 1,
     }),
-    ...(credential.transports !== undefined
-      ? { transports: [...credential.transports] }
-      : {}),
+    transports: credential.transports?.slice(),
   };
 }
 

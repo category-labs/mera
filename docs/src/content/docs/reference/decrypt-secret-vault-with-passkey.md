@@ -66,7 +66,7 @@ Client that runs the ceremony. [WebAuthnClient](/reference/web-authn-client/) co
 ## Returns
 
 ```ts
-export type ReturnType = Promise<Uint8Array<ArrayBuffer>>;
+type ReturnType = Promise<Uint8Array<ArrayBuffer>>;
 ```
 
 The decrypted secret bytes as a fresh allocation.
@@ -86,4 +86,4 @@ The WebAuthn challenge is generated internally.
 ## See also
 
 - [parseSecretVault](/reference/parse-secret-vault/): validate stored JSON before this call.
-- [Use an existing secret](/recipes/use-an-existing-secret/): the complete storage and secret-lifetime pattern.
+- [Encrypt an existing secret with a passkey](/recipes/use-an-existing-secret/): the complete storage and secret-lifetime pattern.

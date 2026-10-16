@@ -103,4 +103,4 @@ If the fallback ceremony or vault encryption fails after creation, the passkey r
 
 - [createSecretVaultWithExistingPasskey](/reference/create-secret-vault-with-existing-passkey/): create another vault with an existing passkey.
 - [decryptSecretVaultWithPasskey](/reference/decrypt-secret-vault-with-passkey/): perform the assertion and decrypt a stored vault.
-- [Use an existing secret](/recipes/use-an-existing-secret/): the complete storage and secret-lifetime pattern.
+- [Encrypt an existing secret with a passkey](/recipes/use-an-existing-secret/): the complete storage and secret-lifetime pattern.

@@ -15,7 +15,7 @@ A passkey is a WebAuthn credential. [WebAuthn](https://www.w3.org/TR/webauthn-3/
 
 **A passkey has a [user handle](https://www.w3.org/TR/webauthn-3/#user-handle), the id of the account it belongs to on that site.** WebAuthn calls it `user.id`.
 
-Creating a passkey with the same rpId and user handle as one the authenticator already holds overwrites it. The replacement gets a new key pair and a new PRF. Mera generates a fresh random 32-byte handle for every passkey it creates, so each creation adds a passkey and leaves existing ones in place.
+Creating a passkey with the same rpId and user handle as one the authenticator already holds overwrites it. The replacement gets a new key pair and a new PRF. mera generates a fresh random 32-byte handle for every passkey it creates, so each creation adds a passkey and leaves existing ones in place.
 
 ## User verification
 
@@ -37,7 +37,7 @@ The output works as key material in two ways. Used as an encryption key, it lock
 
 ## Ceremonies and prompts
 
-A ceremony is one WebAuthn call and one user-verification prompt. A ceremony either creates a credential (closest analogy is sign up) or runs an assertion (sign in).
+A ceremony is one WebAuthn call and one user-verification prompt. It either creates a credential, much like signing up, or runs an assertion, much like signing in.
 
 ## See also
 

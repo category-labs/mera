@@ -1,18 +1,11 @@
 ---
-import LanguageSelect from "virtual:starlight/components/LanguageSelect";
+// Starlight's header with the Category Labs wordmark and a Getting started
+// link. The site has one language and one theme, so the language and theme
+// pickers are left out.
 import Search from "virtual:starlight/components/Search";
 import SiteTitle from "virtual:starlight/components/SiteTitle";
 import SocialIcons from "virtual:starlight/components/SocialIcons";
-import ThemeSelect from "virtual:starlight/components/ThemeSelect";
-import config from "virtual:starlight/user-config";
-import { withBasePath } from "../base-path";
 import CategoryLogotype from "./CategoryLogotype.astro";
-
-// Match Starlight's default search behavior so an explicit Search override
-// can still opt in when Pagefind is disabled.
-const shouldRenderSearch =
-  config.pagefind ||
-  config.components.Search !== "@astrojs/starlight/components/Search.astro";
 ---
 
 <div class="header">
@@ -25,16 +18,14 @@ const shouldRenderSearch =
   </div>
 
   <div class="search-wrapper sl-flex print:hidden">
-    {shouldRenderSearch && <Search />}
+    <Search />
   </div>
 
   <div class="right-group sl-flex print:hidden">
     <div class="social-icons sl-flex">
       <SocialIcons />
     </div>
-    <ThemeSelect />
-    <LanguageSelect />
-    <a class="header-cta" href={withBasePath("/getting-started/")}>
+    <a class="header-cta" href="/getting-started/">
       <span class="mobile-label">Get started</span>
       <span class="desktop-label">Getting started&nbsp;→</span>
     </a>

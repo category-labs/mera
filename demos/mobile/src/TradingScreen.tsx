@@ -1,36 +1,37 @@
-import { parseDecimalAmount } from "@category-labs/mera-demo-shared/amount";
 import { CHART_WINDOW_SECONDS } from "@category-labs/mera-demo-shared/chart";
 import {
-  costBasisAfterBuy,
-  costBasisAfterSell,
-} from "@category-labs/mera-demo-shared/costBasis";
-import {
-  buyShares,
   COMPANY_NAME,
-  coversTrade,
   type Fill,
   LOW_CASH_WEI,
-  maxTradeInput,
-  orderShares,
+  type Order,
   type Portfolio,
+  placeOrder,
   priceAt,
   REFRESH_MS,
   readPortfolio,
-  type Side,
-  sellShares,
   TICKER,
-  UNIT,
+  type TradeDraft,
 } from "@category-labs/mera-demo-shared/market";
 import {
   DEMO_RPC_URL,
   type EvmContext,
   fundAccount,
 } from "@category-labs/mera-demo-shared/network";
-import { CASH_SYMBOL, formatCash } from "@category-labs/mera-demo-shared/ui";
+import {
+  initialPositionState,
+  loadedPosition,
+  positionReducer,
+} from "@category-labs/mera-demo-shared/position";
+import {
+  CASH_SYMBOL,
+  formatCash,
+  formatSignedCash,
+} from "@category-labs/mera-demo-shared/ui";
 import {
   type ReactElement,
   useCallback,
   useEffect,
+  useReducer,
   useRef,
   useState,
 } from "react";
@@ -44,7 +45,7 @@ import { PriceChart } from "./PriceChart";
 import { RecoveryPhrase } from "./RecoveryPhrase";
 import { clearStoredAccount, loadCostBasis, saveCostBasis } from "./storage";
 import { TradeForm } from "./TradeForm";
-import { palette } from "./theme";
+import { palette, text } from "./theme";
 import {
   createAccount,
   describeError,
@@ -59,7 +60,6 @@ type Pending =
   | "signin"
   | "opening:create"
   | "opening:signin"
-  | "trade"
   | "recovery"
   | "funding";
 
@@ -85,15 +85,32 @@ function TradingScreen({
   evmError,
   onAccountChange,
 }: TradingScreenProps): ReactElement {
-  const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
-  const [readError, setReadError] = useState<string | null>(null);
+  const address = account === null ? null : accountAddress(account);
+  const [position, dispatch] = useReducer(
+    positionReducer,
+    initialPositionState,
+  );
+  // Reset during render rather than in an effect, so no frame shows the
+  // previous account's position.
+  if (position.address !== address) {
+    dispatch({
+      type: "accountChanged",
+      address,
+      basis: null,
+      portfolio: null,
+    });
+  }
+  const loaded = loadedPosition(position);
+  const stage = position.trade?.stage ?? null;
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
 
-  const [side, setSide] = useState<Side>("buy");
-  const [amount, setAmount] = useState("");
-  const [sellAll, setSellAll] = useState(false);
+  const [draft, setDraft] = useState<TradeDraft>({
+    kind: "amount",
+    side: "buy",
+    text: "",
+  });
   const [pending, setPending] = useState<Pending | null>(null);
-  const [fill, setFill] = useState<(Fill & { spent?: bigint }) | null>(null);
+  const [fill, setFill] = useState<Fill | null>(null);
   const [tradeError, setTradeError] = useState<string | null>(null);
 
   // Recovery phrase, revealed on demand by a fresh passkey ceremony. It lives
@@ -112,75 +129,73 @@ function TradingScreen({
     return () => subscription.remove();
   }, []);
 
-  const busy = pending !== null;
-  const address = account === null ? null : accountAddress(account);
+  const busy = pending !== null || stage === "sending";
 
-  // Polling, foregrounding, funding, and trades all refresh, so reads
-  // overlap. Only the newest may commit: a slow pre-trade snapshot would
-  // otherwise overwrite fresh balances, and its zero shares would trip the
-  // basis reset below and erase the saved basis.
-  const readGeneration = useRef(0);
+  const operationId = useRef(0);
 
   // Switches to `next` and drops everything scoped to the previous account.
   function adoptAccount(
     next: AccountState,
     portfolio: Portfolio | null = null,
   ): void {
-    readGeneration.current += 1;
     onAccountChange(next);
-    setPortfolio(portfolio);
-    setAmount("");
-    setSellAll(false);
+    const nextAddress = accountAddress(next);
+    dispatch({
+      type: "accountChanged",
+      address: nextAddress,
+      basis: null,
+      portfolio,
+    });
+    setDraft((current) => ({ kind: "amount", side: current.side, text: "" }));
     setFill(null);
     setTradeError(null);
-    setReadError(null);
   }
 
-  // Cash invested in the open position; stored on the device so P&L survives
-  // relaunches.
-  const [basis, setBasis] = useState(0n);
+  // The last fill and trade error describe the draft they came from.
+  function editDraft(next: TradeDraft): void {
+    setDraft(next);
+    setFill(null);
+    setTradeError(null);
+  }
+
+  const basisWrites = useRef(Promise.resolve());
   useEffect(() => {
-    setBasis(0n);
     if (address === null) return;
     let stale = false;
-    void loadCostBasis(address).then((stored) => {
-      if (!stale) setBasis(stored);
-    });
+    void basisWrites.current
+      .then(() => loadCostBasis(address))
+      .then((stored) => {
+        if (!stale) dispatch({ type: "basisLoaded", address, basis: stored });
+      });
     return () => {
       stale = true;
     };
   }, [address]);
 
-  // Persistence is cosmetic: a lost save shows as stale P&L, not lost funds.
-  function applyBasis(next: bigint): void {
-    if (address === null) return;
-    setBasis(next);
-    saveCostBasis(address, next).catch(() => undefined);
-  }
-
-  // A network restart wipes the chain, and with it the position; a basis
-  // left behind would report a loss on shares that no longer exist. Skip the
-  // reset while a trade is in flight: right after a buy mines, the basis is
-  // already updated while `portfolio` still shows the pre-trade zero shares.
   useEffect(() => {
-    if (!busy && address !== null && portfolio?.shares === 0n && basis !== 0n) {
-      setBasis(0n);
-      saveCostBasis(address, 0n).catch(() => undefined);
-    }
-  }, [busy, portfolio, basis, address]);
+    const current = position.address;
+    const value = position.basis;
+    if (current === null || value === null) return;
+    // SecureStore writes are asynchronous; preserve the reducer's update order.
+    basisWrites.current = basisWrites.current
+      .then(() => saveCostBasis(current, value))
+      .catch(() => undefined);
+  }, [position.address, position.basis]);
 
   const refresh = useCallback(async () => {
     setNow(Math.floor(Date.now() / 1000));
     if (evm === null || address === null) return;
-    const generation = ++readGeneration.current;
+    const requestId = ++operationId.current;
+    dispatch({ type: "readStarted", address, requestId });
     try {
       const read = await readPortfolio(evm, address);
-      if (generation !== readGeneration.current) return;
-      setPortfolio(read);
-      setReadError(null);
+      dispatch({ type: "portfolioLoaded", requestId, portfolio: read });
     } catch (caught) {
-      if (generation !== readGeneration.current) return;
-      setReadError(describeError(caught));
+      dispatch({
+        type: "refreshFailed",
+        requestId,
+        error: describeError(caught),
+      });
     }
   }, [evm, address]);
 
@@ -229,51 +244,7 @@ function TradingScreen({
   // The quote is the mirror at the current second: it equals the on-chain
   // price by construction and ticks without network reads.
   const price = priceAt(BigInt(now));
-  const positionValue =
-    portfolio === null ? null : (portfolio.shares * price) / UNIT;
   const delta = price - priceAt(BigInt(now - CHART_WINDOW_SECONDS));
-
-  // House credits change cash, never the basis, so refills cannot fake gains.
-  const pnl =
-    positionValue !== null && portfolio !== null && portfolio.shares > 0n
-      ? positionValue - basis
-      : null;
-  const pnlPercent =
-    pnl !== null && basis > 0n ? Number((pnl * 10_000n) / basis) / 100 : null;
-
-  const amountWei = parseDecimalAmount(amount, 18);
-  const covered =
-    portfolio !== null &&
-    amountWei !== null &&
-    coversTrade({
-      order: { kind: "amount", side, amountWei },
-      price,
-      portfolio,
-    });
-  const canTrade = covered && !busy;
-
-  const estimatedShares =
-    amountWei !== null ? (amountWei * UNIT) / price : null;
-
-  const submitLabel =
-    pending === "trade"
-      ? account?.status === "locked"
-        ? "Unlocking…"
-        : side === "buy"
-          ? "Buying…"
-          : "Selling…"
-      : side === "buy"
-        ? "Buy"
-        : "Sell";
-
-  function fillMax(): void {
-    if (portfolio === null) return;
-    setTradeError(null);
-    setAmount(maxTradeInput({ side, price, portfolio }));
-    // Max on the sell side means the whole position: converting its stale
-    // cash figure back to shares at a moved price can strand dust.
-    setSellAll(side === "sell");
-  }
 
   async function connect(action: "create" | "signin"): Promise<void> {
     setPending(action);
@@ -310,16 +281,16 @@ function TradingScreen({
     return idle;
   }
 
-  async function submit(): Promise<void> {
+  async function submit(order: Order): Promise<void> {
     if (
-      amountWei === null ||
-      portfolio === null ||
+      loaded === null ||
       evm === null ||
       account === null ||
       account.status === "none"
     )
       return;
-    setPending("trade");
+    const tradeId = ++operationId.current;
+    dispatch({ type: "tradeStarted", tradeId });
     setTradeError(null);
     setFill(null);
     try {
@@ -348,29 +319,21 @@ function TradingScreen({
       } else {
         wallet = account.wallet;
       }
-      if (side === "buy") {
-        const result = await buyShares(wallet.session, evm, amountWei);
-        setFill({ ...result, spent: amountWei });
-        applyBasis(costBasisAfterBuy(basis, amountWei));
-      } else {
-        const shares = orderShares({
-          order: sellAll
-            ? { kind: "sellAll", side: "sell" }
-            : { kind: "amount", side: "sell", amountWei },
-          price,
-          heldShares: portfolio.shares,
-        });
-        const result = await sellShares(wallet.session, evm, shares);
-        setFill(result);
-        applyBasis(costBasisAfterSell(basis, result.shares, portfolio.shares));
-      }
-      setAmount("");
-      setSellAll(false);
+      const result = await placeOrder({
+        session: wallet.session,
+        evm,
+        order,
+        price,
+        heldShares: loaded.shares,
+      });
+      setFill(result);
+      dispatch({ type: "tradeConfirmed", tradeId, fill: result });
+      setDraft((current) => ({ kind: "amount", side: current.side, text: "" }));
       await refresh();
     } catch (caught) {
       setTradeError(describeError(caught));
     } finally {
-      setPending(null);
+      dispatch({ type: "tradeFinished", tradeId });
     }
   }
 
@@ -448,8 +411,7 @@ function TradingScreen({
             <Text
               style={[styles.stockDelta, delta < 0n ? styles.down : styles.up]}
             >
-              {delta < 0n ? "" : "+"}
-              {formatCash(delta)} · 30m
+              {formatSignedCash(delta)} · 30m
             </Text>
           </View>
         </View>
@@ -482,40 +444,33 @@ function TradingScreen({
           </View>
         ) : (
           <>
-            <Holdings
-              portfolio={portfolio}
-              positionValue={positionValue}
-              pnl={pnl}
-              pnlPercent={pnlPercent}
-            />
-            <TradeForm
-              side={side}
-              amount={amount}
-              busy={busy}
-              canTrade={canTrade}
-              maxDisabled={busy || portfolio === null}
-              submitLabel={submitLabel}
-              estimatedShares={estimatedShares}
-              fill={fill}
-              onAmountChange={(value) => {
-                setAmount(value);
-                setSellAll(false);
-                // A new amount retires the last fill for the estimate.
-                setFill(null);
-              }}
-              onMax={fillMax}
-              onSideChange={(next) => {
-                setSide(next);
-                setSellAll(false);
-                setTradeError(null);
-              }}
-              onSubmit={() => void submit()}
-            />
+            {loaded === null ? (
+              <Text style={text.hint}>Loading balances…</Text>
+            ) : (
+              <>
+                <Holdings
+                  position={loaded}
+                  price={price}
+                  settling={stage === "settling"}
+                />
+                <TradeForm
+                  draft={draft}
+                  onDraftChange={editDraft}
+                  portfolio={loaded}
+                  price={price}
+                  stage={stage}
+                  locked={account.status === "locked"}
+                  fill={fill}
+                  disabled={pending !== null}
+                  onSubmit={(next) => void submit(next)}
+                />
+              </>
+            )}
             {tradeError !== null ? (
               <Text style={styles.error}>{tradeError}</Text>
             ) : null}
-            {readError !== null ? (
-              <Text style={styles.error}>{readError}</Text>
+            {position.readError !== null ? (
+              <Text style={styles.error}>{position.readError}</Text>
             ) : null}
           </>
         )}
@@ -523,7 +478,7 @@ function TradingScreen({
 
       {account !== null && account.status !== "none" ? (
         <View style={styles.links}>
-          {portfolio !== null && portfolio.cash < LOW_CASH_WEI ? (
+          {loaded !== null && loaded.cash < LOW_CASH_WEI ? (
             <LinkButton
               title={
                 pending === "funding"

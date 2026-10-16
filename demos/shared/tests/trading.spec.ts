@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { maxTradeInput, priceAt, UNIT } from "../src/market";
+import { maxDraft, priceAt, UNIT } from "../src/market";
 import { DEMO_RPC_URL } from "../src/network";
 
 const address = "0x2222222222222222222222222222222222222222";
@@ -105,11 +105,11 @@ test("Sell Max remains enabled after the quote falls; typing restores amount val
   await expect(max).toBeEnabled();
   await max.click();
   const amount = page.getByLabel("Amount (DEMOCASH)");
-  const originalAmount = maxTradeInput({
+  const originalAmount = maxDraft({
     side: "sell",
     price,
     portfolio: { cash: 10_000n * UNIT, shares },
-  });
+  }).text;
   await expect(amount).toHaveValue(originalAmount);
   const sell = page.getByRole("button", { name: "Sell", exact: true });
   await expect(sell).toBeEnabled();

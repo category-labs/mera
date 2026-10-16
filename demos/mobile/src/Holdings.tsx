@@ -1,7 +1,9 @@
-import { type Portfolio, TICKER } from "@category-labs/mera-demo-shared/market";
+import { TICKER, UNIT } from "@category-labs/mera-demo-shared/market";
+import type { LoadedPosition } from "@category-labs/mera-demo-shared/position";
 import {
   CASH_SYMBOL,
   formatCash,
+  formatPnl,
   formatShares,
 } from "@category-labs/mera-demo-shared/ui";
 import type { ReactElement } from "react";
@@ -9,41 +11,35 @@ import { StyleSheet, Text, View } from "react-native";
 import { palette, text } from "./theme";
 
 type HoldingsProps = {
-  portfolio: Portfolio | null;
-  positionValue: bigint | null;
-  pnl: bigint | null;
-  pnlPercent: number | null;
+  position: LoadedPosition;
+  price: bigint;
+  /** A trade waits for the read that includes its fee, so cash shows "…". */
+  settling: boolean;
 };
 
-function Holdings({
-  portfolio,
-  positionValue,
-  pnl,
-  pnlPercent,
-}: HoldingsProps): ReactElement {
+/**
+ * The account's balances: cash, the position at the live price, and its gain
+ * or loss against the cost basis. House credits change cash, never the basis,
+ * so refills cannot fake gains.
+ */
+function Holdings({ position, price, settling }: HoldingsProps): ReactElement {
+  const value = (position.shares * price) / UNIT;
+  const pnl = value - position.basis;
   return (
     <View style={styles.holdings}>
       <Row
         label={CASH_SYMBOL}
-        value={portfolio === null ? "…" : formatCash(portfolio.cash)}
+        value={settling ? "…" : formatCash(position.cash)}
       />
       <Row
         label={TICKER}
-        value={
-          portfolio === null || positionValue === null
-            ? "…"
-            : `${formatShares(portfolio.shares)} · ${formatCash(positionValue)}`
-        }
+        value={`${formatShares(position.shares)} · ${formatCash(value)}`}
       />
-      {pnl !== null ? (
+      {position.shares > 0n ? (
         <Row
           label="P&L"
           tone={pnl < 0n ? "down" : "up"}
-          value={`${pnl < 0n ? "" : "+"}${formatCash(pnl)}${
-            pnlPercent === null
-              ? ""
-              : ` · ${pnlPercent < 0 ? "" : "+"}${pnlPercent.toFixed(2)}%`
-          }`}
+          value={formatPnl(pnl, position.basis)}
         />
       ) : null}
     </View>

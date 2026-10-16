@@ -34,15 +34,6 @@ function normalizeByteArray(
 }
 
 /**
- * Encodes bytes as canonical unpadded base64url.
- *
- * @internal
- */
-function base64UrlEncode(value: Uint8Array): string {
-  return base64urlnopad.encode(value);
-}
-
-/**
  * Decodes canonical unpadded base64url into bytes.
  *
  * @param value - Canonical unpadded base64url text.
@@ -90,4 +81,4 @@ function base64UrlDecode(
   return bytes;
 }
 
-export { base64UrlDecode, base64UrlEncode, copyBytes, normalizeByteArray };
+export { base64UrlDecode, copyBytes, normalizeByteArray };

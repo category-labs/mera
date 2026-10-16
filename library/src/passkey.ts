@@ -1,6 +1,7 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { utf8ToBytes } from "@noble/hashes/utils.js";
-import { base64UrlDecode, base64UrlEncode, copyBytes } from "./encoding.js";
+import { base64urlnopad } from "@scure/base";
+import { base64UrlDecode, copyBytes } from "./encoding.js";
 import { isMeraError, MeraError } from "./errors.js";
 import type {
   PasskeyCredentialMetadata,
@@ -77,7 +78,7 @@ async function createPasskeyWithPrfOutput({
     }
 
     const credentialMetadata = toCredentialMetadata(
-      base64UrlEncode(created.credentialId),
+      base64urlnopad.encode(created.credentialId),
       created.transports,
     );
 
@@ -209,7 +210,7 @@ async function getPasskeyPrfOutput({
     }
 
     return {
-      credentialId: base64UrlEncode(asserted.credentialId),
+      credentialId: base64urlnopad.encode(asserted.credentialId),
       prfOutput: copyPrfOutput(asserted.prfOutput),
     };
   } catch (error) {

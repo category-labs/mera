@@ -1,9 +1,6 @@
+import { base64urlnopad } from "@scure/base";
 import type { Passkey } from "react-native-passkey";
-import {
-  base64UrlDecode,
-  base64UrlEncode,
-  normalizeByteArray,
-} from "./encoding.js";
+import { base64UrlDecode, normalizeByteArray } from "./encoding.js";
 import type { MeraErrorCode } from "./errors.js";
 import type { WebAuthnClient } from "./webauthn.js";
 
@@ -32,11 +29,11 @@ function createReactNativeWebAuthnClient(
       const created = await platformApi.createPlatformKey({
         rp: request.rp,
         user: {
-          id: base64UrlEncode(request.user.id),
+          id: base64urlnopad.encode(request.user.id),
           name: request.user.name,
           displayName: request.user.displayName,
         },
-        challenge: base64UrlEncode(request.challenge),
+        challenge: base64urlnopad.encode(request.challenge),
         pubKeyCredParams: request.algorithms.map((alg) => ({
           type: "public-key",
           alg,
@@ -71,7 +68,7 @@ function createReactNativeWebAuthnClient(
       const { allowCredential } = request;
       const asserted = await platformApi.getPlatformKey({
         rpId: request.rpId,
-        challenge: base64UrlEncode(request.challenge),
+        challenge: base64urlnopad.encode(request.challenge),
         userVerification: request.userVerification,
         extensions: prfExtension(request.prfSalt),
         ...(allowCredential !== undefined
@@ -79,7 +76,7 @@ function createReactNativeWebAuthnClient(
               allowCredentials: [
                 {
                   type: "public-key" as const,
-                  id: base64UrlEncode(allowCredential.credentialId),
+                  id: base64urlnopad.encode(allowCredential.credentialId),
                   ...(allowCredential.transports !== undefined
                     ? {
                         transports: [

@@ -1,4 +1,5 @@
-import { base64UrlDecode, base64UrlEncode, copyBytes } from "./encoding.js";
+import { base64urlnopad } from "@scure/base";
+import { base64UrlDecode, copyBytes } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import {
   createPasskeyWithPrfOutput,
@@ -131,9 +132,9 @@ async function createSecretVault({
       credential.credentialId,
       credential.transports,
     ),
-    prfSalt: base64UrlEncode(credential.prfSalt),
-    nonce: base64UrlEncode(nonce),
-    ciphertext: base64UrlEncode(new Uint8Array(ciphertext)),
+    prfSalt: base64urlnopad.encode(credential.prfSalt),
+    nonce: base64urlnopad.encode(nonce),
+    ciphertext: base64urlnopad.encode(new Uint8Array(ciphertext)),
   };
 }
 

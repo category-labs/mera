@@ -19,7 +19,7 @@ function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array<ArrayBuffer> {
     );
   }
 
-  return new Uint8Array(ed25519.getPublicKey(privateKey));
+  return ed25519.getPublicKey(privateKey);
 }
 
 /**
@@ -40,7 +40,7 @@ function createEd25519SigningSession({
   return {
     publicKey,
     async signMessage(message: Uint8Array): Promise<Uint8Array<ArrayBuffer>> {
-      return new Uint8Array(ed25519.sign(message, use()));
+      return ed25519.sign(message, use());
     },
     end,
     [Symbol.dispose]: end,

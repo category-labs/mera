@@ -29,43 +29,31 @@ function createSigningKey(
   privateKey: Uint8Array,
   derivePublicKey: (privateKey: Uint8Array) => Uint8Array<ArrayBuffer>,
 ): SigningKey {
-  let activePrivateKey: Uint8Array<ArrayBuffer> | undefined;
+  let activePrivateKey: Uint8Array<ArrayBuffer> | undefined =
+    copyBytes(privateKey);
+  let publicKey: Uint8Array<ArrayBuffer>;
 
   try {
-    activePrivateKey = copyBytes(privateKey);
-    const publicKey = derivePublicKey(activePrivateKey);
-
-    return {
-      use(): Uint8Array<ArrayBuffer> {
-        return requireActive(activePrivateKey);
-      },
-      end(): void {
-        if (activePrivateKey !== undefined) {
-          activePrivateKey.fill(0);
-          activePrivateKey = undefined;
-        }
-      },
-      publicKey,
-    };
+    publicKey = derivePublicKey(activePrivateKey);
   } catch (error) {
-    activePrivateKey?.fill(0);
+    activePrivateKey.fill(0);
     throw error;
   }
-}
 
-/**
- * Returns the active private key.
- *
- * @throws MeraError with code `SESSION_ENDED` when `privateKey` is undefined.
- */
-function requireActive(
-  privateKey: Uint8Array<ArrayBuffer> | undefined,
-): Uint8Array<ArrayBuffer> {
-  if (privateKey === undefined) {
-    throw new MeraError("SESSION_ENDED", "Signing session has ended");
-  }
+  return {
+    use(): Uint8Array<ArrayBuffer> {
+      if (activePrivateKey === undefined) {
+        throw new MeraError("SESSION_ENDED", "Signing session has ended");
+      }
 
-  return privateKey;
+      return activePrivateKey;
+    },
+    end(): void {
+      activePrivateKey?.fill(0);
+      activePrivateKey = undefined;
+    },
+    publicKey,
+  };
 }
 
 export { createSigningKey };

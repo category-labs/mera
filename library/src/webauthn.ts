@@ -83,17 +83,16 @@ declare namespace WebAuthnClient {
   };
 }
 
-type PrfClientExtensionResults = AuthenticationExtensionsClientOutputs & {
+/**
+ * PRF extension outputs as browsers return them. lib.dom types the output as
+ * a `BufferSource`, but the 1Password extension returns a plain array of byte
+ * values.
+ */
+type PrfExtensionOutputs = {
   prf?: {
     enabled?: boolean;
-    results?: {
-      first?: BufferSource | ArrayLike<number>;
-    };
+    results?: { first?: BufferSource | ArrayLike<number> };
   };
-};
-
-type PublicKeyCredentialWithPrf = PublicKeyCredential & {
-  getClientExtensionResults(): PrfClientExtensionResults;
 };
 
 const browserWebAuthnClient: WebAuthnClient = {
@@ -123,27 +122,16 @@ const browserWebAuthnClient: WebAuthnClient = {
     });
 
     const publicKeyCredential = assertPublicKeyCredential(credential);
-    const prf = publicKeyCredential.getClientExtensionResults().prf;
+    const prf = readPrfExtension(publicKeyCredential);
     const response =
       publicKeyCredential.response as AuthenticatorAttestationResponse;
-    const transports =
-      typeof response.getTransports === "function"
-        ? response.getTransports()
-        : undefined;
-    const first = prf?.results?.first;
+    const transports = response.getTransports?.();
 
     return {
       credentialId: new Uint8Array(publicKeyCredential.rawId),
       ...(transports !== undefined ? { transports } : {}),
-      prfEnabled: prf?.enabled === true,
-      ...(first
-        ? {
-            prfOutput: normalizeByteArray(first, {
-              name: "PRF output",
-              code: "PRF_UNAVAILABLE",
-            }),
-          }
-        : {}),
+      prfEnabled: prf.enabled,
+      ...(prf.output !== undefined ? { prfOutput: prf.output } : {}),
     };
   },
 
@@ -179,26 +167,18 @@ const browserWebAuthnClient: WebAuthnClient = {
       },
     });
     const publicKeyCredential = assertPublicKeyCredential(credential);
-    const first =
-      publicKeyCredential.getClientExtensionResults().prf?.results?.first;
+    const prf = readPrfExtension(publicKeyCredential);
 
     return {
       credentialId: new Uint8Array(publicKeyCredential.rawId),
-      ...(first
-        ? {
-            prfOutput: normalizeByteArray(first, {
-              name: "PRF output",
-              code: "PRF_UNAVAILABLE",
-            }),
-          }
-        : {}),
+      ...(prf.output !== undefined ? { prfOutput: prf.output } : {}),
     };
   },
 };
 
 function assertPublicKeyCredential(
   credential: Credential | null | undefined,
-): PublicKeyCredentialWithPrf {
+): PublicKeyCredential {
   if (
     credential?.type !== "public-key" ||
     !("rawId" in credential) ||
@@ -211,7 +191,29 @@ function assertPublicKeyCredential(
     );
   }
 
-  return credential as PublicKeyCredentialWithPrf;
+  return credential as PublicKeyCredential;
+}
+
+/**
+ * @throws MeraError with code `PRF_UNAVAILABLE` when the PRF output is an
+ * array holding a value that is not a byte.
+ */
+function readPrfExtension(credential: PublicKeyCredential): {
+  enabled: boolean;
+  output: Uint8Array | undefined;
+} {
+  const { prf }: PrfExtensionOutputs = credential.getClientExtensionResults();
+  const first = prf?.results?.first;
+
+  return {
+    enabled: prf?.enabled === true,
+    output: first
+      ? normalizeByteArray(first, {
+          name: "PRF output",
+          code: "PRF_UNAVAILABLE",
+        })
+      : undefined,
+  };
 }
 
 export type { WebAuthnClient };

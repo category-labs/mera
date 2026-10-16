@@ -1,14 +1,12 @@
-import { base64UrlDecode, base64UrlEncode, copyBytes } from "./encoding.js";
+import { base64urlnopad } from "@scure/base";
+import { base64UrlDecode, copyBytes } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
   toCredentialMetadata,
 } from "./passkey.js";
-import type {
-  PasskeyCredentialTransport,
-  PasskeySecretVault,
-} from "./types.js";
+import type { PasskeySecretVault } from "./types.js";
 import { getSubtleCrypto, randomBytes } from "./webcrypto.js";
 
 const PRF_SALT_LENGTH = 32;
@@ -82,6 +80,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function isStringArray(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === "string")
+  );
+}
+
 /** Inputs for `createSecretVault`. */
 type CreateSecretVaultOptions = {
   /** Credential metadata plus the PRF salt and PRF output that key this secret. */
@@ -131,9 +135,9 @@ async function createSecretVault({
       credential.credentialId,
       credential.transports,
     ),
-    prfSalt: base64UrlEncode(credential.prfSalt),
-    nonce: base64UrlEncode(nonce),
-    ciphertext: base64UrlEncode(new Uint8Array(ciphertext)),
+    prfSalt: base64urlnopad.encode(credential.prfSalt),
+    nonce: base64urlnopad.encode(nonce),
+    ciphertext: base64urlnopad.encode(new Uint8Array(ciphertext)),
   };
 }
 
@@ -347,21 +351,13 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
     { minByteLength: 1 },
   );
 
-  let transports: PasskeyCredentialTransport[] | undefined;
+  const { transports } = vault.credential;
 
-  if (vault.credential.transports !== undefined) {
-    if (
-      !Array.isArray(vault.credential.transports) ||
-      vault.credential.transports.some(
-        (transport) => typeof transport !== "string",
-      )
-    ) {
-      throw new MeraError(
-        "VAULT_FORMAT_INVALID",
-        "credential.transports must be an array of strings or omitted",
-      );
-    }
-    transports = vault.credential.transports;
+  if (transports !== undefined && !isStringArray(transports)) {
+    throw new MeraError(
+      "VAULT_FORMAT_INVALID",
+      "credential.transports must be an array of strings or omitted",
+    );
   }
 
   const credential = toCredentialMetadata(credentialId, transports);

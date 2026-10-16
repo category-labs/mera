@@ -170,7 +170,7 @@ test("secret-vault functions create separate vaults and decrypt them", async ({
           vault: tampered,
         });
       } catch (error) {
-        tamperCode = mera.isMeraError(error) ? error.code : undefined;
+        tamperCode = error instanceof mera.MeraError ? error.code : undefined;
       }
 
       const revealedFirst = new TextDecoder().decode(firstSecret);

@@ -18,12 +18,12 @@ declare class MeraError extends Error {
 
 `name` is always `"MeraError"`. When a lower-level failure triggered the error (a [WebAuthn](https://www.w3.org/TR/webauthn-3/) rejection, a Web Crypto failure), it is attached as `cause`.
 
-## isMeraError
+`instanceof MeraError` narrows a caught value so `code` can be branched on:
 
 ```ts
 import {
   getPasskeyPrfOutput,
-  isMeraError,
+  MeraError,
 } from "@category-labs/mera";
 
 try {
@@ -31,14 +31,12 @@ try {
     rpId: "account.example.com",
   });
 } catch (error) {
-  if (isMeraError(error) && error.code === "PRF_UNAVAILABLE") {
+  if (error instanceof MeraError && error.code === "PRF_UNAVAILABLE") {
     // Point at a PRF-capable authenticator.
   }
   throw error;
 }
 ```
-
-`isMeraError` is a type guard: it narrows a caught value so `code` can be branched on.
 
 ## Codes
 

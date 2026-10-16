@@ -2,7 +2,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { base64urlnopad } from "@scure/base";
 import { base64UrlDecode, copyBytes } from "./encoding.js";
-import { isMeraError, MeraError } from "./errors.js";
+import { MeraError } from "./errors.js";
 import type {
   PasskeyCredentialMetadata,
   PasskeyCredentialTransport,
@@ -299,7 +299,7 @@ function copyPrfOutput(prfOutput: Uint8Array): Uint8Array<ArrayBuffer> {
  * rejection, as `PASSKEY_OPERATION_FAILED`.
  */
 function toPasskeyError(error: unknown, message: string): MeraError {
-  return isMeraError(error)
+  return error instanceof MeraError
     ? error
     : new MeraError("PASSKEY_OPERATION_FAILED", message, { cause: error });
 }

@@ -1,7 +1,7 @@
 import {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
-  isMeraError,
+  MeraError,
 } from "@category-labs/mera";
 import { reactNativeWebAuthnClient } from "@category-labs/mera/react-native-webauthn-client";
 import { describeError as describeDemoError } from "@category-labs/mera-demo-shared/errors";
@@ -97,7 +97,7 @@ async function revealMnemonic(credentialId: string): Promise<string> {
 
 /** The shared error text, with React Native wording for passkey failures. */
 function describeError(error: unknown): string {
-  if (isMeraError(error)) {
+  if (error instanceof MeraError) {
     switch (error.code) {
       case "PRF_UNAVAILABLE":
         return "This passkey provider does not support the WebAuthn PRF extension. iOS needs 18 or newer; on Android, Google Password Manager and 1Password both supply it.";

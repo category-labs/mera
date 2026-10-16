@@ -5,12 +5,11 @@
   "type": "module",
   "exports": {
     "./account": "./src/account.ts",
+    "./AccountHoldings": "./src/AccountHoldings.tsx",
     "./AccountChip": "./src/AccountChip.tsx",
-    "./amount": "./src/amount.ts",
     "./base.css": "./src/base.css",
     "./chart": "./src/chart.ts",
     "./connect": "./src/connect.ts",
-    "./costBasis": "./src/costBasis.ts",
     "./costBasisStorage": "./src/costBasisStorage.ts",
     "./hd": "./src/hd.ts",
     "./market": "./src/market.ts",
@@ -19,6 +18,7 @@
     "./NewsTicker": "./src/NewsTicker.tsx",
     "./position": "./src/position.ts",
     "./PriceChart": "./src/PriceChart.tsx",
+    "./TradeForm": "./src/TradeForm.tsx",
     "./ui": "./src/ui.ts",
     "./useCopyButton": "./src/useCopyButton.ts",
     "./validation": "./src/validation.ts"

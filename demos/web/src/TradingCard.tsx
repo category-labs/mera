@@ -1,9 +1,9 @@
+import { AccountHoldings } from "@category-labs/mera-demo-shared/AccountHoldings";
 import {
   type AccountState,
   accountAddress,
   clearCachedAccount,
 } from "@category-labs/mera-demo-shared/account";
-import { parseDecimalAmount } from "@category-labs/mera-demo-shared/amount";
 import { CHART_WINDOW_SECONDS } from "@category-labs/mera-demo-shared/chart";
 import {
   type AccountMode,
@@ -13,29 +13,21 @@ import {
   revealMnemonic,
 } from "@category-labs/mera-demo-shared/connect";
 import {
-  costBasisAfterBuy,
-  costBasisAfterSell,
-} from "@category-labs/mera-demo-shared/costBasis";
-import {
   loadCostBasis,
   saveCostBasis,
 } from "@category-labs/mera-demo-shared/costBasisStorage";
 import {
-  buyShares,
   COMPANY_NAME,
-  coversTrade,
   type Fill,
   LOW_CASH_WEI,
-  maxTradeInput,
-  orderShares,
+  type Order,
   type Portfolio,
+  placeOrder,
   priceAt,
   REFRESH_MS,
   readPortfolio,
-  type Side,
-  sellShares,
   TICKER,
-  UNIT,
+  type TradeDraft,
 } from "@category-labs/mera-demo-shared/market";
 import { NewsTicker } from "@category-labs/mera-demo-shared/NewsTicker";
 import {
@@ -44,14 +36,21 @@ import {
 } from "@category-labs/mera-demo-shared/network";
 import { PriceChart } from "@category-labs/mera-demo-shared/PriceChart";
 import {
+  initialPositionState,
+  loadedPosition,
+  positionReducer,
+} from "@category-labs/mera-demo-shared/position";
+import { TradeForm } from "@category-labs/mera-demo-shared/TradeForm";
+import {
   CASH_SYMBOL,
   formatCash,
-  formatShares,
+  formatSignedCash,
 } from "@category-labs/mera-demo-shared/ui";
 import {
   type ReactElement,
   useCallback,
   useEffect,
+  useReducer,
   useRef,
   useState,
 } from "react";
@@ -65,6 +64,20 @@ type TradingCardProps = {
   account: AccountState;
   onAccountChange: (next: AccountState) => void;
 };
+
+// The switch to `next`, with the cost basis this device stored for it.
+function accountChanged(
+  next: AccountState,
+  portfolio: Portfolio | null,
+): positionReducer.Event {
+  const nextAddress = accountAddress(next);
+  return {
+    type: "accountChanged",
+    address: nextAddress,
+    basis: nextAddress === null ? null : loadCostBasis(nextAddress),
+    portfolio,
+  };
+}
 
 /**
  * The always-on trading surface: the stock's price, chart, and fake newsroom
@@ -80,16 +93,26 @@ function TradingCard({
   onAccountChange,
 }: TradingCardProps): ReactElement {
   const [connectMode, setConnectMode] = useState<AccountMode>("passkey");
+  const [connecting, setConnecting] = useState(false);
 
-  const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
-  const [readError, setReadError] = useState<string | null>(null);
+  const address = accountAddress(account);
+  const [position, dispatch] = useReducer(
+    positionReducer,
+    initialPositionState,
+  );
+  // Reset during render rather than in an effect, so no frame shows the
+  // previous account's position.
+  if (position.address !== address) dispatch(accountChanged(account, null));
+  const loaded = loadedPosition(position);
+  const stage = position.trade?.stage ?? null;
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
 
-  const [side, setSide] = useState<Side>("buy");
-  const [amount, setAmount] = useState("");
-  const [sellAll, setSellAll] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [fill, setFill] = useState<(Fill & { spent?: bigint }) | null>(null);
+  const [draft, setDraft] = useState<TradeDraft>({
+    kind: "amount",
+    side: "buy",
+    text: "",
+  });
+  const [fill, setFill] = useState<Fill | null>(null);
   const [tradeError, setTradeError] = useState<string | null>(null);
   const [funding, setFunding] = useState(false);
 
@@ -100,66 +123,48 @@ function TradingCard({
   const [revealing, setRevealing] = useState(false);
   const [backupError, setBackupError] = useState<string | null>(null);
 
-  const address = accountAddress(account);
-
-  // Polling, foregrounding, funding, and trades all refresh, so reads
-  // overlap. Only the newest may commit: a slow pre-funding snapshot would
-  // otherwise overwrite fresh balances, and its zero shares would trip the
-  // basis reset below and erase the saved basis.
-  const readGeneration = useRef(0);
+  const operationId = useRef(0);
 
   // Switches to `next` and drops everything scoped to the previous account.
   function adoptAccount(
     next: AccountState,
     portfolio: Portfolio | null = null,
   ): void {
-    readGeneration.current += 1;
     onAccountChange(next);
-    setPortfolio(portfolio);
-    setAmount("");
-    setSellAll(false);
+    dispatch(accountChanged(next, portfolio));
+    setDraft((current) => ({ kind: "amount", side: current.side, text: "" }));
     setFill(null);
     setTradeError(null);
-    setReadError(null);
     setBackupError(null);
   }
 
-  // Cash invested in the open position; localStorage so P&L survives reloads.
-  const [basis, setBasis] = useState(() =>
-    address === null ? 0n : loadCostBasis(address),
-  );
-  useEffect(() => {
-    setBasis(address === null ? 0n : loadCostBasis(address));
-  }, [address]);
-  function applyBasis(next: bigint): void {
-    if (address === null) return;
-    setBasis(next);
-    saveCostBasis(address, next);
+  // The last fill and trade error describe the draft they came from.
+  function editDraft(next: TradeDraft): void {
+    setDraft(next);
+    setFill(null);
+    setTradeError(null);
   }
 
-  // A network restart wipes the chain, and with it the position; a basis
-  // left behind would report a loss on shares that no longer exist. Skip the
-  // reset while a trade is in flight: right after a buy mines, the basis is
-  // already updated while `portfolio` still shows the pre-trade zero shares.
   useEffect(() => {
-    if (!busy && address !== null && portfolio?.shares === 0n && basis !== 0n) {
-      setBasis(0n);
-      saveCostBasis(address, 0n);
-    }
-  }, [busy, portfolio, basis, address]);
+    const current = position.address;
+    const value = position.basis;
+    if (current !== null && value !== null) saveCostBasis(current, value);
+  }, [position.address, position.basis]);
 
   const refresh = useCallback(async () => {
     setNow(Math.floor(Date.now() / 1000));
     if (evm === null || address === null) return;
-    const generation = ++readGeneration.current;
+    const requestId = ++operationId.current;
+    dispatch({ type: "readStarted", address, requestId });
     try {
       const read = await readPortfolio(evm, address);
-      if (generation !== readGeneration.current) return;
-      setPortfolio(read);
-      setReadError(null);
+      dispatch({ type: "portfolioLoaded", requestId, portfolio: read });
     } catch (caught) {
-      if (generation !== readGeneration.current) return;
-      setReadError(describeError(caught));
+      dispatch({
+        type: "refreshFailed",
+        requestId,
+        error: describeError(caught),
+      });
     }
   }, [evm, address]);
 
@@ -229,50 +234,12 @@ function TradingCard({
   // The quote is the mirror at the current second: it equals the on-chain
   // price by construction and ticks without network reads.
   const price = priceAt(BigInt(now));
-  const positionValue =
-    portfolio === null ? null : (portfolio.shares * price) / UNIT;
   const delta = price - priceAt(BigInt(now - CHART_WINDOW_SECONDS));
 
-  // House credits change cash, never the basis, so refills cannot fake gains.
-  const pnl =
-    positionValue !== null && portfolio !== null && portfolio.shares > 0n
-      ? positionValue - basis
-      : null;
-  const pnlPercent =
-    pnl !== null && basis > 0n ? Number((pnl * 10_000n) / basis) / 100 : null;
-
-  const amountWei = parseDecimalAmount(amount, 18);
-  const covered =
-    portfolio !== null &&
-    amountWei !== null &&
-    coversTrade({
-      order: { kind: "amount", side, amountWei },
-      price,
-      portfolio,
-    });
-  const canTrade = covered && !busy;
-
-  const estimatedShares =
-    amountWei !== null ? (amountWei * UNIT) / price : null;
-
-  function fillMax(): void {
-    if (portfolio === null) return;
-    setTradeError(null);
-    setAmount(maxTradeInput({ side, price, portfolio }));
-    // Max on the sell side means the whole position: converting its stale
-    // cash figure back to shares at a moved price can strand dust.
-    setSellAll(side === "sell");
-  }
-
-  async function submit(): Promise<void> {
-    if (
-      amountWei === null ||
-      portfolio === null ||
-      evm === null ||
-      account.status === "none"
-    )
-      return;
-    setBusy(true);
+  async function submit(order: Order): Promise<void> {
+    if (loaded === null || evm === null || account.status === "none") return;
+    const tradeId = ++operationId.current;
+    dispatch({ type: "tradeStarted", tradeId });
     setTradeError(null);
     setFill(null);
     try {
@@ -295,30 +262,21 @@ function TradingCard({
       } else {
         wallet = account.wallet;
       }
-      const session = wallet.account.session;
-      if (side === "buy") {
-        const result = await buyShares(session, evm, amountWei);
-        setFill({ ...result, spent: amountWei });
-        applyBasis(costBasisAfterBuy(basis, amountWei));
-      } else {
-        const shares = orderShares({
-          order: sellAll
-            ? { kind: "sellAll", side: "sell" }
-            : { kind: "amount", side: "sell", amountWei },
-          price,
-          heldShares: portfolio.shares,
-        });
-        const result = await sellShares(session, evm, shares);
-        setFill(result);
-        applyBasis(costBasisAfterSell(basis, result.shares, portfolio.shares));
-      }
-      setAmount("");
-      setSellAll(false);
+      const result = await placeOrder({
+        session: wallet.account.session,
+        evm,
+        order,
+        price,
+        heldShares: loaded.shares,
+      });
+      setFill(result);
+      dispatch({ type: "tradeConfirmed", tradeId, fill: result });
+      setDraft((current) => ({ kind: "amount", side: current.side, text: "" }));
       await refresh();
     } catch (caught) {
       setTradeError(describeError(caught));
     } finally {
-      setBusy(false);
+      dispatch({ type: "tradeFinished", tradeId });
     }
   }
 
@@ -378,8 +336,7 @@ function TradingCard({
             <span
               className={delta < 0n ? "stock-delta down" : "stock-delta up"}
             >
-              {delta < 0n ? "" : "+"}
-              {formatCash(delta)} · 30m
+              {formatSignedCash(delta)} · 30m
             </span>
           </div>
         </div>
@@ -396,134 +353,37 @@ function TradingCard({
             key={connectMode}
             mode={connectMode}
             onConnected={openAccount}
+            onBusyChange={setConnecting}
           />
         ) : (
           <>
-            <div className="holdings">
-              <div className="holding-row">
-                <span className="holding-label">{CASH_SYMBOL}</span>
-                <span className="holding-value">
-                  {portfolio === null ? "…" : formatCash(portfolio.cash)}
-                </span>
+            {loaded === null ? (
+              <div className="holdings">
+                <p className="hint">Loading balances…</p>
               </div>
-              <div className="holding-row">
-                <span className="holding-label">{TICKER}</span>
-                <span className="holding-value">
-                  {portfolio === null || positionValue === null
-                    ? "…"
-                    : `${formatShares(portfolio.shares)} · ${formatCash(positionValue)}`}
-                </span>
-              </div>
-              {pnl !== null && (
-                <div className="holding-row">
-                  <span className="holding-label">P&L</span>
-                  <span
-                    className={
-                      pnl < 0n ? "holding-value down" : "holding-value up"
-                    }
-                  >
-                    {pnl < 0n ? "" : "+"}
-                    {formatCash(pnl)}
-                    {pnlPercent !== null &&
-                      ` · ${pnlPercent < 0 ? "" : "+"}${pnlPercent.toFixed(2)}%`}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="segmented" role="tablist" aria-label="Trade side">
-              {(["buy", "sell"] as const).map((entry) => (
-                <button
-                  key={entry}
-                  type="button"
-                  role="tab"
-                  aria-selected={entry === side}
-                  className={entry === side ? "segment active" : "segment"}
-                  onClick={() => {
-                    setSide(entry);
-                    setSellAll(false);
-                    setTradeError(null);
-                  }}
-                >
-                  {entry === "buy" ? "Buy" : "Sell"}
-                </button>
-              ))}
-            </div>
-
-            <form
-              className="trade"
-              onSubmit={(event) => {
-                event.preventDefault();
-                if (canTrade) void submit();
-              }}
-            >
-              <div className="send-row">
-                <div className="field grow">
-                  <span className="field-head">
-                    <label htmlFor="trade-amount">Amount ({CASH_SYMBOL})</label>
-                    <button
-                      type="button"
-                      className="link small"
-                      onClick={fillMax}
-                      disabled={busy || portfolio === null}
-                    >
-                      Max
-                    </button>
-                  </span>
-                  <input
-                    id="trade-amount"
-                    value={amount}
-                    placeholder="100.00"
-                    inputMode="decimal"
-                    spellCheck={false}
-                    onChange={(event) => {
-                      setAmount(event.target.value);
-                      setSellAll(false);
-                      // A new amount retires the last fill for the estimate.
-                      setFill(null);
-                    }}
-                    disabled={busy}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="btn primary send-btn"
-                  disabled={!canTrade}
-                >
-                  {busy
-                    ? account.status === "locked"
-                      ? "Waiting for passkey…"
-                      : side === "buy"
-                        ? "Buying…"
-                        : "Selling…"
-                    : side === "buy"
-                      ? "Buy"
-                      : "Sell"}
-                </button>
-              </div>
-
-              {estimatedShares !== null && !fill && (
-                <p className="hint">
-                  ≈ {formatShares(estimatedShares)} {TICKER} at the current
-                  price
-                </p>
-              )}
-
-              {fill && (
-                <p className="status ok">
-                  {fill.side === "buy"
-                    ? `Bought ${formatShares(fill.shares)} ${TICKER}${
-                        fill.spent === undefined
-                          ? ""
-                          : ` for ${formatCash(fill.spent)} ${CASH_SYMBOL}`
-                      }`
-                    : `Sold ${formatShares(fill.shares)} ${TICKER}`}
-                </p>
-              )}
-
-              {tradeError && <p className="status error">{tradeError}</p>}
-              {readError && <p className="status error">{readError}</p>}
-            </form>
+            ) : (
+              <>
+                <AccountHoldings
+                  position={loaded}
+                  price={price}
+                  settling={stage === "settling"}
+                />
+                <TradeForm
+                  draft={draft}
+                  onDraftChange={editDraft}
+                  portfolio={loaded}
+                  price={price}
+                  stage={stage}
+                  locked={account.status === "locked"}
+                  fill={fill}
+                  onSubmit={(order) => void submit(order)}
+                />
+              </>
+            )}
+            {tradeError && <p className="status error">{tradeError}</p>}
+            {position.readError && (
+              <p className="status error">{position.readError}</p>
+            )}
           </>
         )}
       </section>
@@ -531,7 +391,7 @@ function TradingCard({
       {account.status !== "none" && (
         <>
           <div className="account-links">
-            {portfolio !== null && portfolio.cash < LOW_CASH_WEI && (
+            {loaded !== null && loaded.cash < LOW_CASH_WEI && (
               <button
                 type="button"
                 className="link"
@@ -549,7 +409,12 @@ function TradingCard({
             >
               {revealing ? "Waiting for passkey…" : "Export account"}
             </button>
-            <button type="button" className="link" onClick={signOut}>
+            <button
+              type="button"
+              className="link"
+              onClick={signOut}
+              disabled={stage === "sending" || revealing}
+            >
               Sign out
             </button>
           </div>
@@ -562,6 +427,7 @@ function TradingCard({
           <button
             type="button"
             className="mode-switch"
+            disabled={connecting}
             onClick={() =>
               setConnectMode(connectMode === "passkey" ? "vault" : "passkey")
             }

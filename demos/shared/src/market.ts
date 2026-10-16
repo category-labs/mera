@@ -380,19 +380,16 @@ async function placeOrder({
 
 export type { Fill, Order, Portfolio, Side, TradeDraft };
 export {
-  buyShares,
   COMPANY_NAME,
   coversTrade,
   draftOrder,
   LOW_CASH_WEI,
   maxDraft,
-  maxTradeInput,
   orderShares,
   placeOrder,
   priceAt,
   REFRESH_MS,
   readPortfolio,
-  sellShares,
   TICKER,
   UNIT,
 };

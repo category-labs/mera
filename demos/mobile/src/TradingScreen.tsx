@@ -11,13 +11,13 @@ import {
   type Fill,
   LOW_CASH_WEI,
   maxTradeInput,
+  orderShares,
   type Portfolio,
   priceAt,
   REFRESH_MS,
   readPortfolio,
   type Side,
   sellShares,
-  sharesToSell,
   TICKER,
   UNIT,
 } from "@category-labs/mera-demo-shared/market";
@@ -245,7 +245,11 @@ function TradingScreen({
   const covered =
     portfolio !== null &&
     amountWei !== null &&
-    coversTrade({ side, amountWei, price, portfolio });
+    coversTrade({
+      order: { kind: "amount", side, amountWei },
+      price,
+      portfolio,
+    });
   const canTrade = covered && !busy;
 
   const estimatedShares =
@@ -349,11 +353,12 @@ function TradingScreen({
         setFill({ ...result, spent: amountWei });
         applyBasis(costBasisAfterBuy(basis, amountWei));
       } else {
-        const shares = sharesToSell({
-          amountWei,
+        const shares = orderShares({
+          order: sellAll
+            ? { kind: "sellAll", side: "sell" }
+            : { kind: "amount", side: "sell", amountWei },
           price,
           heldShares: portfolio.shares,
-          sellAll,
         });
         const result = await sellShares(wallet.session, evm, shares);
         setFill(result);

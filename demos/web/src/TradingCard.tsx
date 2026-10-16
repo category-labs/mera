@@ -1,9 +1,25 @@
+import {
+  type AccountState,
+  accountAddress,
+  clearCachedAccount,
+} from "@category-labs/mera-demo-shared/account";
 import { parseDecimalAmount } from "@category-labs/mera-demo-shared/amount";
 import { CHART_WINDOW_SECONDS } from "@category-labs/mera-demo-shared/chart";
+import {
+  type AccountMode,
+  type ConnectedWallet,
+  connect,
+  describeError,
+  revealMnemonic,
+} from "@category-labs/mera-demo-shared/connect";
 import {
   costBasisAfterBuy,
   costBasisAfterSell,
 } from "@category-labs/mera-demo-shared/costBasis";
+import {
+  loadCostBasis,
+  saveCostBasis,
+} from "@category-labs/mera-demo-shared/costBasisStorage";
 import {
   buyShares,
   COMPANY_NAME,
@@ -11,13 +27,13 @@ import {
   type Fill,
   LOW_CASH_WEI,
   maxTradeInput,
+  orderShares,
   type Portfolio,
   priceAt,
   REFRESH_MS,
   readPortfolio,
   type Side,
   sellShares,
-  sharesToSell,
   TICKER,
   UNIT,
 } from "@category-labs/mera-demo-shared/market";
@@ -27,6 +43,7 @@ import {
   fundAccount,
 } from "@category-labs/mera-demo-shared/network";
 import { PriceChart } from "@category-labs/mera-demo-shared/PriceChart";
+import { currentPasskeyWallet } from "@category-labs/mera-demo-shared/passkeyWallet";
 import {
   CASH_SYMBOL,
   formatCash,
@@ -39,22 +56,8 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  type AccountState,
-  accountAddress,
-  clearCachedAccount,
-} from "./account";
 import { ConnectPanel } from "./ConnectPanel";
 import { RPC_URL } from "./config";
-import {
-  type AccountMode,
-  type ConnectedWallet,
-  connect,
-  describeError,
-  revealMnemonic,
-} from "./connect";
-import { loadCostBasis, saveCostBasis } from "./costBasis";
-import { currentPasskeyWallet } from "./passkeyWallet";
 import { WalletBackup } from "./WalletBackup";
 
 type TradingCardProps = {
@@ -243,7 +246,11 @@ function TradingCard({
   const covered =
     portfolio !== null &&
     amountWei !== null &&
-    coversTrade({ side, amountWei, price, portfolio });
+    coversTrade({
+      order: { kind: "amount", side, amountWei },
+      price,
+      portfolio,
+    });
   const canTrade = covered && !busy;
 
   const estimatedShares =
@@ -295,11 +302,12 @@ function TradingCard({
         setFill({ ...result, spent: amountWei });
         applyBasis(costBasisAfterBuy(basis, amountWei));
       } else {
-        const shares = sharesToSell({
-          amountWei,
+        const shares = orderShares({
+          order: sellAll
+            ? { kind: "sellAll", side: "sell" }
+            : { kind: "amount", side: "sell", amountWei },
           price,
           heldShares: portfolio.shares,
-          sellAll,
         });
         const result = await sellShares(session, evm, shares);
         setFill(result);

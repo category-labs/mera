@@ -1,51 +1,18 @@
 import { AccountChip } from "@category-labs/mera-demo-shared/AccountChip";
 import {
-  type EvmContext,
-  resolveEvmContext,
-} from "@category-labs/mera-demo-shared/network";
-import { type ReactElement, useEffect, useState } from "react";
-import {
   type AccountState,
   accountAddress,
   loadCachedAccount,
-} from "./account";
+} from "@category-labs/mera-demo-shared/account";
+import { describeError } from "@category-labs/mera-demo-shared/connect";
+import {
+  type EvmContext,
+  resolveEvmContext,
+  retryingResolve,
+} from "@category-labs/mera-demo-shared/network";
+import { type ReactElement, useEffect, useState } from "react";
 import { RPC_URL } from "./config";
-import { describeError } from "./connect";
 import { TradingCard } from "./TradingCard";
-
-const RESOLVE_RETRY_MS = 5_000;
-
-/**
- * Resolves the network context, retrying on failure until stopped. Each
- * failure is surfaced through `onError` while the retries continue, because
- * the demo network comes back empty but reachable after a restart, which can
- * take up to a minute. Returns a stop function for effect cleanup.
- */
-function retryingResolve<T>(
-  resolve: () => Promise<T>,
-  onResolved: (value: T) => void,
-  onError: (message: string) => void,
-): () => void {
-  let stopped = false;
-  let timer: number | undefined;
-  function attempt(): void {
-    resolve().then(
-      (value) => {
-        if (!stopped) onResolved(value);
-      },
-      (error: unknown) => {
-        if (stopped) return;
-        onError(describeError(error));
-        timer = window.setTimeout(attempt, RESOLVE_RETRY_MS);
-      },
-    );
-  }
-  attempt();
-  return () => {
-    stopped = true;
-    window.clearTimeout(timer);
-  };
-}
 
 function App(): ReactElement {
   const [evmContext, setEvmContext] = useState<EvmContext | null>(null);
@@ -65,7 +32,7 @@ function App(): ReactElement {
           // outlive the outage it reported.
           setEvmError(null);
         },
-        setEvmError,
+        (error) => setEvmError(describeError(error)),
       ),
     [],
   );

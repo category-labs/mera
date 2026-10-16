@@ -52,7 +52,7 @@ Source of truth is the JSDoc in `library/src/`. Write reference prose from it. W
 - Title with a verb: "Encrypt a recovery phrase" rather than "Recovery phrase encryption".
 - One goal per page. Prerequisites in the first paragraph.
 - Code blocks are complete and pasteable in order. A reader who pastes every block top to bottom ends with working code.
-- Code adapted from `demos/web/src/` is an app-side pattern. Say so. Derivation schemes, storage, and transport belong to the app, and the recipe's framing must keep the library/app boundary visible.
+- Code adapted from `demos/web/src/` or `demos/shared/src/` is an app-side pattern. Say so. Derivation schemes, storage, and transport belong to the app, and the recipe's framing must keep the library/app boundary visible.
 
 ## Voice
 

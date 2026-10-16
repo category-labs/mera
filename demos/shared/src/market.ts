@@ -8,6 +8,7 @@ import {
   keccak256,
   parseEventLogs,
 } from "viem";
+import { parseDecimalAmount } from "./amount";
 import type { EvmContext } from "./network";
 import { MAX_UINT256, validateTradeAmount } from "./validation";
 
@@ -107,11 +108,13 @@ type Portfolio = {
   shares: bigint;
 };
 
-/** A mined trade: the exact share amount from the contract's Transfer event. */
-type Fill = {
-  side: "buy" | "sell";
-  shares: bigint;
-};
+/**
+ * A mined trade: the exact share amount from the contract's Transfer event.
+ * A buy also carries the cash it sent, excluding the network fee.
+ */
+type Fill =
+  | { side: "buy"; shares: bigint; spent: bigint }
+  | { side: "sell"; shares: bigint };
 
 async function readPortfolio(
   evm: EvmContext,
@@ -181,7 +184,11 @@ async function buyShares(
     functionName: "buy",
     value: valueWei,
   });
-  return { side: "buy", shares: await minedShares(evm, hash) };
+  return {
+    side: "buy",
+    shares: await minedShares(evm, hash),
+    spent: valueWei,
+  };
 }
 
 async function sellShares(
@@ -204,6 +211,20 @@ async function sellShares(
 
 type Side = "buy" | "sell";
 
+/** A trade to place: a cash amount on either side, or every held share. */
+type Order =
+  | { kind: "amount"; side: Side; amountWei: bigint }
+  | { kind: "sellAll"; side: "sell" };
+
+/**
+ * The trade form's state. Max on the sell side makes a `sellAll` draft, which
+ * sells every held share whatever the quote does after the click; typing makes
+ * an `amount` draft again. `text` is what the amount field shows.
+ */
+type TradeDraft =
+  | { kind: "amount"; side: Side; text: string }
+  | { kind: "sellAll"; side: "sell"; text: string };
+
 // How often the demos re-read the portfolio.
 const REFRESH_MS = 5_000;
 // Cash kept out of Max buys so the account can always pay a trade's network
@@ -215,6 +236,15 @@ const CENT_WEI = 10n ** 16n;
 // Cash below this offers the 10,000 DEMOCASH top-up; the guard enforces the
 // same threshold, so the button cannot inflate a healthy account.
 const LOW_CASH_WEI = 100n * UNIT;
+
+/** The order a draft places; null while its text is not a positive amount. */
+function draftOrder(draft: TradeDraft): Order | null {
+  if (draft.kind === "sellAll") return { kind: "sellAll", side: "sell" };
+  const amountWei = parseDecimalAmount(draft.text, 18);
+  return amountWei === null
+    ? null
+    : { kind: "amount", side: draft.side, amountWei };
+}
 
 /** Wei to a plain decimal cash string floored to cents, e.g. "9999.99". */
 function cashInput(wei: bigint): string {
@@ -250,68 +280,119 @@ function maxTradeInput({
 }
 
 /**
- * Whether the portfolio can pay for the trade. Buys must leave the fee
- * reserve behind. Sells cannot exceed the position (with a cent of slack for
- * price movement between render and submit), must round to at least one
- * share-wei at the current price, and still need the reserve for the trade's
- * network fee.
+ * The draft Max fills in. On the sell side it sells the whole position:
+ * converting the Max cash figure back to shares at a moved price can strand
+ * dust.
  */
-function coversTrade({
+function maxDraft({
   side,
-  amountWei,
   price,
   portfolio,
 }: {
   side: Side;
-  amountWei: bigint;
+  price: bigint;
+  portfolio: Portfolio;
+}): TradeDraft {
+  const text = maxTradeInput({ side, price, portfolio });
+  return side === "sell"
+    ? { kind: "sellAll", side, text }
+    : { kind: "amount", side, text };
+}
+
+/**
+ * Whether the portfolio can pay for the order. Buys must leave the fee
+ * reserve behind. Sells cannot exceed the position (with a cent of slack for
+ * price movement between render and submit), must round to at least one
+ * share-wei at the current price, and still need the reserve for the trade's
+ * network fee. A sell-all needs only shares to sell and the reserve.
+ */
+function coversTrade({
+  order,
+  price,
+  portfolio,
+}: {
+  order: Order;
   price: bigint;
   portfolio: Portfolio;
 }): boolean {
-  if (side === "buy") return amountWei + FEE_RESERVE_WEI <= portfolio.cash;
+  if (order.kind === "sellAll") {
+    return portfolio.shares > 0n && portfolio.cash >= FEE_RESERVE_WEI;
+  }
+  if (order.side === "buy") {
+    return order.amountWei + FEE_RESERVE_WEI <= portfolio.cash;
+  }
   const positionValue = (portfolio.shares * price) / UNIT;
   return (
     positionValue > 0n &&
-    (amountWei * UNIT) / price > 0n &&
-    amountWei <= positionValue + CENT_WEI &&
+    (order.amountWei * UNIT) / price > 0n &&
+    order.amountWei <= positionValue + CENT_WEI &&
     portfolio.cash >= FEE_RESERVE_WEI
   );
 }
 
 /**
- * Shares a sell of `amountWei` moves at `price`. A Max sell, or an amount
- * within a cent of the whole position, sells all of it, so no dust the
- * display would round to 0.00 is left behind.
+ * Shares an order moves at `price`: the estimate for a buy, and exactly what
+ * a sell sends. A sell-all, or a sell within a cent of the whole position,
+ * sends every held share, so no dust the display would round to 0.00 is left
+ * behind.
  */
-function sharesToSell({
-  amountWei,
+function orderShares({
+  order,
   price,
   heldShares,
-  sellAll,
 }: {
-  amountWei: bigint;
+  order: Order;
   price: bigint;
   heldShares: bigint;
-  sellAll: boolean;
 }): bigint {
-  const shares = (amountWei * UNIT) / price;
-  if (sellAll || ((heldShares - shares) * price) / UNIT < CENT_WEI) {
+  if (order.kind === "sellAll") return heldShares;
+  const shares = (order.amountWei * UNIT) / price;
+  if (
+    order.side === "sell" &&
+    ((heldShares - shares) * price) / UNIT < CENT_WEI
+  ) {
     return heldShares;
   }
   return shares;
 }
 
-export type { Fill, Portfolio, Side };
+/**
+ * Sends the order and waits for its fill: a buy sends `amountWei` of cash,
+ * and a sell sends the shares `orderShares` sizes at `price`.
+ */
+async function placeOrder({
+  session,
+  evm,
+  order,
+  price,
+  heldShares,
+}: {
+  session: Secp256k1SigningSession;
+  evm: EvmContext;
+  order: Order;
+  price: bigint;
+  heldShares: bigint;
+}): Promise<Fill> {
+  return order.side === "buy"
+    ? buyShares(session, evm, order.amountWei)
+    : sellShares(session, evm, orderShares({ order, price, heldShares }));
+}
+
+export type { Fill, Order, Portfolio, Side, TradeDraft };
 export {
   buyShares,
   COMPANY_NAME,
   coversTrade,
+  draftOrder,
   LOW_CASH_WEI,
+  maxDraft,
   maxTradeInput,
+  orderShares,
+  placeOrder,
   priceAt,
   REFRESH_MS,
   readPortfolio,
   sellShares,
-  sharesToSell,
   TICKER,
   UNIT,
 };

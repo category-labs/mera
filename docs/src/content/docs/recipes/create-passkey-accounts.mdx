@@ -145,7 +145,6 @@ import type {
   Ed25519SigningSession,
   EvmAddress,
   Secp256k1SigningSession,
-  SolanaAddress,
 } from "@category-labs/mera";
 
 declare const seed: Uint8Array;
@@ -156,7 +155,7 @@ declare function deriveEvmAccount(
 declare function deriveSolanaAccount(
   seed: Uint8Array,
   index: number,
-): { session: Ed25519SigningSession; address: SolanaAddress };
+): { session: Ed25519SigningSession; address: string };
 
 // ---cut---
 const accounts = [deriveEvmAccount(seed, 0), deriveSolanaAccount(seed, 0)];

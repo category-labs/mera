@@ -244,7 +244,7 @@ async function createSecretVaultWithExistingPasskey({
     const prfSalt = randomBytes(PRF_SALT_LENGTH);
     const evaluated = await getPasskeyPrfOutput({
       ...passkeyOptions,
-      ...(credentialCopy !== undefined ? { credential: credentialCopy } : {}),
+      credential: credentialCopy,
       prfSalt,
     });
     prfOutput = evaluated.prfOutput;

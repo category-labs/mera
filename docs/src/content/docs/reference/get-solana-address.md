@@ -39,12 +39,10 @@ A 32-byte Ed25519 public key.
 ## Returns
 
 ```ts
-import type { SolanaAddress } from "@category-labs/mera";
-
-type ReturnType = SolanaAddress;
+type ReturnType = string;
 ```
 
-A base58-encoded 32-byte address. `SolanaAddress` is a branded `string` type and a plain string at runtime.
+A base58-encoded 32-byte address.
 
 ## Errors
 

@@ -93,13 +93,15 @@ Serve this JSON from `https://account.example.com/.well-known/assetlinks.json`:
 ]
 ```
 
+Google Play services does not yet accept `get_login_creds` alone when it checks the relying party ID, so passkey creation fails with "RP ID cannot be validated" unless the file also lists `handle_all_urls`. Google's Digital Asset Links API caches its answer for an hour, so a change to the file can take that long to apply.
+
 Replace the package name and fingerprint with those of the Android app. Include every certificate used to sign the app. For a local build, print the debug certificate with:
 
 ```sh
 keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android
 ```
 
-Both files must be public over HTTPS and return JSON without a redirect. Android passkey creation fails with "RP ID cannot be validated" unless the Android file lists both relations. Google caches the file for up to an hour, so a change can take that long to reach a device.
+Both files must be public over HTTPS and return JSON without a redirect.
 
 ## Use the React Native WebAuthn client
 

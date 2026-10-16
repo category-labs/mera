@@ -15,7 +15,7 @@ type AccountChipProps = {
  * so the page always says where trades settle.
  */
 function AccountChip({ address, connected }: AccountChipProps): ReactElement {
-  const { copied, copy } = useCopyButton();
+  const { feedback, copy } = useCopyButton();
   return (
     <div className="account-chip">
       {address !== null && (
@@ -25,7 +25,7 @@ function AccountChip({ address, connected }: AccountChipProps): ReactElement {
           title={address}
           onClick={() => void copy(address)}
         >
-          {copied ? "Copied" : truncateAddress(address)}
+          {feedback ?? truncateAddress(address)}
         </button>
       )}
       <span className={connected ? "chip-network connected" : "chip-network"}>

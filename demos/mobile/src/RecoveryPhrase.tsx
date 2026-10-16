@@ -16,7 +16,7 @@ type RecoveryPhraseProps = {
  * is the tightest lifetime available.
  */
 function RecoveryPhrase({ phrase, onHide }: RecoveryPhraseProps): ReactElement {
-  const { copied, copy } = useCopyButton(setStringAsync);
+  const { feedback, copy } = useCopyButton(setStringAsync);
   const words = phrase
     .split(" ")
     .map((word, index) => ({ position: index + 1, word }));
@@ -40,7 +40,7 @@ function RecoveryPhrase({ phrase, onHide }: RecoveryPhraseProps): ReactElement {
         ))}
       </View>
       <Button
-        title={copied ? "Copied" : "Copy phrase"}
+        title={feedback ?? "Copy phrase"}
         onPress={() => void copy(phrase)}
       />
     </View>

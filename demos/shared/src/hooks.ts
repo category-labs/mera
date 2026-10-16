@@ -189,24 +189,30 @@ function usePosition(
 }
 
 /**
- * Copy-to-clipboard button state: `copy(text)` writes the text and flips
- * `copied` true for 1.2 seconds, so the button can confirm it.
+ * Copy-to-clipboard button state: `copy(text)` writes the text, then for 1.2
+ * seconds `feedback` reads "Copied" or "Copy failed", for the button to show
+ * in place of its label. A write that rejects or resolves to false fails;
+ * expo-clipboard reports failure with false.
  */
 function useCopyButton(
   writeText: (text: string) => Promise<unknown> = (text) =>
     navigator.clipboard.writeText(text),
-): { copied: boolean; copy: (text: string) => Promise<void> } {
-  const [copied, setCopied] = useState(false);
+): { feedback: string | null; copy: (text: string) => Promise<void> } {
+  const [feedback, setFeedback] = useState<string | null>(null);
   useEffect(() => {
-    if (!copied) return;
-    const timer = setTimeout(() => setCopied(false), 1_200);
+    if (feedback === null) return;
+    const timer = setTimeout(() => setFeedback(null), 1_200);
     return () => clearTimeout(timer);
-  }, [copied]);
+  }, [feedback]);
   async function copy(text: string): Promise<void> {
-    await writeText(text);
-    setCopied(true);
+    try {
+      const written = await writeText(text);
+      setFeedback(written === false ? "Copy failed" : "Copied");
+    } catch {
+      setFeedback("Copy failed");
+    }
   }
-  return { copied, copy };
+  return { feedback, copy };
 }
 
 export { useCopyButton, useEvmContext, useNow, usePosition };

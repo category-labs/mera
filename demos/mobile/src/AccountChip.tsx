@@ -19,7 +19,7 @@ type AccountChipProps = {
  * so the screen always says where trades settle.
  */
 function AccountChip({ address, connected }: AccountChipProps): ReactElement {
-  const { copied, copy } = useCopyButton(setStringAsync);
+  const { feedback, copy } = useCopyButton(setStringAsync);
   return (
     <View style={styles.chip}>
       {address !== null ? (
@@ -28,7 +28,7 @@ function AccountChip({ address, connected }: AccountChipProps): ReactElement {
           onPress={() => void copy(address)}
         >
           <Text style={styles.address}>
-            {copied ? "Copied" : truncateAddress(address)}
+            {feedback ?? truncateAddress(address)}
           </Text>
         </Pressable>
       ) : null}

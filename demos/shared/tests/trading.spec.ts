@@ -124,6 +124,25 @@ test("Sell Max remains enabled after the quote falls; typing restores amount val
   await expect(sell).toBeDisabled();
 });
 
+test("a failed clipboard write shows on the copy button", async ({ page }) => {
+  await page.addInitScript((cachedAddress) => {
+    localStorage.setItem(
+      "mera.demo.account",
+      JSON.stringify({
+        mode: "passkey",
+        address: cachedAddress,
+        credential: { credentialId: "AQID" },
+      }),
+    );
+    navigator.clipboard.writeText = () =>
+      Promise.reject(new DOMException("Denied", "NotAllowedError"));
+  }, address);
+  await routeRpc(page, (method) => ({ result: readResult(method, 0n) }));
+  await page.goto("/");
+  await page.getByRole("button", { name: /^0x/u }).click();
+  await expect(page.getByRole("button", { name: "Copy failed" })).toBeVisible();
+});
+
 test("a failed refresh after buying preserves the saved basis until balances recover", async ({
   page,
   context,

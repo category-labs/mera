@@ -12,24 +12,20 @@ import type { EvmAddress } from "../types.js";
  */
 function getEvmAddress(publicKey: Uint8Array): EvmAddress {
   const uncompressed = normalizeSecp256k1PublicKey(publicKey);
-  const addressBytes = keccak_256(uncompressed.subarray(1)).slice(-20);
-  return toChecksumAddress(bytesToHex(addressBytes));
-}
+  const lowercaseHex = bytesToHex(
+    keccak_256(uncompressed.subarray(1)).slice(-20),
+  );
 
-// EIP-55: each lowercase hex nibble is uppercased iff the corresponding nibble
-// of keccak256(lowercase-hex-without-0x) is >= 8. Precondition: lowercaseHex is
-// the 20-byte address as 40 lowercase hex chars; mixed case would produce a
-// wrong checksum.
-function toChecksumAddress(lowercaseHex: string): EvmAddress {
-  const hash = keccak_256(utf8ToBytes(lowercaseHex));
-  let body = "";
-  for (const [i, hashByte] of hash.subarray(0, 20).entries()) {
-    const high = lowercaseHex.charAt(i * 2);
-    const low = lowercaseHex.charAt(i * 2 + 1);
-    body += hashByte >> 4 >= 8 ? high.toUpperCase() : high;
-    body += (hashByte & 0xf) >= 8 ? low.toUpperCase() : low;
-  }
-  return `0x${body}`;
+  // EIP-55 uppercases each hex digit whose matching digit in
+  // keccak256(lowercaseHex) is 8 or more.
+  const hashHex = bytesToHex(keccak_256(utf8ToBytes(lowercaseHex)));
+  const checksummed = [...lowercaseHex]
+    .map((char, i) =>
+      Number.parseInt(hashHex.charAt(i), 16) >= 8 ? char.toUpperCase() : char,
+    )
+    .join("");
+
+  return `0x${checksummed}`;
 }
 
 export { getEvmAddress };

@@ -11,11 +11,11 @@ const RFC_PUBLIC_KEY = hexToBytes(
   "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
 );
 
-test("signs messages and ends the session", async () => {
+test("signs messages and ends the session", () => {
   const buffer = new Uint8Array(RFC_SECRET);
   const session = createEd25519SigningSession({ privateKey: buffer });
   const message = new TextEncoder().encode("mera demo");
-  const signature = await session.signMessage(message);
+  const signature = session.signMessage(message);
 
   expect(buffer).toEqual(RFC_SECRET);
 
@@ -25,9 +25,7 @@ test("signs messages and ends the session", async () => {
 
   session.end();
 
-  await expect(session.signMessage(message)).rejects.toMatchObject({
-    code: "SESSION_ENDED",
-  });
+  expectError(() => session.signMessage(message), "SESSION_ENDED");
 });
 
 test("rejects a wrong-length private key and leaves the caller's buffer unmodified", () => {
@@ -41,34 +39,19 @@ test("rejects a wrong-length private key and leaves the caller's buffer unmodifi
   expect(buffer).toEqual(new Uint8Array(31).fill(7));
 });
 
-test("a using declaration ends the session when its scope exits", async () => {
+test("a using declaration ends the session when its scope exits", () => {
   let escaped: ReturnType<typeof createEd25519SigningSession> | undefined;
 
   {
     using session = createEd25519SigningSession({
       privateKey: RFC_SECRET,
     });
-    await session.signMessage(new TextEncoder().encode("mera demo"));
+    session.signMessage(new TextEncoder().encode("mera demo"));
     escaped = session;
   }
 
-  await expect(
-    escaped.signMessage(new TextEncoder().encode("mera demo")),
-  ).rejects.toMatchObject({ code: "SESSION_ENDED" });
-});
-
-test("signs the message bytes read at call time, not later mutations", async () => {
-  const session = createEd25519SigningSession({
-    privateKey: RFC_SECRET,
-  });
-
-  const original = new TextEncoder().encode("mera demo");
-  const message = new Uint8Array(original); // caller-owned buffer we will mutate
-  const pending = session.signMessage(message); // not awaited
-  message.fill(0);
-  const signature = await pending;
-
-  // The signature is over the bytes at call time, not the later mutation.
-  expect(ed25519.verify(signature, original, session.publicKey)).toBe(true);
-  expect(ed25519.verify(signature, message, session.publicKey)).toBe(false);
+  expectError(
+    () => escaped.signMessage(new TextEncoder().encode("mera demo")),
+    "SESSION_ENDED",
+  );
 });

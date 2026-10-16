@@ -103,7 +103,7 @@ type Secp256k1SigningSession = SigningSession & {
    * @throws MeraError with code `INPUT_INVALID` when `digest32` is not 32 bytes.
    * @throws MeraError with code `SESSION_ENDED` after `end` has been called.
    */
-  signDigest(digest32: Uint8Array): Promise<Secp256k1Signature>;
+  signDigest(digest32: Uint8Array): Secp256k1Signature;
 };
 
 /** Ed25519 signing session that can sign messages until `end` is called. */
@@ -117,7 +117,7 @@ type Ed25519SigningSession = SigningSession & {
    * @returns A 64-byte Ed25519 signature (`R || s`).
    * @throws MeraError with code `SESSION_ENDED` after `end` has been called.
    */
-  signMessage(message: Uint8Array): Promise<Uint8Array<ArrayBuffer>>;
+  signMessage(message: Uint8Array): Uint8Array<ArrayBuffer>;
 };
 
 export type {

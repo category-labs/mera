@@ -1,9 +1,9 @@
-import { isMeraError } from "@category-labs/mera";
+import { MeraError } from "@category-labs/mera";
 import { BaseError as ViemError } from "viem";
 
 /** Library and chain errors as one line of status text. */
 function describeError(error: unknown): string {
-  if (isMeraError(error)) {
+  if (error instanceof MeraError) {
     switch (error.code) {
       case "PRF_UNAVAILABLE":
         return "This browser or authenticator doesn't support the WebAuthn PRF extension this demo needs.";

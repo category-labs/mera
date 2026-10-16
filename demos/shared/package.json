@@ -4,22 +4,28 @@
   "version": "0.1.0",
   "type": "module",
   "exports": {
+    "./account": "./src/account.ts",
     "./AccountChip": "./src/AccountChip.tsx",
     "./amount": "./src/amount.ts",
     "./base.css": "./src/base.css",
     "./chart": "./src/chart.ts",
+    "./connect": "./src/connect.ts",
     "./costBasis": "./src/costBasis.ts",
+    "./costBasisStorage": "./src/costBasisStorage.ts",
     "./hd": "./src/hd.ts",
     "./market": "./src/market.ts",
     "./network": "./src/network.ts",
     "./news": "./src/news.ts",
     "./NewsTicker": "./src/NewsTicker.tsx",
+    "./passkeyWallet": "./src/passkeyWallet.ts",
+    "./position": "./src/position.ts",
     "./PriceChart": "./src/PriceChart.tsx",
     "./ui": "./src/ui.ts",
     "./useCopyButton": "./src/useCopyButton.ts",
     "./validation": "./src/validation.ts"
   },
   "scripts": {
+    "test": "tsc && playwright test",
     "typecheck": "tsc"
   },
   "dependencies": {
@@ -30,6 +36,7 @@
     "viem": "2.57.7"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@types/react": "~19.2.18",
     "typescript": "^7.0.2"
   }

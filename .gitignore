@@ -3,6 +3,7 @@ node_modules/
 demos/web/network/evm/out/
 demos/web/network/evm/cache/
 demos/web/.env
+demos/vue/.env
 docs/public/demo/
 docs/public/prf-demo/
 .astro/

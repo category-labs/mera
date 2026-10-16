@@ -17,6 +17,9 @@ const DEMO_CHAIN_ID = 31337;
 
 const NETWORK_NAME = "Demo Network";
 
+// How long a failed network resolve waits before the next attempt.
+const RESOLVE_RETRY_MS = 5_000;
+
 type EvmContext = {
   chain: Chain;
   publicClient: PublicClient;
@@ -125,6 +128,39 @@ async function resolveEvmContext({
 }
 
 /**
+ * Calls `resolve` until it succeeds, waiting RESOLVE_RETRY_MS after each
+ * failure. Each failure reaches `onError` while the retries continue, because
+ * the demo network comes back empty but reachable after a restart, which can
+ * take up to a minute. Returns a stop function; after it runs, no callback
+ * fires.
+ */
+function retryingResolve<T>(
+  resolve: () => Promise<T>,
+  onResolved: (value: T) => void,
+  onError: (error: unknown) => void,
+): () => void {
+  let stopped = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  function attempt(): void {
+    resolve().then(
+      (value) => {
+        if (!stopped) onResolved(value);
+      },
+      (error: unknown) => {
+        if (stopped) return;
+        onError(error);
+        timer = setTimeout(attempt, RESOLVE_RETRY_MS);
+      },
+    );
+  }
+  attempt();
+  return () => {
+    stopped = true;
+    clearTimeout(timer);
+  };
+}
+
+/**
  * Asks the guard's demo_fundAccount to top up `address`. Balances below the
  * guard's threshold rise by a fixed amount, a no-op otherwise, so the call
  * is idempotent.
@@ -142,4 +178,5 @@ export {
   jsonRpcResult,
   NETWORK_NAME,
   resolveEvmContext,
+  retryingResolve,
 };

@@ -1,45 +1,11 @@
-/* The shared base plus the web-only layer: the Satoshi webfont, the
-   page-bottom footer with the connect mode switch, and the embedded-in-iframe
-   layout driven by embed.ts. Importing the base here gives every web entry
-   (index.html and passkey.html) the full stylesheet through one import. */
+/* The shared base plus the web-only layer: the Satoshi webfont and the
+   embedded-in-iframe layout driven by embed.ts. Importing the base here gives
+   every web entry (index.html and passkey.html) the full stylesheet through
+   one import. */
 @import "@category-labs/mera-demo-shared/base.css";
 
 :root {
   font-family: "Satoshi", -apple-system, system-ui, sans-serif;
-}
-
-/* Page-bottom footer: the connect mode switch (signed out) and the
-   disclaimer. `margin-top: auto` pushes it to the bottom of the
-   viewport-filling column; embedded, where the page hugs its content, the
-   auto margin collapses to the plain gap. */
-.shell-footer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: auto;
-  gap: 14px;
-}
-
-/* Signed-out footer link that swaps passkey and vault connect modes.
-   Quiet by default, accent on hover. */
-.mode-switch {
-  border: none;
-  background: none;
-  padding: 4px 8px;
-  color: var(--muted);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 550;
-  cursor: pointer;
-}
-
-.mode-switch:hover:not(:disabled) {
-  color: var(--accent);
-}
-
-.mode-switch:disabled {
-  opacity: 0.5;
-  cursor: default;
 }
 
 a {

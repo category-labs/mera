@@ -49,8 +49,6 @@ function createReactNativeWebAuthnClient(
       });
 
       const prf = created.clientExtensionResults?.prf;
-      const prfOutput = readPrfOutput(prf?.results?.first);
-      const transports = created.response.transports;
 
       return {
         credentialId: decodeNativeBase64Url(
@@ -58,9 +56,9 @@ function createReactNativeWebAuthnClient(
           "Credential ID",
           "PASSKEY_OPERATION_FAILED",
         ),
-        ...(transports !== undefined ? { transports } : {}),
+        transports: created.response.transports,
         prfEnabled: prf?.enabled === true,
-        ...(prfOutput !== undefined ? { prfOutput } : {}),
+        prfOutput: readPrfOutput(prf?.results?.first),
       };
     },
 
@@ -91,17 +89,15 @@ function createReactNativeWebAuthnClient(
         ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
       });
 
-      const prfOutput = readPrfOutput(
-        asserted.clientExtensionResults?.prf?.results?.first,
-      );
-
       return {
         credentialId: decodeNativeBase64Url(
           asserted.rawId ?? asserted.id,
           "Credential ID",
           "PASSKEY_OPERATION_FAILED",
         ),
-        ...(prfOutput !== undefined ? { prfOutput } : {}),
+        prfOutput: readPrfOutput(
+          asserted.clientExtensionResults?.prf?.results?.first,
+        ),
       };
     },
   };

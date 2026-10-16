@@ -16,7 +16,7 @@ import type { Secp256k1SigningSession } from "./types.js";
 /** Inputs for `toViemAccount`. */
 type ToViemAccountOptions = {
   /** viem nonce manager forwarded to the account for automatic nonce handling. */
-  nonceManager?: NonceManager;
+  nonceManager?: NonceManager | undefined;
 };
 
 /**

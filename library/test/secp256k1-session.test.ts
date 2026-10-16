@@ -8,11 +8,11 @@ const PRIVATE_KEY_ONE = hexToBytes(
   "0000000000000000000000000000000000000000000000000000000000000001",
 );
 
-test("signs 32-byte digests and ends the session", async () => {
+test("signs 32-byte digests and ends the session", () => {
   const buffer = new Uint8Array(PRIVATE_KEY_ONE);
   const session = createSecp256k1SigningSession({ privateKey: buffer });
   const digest = new Uint8Array(32).fill(1);
-  const signature = await session.signDigest(digest);
+  const signature = session.signDigest(digest);
 
   expect(buffer).toEqual(PRIVATE_KEY_ONE);
 
@@ -29,19 +29,15 @@ test("signs 32-byte digests and ends the session", async () => {
 
   session.end();
 
-  await expect(session.signDigest(digest)).rejects.toMatchObject({
-    code: "SESSION_ENDED",
-  });
+  expectError(() => session.signDigest(digest), "SESSION_ENDED");
 });
 
-test("rejects non-32-byte digests", async () => {
+test("rejects non-32-byte digests", () => {
   const session = createSecp256k1SigningSession({
     privateKey: PRIVATE_KEY_ONE,
   });
 
-  await expect(session.signDigest(new Uint8Array(31))).rejects.toMatchObject({
-    code: "INPUT_INVALID",
-  });
+  expectError(() => session.signDigest(new Uint8Array(31)), "INPUT_INVALID");
 });
 
 test("rejects an invalid scalar and leaves the caller's buffer unmodified", () => {
@@ -62,42 +58,19 @@ test("rejects an invalid scalar and leaves the caller's buffer unmodified", () =
   );
 });
 
-test("a using declaration ends the session when its scope exits", async () => {
+test("a using declaration ends the session when its scope exits", () => {
   let escaped: ReturnType<typeof createSecp256k1SigningSession> | undefined;
 
   {
     using session = createSecp256k1SigningSession({
       privateKey: PRIVATE_KEY_ONE,
     });
-    await session.signDigest(new Uint8Array(32).fill(1));
+    session.signDigest(new Uint8Array(32).fill(1));
     escaped = session;
   }
 
-  await expect(
-    escaped.signDigest(new Uint8Array(32).fill(1)),
-  ).rejects.toMatchObject({ code: "SESSION_ENDED" });
-});
-
-test("signs the digest bytes read at call time, not later mutations", async () => {
-  const session = createSecp256k1SigningSession({
-    privateKey: PRIVATE_KEY_ONE,
-  });
-
-  const original = new Uint8Array(32).fill(1);
-  const digest = new Uint8Array(original); // caller-owned buffer we will mutate
-  const pending = session.signDigest(digest); // not awaited
-  digest.fill(2);
-  const signature = await pending;
-
-  // The signature is over the bytes at call time, not the later mutation.
-  expect(
-    secp256k1.verify(signature.compact, original, session.publicKey, {
-      prehash: false,
-    }),
-  ).toBe(true);
-  expect(
-    secp256k1.verify(signature.compact, digest, session.publicKey, {
-      prehash: false,
-    }),
-  ).toBe(false);
+  expectError(
+    () => escaped.signDigest(new Uint8Array(32).fill(1)),
+    "SESSION_ENDED",
+  );
 });

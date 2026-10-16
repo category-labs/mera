@@ -18,7 +18,7 @@ function RecoveryPhrase({
   onHide,
   children,
 }: RecoveryPhraseProps): ReactElement {
-  const { copied, copy } = useCopyButton();
+  const { feedback, copy } = useCopyButton();
   const words = phrase
     .split(" ")
     .map((word, index) => ({ position: index + 1, word }));
@@ -44,7 +44,7 @@ function RecoveryPhrase({
       </ol>
       {children}
       <button type="button" className="btn" onClick={() => void copy(phrase)}>
-        {copied ? "Copied" : "Copy phrase"}
+        {feedback ?? "Copy phrase"}
       </button>
     </section>
   );

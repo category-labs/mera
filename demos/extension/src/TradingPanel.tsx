@@ -139,6 +139,9 @@ function TradingPanel({
     return () => {
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("pagehide", onPageHide);
+      // Unmounting counts as hiding, so no session or pending result outlives
+      // the panel.
+      lockOnHide();
     };
   }, []);
 

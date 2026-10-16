@@ -14,7 +14,7 @@ const { address, connected } = defineProps<{
   connected: boolean;
 }>();
 
-const { copied, copy } = useCopyButton();
+const { feedback, copy } = useCopyButton();
 </script>
 
 <template>
@@ -26,7 +26,7 @@ const { copied, copy } = useCopyButton();
       :title="address"
       @click="copy(address)"
     >
-      {{ copied ? "Copied" : truncateAddress(address) }}
+      {{ feedback ?? truncateAddress(address) }}
     </button>
     <span class="chip-network" :class="{ connected }">
       {{ NETWORK_NAME }}

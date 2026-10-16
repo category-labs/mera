@@ -186,27 +186,32 @@ function usePosition(
 }
 
 /**
- * Copy-to-clipboard button state: `copy(text)` writes the text and flips
- * `copied` true for 1.2 seconds, so the button can confirm it.
+ * Copy-to-clipboard button state: `copy(text)` writes the text, then for 1.2
+ * seconds `feedback` reads "Copied" or "Copy failed", for the button to show
+ * in place of its label.
  */
 function useCopyButton(): {
-  copied: Ref<boolean>;
+  feedback: Ref<string | null>;
   copy: (text: string) => Promise<void>;
 } {
-  const copied = ref(false);
+  const feedback = ref<string | null>(null);
   let timer: ReturnType<typeof setTimeout> | undefined;
   onScopeDispose(() => clearTimeout(timer));
 
   async function copy(text: string): Promise<void> {
-    await navigator.clipboard.writeText(text);
-    copied.value = true;
+    try {
+      await navigator.clipboard.writeText(text);
+      feedback.value = "Copied";
+    } catch {
+      feedback.value = "Copy failed";
+    }
     clearTimeout(timer);
     timer = setTimeout(() => {
-      copied.value = false;
+      feedback.value = null;
     }, 1_200);
   }
 
-  return { copied, copy };
+  return { feedback, copy };
 }
 
 export { useCopyButton, useNow, usePosition };

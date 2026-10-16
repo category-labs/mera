@@ -10,7 +10,7 @@ import { useCopyButton } from "./composables";
 const { phrase } = defineProps<{ phrase: string }>();
 const emit = defineEmits<{ hide: [] }>();
 
-const { copied, copy } = useCopyButton();
+const { feedback, copy } = useCopyButton();
 const words = computed(() =>
   phrase.split(" ").map((word, index) => ({ position: index + 1, word })),
 );
@@ -33,7 +33,7 @@ const words = computed(() =>
       </li>
     </ol>
     <button type="button" class="btn" @click="copy(phrase)">
-      {{ copied ? "Copied" : "Copy phrase" }}
+      {{ feedback ?? "Copy phrase" }}
     </button>
   </section>
 </template>

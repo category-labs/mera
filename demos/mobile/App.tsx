@@ -1,6 +1,6 @@
 import { useEvmContext } from "@category-labs/mera-demo-shared/hooks";
 import { DEMO_RPC_URL } from "@category-labs/mera-demo-shared/network";
-import { useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AccountChip } from "./src/AccountChip";
@@ -19,6 +19,12 @@ export default function App() {
       ? { status: "none" }
       : { status: "locked", ...stored };
   });
+  // Unmounting ends the live session, so its key does not wait for garbage
+  // collection.
+  const endSession = useEffectEvent((): void => {
+    if (account.status === "unlocked") account.wallet.session.end();
+  });
+  useEffect(() => () => endSession(), []);
 
   return (
     <SafeAreaProvider>

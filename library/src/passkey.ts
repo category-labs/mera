@@ -50,10 +50,7 @@ async function createPasskeyWithPrfOutput({
   webAuthnClient = browserWebAuthnClient,
 }: createPasskeyWithPrfOutput.Options): Promise<createPasskeyWithPrfOutput.Result> {
   try {
-    validatePrfSalt(prfSalt);
-
-    const prfSaltCopy = copyBytes(prfSalt ?? DEFAULT_PRF_SALT);
-
+    const prfSaltCopy = copyPrfSalt(prfSalt);
     const created = await webAuthnClient.createCredential({
       rp,
       user: {
@@ -101,13 +98,7 @@ async function createPasskeyWithPrfOutput({
       prfOutput,
     };
   } catch (error) {
-    if (isMeraError(error)) {
-      throw error;
-    }
-
-    throw new MeraError("PASSKEY_OPERATION_FAILED", "Passkey creation failed", {
-      cause: error,
-    });
+    throw toPasskeyError(error, "Passkey creation failed");
   }
 }
 
@@ -188,13 +179,11 @@ async function getPasskeyPrfOutput({
   webAuthnClient = browserWebAuthnClient,
 }: getPasskeyPrfOutput.Options): Promise<getPasskeyPrfOutput.Result> {
   try {
-    validatePrfSalt(prfSalt);
-
+    const prfSaltCopy = copyPrfSalt(prfSalt);
     const asserted = await webAuthnClient.getCredential({
       rpId,
       challenge: randomBytes(32),
-      // The client gets its own salt array, so it cannot reach DEFAULT_PRF_SALT.
-      prfSalt: copyBytes(prfSalt ?? DEFAULT_PRF_SALT),
+      prfSalt: prfSaltCopy,
       userVerification: "required",
       ...(allowCredential !== undefined
         ? { allowCredential: toAllowCredential(allowCredential) }
@@ -214,15 +203,7 @@ async function getPasskeyPrfOutput({
       prfOutput: copyPrfOutput(asserted.prfOutput),
     };
   } catch (error) {
-    if (isMeraError(error)) {
-      throw error;
-    }
-
-    throw new MeraError(
-      "PASSKEY_OPERATION_FAILED",
-      "Passkey assertion failed",
-      { cause: error },
-    );
+    throw toPasskeyError(error, "Passkey assertion failed");
   }
 }
 
@@ -291,10 +272,18 @@ function toAllowCredential(
   };
 }
 
-function validatePrfSalt(prfSalt: Uint8Array | undefined): void {
-  if (prfSalt !== undefined && prfSalt.length !== 32) {
+/**
+ * Copies even the default salt, so neither a client nor a caller that writes
+ * to the returned salt can change `DEFAULT_PRF_SALT`.
+ */
+function copyPrfSalt(
+  prfSalt: Uint8Array = DEFAULT_PRF_SALT,
+): Uint8Array<ArrayBuffer> {
+  if (prfSalt.length !== 32) {
     throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
   }
+
+  return copyBytes(prfSalt);
 }
 
 function copyPrfOutput(prfOutput: Uint8Array): Uint8Array<ArrayBuffer> {
@@ -303,6 +292,16 @@ function copyPrfOutput(prfOutput: Uint8Array): Uint8Array<ArrayBuffer> {
   }
 
   return copyBytes(prfOutput);
+}
+
+/**
+ * Keeps a `MeraError` as is and wraps any other failure, such as a WebAuthn
+ * rejection, as `PASSKEY_OPERATION_FAILED`.
+ */
+function toPasskeyError(error: unknown, message: string): MeraError {
+  return isMeraError(error)
+    ? error
+    : new MeraError("PASSKEY_OPERATION_FAILED", message, { cause: error });
 }
 
 export {

@@ -25,7 +25,7 @@ const digest32 = new Uint8Array(32);
 const session = createSecp256k1SigningSession({ privateKey });
 
 const address = getEvmAddress(session.publicKey);
-const { compact, recovery } = await session.signDigest(digest32);
+const { compact, recovery } = session.signDigest(digest32);
 
 session.end();
 ```

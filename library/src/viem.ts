@@ -45,8 +45,8 @@ function toViemAccount(
 ): LocalAccount<"mera"> {
   const address = getEvmAddress(session.publicKey);
 
-  async function signHash(hash: Hash): Promise<Signature> {
-    const { compact, recovery } = await session.signDigest(hexToBytes(hash));
+  function signHash(hash: Hash): Signature {
+    const { compact, recovery } = session.signDigest(hexToBytes(hash));
     return {
       r: toHex(compact.slice(0, 32)),
       s: toHex(compact.slice(32, 64)),
@@ -57,11 +57,13 @@ function toViemAccount(
     };
   }
 
+  // The methods stay async even where they await nothing: viem expects
+  // promises, and an async method turns a SESSION_ENDED throw into a rejection.
   const account = toAccount({
     address,
     nonceManager,
     async sign({ hash }) {
-      return serializeSignature(await signHash(hash));
+      return serializeSignature(signHash(hash));
     },
     async signAuthorization(authorization) {
       // AuthorizationRequest is a one-of union of `address` and its
@@ -70,13 +72,13 @@ function toViemAccount(
       const contract = (authorization.contractAddress ??
         authorization.address) as Hex;
       const { chainId, nonce } = authorization;
-      const signature = await signHash(
+      const signature = signHash(
         hashAuthorization({ address: contract, chainId, nonce }),
       );
       return { address: contract, chainId, nonce, ...signature };
     },
     async signMessage({ message }) {
-      return serializeSignature(await signHash(hashMessage(message)));
+      return serializeSignature(signHash(hashMessage(message)));
     },
     async signTransaction(
       transaction,
@@ -88,13 +90,13 @@ function toViemAccount(
         transaction.type === "eip4844"
           ? { ...transaction, sidecars: false as const }
           : transaction;
-      const signature = await signHash(
+      const signature = signHash(
         keccak256(await serializer(signableTransaction)),
       );
       return serializer(transaction, signature);
     },
     async signTypedData(typedData) {
-      return serializeSignature(await signHash(hashTypedData(typedData)));
+      return serializeSignature(signHash(hashTypedData(typedData)));
     },
   });
 

@@ -13,6 +13,12 @@ import { type ReactElement, useRef, useState } from "react";
 type ConnectPanelProps = {
   mode: AccountMode;
   onConnected: (wallet: ConnectedWallet) => Promise<void>;
+  /**
+   * Called with true at the click and false once the attempt settles, even
+   * after the panel unmounts. A mode switch meanwhile would mount a second
+   * panel whose connect could race this one.
+   */
+  onBusyChange: (busy: boolean) => void;
 };
 
 // The action a click started, and how far it has come: the passkey ceremony,
@@ -30,7 +36,11 @@ type ConnectBusy = {
  * before this panel gives way to it. Mount with `key={mode}` so switching
  * modes resets the local state.
  */
-function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
+function ConnectPanel({
+  mode,
+  onConnected,
+  onBusyChange,
+}: ConnectPanelProps): ReactElement {
   const [secret, setSecret] = useState("");
   const [busy, setBusy] = useState<ConnectBusy | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +62,7 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
   async function run(action: "create" | "signin") {
     setBusy({ action, phase: "passkey" });
     setError(null);
+    onBusyChange(true);
     try {
       const wallet = await connect(mode, action, secret);
       setBusy({ action, phase: "opening" });
@@ -60,6 +71,7 @@ function ConnectPanel({ mode, onConnected }: ConnectPanelProps): ReactElement {
       setError(describeError(caught));
     } finally {
       setBusy(null);
+      onBusyChange(false);
     }
   }
 

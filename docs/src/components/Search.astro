@@ -1,7 +1,6 @@
 ---
 import { getCollection } from "astro:content";
 import Default from "@astrojs/starlight/components/Search.astro";
-import { withBasePath } from "../base-path";
 
 // Pages suggested in the search modal when the query is empty. Titles and
 // descriptions come from each page's frontmatter, so this list only needs the
@@ -20,7 +19,7 @@ const suggestions = suggestedSlugs.map((slug) => {
     throw new Error(`Suggested page "${slug}" is not in the docs collection.`);
   }
   return {
-    href: withBasePath(`/${slug}/`),
+    href: `/${slug}/`,
     title: entry.data.title,
     description: entry.data.description ?? "",
   };

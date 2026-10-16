@@ -1,6 +1,6 @@
 # Writing the mera docs
 
-Guidance for authoring content in this site (`src/content/docs/`). [site/WRITING.md](../site/WRITING.md) governs voice for everything published under the mera name; this file adds the structure and mechanics specific to the docs site.
+Guidance for authoring content in this site (`src/content/docs/`): its audience, structure, voice, and mechanics.
 
 ## Audience
 
@@ -60,7 +60,7 @@ The bar is simple, concise, and detailed at once: detail survives the cut, fille
 
 Design rationale meets the same bar: keep the why only when it changes what the reader does. A sentence that explains the library to itself ("rejecting an unknown version keeps an old library from misreading newer data", "the two cases are indistinguishable by design") is filler next to the behavior it decorates. The same goes for restating a guarantee the adjacent text already carries.
 
-`site/WRITING.md` applies in full. The rules that carry the most weight here:
+The rules:
 
 - Say "account". "Wallet" is only for wallet apps: MetaMask, Phantom, the demo.
 - Say "passkey account", never "derived account". "Derive" survives as the verb: derive a key, a derivation path, address derivation.

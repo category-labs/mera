@@ -1,46 +1,21 @@
 // @ts-check
 
-import { unified } from "@astrojs/markdown-remark";
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
-import { visit } from "unist-util-visit";
 
-const site = process.env.DOCS_SITE;
-const configuredBase = process.env.DOCS_BASE;
-
-if (configuredBase && !configuredBase.startsWith("/")) {
-  throw new Error("DOCS_BASE must start with a forward slash");
-}
-
-const base = configuredBase?.replace(/\/+$/, "") ?? "";
-/** @param {string} path */
-const withBase = (path) => `${base}${path}`;
-const socialImage = site
-  ? new URL(withBase("/og.png"), site).href
-  : withBase("/og.png");
-
-/** @type {import("unified").Plugin<[], import("mdast").Root>} */
-const prefixRootRelativeLinks = () => (tree) => {
-  visit(tree, "link", (node) => {
-    if (node.url.startsWith("/")) {
-      node.url = withBase(node.url);
-    }
-  });
-};
+const site = "https://mera.category.xyz";
+const socialImage = `${site}/og.png`;
+const socialImageAlt =
+  "mera. Accounts on any chain and platform, from a passkey. npm install @category-labs/mera";
 
 // https://astro.build/config
 export default defineConfig({
   site,
-  base: base || undefined,
   redirects: {
-    "/concepts/derived-accounts-and-secret-vaults": withBase(
+    "/concepts/derived-accounts-and-secret-vaults":
       "/concepts/passkey-accounts/",
-    ),
-    "/recipes/derive-accounts": withBase("/recipes/create-passkey-accounts/"),
-    "/concepts/authenticator-support": withBase("/authenticator-support/"),
-  },
-  markdown: {
-    processor: unified({ remarkPlugins: [prefixRootRelativeLinks] }),
+    "/recipes/derive-accounts": "/recipes/create-passkey-accounts/",
+    "/concepts/authenticator-support": "/authenticator-support/",
   },
   integrations: [
     starlight({
@@ -52,6 +27,7 @@ export default defineConfig({
           href: "https://github.com/category-labs/mera",
         },
       ],
+      // Starlight emits twitter:card, and X falls back to og:image.
       head: [
         {
           tag: "meta",
@@ -71,27 +47,11 @@ export default defineConfig({
         },
         {
           tag: "meta",
-          attrs: {
-            property: "og:image:alt",
-            content:
-              "mera. Accounts on any chain and platform, from a passkey. npm install @category-labs/mera",
-          },
+          attrs: { property: "og:image:alt", content: socialImageAlt },
         },
         {
           tag: "meta",
-          attrs: { name: "twitter:card", content: "summary_large_image" },
-        },
-        {
-          tag: "meta",
-          attrs: { name: "twitter:image", content: socialImage },
-        },
-        {
-          tag: "meta",
-          attrs: {
-            name: "twitter:image:alt",
-            content:
-              "mera. Accounts on any chain and platform, from a passkey. npm install @category-labs/mera",
-          },
+          attrs: { name: "twitter:image:alt", content: socialImageAlt },
         },
         {
           tag: "link",

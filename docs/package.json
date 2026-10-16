@@ -10,7 +10,6 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "^7.3.3",
     "@astrojs/starlight": "^0.42.6",
     "@category-labs/mera": "*",
     "@ec-ts/twoslash": "1.0.0",
@@ -27,7 +26,6 @@
     "react-native-passkey": "3.6.2",
     "sharp": "^0.35.5",
     "typescript": "5.9.3",
-    "unist-util-visit": "^5.1.0",
     "viem": "2.57.7"
   }
 }

@@ -54,8 +54,6 @@ jobs:
       # the optimized remote-image cache.
       - name: Build site
         run: npm run build:site
-        env:
-          DOCS_SITE: https://mera.category.xyz
 
       # The action tars the site with hidden paths excluded by default, which
       # drops .well-known and with it the passkey app-association files.

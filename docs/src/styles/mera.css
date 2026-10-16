@@ -1,6 +1,5 @@
-/* mera docs skin: palette from the demo app (demos/web/src/styles.css), type
-   from site/index.html. Light-only, like the demo; ThemeProvider.astro pins
-   the theme. */
+/* mera docs skin: the demo app's palette and type on Starlight's variables.
+   Light-only, like the demo; ThemeProvider.astro pins the theme. */
 
 :root {
   color-scheme: light;
@@ -25,9 +24,7 @@
 
   --sl-color-bg-inline-code: #f1f2f5;
   --sl-color-hairline: #e6e8ec;
-}
 
-:root {
   --sl-font: "Satoshi", -apple-system, system-ui, sans-serif;
   --sl-font-headings: "Satoshi", -apple-system, system-ui, sans-serif;
   --sl-font-mono:
@@ -39,7 +36,6 @@
   --sl-color-text: var(--sl-color-white);
 }
 
-/* Headings tight and calm like the article. */
 h1,
 h2,
 h3,

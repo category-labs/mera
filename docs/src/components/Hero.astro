@@ -4,7 +4,6 @@
 // The title, tagline, and action buttons come from the page frontmatter; the
 // rest of the landing copy lives here.
 import { Code, LinkButton } from "@astrojs/starlight/components";
-import { withBasePath } from "../base-path";
 import DemoEmbed from "./DemoEmbed.astro";
 import LegalLinks from "./LegalLinks.astro";
 
@@ -60,7 +59,7 @@ const features = [
               {String(index + 1).padStart(2, "0")}
             </span>
             <div>
-              <a href={withBasePath(feature.link)}>{feature.title}</a>
+              <a href={feature.link}>{feature.title}</a>
               <p>{feature.text}</p>
             </div>
           </li>
@@ -68,32 +67,15 @@ const features = [
       }
     </ol>
 
-    {
-      actions.length > 0 && (
-        <div class="actions">
-          {actions.map(
-            ({
-              attrs: { class: className, ...attrs } = {},
-              icon,
-              link,
-              text,
-              variant,
-            }) => (
-              <LinkButton
-                href={withBasePath(link)}
-                {variant}
-                icon={icon?.name}
-                class:list={[className]}
-                {...attrs}
-              >
-                {text}
-                {icon?.html && <Fragment set:html={icon.html} />}
-              </LinkButton>
-            ),
-          )}
-        </div>
-      )
-    }
+    <div class="actions">
+      {
+        actions.map(({ icon, link, text, variant }) => (
+          <LinkButton href={link} {variant} icon={icon?.name}>
+            {text}
+          </LinkButton>
+        ))
+      }
+    </div>
 
     <div class="legal">
       <LegalLinks />

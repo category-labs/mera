@@ -30,10 +30,5 @@ class MeraError extends Error {
   }
 }
 
-/** Returns `true` when `error` is a `MeraError`. */
-function isMeraError(error: unknown): error is MeraError {
-  return error instanceof MeraError;
-}
-
 export type { MeraErrorCode };
-export { isMeraError, MeraError };
+export { MeraError };

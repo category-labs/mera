@@ -6,10 +6,7 @@ import {
   getPasskeyPrfOutput,
   toCredentialMetadata,
 } from "./passkey.js";
-import type {
-  PasskeyCredentialTransport,
-  PasskeySecretVault,
-} from "./types.js";
+import type { PasskeySecretVault } from "./types.js";
 import { getSubtleCrypto, randomBytes } from "./webcrypto.js";
 
 const PRF_SALT_LENGTH = 32;
@@ -81,6 +78,12 @@ function readVaultBase64Url(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === "string")
+  );
 }
 
 /** Inputs for `createSecretVault`. */
@@ -348,21 +351,13 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
     { minByteLength: 1 },
   );
 
-  let transports: PasskeyCredentialTransport[] | undefined;
+  const { transports } = vault.credential;
 
-  if (vault.credential.transports !== undefined) {
-    if (
-      !Array.isArray(vault.credential.transports) ||
-      vault.credential.transports.some(
-        (transport) => typeof transport !== "string",
-      )
-    ) {
-      throw new MeraError(
-        "VAULT_FORMAT_INVALID",
-        "credential.transports must be an array of strings or omitted",
-      );
-    }
-    transports = vault.credential.transports;
+  if (transports !== undefined && !isStringArray(transports)) {
+    throw new MeraError(
+      "VAULT_FORMAT_INVALID",
+      "credential.transports must be an array of strings or omitted",
+    );
   }
 
   const credential = toCredentialMetadata(credentialId, transports);

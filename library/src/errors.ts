@@ -23,11 +23,7 @@ class MeraError extends Error {
   /** Stable machine-readable category for the failure. */
   readonly code: MeraErrorCode;
 
-  constructor(
-    code: MeraErrorCode,
-    message: string,
-    options?: { cause?: unknown },
-  ) {
+  constructor(code: MeraErrorCode, message: string, options?: ErrorOptions) {
     super(message, options);
     this.name = "MeraError";
     this.code = code;

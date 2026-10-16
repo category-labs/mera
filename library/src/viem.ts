@@ -41,7 +41,7 @@ type ToViemAccountOptions = {
  */
 function toViemAccount(
   session: Secp256k1SigningSession,
-  options: ToViemAccountOptions = {},
+  { nonceManager }: ToViemAccountOptions = {},
 ): LocalAccount<"mera"> {
   const address = getEvmAddress(session.publicKey);
 
@@ -59,7 +59,7 @@ function toViemAccount(
 
   const account = toAccount({
     address,
-    nonceManager: options.nonceManager,
+    nonceManager,
     async sign({ hash }) {
       return serializeSignature(await signHash(hash));
     },

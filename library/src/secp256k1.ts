@@ -17,7 +17,7 @@ function getSecp256k1PublicKey(
   privateKey: Uint8Array,
 ): Uint8Array<ArrayBuffer> {
   try {
-    return new Uint8Array(secp256k1.getPublicKey(privateKey, false));
+    return secp256k1.getPublicKey(privateKey, false);
   } catch (cause) {
     throw new MeraError(
       "INPUT_INVALID",
@@ -38,7 +38,7 @@ function normalizeSecp256k1PublicKey(
   publicKey: Uint8Array,
 ): Uint8Array<ArrayBuffer> {
   try {
-    return new Uint8Array(secp256k1.Point.fromBytes(publicKey).toBytes(false));
+    return secp256k1.Point.fromBytes(publicKey).toBytes(false);
   } catch (cause) {
     throw new MeraError("INPUT_INVALID", "Public key is not valid secp256k1", {
       cause,
@@ -68,8 +68,7 @@ function createSecp256k1SigningSession({
         throw new MeraError("INPUT_INVALID", "Digest must be 32 bytes");
       }
 
-      const activeKey = use();
-      const signature = secp256k1.sign(digest32, activeKey, {
+      const signature = secp256k1.sign(digest32, use(), {
         format: "recovered",
         lowS: true,
         prehash: false,

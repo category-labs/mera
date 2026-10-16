@@ -19,7 +19,7 @@ import type { Ed25519SigningSession } from "@category-labs/mera";
 
 ### signMessage(message)
 
-Signs an arbitrary-length message and resolves to the 64-byte Ed25519 signature (`R || s`). Hashing happens inside Ed25519 itself.
+Signs an arbitrary-length message and returns the 64-byte Ed25519 signature (`R || s`). Hashing happens inside Ed25519 itself.
 
 ### end()
 
@@ -37,7 +37,7 @@ const message = new TextEncoder().encode("hello mera");
 
 {
   using session = createEd25519SigningSession({ privateKey });
-  await session.signMessage(message);
+  session.signMessage(message);
 } // ended here
 ```
 

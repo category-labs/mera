@@ -19,7 +19,7 @@ import type { Secp256k1SigningSession } from "@category-labs/mera";
 
 ### signDigest(digest32)
 
-Signs a 32-byte digest without prehashing it and resolves to a `Secp256k1Signature`: `compact` (64 bytes, `r || s`, low-S: `s` lies in the lower half of the curve order) plus `recovery` (0 or 1).
+Signs a 32-byte digest without prehashing it and returns a `Secp256k1Signature`: `compact` (64 bytes, `r || s`, low-S: `s` lies in the lower half of the curve order) plus `recovery` (0 or 1).
 
 ### end()
 
@@ -37,7 +37,7 @@ const digest32 = new Uint8Array(32);
 
 {
   using session = createSecp256k1SigningSession({ privateKey });
-  await session.signDigest(digest32);
+  session.signDigest(digest32);
 } // ended here
 ```
 

@@ -1,4 +1,8 @@
-import type { PasskeyCredentialMetadata } from "@category-labs/mera";
+import type {
+  EvmAddress,
+  PasskeyCredentialMetadata,
+} from "@category-labs/mera";
+import { isAddress } from "viem";
 import type { AccountMode, ConnectedWallet } from "./connect";
 
 /**
@@ -11,35 +15,36 @@ type AccountState =
   | ({ status: "locked" } & CachedAccount)
   | { status: "unlocked"; wallet: ConnectedWallet };
 
-/** The address behind an account state; null when signed out. */
-function accountAddress(account: AccountState): `0x${string}` | null {
-  return account.status === "none"
-    ? null
-    : account.status === "locked"
-      ? account.address
-      : account.wallet.account.address;
-}
-
 /**
  * The signed-in account's public identity, cached so a reload can show its
- * portfolio without a passkey ceremony. Holds no key material; trading still
- * requires unlocking.
+ * portfolio without a passkey ceremony. Holds no key material.
  */
 type CachedAccount = {
   mode: AccountMode;
-  address: `0x${string}`;
+  address: EvmAddress;
   /** Credential the recovery-phrase reveal pins; passkey mode only. */
   credential?: PasskeyCredentialMetadata;
 };
 
 const STORAGE_KEY = "mera.demo.account";
 
+function accountAddress(account: AccountState): EvmAddress | null {
+  switch (account.status) {
+    case "none":
+      return null;
+    case "locked":
+      return account.address;
+    case "unlocked":
+      return account.wallet.address;
+  }
+}
+
 function loadCachedAccount(): CachedAccount | undefined {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return undefined;
-    const parsed: unknown = JSON.parse(raw);
-    return isCachedAccount(parsed) ? parsed : undefined;
+    const value: unknown = JSON.parse(
+      localStorage.getItem(STORAGE_KEY) ?? "null",
+    );
+    return isCachedAccount(value) ? value : undefined;
   } catch {
     return undefined;
   }
@@ -54,23 +59,21 @@ function clearCachedAccount(): void {
 }
 
 function isCachedAccount(value: unknown): value is CachedAccount {
-  if (!value || typeof value !== "object") return false;
-  const record = value as Partial<CachedAccount>;
+  const { mode, address, credential } = (value ?? {}) as Record<
+    string,
+    unknown
+  >;
   return (
-    (record.mode === "passkey" || record.mode === "vault") &&
-    typeof record.address === "string" &&
-    /^0x[0-9a-fA-F]{40}$/.test(record.address) &&
+    typeof address === "string" &&
+    isAddress(address, { strict: false }) &&
     // Passkey mode needs the credential: an unpinned reveal offers every
     // passkey and can show another account's phrase.
-    (record.credential === undefined
-      ? record.mode === "vault"
-      : isCredential(record.credential))
+    (mode === "vault" || (mode === "passkey" && isCredential(credential)))
   );
 }
 
 function isCredential(value: unknown): value is PasskeyCredentialMetadata {
-  if (!value || typeof value !== "object") return false;
-  const { credentialId, transports } = value as Record<string, unknown>;
+  const { credentialId, transports } = (value ?? {}) as Record<string, unknown>;
   return (
     typeof credentialId === "string" &&
     (transports === undefined ||

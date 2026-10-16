@@ -37,7 +37,7 @@ Run from the repository root:
 npm test -w demos/extension
 ```
 
-The suite builds the extension and tests its manifest, storage, network rules,
-trades, passkey flow, locking, and recovery timeout. Before review, also check
+The suite builds the extension and tests its manifest, trades, passkey flows,
+locking, and recovery timeout. Before review, also check
 a real PRF-capable passkey, narrow widths, both panel sides, keyboard use, and
 screen-reader labels.

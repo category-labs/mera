@@ -1,32 +1,25 @@
+import { useCopyButton } from "@category-labs/mera-demo-shared/hooks";
+import { setStringAsync } from "expo-clipboard";
 import type { ReactElement } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button, LinkButton } from "./Button";
 import { monoFont, palette, text } from "./theme";
-import { useCopyButton } from "./useCopyButton";
 
 type RecoveryPhraseProps = {
-  /** The revealed recovery phrase to display (12 or 24 words). */
   phrase: string;
-  /** Return to the account view, dropping the phrase reference. */
   onHide: () => void;
 };
 
 /**
- * Recovery-phrase display, shown in place of the trading card.
- *
- * The phrase is held only by the caller's state while shown. `Hide` drops it.
- * JS strings cannot be zeroed, so this is the tightest lifetime achievable.
- * Fresh user verification gates access while the phrase is hidden.
+ * The recovery phrase, shown in place of the trading card. Only the caller's
+ * state holds the phrase; JS strings cannot be zeroed, so dropping it on Hide
+ * is the tightest lifetime available.
  */
 function RecoveryPhrase({ phrase, onHide }: RecoveryPhraseProps): ReactElement {
-  const { copied, copy } = useCopyButton();
+  const { copied, copy } = useCopyButton(setStringAsync);
   const words = phrase
-    .trim()
-    .split(/\s+/)
-    .map((word, index) => ({
-      position: index + 1,
-      word,
-    }));
+    .split(" ")
+    .map((word, index) => ({ position: index + 1, word }));
 
   return (
     <View style={styles.backup}>

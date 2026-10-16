@@ -1,138 +1,73 @@
 import {
   type Address,
-  type Chain,
   createPublicClient,
   defineChain,
   http,
-  type PublicClient,
+  isAddress,
+  rpcSchema,
 } from "viem";
-import { assertDemoChainId } from "./validation";
 
 // The demo's private EVM network. State is wiped on every restart, so nothing
 // on it holds value.
 const DEMO_RPC_URL = "https://evm-network-production.up.railway.app";
-
-// The chain id the demo network reports.
-const DEMO_CHAIN_ID = 31337;
-
 const NETWORK_NAME = "Demo Network";
-
-// How long a failed network resolve waits before the next attempt.
 const RESOLVE_RETRY_MS = 5_000;
 
+const demoChain = defineChain({
+  id: 31337,
+  name: NETWORK_NAME,
+  nativeCurrency: { name: "Demon", symbol: "DEMON", decimals: 18 },
+  rpcUrls: { default: { http: [DEMO_RPC_URL] } },
+});
+
+// The methods the network's guard adds to JSON-RPC. The market reply is
+// untrusted, so its type makes the caller check it.
+type DemoRpcSchema = [
+  {
+    Method: "demo_market";
+    Parameters?: undefined;
+    ReturnType: { address?: unknown } | null;
+  },
+  { Method: "demo_fundAccount"; Parameters: [Address]; ReturnType: unknown },
+];
+
+function demoClient(rpcUrl: string) {
+  return createPublicClient({
+    chain: demoChain,
+    transport: http(rpcUrl),
+    rpcSchema: rpcSchema<DemoRpcSchema>(),
+  });
+}
+
 type EvmContext = {
-  chain: Chain;
-  publicClient: PublicClient;
+  publicClient: ReturnType<typeof demoClient>;
   rpcUrl: string;
   marketAddress: Address;
 };
 
-type JsonRpcBody = {
-  jsonrpc?: unknown;
-  id?: unknown;
-  result?: unknown;
-  error?: { message?: unknown };
-};
-
-type DemoMethod = "demo_fundAccount" | "demo_market";
-
-function isJsonRpcBody(value: unknown): value is JsonRpcBody {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
-function jsonRpcResult(value: unknown, method: string): unknown {
-  if (!isJsonRpcBody(value) || value.jsonrpc !== "2.0" || value.id !== 1) {
-    throw new Error("The network reply is malformed.");
-  }
-  if (value.error !== undefined) {
-    const message = value.error?.message;
-    throw new Error(
-      typeof message === "string" ? message : `The network refused ${method}.`,
-    );
-  }
-  if (!("result" in value)) throw new Error("The network reply has no result.");
-  return value.result;
-}
-
 /**
- * Calls one of the demo network guard's demo_* methods and returns its
- * JSON-RPC result. Throws on an HTTP or JSON-RPC error.
+ * Connects to the demo network and asks it for the stock contract's address,
+ * which changes because the contract redeploys on every network restart. The
+ * request also probes the endpoint, so an unreachable network fails here.
  */
-async function demoRequest(
-  rpcUrl: string,
-  method: DemoMethod,
-  params: unknown[],
-): Promise<unknown> {
-  const response = await fetch(rpcUrl, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-  });
-  if (!response.ok) {
-    throw new Error(`The network answered with status ${response.status}.`);
-  }
-  const value: unknown = await response.json();
-  return jsonRpcResult(value, method);
-}
-
-/**
- * Reads the stock contract's address through the guard's demo_market method.
- * The contract redeploys on every network restart, so the address is asked
- * for rather than hardcoded.
- */
-async function fetchMarketAddress(rpcUrl: string): Promise<Address> {
-  const result = (await demoRequest(rpcUrl, "demo_market", [])) as {
-    address?: unknown;
-  } | null;
-  const address = result?.address;
-  if (typeof address !== "string" || !/^0x[0-9a-fA-F]{40}$/.test(address)) {
+async function resolveEvmContext(rpcUrl: string): Promise<EvmContext> {
+  const publicClient = demoClient(rpcUrl);
+  const market = await publicClient.request({ method: "demo_market" });
+  const marketAddress = market?.address;
+  if (
+    typeof marketAddress !== "string" ||
+    !isAddress(marketAddress, { strict: false })
+  ) {
     throw new Error("The network reported no market address.");
   }
-  return address as Address;
-}
-
-/**
- * Connects to the demo network. The chain id and market address are read from
- * the endpoint rather than hardcoded, so the demo follows whatever the network
- * reports; the reads also probe connectivity, so an unreachable endpoint fails
- * here (and shows in the UI) rather than in the first balance read. With
- * `expectedChainId` set, a network reporting a different chain id is refused
- * instead of adopted.
- */
-async function resolveEvmContext({
-  rpcUrl,
-  expectedChainId,
-}: {
-  rpcUrl: string;
-  expectedChainId?: number;
-}): Promise<EvmContext> {
-  const bootstrap = createPublicClient({ transport: http(rpcUrl) });
-  const [id, marketAddress] = await Promise.all([
-    bootstrap.getChainId(),
-    fetchMarketAddress(rpcUrl),
-  ]);
-  if (expectedChainId !== undefined) {
-    assertDemoChainId(id, expectedChainId);
-  }
-  const chain = defineChain({
-    id,
-    name: NETWORK_NAME,
-    nativeCurrency: { name: "Demon", symbol: "DEMON", decimals: 18 },
-    rpcUrls: { default: { http: [rpcUrl] } },
-  });
-  const publicClient = createPublicClient({
-    chain,
-    transport: http(rpcUrl),
-  });
-  return { chain, publicClient, rpcUrl, marketAddress };
+  return { publicClient, rpcUrl, marketAddress };
 }
 
 /**
  * Calls `resolve` until it succeeds, waiting RESOLVE_RETRY_MS after each
- * failure. Each failure reaches `onError` while the retries continue, because
- * the demo network comes back empty but reachable after a restart, which can
- * take up to a minute. Returns a stop function; after it runs, no callback
- * fires.
+ * failure, because a restarting network can take a minute to answer. Each
+ * failure reaches `onError`. Returns a stop function; after it runs, no
+ * callback fires.
  */
 function retryingResolve<T>(
   resolve: () => Promise<T>,
@@ -161,21 +96,21 @@ function retryingResolve<T>(
 }
 
 /**
- * Asks the guard's demo_fundAccount to top up `address`. Balances below the
- * guard's threshold rise by a fixed amount, a no-op otherwise, so the call
- * is idempotent.
+ * Asks the guard's faucet to top up `address`. It credits only balances below
+ * its threshold, so repeated calls are safe.
  */
-async function fundAccount(rpcUrl: string, address: Address): Promise<void> {
-  await demoRequest(rpcUrl, "demo_fundAccount", [address]);
+async function fundAccount(evm: EvmContext, address: Address): Promise<void> {
+  await evm.publicClient.request({
+    method: "demo_fundAccount",
+    params: [address],
+  });
 }
 
 export type { EvmContext };
 export {
-  DEMO_CHAIN_ID,
   DEMO_RPC_URL,
+  demoChain,
   fundAccount,
-  isJsonRpcBody,
-  jsonRpcResult,
   NETWORK_NAME,
   resolveEvmContext,
   retryingResolve,

@@ -1,7 +1,5 @@
-/* The shared base plus the web-only layer: the Satoshi webfont and the
-   embedded-in-iframe layout driven by embed.ts. Importing the base here gives
-   every web entry (index.html and passkey.html) the full stylesheet through
-   one import. */
+/* The shared base, the Satoshi webfont, the passkey tab's layout, and the
+   embedded layout embed.ts switches on. Both entries import this file. */
 @import "@category-labs/mera-demo-shared/base.css";
 
 :root {
@@ -12,8 +10,7 @@ a {
   color: var(--accent);
 }
 
-/* Passkey tab: a centered sign-in layout instead of the trading page's
-   top-aligned header + card. */
+/* Passkey tab: a centered sign-in layout. */
 .app.signin {
   margin-block: auto;
   flex: 0 0 auto;
@@ -58,9 +55,7 @@ h1.signin-title {
   width: 100%;
 }
 
-/* Embedded in the post's iframe: drop the viewport-filling height and big
-   margins so the demo hugs its content and `embed.ts` can report a tight
-   height. Standalone (opened in its own tab) keeps the centered full layout. */
+/* Embedded: hug the content so embed.ts reports a tight height. */
 html[data-embedded="true"] body {
   min-height: 0;
   padding: 16px;
@@ -70,29 +65,24 @@ html[data-embedded="true"] .app {
   margin: 8px auto;
 }
 
-/* Embedded in a frame taller than the content (embed.ts sets
-   `data-footer-pinned`): the hugged column has no spare height for
-   `margin-top: auto` to distribute, so pin the shell footer just above the
-   frame's bottom edge instead. The column reserves the footer's in-flow band
-   so the measured content height stays the same whether or not the footer is
-   in the flow; small drift between the reserve and the real band is absorbed
-   by FOOTER_PIN_SLACK_PX in embed.ts. */
+/* Pinned: the hugged column has no spare height for the footer's
+   `margin-top: auto`, so the footer is fixed to the frame's bottom edge.
+   The column reserves the footer's band, so the measured height stays the
+   same in both states. */
 html[data-footer-pinned="true"] .app:has(.shell-footer) {
-  /* The 14px shell gap + the disclaimer's ~14px line. */
+  /* The 14px shell gap and the disclaimer's ~14px line. */
   padding-bottom: 28px;
 }
 
 html[data-footer-pinned="true"] .app:has(.mode-switch) {
-  /* + the mode switch's ~23px box and the footer's 14px gap. */
+  /* Plus the mode switch's ~23px box and the footer's 14px gap. */
   padding-bottom: 65px;
 }
 
 html[data-footer-pinned="true"] .shell-footer {
   position: fixed;
-  /* 16px embedded body padding + 8px `.app` margin: the same bottom offset
-     the in-flow footer gets in a content-sized frame. The side offsets mirror
-     the body padding so the pinned footer keeps the in-flow width and the
-     disclaimer wraps identically in both states. */
+  /* The embedded body padding plus the `.app` margin, and the body padding
+     at the sides, so the pinned footer keeps its in-flow width. */
   bottom: 24px;
   left: 16px;
   right: 16px;

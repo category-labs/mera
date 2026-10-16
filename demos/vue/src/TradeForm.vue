@@ -23,7 +23,7 @@ import { computed } from "vue";
  * The buy and sell form. It emits `submit` with an order the portfolio
  * covers, and takes no order while a trade is in flight.
  */
-const props = defineProps<{
+const { portfolio, price, stage, locked, fill } = defineProps<{
   portfolio: Portfolio;
   price: bigint;
   stage: positionReducer.TradeStage | null;
@@ -38,24 +38,16 @@ const SIDES: readonly Side[] = ["buy", "sell"];
 
 const order = computed(() => draftOrder(draft.value));
 const coveredOrder = computed(() =>
-  props.stage === null &&
+  stage === null &&
   order.value !== null &&
-  coversTrade({
-    order: order.value,
-    price: props.price,
-    portfolio: props.portfolio,
-  })
+  coversTrade({ order: order.value, price, portfolio })
     ? order.value
     : null,
 );
 const estimatedShares = computed(() =>
   order.value === null
     ? null
-    : orderShares({
-        order: order.value,
-        price: props.price,
-        heldShares: props.portfolio.shares,
-      }),
+    : orderShares({ order: order.value, price, heldShares: portfolio.shares }),
 );
 
 const amountText = computed({
@@ -67,8 +59,8 @@ const amountText = computed({
 
 const submitLabel = computed(() => {
   const buying = draft.value.side === "buy";
-  if (props.stage !== "sending") return buying ? "Buy" : "Sell";
-  if (props.locked) return "Waiting for passkey…";
+  if (stage !== "sending") return buying ? "Buy" : "Sell";
+  if (locked) return "Waiting for passkey…";
   return buying ? "Buying…" : "Selling…";
 });
 
@@ -77,11 +69,7 @@ function chooseSide(side: Side): void {
 }
 
 function fillMax(): void {
-  draft.value = maxDraft({
-    side: draft.value.side,
-    price: props.price,
-    portfolio: props.portfolio,
-  });
+  draft.value = maxDraft({ side: draft.value.side, price, portfolio });
 }
 
 function submit(): void {

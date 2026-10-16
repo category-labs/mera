@@ -14,11 +14,7 @@ function elementById<T extends HTMLElement>(id: string): T {
   return element as T;
 }
 
-const inputs: {
-  rpId: HTMLInputElement;
-  salt: HTMLInputElement;
-  passkey: HTMLSelectElement;
-} = {
+const inputs = {
   rpId: elementById<HTMLInputElement>("in-rp-id"),
   salt: elementById<HTMLInputElement>("in-salt"),
   passkey: elementById<HTMLSelectElement>("in-passkey"),
@@ -150,11 +146,10 @@ function render(values: ModelInputs): void {
     const result = deriveModel(values);
 
     for (const [index, element] of byteElements.entries()) {
-      const pair = result.entropyHex.slice(index * 2, index * 2 + 2);
-      if (element.textContent !== pair) {
-        element.textContent = pair;
-        if (previous) animateChange(element);
-      }
+      setAnimatedText(
+        element,
+        result.entropyHex.slice(index * 2, index * 2 + 2),
+      );
     }
 
     const words = result.mnemonic.split(" ");

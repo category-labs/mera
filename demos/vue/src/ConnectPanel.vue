@@ -3,8 +3,8 @@ import {
   type AccountMode,
   type ConnectedWallet,
   connect,
-  describeError,
 } from "@category-labs/mera-demo-shared/connect";
+import { describeError } from "@category-labs/mera-demo-shared/errors";
 import {
   createMnemonic,
   isValidMnemonic,
@@ -13,34 +13,29 @@ import { computed, ref } from "vue";
 
 type ConnectAction = "create" | "signin";
 
-// The action a click started, and how far it has come: the passkey ceremony,
-// then the awaited `onConnected`.
-type ConnectBusy = {
-  action: ConnectAction;
-  phase: "passkey" | "opening";
-};
-
 /**
- * The connect area under the market data. Passkey mode offers explicit
- * create and sign-in actions; new passkeys are created under a fixed default
- * name. Vault mode imports or creates a phrase-backed account. The panel
- * stays busy until `onConnected` settles, so the parent can load the account
- * before this panel gives way to it. Mount with `:key="mode"` so switching
- * modes resets the local state.
+ * Create and sign-in actions under the market data. Vault mode adds the
+ * recovery phrase the new account is encrypted from. The panel stays busy
+ * until `onConnected` settles, so the parent can load the account before the
+ * panel gives way. Mount with `:key="mode"` so switching modes resets it.
  */
-const props = defineProps<{
+const { mode, onConnected, onBusyChange } = defineProps<{
   mode: AccountMode;
   onConnected: (wallet: ConnectedWallet) => Promise<void>;
   /**
    * Called with true at the click and false once the attempt settles, even
-   * after the panel unmounts. A mode switch meanwhile would mount a second
-   * panel whose connect could race this one.
+   * after the panel unmounts, so the parent can block a mode switch whose new
+   * panel would race this one.
    */
   onBusyChange: (busy: boolean) => void;
 }>();
 
 const secret = ref("");
-const busy = ref<ConnectBusy | null>(null);
+// The ceremony, then the awaited `onConnected`.
+const busy = ref<{
+  action: ConnectAction;
+  phase: "passkey" | "opening";
+} | null>(null);
 const error = ref<string | null>(null);
 
 const trimmedSecret = computed(() => secret.value.trim());
@@ -54,21 +49,21 @@ function generate(): void {
 async function run(action: ConnectAction): Promise<void> {
   busy.value = { action, phase: "passkey" };
   error.value = null;
-  props.onBusyChange(true);
+  onBusyChange(true);
   try {
-    const wallet = await connect(props.mode, action, secret.value);
+    const wallet = await connect(mode, action, secret.value);
     busy.value = { action, phase: "opening" };
-    await props.onConnected(wallet);
+    await onConnected(wallet);
   } catch (caught) {
     error.value = describeError(caught);
   } finally {
     busy.value = null;
-    props.onBusyChange(false);
+    onBusyChange(false);
   }
 }
 
 function actionLabel(action: ConnectAction, idle: string): string {
-  if (busy.value === null || busy.value.action !== action) return idle;
+  if (busy.value?.action !== action) return idle;
   return busy.value.phase === "passkey"
     ? "Waiting for passkey…"
     : "Opening account…";

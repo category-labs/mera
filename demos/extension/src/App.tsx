@@ -1,104 +1,20 @@
 import { AccountChip } from "@category-labs/mera-demo-shared/AccountChip";
 import {
-  DEMO_CHAIN_ID,
-  DEMO_RPC_URL,
-  type EvmContext,
-  resolveEvmContext,
-} from "@category-labs/mera-demo-shared/network";
-import {
-  type ReactElement,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import { type AccountState, accountAddress } from "./account";
-import { loadAccount } from "./storage";
+  type AccountState,
+  accountAddress,
+  loadCachedAccount,
+} from "@category-labs/mera-demo-shared/account";
+import { useEvmContext } from "@category-labs/mera-demo-shared/hooks";
+import { DEMO_RPC_URL } from "@category-labs/mera-demo-shared/network";
+import { type ReactElement, useState } from "react";
 import { TradingPanel } from "./TradingPanel";
-import { describeError } from "./wallet";
 
 function App(): ReactElement {
+  const { evm, evmError } = useEvmContext(DEMO_RPC_URL);
   const [account, setAccount] = useState<AccountState>(() => {
-    const stored = loadAccount();
-    return stored === undefined
-      ? { status: "none" }
-      : { status: "locked", ...stored };
+    const cached = loadCachedAccount();
+    return cached ? { status: "locked", ...cached } : { status: "none" };
   });
-  const [evm, setEvm] = useState<EvmContext | null>(null);
-  const [evmError, setEvmError] = useState<string | null>(null);
-  const accountRef = useRef(account);
-  const operationEpoch = useRef(0);
-  const suppressHideLock = useRef(false);
-  accountRef.current = account;
-
-  const replaceAccount = useCallback((next: AccountState): void => {
-    const current = accountRef.current;
-    if (
-      current.status === "unlocked" &&
-      (next.status !== "unlocked" || next.wallet !== current.wallet)
-    ) {
-      current.wallet.lock();
-    }
-    accountRef.current = next;
-    setAccount(next);
-  }, []);
-
-  const lock = useCallback((): void => {
-    operationEpoch.current += 1;
-    const current = accountRef.current;
-    if (current.status !== "unlocked") return;
-    replaceAccount({
-      status: "locked",
-      address: current.wallet.address,
-      credential: current.wallet.credential,
-    });
-  }, [replaceAccount]);
-
-  useEffect(() => {
-    let stopped = false;
-    let timer: number | undefined;
-    async function connectNetwork(): Promise<void> {
-      try {
-        const context = await resolveEvmContext({
-          rpcUrl: DEMO_RPC_URL,
-          expectedChainId: DEMO_CHAIN_ID,
-        });
-        if (!stopped) {
-          setEvm(context);
-          setEvmError(null);
-        }
-      } catch (error) {
-        if (!stopped) {
-          setEvm(null);
-          setEvmError(describeError(error));
-          lock();
-          timer = window.setTimeout(() => void connectNetwork(), 5_000);
-        }
-      }
-    }
-    void connectNetwork();
-    return () => {
-      stopped = true;
-      window.clearTimeout(timer);
-    };
-  }, [lock]);
-
-  useEffect(() => {
-    function hide(): void {
-      if (document.visibilityState === "hidden" && !suppressHideLock.current) {
-        lock();
-      }
-    }
-    document.addEventListener("visibilitychange", hide);
-    window.addEventListener("pagehide", lock);
-    return () => {
-      document.removeEventListener("visibilitychange", hide);
-      window.removeEventListener("pagehide", lock);
-      operationEpoch.current += 1;
-      const current = accountRef.current;
-      if (current.status === "unlocked") current.wallet.lock();
-    };
-  }, [lock]);
 
   return (
     <main className="app extension-app">
@@ -113,10 +29,7 @@ function App(): ReactElement {
         account={account}
         evm={evm}
         evmError={evmError}
-        onAccountChange={replaceAccount}
-        onLock={lock}
-        operationEpoch={operationEpoch}
-        suppressHideLock={suppressHideLock}
+        onAccountChange={setAccount}
       />
     </main>
   );

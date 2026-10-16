@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
+import { useCopyButton } from "./hooks";
 import { NETWORK_NAME } from "./network";
 import { truncateAddress } from "./ui";
-import { useCopyButton } from "./useCopyButton";
 
 type AccountChipProps = {
   address: `0x${string}` | null;

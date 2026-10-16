@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { NETWORK_NAME } from "@category-labs/mera-demo-shared/network";
 import { truncateAddress } from "@category-labs/mera-demo-shared/ui";
-import { useCopyButton } from "./useCopyButton";
+import { useCopyButton } from "./composables";
 
 /**
  * Title-row account indicator: the account's truncated address as a copy
@@ -9,7 +9,7 @@ import { useCopyButton } from "./useCopyButton";
  * network context resolves. The network line renders even when signed out,
  * so the page always says where trades settle.
  */
-defineProps<{
+const { address, connected } = defineProps<{
   address: `0x${string}` | null;
   connected: boolean;
 }>();

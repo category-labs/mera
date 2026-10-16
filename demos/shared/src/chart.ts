@@ -1,7 +1,5 @@
 import { priceAt } from "./market";
 
-// The chart shows this much history; the header's delta uses the same window
-// so the number and the shape always tell one story.
 const CHART_WINDOW_SECONDS = 1800;
 const SAMPLE_SECONDS = 5;
 
@@ -17,31 +15,31 @@ type ChartGeometry = {
   area: string;
   /** y of the window's opening price, for a reference line. */
   openY: number;
-  /** Whether the newest price is at or above the window's open. */
-  up: boolean;
+  /** The price at `now`, in wei per share. */
+  price: bigint;
+  /** `price` minus the window's opening price. */
+  delta: bigint;
   /** Window high in DEMOCASH. */
   high: number;
   /** Window low in DEMOCASH. */
   low: number;
 };
 
-// Grid prices, pruned to the drawn window. A redraw resamples the whole
-// window at eight keccak hashes per sample, which stalls JIT-less engines
-// when repeated every second; a grid price never changes, so a redraw
-// computes only the samples that newly entered the window.
+// Grid prices, pruned to the drawn window. Each sample costs eight keccak
+// hashes, which stalls JIT-less engines when the whole window is resampled
+// every second; a grid price never changes, so a redraw computes only the
+// samples that newly entered the window.
 const gridPrices = new Map<number, bigint>();
 
 /**
- * Lays out the last CHART_WINDOW_SECONDS of the stock price as SVG path data
- * in the CHART_WIDTH by CHART_HEIGHT space. History comes from the price
- * mirror (see market.ts) and only the newest point is the caller's live
- * price, so the computation needs no network reads.
+ * Lays out the stock price over the CHART_WINDOW_SECONDS before `now` (Unix
+ * seconds) as SVG path data in the CHART_WIDTH by CHART_HEIGHT space. Every
+ * point comes from the price mirror, so the layout needs no network reads.
  */
-function chartGeometry(livePrice: bigint, now: number): ChartGeometry {
+function chartGeometry(now: number): ChartGeometry {
   const points: { t: number; price: bigint }[] = [];
-  // Sample on the absolute SAMPLE_SECONDS grid, not relative to `now`:
-  // anchoring to `now` would shift every sample time each tick, re-rolling
-  // the price noise across the whole line and making it visibly shimmer.
+  // Sample on the absolute SAMPLE_SECONDS grid: anchoring to `now` would shift
+  // every sample each tick and make the line shimmer.
   const start =
     Math.ceil((now - CHART_WINDOW_SECONDS) / SAMPLE_SECONDS) * SAMPLE_SECONDS;
   // Dropping t >= now also clears samples ahead of a clock that moved back.
@@ -56,39 +54,38 @@ function chartGeometry(livePrice: bigint, now: number): ChartGeometry {
     }
     points.push({ t, price });
   }
-  points.push({ t: now, price: livePrice });
+  const price = priceAt(BigInt(now));
+  points.push({ t: now, price });
+  const open = points[0]?.price ?? price;
 
-  let min = points[0]?.price ?? 0n;
-  let max = min;
+  let min = price;
+  let max = price;
   for (const point of points) {
     if (point.price < min) min = point.price;
     if (point.price > max) max = point.price;
   }
   // Cents as floats are exact enough for pixel math.
-  const toCents = (price: bigint) => Number(price / 10n ** 16n);
+  const toCents = (wei: bigint) => Number(wei / 10n ** 16n);
   const [minC, maxC] = [toCents(min), toCents(max)];
   const span = Math.max(maxC - minC, 1);
   const x = (t: number) =>
     ((t - (now - CHART_WINDOW_SECONDS)) / CHART_WINDOW_SECONDS) * CHART_WIDTH;
-  const y = (price: bigint) =>
+  const y = (wei: bigint) =>
     CHART_HEIGHT -
     PAD_Y -
-    ((toCents(price) - minC) / span) * (CHART_HEIGHT - 2 * PAD_Y);
+    ((toCents(wei) - minC) / span) * (CHART_HEIGHT - 2 * PAD_Y);
 
-  const coords = points.map(
-    (point) => `${x(point.t).toFixed(1)},${y(point.price).toFixed(1)}`,
-  );
-  const first = points[0];
-  const last = points[points.length - 1];
+  const line = `M${points.map((point) => `${x(point.t).toFixed(1)},${y(point.price).toFixed(1)}`).join(" L")}`;
   return {
-    line: `M${coords.join(" L")}`,
-    area: `M${coords.join(" L")} L${CHART_WIDTH},${CHART_HEIGHT} L0,${CHART_HEIGHT} Z`,
-    openY: first ? y(first.price) : 0,
-    up: first !== undefined && last !== undefined && last.price >= first.price,
+    line,
+    area: `${line} L${CHART_WIDTH},${CHART_HEIGHT} L0,${CHART_HEIGHT} Z`,
+    openY: y(open),
+    price,
+    delta: price - open,
     high: maxC / 100,
     low: minC / 100,
   };
 }
 
 export type { ChartGeometry };
-export { CHART_HEIGHT, CHART_WIDTH, CHART_WINDOW_SECONDS, chartGeometry };
+export { CHART_HEIGHT, CHART_WIDTH, chartGeometry };

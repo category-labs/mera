@@ -95,7 +95,11 @@ test("Sell Max remains enabled after the quote falls; typing restores amount val
   await page.addInitScript((cachedAddress) => {
     localStorage.setItem(
       "mera.demo.account",
-      JSON.stringify({ mode: "passkey", address: cachedAddress }),
+      JSON.stringify({
+        mode: "passkey",
+        address: cachedAddress,
+        credential: { credentialId: "AQID" },
+      }),
     );
   }, address);
   await routeRpc(page, (method) => ({ result: readResult(method, shares) }));

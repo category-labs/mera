@@ -43,7 +43,6 @@ import {
   fundAccount,
 } from "@category-labs/mera-demo-shared/network";
 import { PriceChart } from "@category-labs/mera-demo-shared/PriceChart";
-import { currentPasskeyWallet } from "@category-labs/mera-demo-shared/passkeyWallet";
 import {
   CASH_SYMBOL,
   formatCash,
@@ -342,16 +341,7 @@ function TradingCard({
     setRevealing(true);
     setBackupError(null);
     try {
-      // In the locked state the reveal runs against the device's remembered
-      // credential; picking a different discoverable passkey would show that
-      // passkey's phrase, not the cached account's.
-      const target =
-        account.status === "unlocked"
-          ? account.wallet
-          : {
-              mode: account.mode,
-              credential: currentPasskeyWallet(),
-            };
+      const target = account.status === "unlocked" ? account.wallet : account;
       setPhrase(await revealMnemonic(target));
     } catch (caught) {
       setBackupError(describeError(caught));

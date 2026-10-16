@@ -1,3 +1,4 @@
+import type { PasskeyCredentialMetadata } from "@category-labs/mera";
 import type { AccountMode, ConnectedWallet } from "./connect";
 
 /**
@@ -7,7 +8,7 @@ import type { AccountMode, ConnectedWallet } from "./connect";
  */
 type AccountState =
   | { status: "none" }
-  | { status: "locked"; mode: AccountMode; address: `0x${string}` }
+  | ({ status: "locked" } & CachedAccount)
   | { status: "unlocked"; wallet: ConnectedWallet };
 
 /** The address behind an account state; null when signed out. */
@@ -27,6 +28,8 @@ function accountAddress(account: AccountState): `0x${string}` | null {
 type CachedAccount = {
   mode: AccountMode;
   address: `0x${string}`;
+  /** Credential the recovery-phrase reveal pins; passkey mode only. */
+  credential?: PasskeyCredentialMetadata;
 };
 
 const STORAGE_KEY = "mera.demo.account";
@@ -56,7 +59,23 @@ function isCachedAccount(value: unknown): value is CachedAccount {
   return (
     (record.mode === "passkey" || record.mode === "vault") &&
     typeof record.address === "string" &&
-    /^0x[0-9a-fA-F]{40}$/.test(record.address)
+    /^0x[0-9a-fA-F]{40}$/.test(record.address) &&
+    // Passkey mode needs the credential: an unpinned reveal offers every
+    // passkey and can show another account's phrase.
+    (record.credential === undefined
+      ? record.mode === "vault"
+      : isCredential(record.credential))
+  );
+}
+
+function isCredential(value: unknown): value is PasskeyCredentialMetadata {
+  if (!value || typeof value !== "object") return false;
+  const { credentialId, transports } = value as Record<string, unknown>;
+  return (
+    typeof credentialId === "string" &&
+    (transports === undefined ||
+      (Array.isArray(transports) &&
+        transports.every((transport) => typeof transport === "string")))
   );
 }
 

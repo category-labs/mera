@@ -2,7 +2,7 @@ export { deriveEvmPrivateKey, getEvmAddress } from "./chains/evm.js";
 export { deriveSolanaPrivateKey, getSolanaAddress } from "./chains/solana.js";
 export { createEd25519SigningSession } from "./ed25519.js";
 export type { MeraErrorCode } from "./errors.js";
-export { MeraError } from "./errors.js";
+export { MeraError, NewPasskeyError } from "./errors.js";
 export { createPasskeyWithPrfOutput, getPasskeyPrfOutput } from "./passkey.js";
 export { createSecp256k1SigningSession } from "./secp256k1.js";
 export type {

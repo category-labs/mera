@@ -283,21 +283,16 @@ test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavaila
   });
 });
 
-test("createSecretVaultWithNewPasskey needs crypto.subtle after passkey creation", async () => {
+test("createSecretVaultWithNewPasskey checks crypto.subtle before creating a passkey", async () => {
   const { getRandomValues } = globalThis.crypto;
   const randomOnly = {
     getRandomValues: getRandomValues.bind(globalThis.crypto),
   };
   let passkeyCreated = false;
   const webAuthnClient: WebAuthnClient = {
-    async createCredential({ prfSalt }) {
+    async createCredential() {
       passkeyCreated = true;
-      return {
-        credentialId: new Uint8Array(CREDENTIAL_ID_BYTES),
-        transports: ["internal"],
-        prfEnabled: true,
-        prfOutput: new Uint8Array(prfSalt),
-      };
+      throw new Error("creation must not start");
     },
     async getCredential() {
       throw new Error("sign-in must not start");
@@ -315,7 +310,53 @@ test("createSecretVaultWithNewPasskey needs crypto.subtle after passkey creation
     ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
   });
 
-  expect(passkeyCreated).toBe(true);
+  expect(passkeyCreated).toBe(false);
+});
+
+test("createSecretVaultWithNewPasskey names the new passkey when encryption fails", async () => {
+  const unsupported = new DOMException(
+    "HKDF is unsupported",
+    "NotSupportedError",
+  );
+  const cryptoWithoutHkdf = {
+    getRandomValues: globalThis.crypto.getRandomValues.bind(globalThis.crypto),
+    subtle: {
+      async importKey() {
+        throw unsupported;
+      },
+    },
+  };
+  const webAuthnClient: WebAuthnClient = {
+    async createCredential({ prfSalt }) {
+      return {
+        credentialId: new Uint8Array(CREDENTIAL_ID_BYTES),
+        transports: ["internal"],
+        prfEnabled: true,
+        prfOutput: new Uint8Array(prfSalt),
+      };
+    },
+    async getCredential() {
+      throw new Error("sign-in must not start");
+    },
+  };
+
+  await withStubbedGlobal("crypto", cryptoWithoutHkdf, async () => {
+    await expect(
+      createSecretVaultWithNewPasskey({
+        rp: { id: "example.com", name: "Mera Test" },
+        user: { name: "nad", displayName: "nad" },
+        secret: new Uint8Array([1, 2, 3]),
+        webAuthnClient,
+      }),
+    ).rejects.toMatchObject({
+      code: "CRYPTO_UNAVAILABLE",
+      cause: unsupported,
+      credential: {
+        credentialId: CREDENTIAL_ID_BASE64URL,
+        transports: ["internal"],
+      },
+    });
+  });
 });
 
 test("zeroes the PRF output and secret handed to Web Crypto", async () => {

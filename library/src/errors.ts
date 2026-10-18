@@ -1,3 +1,5 @@
+import type { PasskeyCredentialMetadata } from "./types.js";
+
 /**
  * Stable error codes thrown by this package.
  *
@@ -30,5 +32,27 @@ class MeraError extends Error {
   }
 }
 
+/**
+ * Error thrown by `createPasskeyWithPrfOutput` and
+ * `createSecretVaultWithNewPasskey` when they fail after the WebAuthn client
+ * returns the new passkey. The passkey stays on the authenticator.
+ *
+ * `code`, `message`, and `cause` are those of the failure, and `name` stays
+ * `"MeraError"`.
+ */
+class NewPasskeyError extends MeraError {
+  /** The passkey the failed call left on the authenticator. */
+  readonly credential: PasskeyCredentialMetadata;
+
+  constructor(error: MeraError, credential: PasskeyCredentialMetadata) {
+    super(
+      error.code,
+      error.message,
+      error.cause === undefined ? undefined : { cause: error.cause },
+    );
+    this.credential = credential;
+  }
+}
+
 export type { MeraErrorCode };
-export { MeraError };
+export { MeraError, NewPasskeyError };

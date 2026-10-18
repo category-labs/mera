@@ -38,6 +38,48 @@ try {
 }
 ```
 
+## NewPasskeyError
+
+```ts
+import {
+  MeraError,
+  type PasskeyCredentialMetadata,
+} from "@category-labs/mera";
+
+// ---cut---
+declare class NewPasskeyError extends MeraError {
+  readonly credential: PasskeyCredentialMetadata;
+}
+```
+
+[createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) and [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/) throw a `NewPasskeyError` when they fail after the WebAuthn client returns the new passkey. The passkey stays on the authenticator, and `credential` names it. `code`, `message`, and `cause` are those of the failure.
+
+When the fallback assertion fails with `PASSKEY_OPERATION_FAILED`, the passkey supports PRF, so [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) can finish with it instead of creating another:
+
+```ts
+import {
+  createPasskeyWithPrfOutput,
+  getPasskeyPrfOutput,
+  NewPasskeyError,
+} from "@category-labs/mera";
+
+const rp = { id: "account.example.com", name: "Example" };
+const user = { name: "account@example.com", displayName: "Example account" };
+
+try {
+  await createPasskeyWithPrfOutput({ rp, user });
+} catch (error) {
+  if (
+    error instanceof NewPasskeyError &&
+    error.code === "PASSKEY_OPERATION_FAILED"
+  ) {
+    await getPasskeyPrfOutput({ rpId: rp.id, credential: error.credential });
+  } else {
+    throw error;
+  }
+}
+```
+
 ## Codes
 
 ### PASSKEY_OPERATION_FAILED

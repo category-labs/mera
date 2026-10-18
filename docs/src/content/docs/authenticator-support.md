@@ -37,6 +37,12 @@ On desktop Chrome, only passkeys saved to Google Password Manager carry PRF. The
 
 Chrome may create the passkey in the local profile instead of Google Password Manager when its "Offer to save passwords and passkeys" setting is off, or when a third-party password-manager extension intercepts WebAuthn and relays the browser fallback [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts). Either way the passkey exists but returns no PRF output, so mera cannot use it and [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) fails.
 
+## Passkeys without PRF
+
+As of 2026-10, no browser reports in advance whether a new passkey will support PRF. `PublicKeyCredential.getClientCapabilities()` describes the browser alone: Chrome reports `"extension:prf": true` even when the passkey will land in the Chrome profile authenticator, and Safari reports no extension keys. A passkey without PRF shows up only when [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) fails with [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable).
+
+The WebAuthn Signal API (`PublicKeyCredential.signalUnknownCredential`) asks a credential manager to remove a passkey. As of 2026-10, the Chrome profile authenticator and Windows Hello ignore it, so it does not reach the passkeys that lack PRF. In Safari 26 the call can also remove other passkeys for the same rpId, which deletes passkey accounts ([WebKit bug 302624](https://bugs.webkit.org/show_bug.cgi?id=302624), open as of 2026-10).
+
 ## See also
 
 - [Passkeys and the PRF extension](/concepts/passkeys-and-prf/): what PRF is and why user verification is required.

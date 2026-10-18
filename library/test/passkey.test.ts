@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { NewPasskeyError } from "../dist/errors.js";
 import {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
@@ -319,10 +320,13 @@ test("passkey functions keep the cause of custom client errors", async () => {
     () => getPasskeyPrfOutput({ rpId: "example.com", webAuthnClient: client }),
     () => createPasskeyWithPrfOutput({ rp, user, webAuthnClient: client }),
   ]) {
-    await expect(runPasskeyRequest()).rejects.toMatchObject({
+    const error = await runPasskeyRequest().catch((caught: unknown) => caught);
+    expect(error).toMatchObject({
       code: "PASSKEY_OPERATION_FAILED",
       cause: platformFailure,
     });
+    // No ceremony completed, so there is no passkey to name.
+    expect(error).not.toBeInstanceOf(NewPasskeyError);
   }
 });
 
@@ -406,9 +410,35 @@ test("createPasskeyWithPrfOutput stops when a custom client reports no PRF suppo
 
   await expect(
     createPasskeyWithPrfOutput({ rp, user, webAuthnClient: client }),
-  ).rejects.toMatchObject({ code: "PRF_UNAVAILABLE" });
+  ).rejects.toMatchObject({
+    code: "PRF_UNAVAILABLE",
+    credential: {
+      credentialId: CREDENTIAL_ID_BASE64URL,
+      transports: ["internal"],
+    },
+  });
 
   expect(calls.get).toHaveLength(0);
+});
+
+test("createPasskeyWithPrfOutput names the new passkey when its second ceremony fails", async () => {
+  const platformFailure = new Error("the person dismissed the second prompt");
+  const { client } = stubClient({ getError: platformFailure });
+
+  const error = await createPasskeyWithPrfOutput({
+    rp,
+    user,
+    webAuthnClient: client,
+  }).catch((caught: unknown) => caught);
+  expect(error).toBeInstanceOf(NewPasskeyError);
+  expect(error).toMatchObject({
+    code: "PASSKEY_OPERATION_FAILED",
+    cause: platformFailure,
+    credential: {
+      credentialId: CREDENTIAL_ID_BASE64URL,
+      transports: ["internal"],
+    },
+  });
 });
 
 test("createPasskeyWithPrfOutput copies prfSalt for its second request and result", async () => {

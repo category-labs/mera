@@ -95,7 +95,7 @@ The credential is requested with fixed parameters: ES256 or RS256 key types, att
 
 WebAuthn challenges and the credential's [user handle](/concepts/passkeys-and-prf/#user-handles) (`user.id`) are generated internally, 32 random bytes each. A fresh handle per call means each call adds a passkey and never overwrites one.
 
-Any failure after the creation ceremony completes leaves the passkey on the authenticator: it appears in the authenticator's passkey list, but the thrown error does not carry its metadata.
+Any failure after the WebAuthn client returns the new passkey leaves it on the authenticator and throws a [`NewPasskeyError`](/reference/errors/#newpasskeyerror) that names it. A `NewPasskeyError` with code [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed) comes from the fallback assertion, which runs only on a passkey that reported PRF support.
 
 ## See also
 

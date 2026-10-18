@@ -90,14 +90,14 @@ A JSON-safe vault with `version`, `credential`, `prfSalt`, `nonce`, and `ciphert
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not enable PRF or return a usable 32-byte output.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `secret` is empty.
-- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the runtime provides no `crypto.getRandomValues` or `crypto.subtle`.
+- [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the runtime provides no `crypto.getRandomValues` or `crypto.subtle`, or its `crypto.subtle` lacks the HKDF or AES-GCM support the vault needs. A missing `crypto.subtle` fails before any prompt.
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
 
 ## Notes
 
 The credential's [user handle](/concepts/passkeys-and-prf/#user-handles) (`user.id`) is 32 random bytes, generated per call, so each call adds a passkey and never overwrites one.
 
-If the fallback ceremony or vault encryption fails after creation, the passkey remains on the authenticator and the error does not contain its metadata.
+Any failure after the WebAuthn client returns the new passkey leaves it on the authenticator and throws a [`NewPasskeyError`](/reference/errors/#newpasskeyerror) that names it.
 
 ## See also
 

@@ -308,6 +308,43 @@ test("passkey helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavailable",
   });
 });
 
+test("getPasskeyPrfOutput refuses immediate with a credential before any prompt", async () => {
+  const { client, calls } = stubClient();
+
+  await expect(
+    getPasskeyPrfOutput({
+      rpId: "example.com",
+      credential: { credentialId: CREDENTIAL_ID_BASE64URL },
+      immediate: true,
+      webAuthnClient: client,
+    }),
+  ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+
+  expect(calls.get).toHaveLength(0);
+});
+
+test("the browser client sets uiMode only for immediate assertions", async () => {
+  const requests: CredentialRequestOptions[] = [];
+  const navigator = {
+    credentials: {
+      async get(request: CredentialRequestOptions) {
+        requests.push(request);
+        return stubPublicKeyCredential({
+          prf: { results: { first: new Uint8Array(32).buffer } },
+        });
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    await getPasskeyPrfOutput({ rpId: "example.com", immediate: true });
+    await getPasskeyPrfOutput({ rpId: "example.com" });
+  });
+
+  expect(requests[0]).toHaveProperty("uiMode", "immediate");
+  expect(requests[1]).not.toHaveProperty("uiMode");
+});
+
 test("passkey functions keep the cause of custom client errors", async () => {
   const platformFailure = new Error("the person dismissed the prompt");
   const { client } = stubClient({

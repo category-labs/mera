@@ -40,9 +40,11 @@ function stubPlatformApi(
   platformApi: PlatformApi;
   createRequests: NativeCreateRequest[];
   getRequests: NativeGetRequest[];
+  immediateRequests: NativeGetRequest[];
 } {
   const createRequests: NativeCreateRequest[] = [];
   const getRequests: NativeGetRequest[] = [];
+  const immediateRequests: NativeGetRequest[] = [];
 
   const platformApi: PlatformApi = {
     async createPlatformKey(request) {
@@ -53,9 +55,13 @@ function stubPlatformApi(
       getRequests.push(request);
       return options.getResult ?? getResult();
     },
+    async getImmediate(request) {
+      immediateRequests.push(request);
+      return options.getResult ?? getResult();
+    },
   };
 
-  return { platformApi, createRequests, getRequests };
+  return { platformApi, createRequests, getRequests, immediateRequests };
 }
 
 test("createCredential converts data to and from createPlatformKey", async () => {
@@ -118,6 +124,22 @@ test("createCredential converts data to and from createPlatformKey", async () =>
     prfEnabled: true,
     prfOutput: new Uint8Array([1, 2, 3]),
   });
+});
+
+test("getCredential asks getImmediate for an immediate request", async () => {
+  const { platformApi, getRequests, immediateRequests } = stubPlatformApi();
+  const client = createReactNativeWebAuthnClient(platformApi);
+
+  await client.getCredential({
+    rpId: "account.example.com",
+    challenge: new Uint8Array([1, 2, 3]),
+    prfSalt: new Uint8Array([9, 8, 7]),
+    userVerification: "required",
+    immediate: true,
+  });
+
+  expect(getRequests).toHaveLength(0);
+  expect(immediateRequests).toHaveLength(1);
 });
 
 test("getCredential converts data to and from getPlatformKey", async () => {

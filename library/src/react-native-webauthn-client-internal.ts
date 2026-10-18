@@ -4,7 +4,10 @@ import { base64UrlDecode, normalizeByteArray } from "./encoding.js";
 import type { MeraErrorCode } from "./errors.js";
 import type { WebAuthnClient } from "./webauthn.js";
 
-type PlatformApi = Pick<typeof Passkey, "createPlatformKey" | "getPlatformKey">;
+type PlatformApi = Pick<
+  typeof Passkey,
+  "createPlatformKey" | "getImmediate" | "getPlatformKey"
+>;
 
 type NativeGetRequest = Parameters<PlatformApi["getPlatformKey"]>[0];
 type NativeGetResult = Awaited<ReturnType<PlatformApi["getPlatformKey"]>>;
@@ -64,7 +67,7 @@ function createReactNativeWebAuthnClient(
 
     async getCredential(request) {
       const { allowCredential } = request;
-      const asserted = await platformApi.getPlatformKey({
+      const nativeRequest: NativeGetRequest = {
         rpId: request.rpId,
         challenge: base64urlnopad.encode(request.challenge),
         userVerification: request.userVerification,
@@ -87,7 +90,12 @@ function createReactNativeWebAuthnClient(
             }
           : {}),
         ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
-      });
+      };
+      // getImmediate sends only the platform request, as getPlatformKey does.
+      const asserted =
+        request.immediate === true
+          ? await platformApi.getImmediate(nativeRequest)
+          : await platformApi.getPlatformKey(nativeRequest);
 
       return {
         credentialId: decodeNativeBase64Url(

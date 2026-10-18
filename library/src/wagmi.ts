@@ -68,6 +68,12 @@ type Properties = {
      * passkey stays, and a later connect without `create` offers it.
      */
     create?: CreatePasskey | undefined;
+    /**
+     * Asks only for passkeys already on this device, and rejects at once with
+     * `UserRejectedRequestError` when there is none. Cannot be combined with
+     * `create`.
+     */
+    immediate?: boolean | undefined;
   }): Promise<{
     accounts: withCapabilities extends true
       ? readonly { address: Address; capabilities: Record<string, unknown> }[]
@@ -184,12 +190,19 @@ function mera({
      */
     async function signIn(
       create: CreatePasskey | undefined,
+      immediate: boolean,
     ): Promise<StoredAccount> {
+      if (create !== undefined && immediate) {
+        throw new MeraError(
+          "INPUT_INVALID",
+          "immediate cannot be combined with create",
+        );
+      }
       const ceremony: Promise<
         PasskeyCredentialMetadata & { prfOutput: Uint8Array }
       > =
         create === undefined
-          ? getPasskeyPrfOutput({ rpId: rp.id, webAuthnClient })
+          ? getPasskeyPrfOutput({ rpId: rp.id, immediate, webAuthnClient })
           : createPasskeyWithPrfOutput({
               rp,
               user: create.user,
@@ -405,10 +418,13 @@ function mera({
         isReconnecting,
         withCapabilities,
         create,
+        immediate = false,
       }: NonNullable<Parameters<Properties["connect"]>[0]> = {}) {
         // Checked before the ceremony, so an unknown chain stores nothing.
         if (requestedChainId !== undefined) configuredChain(requestedChainId);
-        const account = isReconnecting ? await restore() : await signIn(create);
+        const account = isReconnecting
+          ? await restore()
+          : await signIn(create, immediate);
         if (requestedChainId !== undefined) switchTo(requestedChainId);
         return {
           accounts: (withCapabilities
@@ -510,8 +526,9 @@ function openAccount(
 /**
  * Rethrows a dismissed or timed-out prompt as `UserRejectedRequestError`,
  * which wagmi apps treat as the person's choice, and any other failure as is.
- * Browsers reject both with `NotAllowedError`; react-native-passkey reports
- * `UserCancelled` or `TimedOut`.
+ * Browsers reject both with `NotAllowedError`, as they do when no passkey
+ * answers; react-native-passkey reports `UserCancelled` or `TimedOut`, or
+ * `NoCredentials` when the device holds no passkey.
  */
 function rejectCeremony(error: unknown): never {
   if (error instanceof MeraError && error.code === "PASSKEY_OPERATION_FAILED") {
@@ -519,7 +536,8 @@ function rejectCeremony(error: unknown): never {
     if (
       cause?.name === "NotAllowedError" ||
       cause?.error === "UserCancelled" ||
-      cause?.error === "TimedOut"
+      cause?.error === "TimedOut" ||
+      cause?.error === "NoCredentials"
     ) {
       throw new UserRejectedRequestError(error);
     }

@@ -54,6 +54,13 @@ PRF salt as 32 raw bytes. An explicit value supports custom PRF namespaces.
 
 WebAuthn timeout in milliseconds.
 
+### options.immediate
+
+- Type: `boolean`
+- Optional; defaults to `false`
+
+Asks only for passkeys already on this device, and rejects at once, with no prompt, when there is none. A passkey on a phone or a security key does not count. Cannot be combined with `credential`.
+
 ### options.webAuthnClient
 
 - Type: `WebAuthnClient`
@@ -77,9 +84,9 @@ When `credential` is omitted, the result may identify any discoverable credentia
 ## Errors
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not return a usable 32-byte PRF output.
-- [`INPUT_INVALID`](/reference/errors/#input_invalid): an explicit `prfSalt` is not 32 bytes, or `credential.credentialId` is empty or not canonical base64url.
+- [`INPUT_INVALID`](/reference/errors/#input_invalid): an explicit `prfSalt` is not 32 bytes, `credential.credentialId` is empty or not canonical base64url, or `immediate` is combined with `credential`.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the runtime provides no `crypto.getRandomValues`.
-- [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
+- [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential, or an `immediate` request finds no passkey on the device.
 
 ## Notes
 
@@ -88,6 +95,8 @@ When `prfSalt` is omitted, the default salt is used: `sha256("mera.prf.salt.v1")
 The assertion requires user verification, and the requirement is not configurable ([Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism).
 
 The WebAuthn challenge is generated internally.
+
+As of 2026-10, Chrome 148 and later run `immediate` requests, and so does the React Native client. Browsers without immediate mode ignore the option and show their usual prompt. Without a user gesture, or in Incognito, Chrome rejects an immediate request with the same error even when a passkey exists.
 
 ## See also
 

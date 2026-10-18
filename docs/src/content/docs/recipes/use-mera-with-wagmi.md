@@ -65,6 +65,8 @@ import { connect } from "@wagmi/core";
 await connect(config, { connector: passkey });
 ```
 
+With `immediate: true`, `connect` rejects at once with `UserRejectedRequestError` when this device holds no passkey, including when the passkey is on a phone; [Create passkey accounts](/recipes/create-passkey-accounts/#offer-one-button) shows the one-button flow built on it.
+
 ## Sign and send
 
 Signing works through wagmi's usual actions, and each one asks for the passkey:

@@ -485,7 +485,7 @@ test("rejects a dismissed prompt as the person's choice and keeps other failures
   ).rejects.toMatchObject({ name: "UserRejectedRequestError", code: 4001 });
 
   // react-native-passkey rejects with plain objects that name the outcome.
-  for (const error of ["UserCancelled", "TimedOut"]) {
+  for (const error of ["UserCancelled", "TimedOut", "NoCredentials"]) {
     const native = openPage(fakeAuthenticator({ get: { error, message: "" } }));
     await expect(
       connect(native.config, { connector: native.connector }),
@@ -516,6 +516,33 @@ test("rejects a dismissed prompt as the person's choice and keeps other failures
     name: "MeraError",
     code: "PASSKEY_OPERATION_FAILED",
   });
+});
+
+test("signs in with an immediate ceremony, and refuses immediate with create", async () => {
+  const authenticator = fakeAuthenticator();
+  const creator = openPage(authenticator);
+  const created = await connect(creator.config, {
+    connector: creator.connector,
+    create: { user },
+  });
+
+  const page = openPage(authenticator);
+  const signedIn = await connect(page.config, {
+    connector: page.connector,
+    immediate: true,
+  });
+  expect(signedIn.accounts).toEqual(created.accounts);
+  expect(authenticator.gets.at(-1)?.immediate).toBe(true);
+
+  const fresh = openPage(authenticator);
+  await expect(
+    connect(fresh.config, {
+      connector: fresh.connector,
+      create: { user },
+      immediate: true,
+    }),
+  ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+  expect(authenticator.prompts()).toBe(2);
 });
 
 test("refuses to sign when the passkey opens a different account than the stored one", async () => {

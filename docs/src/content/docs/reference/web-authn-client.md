@@ -35,7 +35,7 @@ The new credential ID, reported transports, PRF support flag, and optional PRF o
 
 ### WebAuthnClient.GetCredentialRequest
 
-The relying party ID, challenge, optional allowed credential, and PRF salt for an assertion ceremony.
+The relying party ID, challenge, optional allowed credential, PRF salt, and optional `immediate` flag for an assertion ceremony. A client without an immediate mode runs a normal assertion when `immediate` is set.
 
 ### WebAuthnClient.GetCredentialResult
 

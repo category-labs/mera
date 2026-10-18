@@ -70,6 +70,43 @@ const record =
 localStorage.setItem("app.derivedCredential", JSON.stringify(record));
 ```
 
+## Offer one button
+
+On a visit with no stored record, a single "Continue with passkey" button can sign in when the device holds a passkey and offer the other paths when it does not. `immediate` asks only for passkeys already on this device and rejects at once, with no prompt, when there is none:
+
+```ts
+const rpId = "account.example.com";
+
+// ---cut---
+import { getPasskeyPrfOutput, MeraError } from "@category-labs/mera";
+
+async function signInOnThisDevice(): Promise<Uint8Array | undefined> {
+  try {
+    const { prfOutput, credentialId } = await getPasskeyPrfOutput({
+      rpId,
+      immediate: true,
+    });
+    localStorage.setItem(
+      "app.derivedCredential",
+      JSON.stringify({ credentialId }),
+    );
+    return prfOutput;
+  } catch (error) {
+    if (
+      !(error instanceof MeraError) ||
+      error.code !== "PASSKEY_OPERATION_FAILED"
+    ) {
+      throw error;
+    }
+    return undefined;
+  }
+}
+
+const prfOutput = await signInOnThisDevice();
+```
+
+The trade-off: `immediate` skips passkeys on other devices, so a person whose passkey is on their phone gets `undefined` too. When `prfOutput` is `undefined`, the app offers "Create a passkey" and "Use a passkey from another device", a sign-in without `immediate`. Browsers without immediate mode ignore the option and show their usual prompt.
+
 ## Derive numbered accounts
 
 `deriveEvmPrivateKey` and `deriveSolanaPrivateKey` number accounts by `accountIndex`. These helpers open one account of each kind:

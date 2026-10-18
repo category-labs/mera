@@ -150,6 +150,12 @@ declare namespace createPasskeyWithPrfOutput {
  * @remarks
  * Runs one assertion ceremony and shows one user-verification prompt.
  *
+ * With `immediate`, Chrome 148 and later (as of 2026-10) and the React Native
+ * client show nothing when the device holds no passkey for `rpId`. Browsers
+ * without immediate mode ignore the option and show their usual prompt.
+ * Without a user gesture, or in Incognito, Chrome rejects an immediate request
+ * with the same error even when a passkey exists.
+ *
  * The WebAuthn challenge is generated internally.
  *
  * The default salt is `sha256("mera.prf.salt.v1")` and will not change across
@@ -167,18 +173,27 @@ declare namespace createPasskeyWithPrfOutput {
  * @see {@link https://www.w3.org/TR/webauthn-3/#prf-extension | WebAuthn: the PRF extension}
  * @see {@link https://www.w3.org/TR/webauthn-3/#enumdef-userverificationrequirement | WebAuthn: UserVerificationRequirement}
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
- * @throws MeraError with code `INPUT_INVALID` when an explicit `prfSalt` is not 32 bytes, or `credential.credentialId` is empty or not canonical base64url.
+ * @throws MeraError with code `INPUT_INVALID` when an explicit `prfSalt` is not 32 bytes, `credential.credentialId` is empty or not canonical base64url, or `immediate` is combined with `credential`.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.getRandomValues` is unavailable.
- * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential, or an `immediate` request finds no passkey.
  */
 async function getPasskeyPrfOutput({
   rpId,
   credential: allowCredential,
   prfSalt,
   timeout,
+  immediate,
   webAuthnClient = browserWebAuthnClient,
 }: getPasskeyPrfOutput.Options): Promise<getPasskeyPrfOutput.Result> {
   try {
+    // Chrome rejects immediate requests that name a credential, so the
+    // combination could never answer there.
+    if (immediate === true && allowCredential !== undefined) {
+      throw new MeraError(
+        "INPUT_INVALID",
+        "immediate cannot be combined with credential",
+      );
+    }
     const prfSaltCopy = copyPrfSalt(prfSalt);
     const asserted = await webAuthnClient.getCredential({
       rpId,
@@ -187,6 +202,7 @@ async function getPasskeyPrfOutput({
       userVerification: "required",
       allowCredential: allowCredential && toAllowCredential(allowCredential),
       timeout,
+      immediate,
     });
 
     if (asserted.prfOutput === undefined) {
@@ -223,6 +239,12 @@ declare namespace getPasskeyPrfOutput {
     prfSalt?: Uint8Array | undefined;
     /** WebAuthn timeout in milliseconds. Platform defaults apply when omitted. */
     timeout?: number | undefined;
+    /**
+     * Asks only for passkeys already on this device, and rejects at once,
+     * without a prompt, when there is none. A passkey on a phone or a
+     * security key does not count. Cannot be combined with `credential`.
+     */
+    immediate?: boolean | undefined;
     /**
      * Client that runs the WebAuthn ceremony. Defaults to the built-in browser
      * client, which calls `navigator.credentials`.

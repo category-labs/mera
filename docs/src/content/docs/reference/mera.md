@@ -66,7 +66,7 @@ A wagmi `CreateConnectorFn` for a connector with the id `"mera"` and the name `"
 
 ### connect
 
-`connect({ connector })` asks for any passkey the relying party has and connects its account. `connect({ connector, create: { user } })` creates a passkey for `user`, the `{ name, displayName }` pair [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) takes, and connects its account. `create` runs one ceremony, or two on authenticators that evaluate the PRF only at sign-in. When the second prompt of a `create` is dismissed, the new passkey stays on the authenticator, and a later `connect` without `create` offers it.
+`connect({ connector })` asks for any passkey the relying party has and connects its account. `connect({ connector, create: { user } })` creates a passkey for `user`, the `{ name, displayName }` pair [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) takes, and connects its account. `create` runs one ceremony, or two on authenticators that evaluate the PRF only at sign-in. When the second prompt of a `create` is dismissed, the new passkey stays on the authenticator, and a later `connect` without `create` offers it. `connect({ connector, immediate: true })` asks only for passkeys already on this device, and rejects at once with `UserRejectedRequestError` when there is none; [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) lists where immediate requests run.
 
 Reconnecting after a page load restores the stored account and shows no prompt. Signing requests run one at a time. Each runs a ceremony restricted to the stored credential, so requests made together prompt one after another. With `keepSessionOpen`, signing after a connect shows no prompt, and only the first request after a page load runs one. A passkey that opens a different address than the stored one is refused with `UnauthorizedProviderError` (code 4100).
 
@@ -83,7 +83,7 @@ Other `eth_sign*`, `personal_*`, and `wallet_*` methods reject with `MethodNotSu
 
 ## Errors
 
-- [`INPUT_INVALID`](/reference/errors/#input_invalid): `accountIndex` is not an integer from 0 to 2³¹ − 1. `mera` throws when called.
+- [`INPUT_INVALID`](/reference/errors/#input_invalid): `accountIndex` is not an integer from 0 to 2³¹ − 1, which `mera` throws when called, or `connect` gets both `create` and `immediate`.
 
 A dismissed or timed-out prompt rejects `connect` or the signing request with viem's `UserRejectedRequestError` (code 4001). Browsers give the same `NotAllowedError` when the page lacks focus or runs in a cross-origin iframe without the WebAuthn permissions, so those cases reject the same way.
 

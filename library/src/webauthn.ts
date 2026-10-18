@@ -72,6 +72,12 @@ declare namespace WebAuthnClient {
     userVerification: "required";
     /** Timeout in milliseconds. Platform defaults apply when omitted. */
     timeout?: number | undefined;
+    /**
+     * Asks only for passkeys already on this device, and rejects without
+     * showing UI when there is none. A client without such a mode runs a
+     * normal assertion. Never set together with `allowCredential`.
+     */
+    immediate?: boolean | undefined;
   };
 
   /** Outcome of one assertion ceremony. */
@@ -93,6 +99,14 @@ type PrfExtensionOutputs = {
     enabled?: boolean;
     results?: { first?: BufferSource | ArrayLike<number> };
   };
+};
+
+/**
+ * Assertion options with the Credential Management `uiMode` member, which
+ * lib.dom does not type yet.
+ */
+type CredentialRequestOptionsWithUiMode = CredentialRequestOptions & {
+  uiMode?: "immediate";
 };
 
 const browserWebAuthnClient: WebAuthnClient = {
@@ -136,7 +150,10 @@ const browserWebAuthnClient: WebAuthnClient = {
 
   async getCredential(request) {
     const { allowCredential } = request;
-    const credential = await globalThis.navigator?.credentials?.get({
+    const options: CredentialRequestOptionsWithUiMode = {
+      // A browser without immediate mode ignores the member and shows its
+      // usual prompt.
+      ...(request.immediate === true ? { uiMode: "immediate" } : {}),
       publicKey: {
         rpId: request.rpId,
         challenge: request.challenge,
@@ -164,7 +181,8 @@ const browserWebAuthnClient: WebAuthnClient = {
             }
           : {}),
       },
-    });
+    };
+    const credential = await globalThis.navigator?.credentials?.get(options);
     const publicKeyCredential = assertPublicKeyCredential(credential);
     const prf = readPrfExtension(publicKeyCredential);
 

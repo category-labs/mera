@@ -110,6 +110,7 @@ export default defineConfig({
             "recipes/use-mera-with-react-native",
             "recipes/use-mera-with-chrome-extensions",
             "recipes/send-a-transaction-with-viem",
+            "recipes/use-mera-with-wagmi",
             "recipes/use-an-existing-secret",
           ],
         },
@@ -142,6 +143,10 @@ export default defineConfig({
                 "reference/ed25519-signing-session",
                 "reference/to-viem-account",
               ],
+            },
+            {
+              label: "wagmi",
+              items: ["reference/mera"],
             },
             {
               label: "Secret vault",

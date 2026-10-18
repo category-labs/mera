@@ -79,3 +79,4 @@ session.end();
 - [toViemAccount](/reference/to-viem-account/): every signing method the account implements, and the adapter contract.
 - [Create passkey accounts](/recipes/create-passkey-accounts/): the first visit, credential pinning, and numbered accounts.
 - [Signing sessions](/concepts/signing-sessions/): how a session owns the key and how long to hold one.
+- [Use mera with wagmi](/recipes/use-mera-with-wagmi/): the same account as a wagmi connection.

@@ -21,6 +21,10 @@ function checkAccountDerivationInputs(
     throw new MeraError("INPUT_INVALID", "PRF output must be 32 bytes");
   }
 
+  checkAccountIndex(accountIndex);
+}
+
+function checkAccountIndex(accountIndex: number): void {
   if (
     !Number.isInteger(accountIndex) ||
     accountIndex < 0 ||
@@ -72,6 +76,7 @@ function slip10Ed25519PrivateKey(
 export {
   bip39Seed,
   checkAccountDerivationInputs,
+  checkAccountIndex,
   hardened,
   slip10Ed25519PrivateKey,
 };

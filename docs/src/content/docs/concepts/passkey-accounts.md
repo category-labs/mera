@@ -3,7 +3,7 @@ title: Passkey accounts
 description: Accounts derived from a passkey with no stored secret.
 ---
 
-In mera's model, a passkey account is a blockchain account whose keys derive from a passkey's [PRF output](/concepts/passkeys-and-prf/), the 32 secret bytes a passkey returns deterministically. mera evaluates the PRF with a fixed salt, so each [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) recomputes the same accounts on every device the passkey syncs to, with no secret stored anywhere. The app passes the output to a [derivation scheme](/concepts/entropy-keys-and-accounts/) of its choosing. [Create passkey accounts](/recipes/create-passkey-accounts/) shows one built on common HD (hierarchical deterministic) standards.
+In mera's model, a passkey account is a blockchain account whose keys derive from a passkey's [PRF output](/concepts/passkeys-and-prf/), the 32 secret bytes a passkey returns deterministically. mera evaluates the PRF with a fixed salt, so each [ceremony](/concepts/passkeys-and-prf/#ceremonies-and-prompts) recomputes the same accounts on every device the passkey syncs to, with no secret stored anywhere. mera derives the account keys with the HD (hierarchical deterministic) [derivation standards](/concepts/entropy-keys-and-accounts/) wallet apps use, and an app can apply another scheme to the same 32 bytes.
 
 ## Losing the passkey
 
@@ -15,8 +15,9 @@ What if a seed phrase or another secret already exists, and the goal is passkey 
 
 ## See also
 
-- [Keys and accounts](/concepts/entropy-keys-and-accounts/): the derivation pipeline the app runs on the PRF output.
+- [Keys and accounts](/concepts/entropy-keys-and-accounts/): the derivation pipeline behind passkey accounts.
 - [Create passkey accounts](/recipes/create-passkey-accounts/): the pattern in code, with numbered accounts and credential pinning.
 - [Secret vaults](/concepts/secret-vaults/): the advanced pattern for secrets that exist on their own.
 - [getPasskeyPrfOutput](/reference/get-passkey-prf-output/): the ceremony and the fixed salt behind the stability.
+- [deriveEvmPrivateKey](/reference/derive-evm-private-key/) and [deriveSolanaPrivateKey](/reference/derive-solana-private-key/): the derivation paths for EVM and Solana accounts.
 - [Security model](/concepts/security-model/): what a domain migration breaks.

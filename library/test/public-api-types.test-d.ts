@@ -8,7 +8,10 @@ import type {
   createSecretVaultWithExistingPasskey,
   createSecretVaultWithNewPasskey,
   DecryptSecretVaultWithPasskeyOptions,
+  DerivePrivateKeyOptions,
   decryptSecretVaultWithPasskey,
+  deriveEvmPrivateKey,
+  deriveSolanaPrivateKey,
   getPasskeyPrfOutput,
   WebAuthnClient,
 } from "../dist/index.js";
@@ -65,6 +68,12 @@ type PublicFunctionOptions = [
       CreateSigningSessionOptions
     >
   >,
+  Expect<
+    Equal<Parameters<typeof deriveEvmPrivateKey>[0], DerivePrivateKeyOptions>
+  >,
+  Expect<
+    Equal<Parameters<typeof deriveSolanaPrivateKey>[0], DerivePrivateKeyOptions>
+  >,
 ];
 
 type PublicFunctionResults = [
@@ -93,6 +102,10 @@ type NoSingleMemberNamespaces = [
   createSecp256k1SigningSession.Options,
   // @ts-expect-error The two signing functions share one standalone options type.
   createEd25519SigningSession.Options,
+  // @ts-expect-error The two derivation functions share one standalone options type.
+  deriveEvmPrivateKey.Options,
+  // @ts-expect-error The two derivation functions share one standalone options type.
+  deriveSolanaPrivateKey.Options,
 ];
 
 type WebAuthnClientTypes = [

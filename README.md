@@ -4,7 +4,7 @@ Accounts on any chain and platform, from a passkey.
 
 ![The mera web demo in mobile Safari: creating an account with a passkey, then trading on a demo network.](./.github/assets/web-demo.gif)
 
-mera is a TypeScript library for creating accounts from a passkey. It derives 32 secret bytes from the passkey to serve as the root for each account and enables signing sessions. Account derivation, recovery, storage, and product flows such as funding remain under application control.
+mera is a TypeScript library for creating accounts from a passkey. It derives 32 secret bytes from the passkey, turns them into account keys with the standards wallet apps use, and enables signing sessions. Recovery, storage, and product flows such as funding remain under application control.
 
 Developers can use mera to:
 

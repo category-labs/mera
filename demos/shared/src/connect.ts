@@ -8,6 +8,7 @@ import { saveCachedAccount } from "./account";
 import {
   type EvmAccount,
   evmAccountFromMnemonic,
+  evmAccountFromPrfOutput,
   isValidMnemonic,
   prfOutputToMnemonic,
 } from "./hd";
@@ -38,7 +39,7 @@ function walletFromPrf({ prfOutput, credential }: PasskeyPrf): ConnectedWallet {
   return {
     mode: "passkey",
     credential,
-    ...evmAccountFromMnemonic(prfOutputToMnemonic(prfOutput)),
+    ...evmAccountFromPrfOutput(prfOutput),
   };
 }
 

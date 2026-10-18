@@ -1,9 +1,38 @@
-import { hexToBytes } from "@noble/hashes/utils.js";
+import { bytesToHex, hexToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
-import { getEvmAddress } from "../dist/index.js";
-import { expectError } from "./helpers.js";
+import { deriveEvmPrivateKey, getEvmAddress } from "../dist/index.js";
+import { expectError, SEQUENCE_PRF_OUTPUT } from "./helpers.js";
 
 const ADDRESS_ONE = "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf";
+
+test("deriveEvmPrivateKey derives the key at m/44'/60'/0'/0/{accountIndex}", () => {
+  const privateKey = deriveEvmPrivateKey({
+    prfOutput: SEQUENCE_PRF_OUTPUT,
+    accountIndex: 2 ** 31 - 1,
+  });
+
+  // viem's mnemonicToAccount returns the same key for the PRF output's phrase.
+  expect(bytesToHex(privateKey)).toBe(
+    "b24c9eb167e477f9c942deac60952a2504ff53014f790f7fadcc976ce18b06b7",
+  );
+});
+
+test("deriveEvmPrivateKey rejects other PRF output lengths and account indices", () => {
+  for (const prfOutput of [new Uint8Array(16), new Uint8Array(33)]) {
+    expectError(
+      () => deriveEvmPrivateKey({ prfOutput, accountIndex: 0 }),
+      "INPUT_INVALID",
+    );
+  }
+
+  for (const accountIndex of [-1, 0.5, 2 ** 31, Number.NaN]) {
+    expectError(
+      () =>
+        deriveEvmPrivateKey({ prfOutput: SEQUENCE_PRF_OUTPUT, accountIndex }),
+      "INPUT_INVALID",
+    );
+  }
+});
 
 test("derives the EIP-55 checksummed EVM address from an uncompressed public key", () => {
   // Uncompressed form of private key one's public key (the secp256k1 generator).

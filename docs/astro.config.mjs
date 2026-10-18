@@ -127,6 +127,13 @@ export default defineConfig({
               ],
             },
             {
+              label: "Key derivation",
+              items: [
+                "reference/derive-evm-private-key",
+                "reference/derive-solana-private-key",
+              ],
+            },
+            {
               label: "Signing sessions",
               items: [
                 "reference/create-secp256k1-signing-session",

@@ -24,10 +24,17 @@ const importMap = JSON.stringify({
     "@noble/curves/ed25519.js": "/node_modules/@noble/curves/ed25519.js",
     "@noble/curves/secp256k1.js": "/node_modules/@noble/curves/secp256k1.js",
     "@noble/hashes/hmac.js": "/node_modules/@noble/hashes/hmac.js",
+    "@noble/hashes/legacy.js": "/node_modules/@noble/hashes/legacy.js",
+    "@noble/hashes/pbkdf2.js": "/node_modules/@noble/hashes/pbkdf2.js",
     "@noble/hashes/sha2.js": "/node_modules/@noble/hashes/sha2.js",
     "@noble/hashes/sha3.js": "/node_modules/@noble/hashes/sha3.js",
     "@noble/hashes/utils.js": "/node_modules/@noble/hashes/utils.js",
+    "@noble/hashes/webcrypto.js": "/node_modules/@noble/hashes/webcrypto.js",
     "@scure/base": "/node_modules/@scure/base/index.js",
+    "@scure/bip32": "/node_modules/@scure/bip32/index.js",
+    "@scure/bip39": "/node_modules/@scure/bip39/index.js",
+    "@scure/bip39/wordlists/english.js":
+      "/node_modules/@scure/bip39/wordlists/english.js",
   },
 });
 

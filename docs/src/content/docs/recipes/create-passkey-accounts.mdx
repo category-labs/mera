@@ -7,7 +7,7 @@ import FirstVsReturning from "../../../assets/diagrams/first-vs-returning.svg";
 
 Prerequisites:
 
-- `@category-labs/mera`, `@scure/bip32`, `@scure/bip39`, and `@noble/hashes` installed.
+- `@category-labs/mera` installed.
 - A [PRF](/concepts/passkeys-and-prf/)-capable authenticator ([authenticator support](/authenticator-support/)).
 
 <FirstVsReturning />
@@ -70,75 +70,38 @@ const record =
 localStorage.setItem("app.derivedCredential", JSON.stringify(record));
 ```
 
-## Create a seed from the PRF output
-
-Turn the PRF output into a [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) seed.
-
-```ts
-declare const prfOutput: Uint8Array;
-
-// ---cut---
-import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
-import { wordlist } from "@scure/bip39/wordlists/english.js";
-
-const seed = mnemonicToSeedSync(entropyToMnemonic(prfOutput, wordlist));
-```
-
 ## Derive numbered accounts
 
-EVM accounts follow [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) over the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) Ethereum path:
-
-```ts
-import {
-  createSecp256k1SigningSession,
-  getEvmAddress,
-} from "@category-labs/mera";
-import { HDKey } from "@scure/bip32";
-
-function deriveEvmAccount(seed: Uint8Array, index: number) {
-  const ethereumAccountPath = `m/44'/60'/0'/0/${index}`;
-  const node = HDKey.fromMasterSeed(seed).derive(ethereumAccountPath);
-  if (node.privateKey === null) throw new Error("derivation produced no key");
-  const session = createSecp256k1SigningSession({
-    privateKey: node.privateKey,
-  });
-  return { session, address: getEvmAddress(session.publicKey) };
-}
-```
-
-Solana uses [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md), the Ed25519 counterpart of BIP-32, and its derivation is a short chain of HMAC (keyed hash) calls:
+`deriveEvmPrivateKey` and `deriveSolanaPrivateKey` number accounts by `accountIndex`. These helpers open one account of each kind:
 
 ```ts
 import {
   createEd25519SigningSession,
+  createSecp256k1SigningSession,
+  deriveEvmPrivateKey,
+  deriveSolanaPrivateKey,
+  getEvmAddress,
   getSolanaAddress,
 } from "@category-labs/mera";
-import { hmac } from "@noble/hashes/hmac.js";
-import { sha512 } from "@noble/hashes/sha2.js";
-import { utf8ToBytes } from "@noble/hashes/utils.js";
 
-function deriveSolanaSeed(seed: Uint8Array, index: number): Uint8Array {
-  // The SLIP-0010 path m/44'/501'/{index}'/0'; every step is hardened.
-  const solanaAccountPath = [44, 501, index, 0];
-  let i = hmac(sha512, utf8ToBytes("ed25519 seed"), seed);
-  for (const step of solanaAccountPath) {
-    const data = new Uint8Array(1 + 32 + 4);
-    data.set(i.slice(0, 32), 1);
-    new DataView(data.buffer).setUint32(33, (step + 0x80000000) >>> 0, false);
-    i = hmac(sha512, i.slice(32), data);
-  }
-  return i.slice(0, 32);
+function openEvmAccount(prfOutput: Uint8Array, accountIndex: number) {
+  const privateKey = deriveEvmPrivateKey({ prfOutput, accountIndex });
+  const session = createSecp256k1SigningSession({ privateKey });
+  privateKey.fill(0);
+  return { session, address: getEvmAddress(session.publicKey) };
 }
 
-function deriveSolanaAccount(seed: Uint8Array, index: number) {
-  const session = createEd25519SigningSession({
-    privateKey: deriveSolanaSeed(seed, index),
-  });
+function openSolanaAccount(prfOutput: Uint8Array, accountIndex: number) {
+  const privateKey = deriveSolanaPrivateKey({ prfOutput, accountIndex });
+  const session = createEd25519SigningSession({ privateKey });
+  privateKey.fill(0);
   return { session, address: getSolanaAddress(session.publicKey) };
 }
 ```
 
-Build the account list from these helpers:
+Each session copies the key, so the helpers zero the derived key right away.
+
+Build the account list from these helpers. The PRF output reproduces every account, so it is zeroed once they are open:
 
 ```ts
 import type {
@@ -147,18 +110,22 @@ import type {
   Secp256k1SigningSession,
 } from "@category-labs/mera";
 
-declare const seed: Uint8Array;
-declare function deriveEvmAccount(
-  seed: Uint8Array,
-  index: number,
+declare const prfOutput: Uint8Array;
+declare function openEvmAccount(
+  prfOutput: Uint8Array,
+  accountIndex: number,
 ): { session: Secp256k1SigningSession; address: EvmAddress };
-declare function deriveSolanaAccount(
-  seed: Uint8Array,
-  index: number,
+declare function openSolanaAccount(
+  prfOutput: Uint8Array,
+  accountIndex: number,
 ): { session: Ed25519SigningSession; address: string };
 
 // ---cut---
-const accounts = [deriveEvmAccount(seed, 0), deriveSolanaAccount(seed, 0)];
+const accounts = [
+  openEvmAccount(prfOutput, 0),
+  openSolanaAccount(prfOutput, 0),
+];
+prfOutput.fill(0);
 ```
 
 ## End the sessions
@@ -186,4 +153,5 @@ Ending a session zeroes the private keys it owns.
 - [Passkey accounts](/concepts/passkey-accounts/): the account model this recipe implements.
 - [Send a transaction with viem](/recipes/send-a-transaction-with-viem/): sign and broadcast with a derived account.
 - [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) and [getPasskeyPrfOutput](/reference/get-passkey-prf-output/): the two ceremonies this recipe runs.
+- [deriveEvmPrivateKey](/reference/derive-evm-private-key/) and [deriveSolanaPrivateKey](/reference/derive-solana-private-key/): the derivation paths and their `@scure` equivalents.
 - [React](https://github.com/category-labs/mera/tree/main/demos/web) and [Vue](https://github.com/category-labs/mera/tree/main/demos/vue) web demos: full browser apps that follow this recipe for one EVM account.

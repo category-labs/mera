@@ -9,6 +9,11 @@ description: The exported functions, the vault storage format, and the error cod
 - [getPasskeyPrfOutput](/reference/get-passkey-prf-output/): requests a passkey PRF evaluation and returns the deterministic output.
 - [WebAuthnClient](/reference/web-authn-client/): connects mera's passkey functions to the platform's WebAuthn API.
 
+## Key derivation
+
+- [deriveEvmPrivateKey](/reference/derive-evm-private-key/): derives the private key of an EVM account from a PRF output.
+- [deriveSolanaPrivateKey](/reference/derive-solana-private-key/): derives the private key of a Solana account from a PRF output.
+
 ## Signing sessions
 
 - [createSecp256k1SigningSession](/reference/create-secp256k1-signing-session/): creates a signing session from a secp256k1 private key.

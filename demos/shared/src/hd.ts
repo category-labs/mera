@@ -1,5 +1,6 @@
 import {
   createSecp256k1SigningSession,
+  deriveEvmPrivateKey,
   type EvmAddress,
   getEvmAddress,
   type Secp256k1SigningSession,
@@ -39,6 +40,23 @@ function prfOutputToMnemonic(prfOutput: Uint8Array): string {
 }
 
 /**
+ * Opens the demo's account for a PRF output: account 0, the account the
+ * recovery phrase opens in a wallet app. Zeroes `prfOutput` and the derived
+ * key before this returns or throws.
+ */
+function evmAccountFromPrfOutput(prfOutput: Uint8Array): EvmAccount {
+  let privateKey: Uint8Array | undefined;
+  try {
+    privateKey = deriveEvmPrivateKey({ prfOutput, accountIndex: 0 });
+    const session = createSecp256k1SigningSession({ privateKey });
+    return { session, address: getEvmAddress(session.publicKey) };
+  } finally {
+    privateKey?.fill(0);
+    prfOutput.fill(0);
+  }
+}
+
+/**
  * Opens the demo's account for a BIP-39 phrase. The seed and the derived key
  * are zeroed before this returns or throws; the HD key objects keep their
  * copies until garbage collection.
@@ -70,6 +88,7 @@ export type { EvmAccount };
 export {
   createMnemonic,
   evmAccountFromMnemonic,
+  evmAccountFromPrfOutput,
   isValidMnemonic,
   prfOutputToMnemonic,
 };

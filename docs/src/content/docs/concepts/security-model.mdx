@@ -25,7 +25,7 @@ mera zeroes every sensitive buffer it allocates once it no longer needs it. Inpu
 
 Zeroing bounds how long key material stays readable. It reduces the chance that a key appears in a crash dump, a swap or hibernation file, a heap snapshot, or an error report that serializes the object graph.
 
-A zeroed buffer is not proof the bytes left the process. Garbage collection copies values, in ways that differ between JavaScript engines, and dependencies may convert private keys to immutable bigint scalars while signing.
+A zeroed buffer is not proof the bytes left the process. Garbage collection copies values, in ways that differ between JavaScript engines. Dependencies may also keep copies mera cannot zero, such as private keys converted to immutable bigint scalars.
 
 ## See also
 

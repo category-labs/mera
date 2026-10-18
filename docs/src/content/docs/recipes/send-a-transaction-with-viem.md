@@ -17,22 +17,15 @@ const { prfOutput } = await getPasskeyPrfOutput({ rpId });
 
 ## Derive the key
 
-The seed and path come from the same mapping [Create passkey accounts](/recipes/create-passkey-accounts/) uses ([Keys and accounts](/concepts/entropy-keys-and-accounts/) introduces the standards).
+[deriveEvmPrivateKey](/reference/derive-evm-private-key/) derives the key of the first EVM account.
 
 ```ts
 declare const prfOutput: Uint8Array;
 
 // ---cut---
-import { HDKey } from "@scure/bip32";
-import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
-import { wordlist } from "@scure/bip39/wordlists/english.js";
+import { deriveEvmPrivateKey } from "@category-labs/mera";
 
-const firstEthereumAccountPath = "m/44'/60'/0'/0/0";
-
-const seed = mnemonicToSeedSync(entropyToMnemonic(prfOutput, wordlist));
-
-const node = HDKey.fromMasterSeed(seed).derive(firstEthereumAccountPath);
-if (node.privateKey === null) throw new Error("derivation produced no key");
+const privateKey = deriveEvmPrivateKey({ prfOutput, accountIndex: 0 });
 ```
 
 ## Create the viem account
@@ -40,18 +33,13 @@ if (node.privateKey === null) throw new Error("derivation produced no key");
 `toViemAccount` lives in the `@category-labs/mera/viem` entry point, which requires the optional `viem` peer dependency.
 
 ```ts
-import { HDKey } from "@scure/bip32";
-
-const node = HDKey.fromMasterSeed(crypto.getRandomValues(new Uint8Array(32)));
-if (node.privateKey === null) throw new Error("derivation produced no key");
+declare const privateKey: Uint8Array;
 
 // ---cut---
 import { createSecp256k1SigningSession } from "@category-labs/mera";
 import { toViemAccount } from "@category-labs/mera/viem";
 
-const session = createSecp256k1SigningSession({
-  privateKey: node.privateKey,
-});
+const session = createSecp256k1SigningSession({ privateKey });
 
 const account = toViemAccount(session);
 ```

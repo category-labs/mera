@@ -7,7 +7,7 @@ import { reactNativeWebAuthnClient } from "@category-labs/mera/react-native-weba
 import { describeError as describeDemoError } from "@category-labs/mera-demo-shared/errors";
 import {
   type EvmAccount,
-  evmAccountFromMnemonic,
+  evmAccountFromPrfOutput,
   prfOutputToMnemonic,
 } from "@category-labs/mera-demo-shared/hd";
 import { newPasskeyOptions } from "@category-labs/mera-demo-shared/passkey";
@@ -81,7 +81,7 @@ function toWallet({
 }: getPasskeyPrfOutput.Result): Wallet {
   return {
     credentialId,
-    ...evmAccountFromMnemonic(prfOutputToMnemonic(prfOutput)),
+    ...evmAccountFromPrfOutput(prfOutput),
   };
 }
 

@@ -1,5 +1,5 @@
-export { getEvmAddress } from "./chains/evm.js";
-export { getSolanaAddress } from "./chains/solana.js";
+export { deriveEvmPrivateKey, getEvmAddress } from "./chains/evm.js";
+export { deriveSolanaPrivateKey, getSolanaAddress } from "./chains/solana.js";
 export { createEd25519SigningSession } from "./ed25519.js";
 export type { MeraErrorCode } from "./errors.js";
 export { MeraError } from "./errors.js";
@@ -18,6 +18,7 @@ export {
 } from "./secret.js";
 export type {
   CreateSigningSessionOptions,
+  DerivePrivateKeyOptions,
   Ed25519SigningSession,
   EvmAddress,
   PasskeyCredentialMetadata,

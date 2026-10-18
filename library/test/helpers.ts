@@ -7,6 +7,8 @@ const DEFAULT_PRF_SALT = hexToBytes(
   "896d46ac4ac191885c46137439db7bb52fb05cff3ecd34af7cdae0a1e0c00db9",
 );
 
+const SEQUENCE_PRF_OUTPUT = Uint8Array.from({ length: 32 }, (_, i) => i);
+
 const CREDENTIAL_ID_BYTES = new Uint8Array([1, 2, 3, 4]);
 const CREDENTIAL_ID_BASE64URL = "AQIDBA";
 
@@ -104,6 +106,7 @@ export {
   DEFAULT_PRF_SALT,
   expectError,
   readEvaluatedPrfSalt,
+  SEQUENCE_PRF_OUTPUT,
   stubPublicKeyCredential,
   withCountedRandomness,
   withStubbedGlobal,

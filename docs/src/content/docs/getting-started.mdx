@@ -24,12 +24,6 @@ Prerequisites:
 npm install @category-labs/mera
 ```
 
-This walkthrough derives accounts with `@scure/bip32` and `@scure/bip39`. Any derivation scheme works.
-
-```sh
-npm install @scure/bip32 @scure/bip39
-```
-
 ## Create a passkey
 
 `createPasskeyWithPrfOutput` creates a passkey and evaluates its PRF in one call.
@@ -50,31 +44,21 @@ mera uses a stable PRF salt for this call, so a later sign-in reproduces the sam
 
 ## Derive an account
 
-The PRF output is the root of every account. This walkthrough maps it through [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) to a phrase and a [seed](/concepts/entropy-keys-and-accounts/#deterministic-derivation), then derives keys with [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki).
+The PRF output is the root of every account. `deriveEvmPrivateKey` turns it into the private key of an EVM account, numbered from 0.
 
 ```ts
 declare const prfOutput: Uint8Array;
 
 // ---cut---
-import { HDKey } from "@scure/bip32";
-import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
-import { wordlist } from "@scure/bip39/wordlists/english.js";
+import { deriveEvmPrivateKey } from "@category-labs/mera";
 
-const firstEthereumAccountPath = "m/44'/60'/0'/0/0";
-
-const mnemonic = entropyToMnemonic(prfOutput, wordlist);
-const seed = mnemonicToSeedSync(mnemonic);
-const node = HDKey.fromMasterSeed(seed).derive(firstEthereumAccountPath);
-if (node.privateKey === null) throw new Error("derivation produced no key");
+const privateKey = deriveEvmPrivateKey({ prfOutput, accountIndex: 0 });
 ```
 
 ## Sign
 
 ```ts
-import { HDKey } from "@scure/bip32";
-
-const node = HDKey.fromMasterSeed(crypto.getRandomValues(new Uint8Array(32)));
-if (node.privateKey === null) throw new Error("derivation produced no key");
+declare const privateKey: Uint8Array;
 
 // ---cut---
 import {
@@ -82,9 +66,7 @@ import {
   getEvmAddress,
 } from "@category-labs/mera";
 
-const session = createSecp256k1SigningSession({
-  privateKey: node.privateKey,
-});
+const session = createSecp256k1SigningSession({ privateKey });
 
 const address = getEvmAddress(session.publicKey);
 

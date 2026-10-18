@@ -57,6 +57,14 @@ type Secp256k1Signature = {
   readonly recovery: 0 | 1;
 };
 
+/** Inputs for deriving an account's private key from a PRF output. */
+type DerivePrivateKeyOptions = {
+  /** PRF output used as the BIP-39 entropy. Must be exactly 32 bytes. */
+  prfOutput: Uint8Array;
+  /** Account number in the derivation path, an integer from 0 to 2^31 - 1. */
+  accountIndex: number;
+};
+
 /** Inputs for creating a curve signing session. */
 type CreateSigningSessionOptions = {
   /**
@@ -111,6 +119,7 @@ type Ed25519SigningSession = SigningSession & {
 
 export type {
   CreateSigningSessionOptions,
+  DerivePrivateKeyOptions,
   Ed25519SigningSession,
   EvmAddress,
   PasskeyCredentialMetadata,

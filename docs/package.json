@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "astro dev",
     "check:snippets": "node scripts/check-code-snippets.mjs",
-    "build": "npm run check:snippets && astro build",
+    "build": "npm run check:snippets && NODE_OPTIONS=--max-old-space-size=8192 astro build",
     "preview": "astro preview"
   },
   "dependencies": {
@@ -18,6 +18,7 @@
     "@noble/hashes": "2.4.0",
     "@scure/bip32": "2.4.0",
     "@scure/bip39": "2.4.0",
+    "@wagmi/core": "3.6.5",
     "astro": "^7.4.0",
     "expo-crypto": "57.0.4",
     "expo-modules-core": "57.0.23",

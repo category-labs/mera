@@ -38,6 +38,10 @@
     "./react-native-webauthn-client": {
       "types": "./dist/react-native-webauthn-client.d.ts",
       "default": "./dist/react-native-webauthn-client.js"
+    },
+    "./wagmi": {
+      "types": "./dist/wagmi.d.ts",
+      "default": "./dist/wagmi.js"
     }
   },
   "sideEffects": false,
@@ -66,10 +70,14 @@
     "@scure/bip39": "2.4.0"
   },
   "peerDependencies": {
+    "@wagmi/core": "^3.0.0",
     "react-native-passkey": "3.6.2",
     "viem": "^2.28.0"
   },
   "peerDependenciesMeta": {
+    "@wagmi/core": {
+      "optional": true
+    },
     "react-native-passkey": {
       "optional": true
     },
@@ -80,6 +88,7 @@
   "devDependencies": {
     "@playwright/test": "1.64.1",
     "@types/node": "24.19.2",
+    "@wagmi/core": "3.6.5",
     "publint": "0.3.25",
     "react-native-passkey": "3.6.2",
     "typescript": "7.0.2",

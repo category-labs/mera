@@ -22,6 +22,10 @@ description: The exported functions, the vault storage format, and the error cod
 - [Ed25519SigningSession](/reference/ed25519-signing-session/): the returned session.
 - [toViemAccount](/reference/to-viem-account/): adapts a secp256k1 signing session into a viem local account.
 
+## wagmi
+
+- [mera](/reference/mera/): a wagmi connector for passkey accounts.
+
 ## Secret vault
 
 - [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/): creates a passkey and encrypts one secret with a fresh random salt.

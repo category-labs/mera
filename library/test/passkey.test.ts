@@ -3,68 +3,17 @@ import {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
 } from "../dist/passkey.js";
-import type { WebAuthnClient } from "../dist/webauthn.js";
 import {
   CREDENTIAL_ID_BASE64URL,
   CREDENTIAL_ID_BYTES,
   DEFAULT_PRF_SALT,
   readEvaluatedPrfSalt,
+  rp,
+  stubClient,
   stubPublicKeyCredential,
+  user,
   withStubbedGlobal,
 } from "./helpers.js";
-
-const rp = { id: "example.com", name: "Mera Test" };
-const user = { name: "nad", displayName: "nad" };
-
-type ClientCalls = {
-  create: Parameters<WebAuthnClient["createCredential"]>[0][];
-  get: Parameters<WebAuthnClient["getCredential"]>[0][];
-};
-
-function stubClient(
-  answers: {
-    prfEnabled?: boolean;
-    createPrfOutput?: Uint8Array;
-    getPrfOutput?: (prfSalt: Uint8Array) => Uint8Array | undefined;
-    createError?: Error;
-    getError?: Error;
-  } = {},
-): { client: WebAuthnClient; calls: ClientCalls } {
-  const calls: ClientCalls = { create: [], get: [] };
-  const getPrfOutput =
-    answers.getPrfOutput ?? ((prfSalt) => new Uint8Array(prfSalt));
-
-  const client: WebAuthnClient = {
-    async createCredential(request) {
-      calls.create.push(request);
-      if (answers.createError !== undefined) {
-        throw answers.createError;
-      }
-      const prfOutput = answers.createPrfOutput;
-
-      return {
-        credentialId: new Uint8Array(CREDENTIAL_ID_BYTES),
-        transports: ["internal"],
-        prfEnabled: answers.prfEnabled ?? true,
-        ...(prfOutput !== undefined ? { prfOutput } : {}),
-      };
-    },
-    async getCredential(request) {
-      calls.get.push(request);
-      if (answers.getError !== undefined) {
-        throw answers.getError;
-      }
-      const prfOutput = getPrfOutput(request.prfSalt);
-
-      return {
-        credentialId: new Uint8Array(CREDENTIAL_ID_BYTES),
-        ...(prfOutput !== undefined ? { prfOutput } : {}),
-      };
-    },
-  };
-
-  return { client, calls };
-}
 
 async function getPrfOutputWithStub(first: unknown): Promise<Uint8Array> {
   return withStubbedGlobal(
@@ -78,7 +27,7 @@ async function getPrfOutputWithStub(first: unknown): Promise<Uint8Array> {
     },
     async () => {
       const { prfOutput } = await getPasskeyPrfOutput({
-        rpId: "example.com",
+        rpId: rp.id,
         prfSalt: new Uint8Array(32),
       });
       return prfOutput;
@@ -90,14 +39,14 @@ test("getPasskeyPrfOutput works with a custom client outside a browser", async (
   const { client, calls } = stubClient();
 
   const result = await withStubbedGlobal("navigator", undefined, () =>
-    getPasskeyPrfOutput({ rpId: "example.com", webAuthnClient: client }),
+    getPasskeyPrfOutput({ rpId: rp.id, webAuthnClient: client }),
   );
 
   expect(result.credentialId).toBe(CREDENTIAL_ID_BASE64URL);
   expect(result.prfOutput).toEqual(DEFAULT_PRF_SALT);
   expect(calls.get).toHaveLength(1);
   expect(calls.get[0]).toMatchObject({
-    rpId: "example.com",
+    rpId: rp.id,
     userVerification: "required",
   });
   expect(calls.get[0]?.challenge).toHaveLength(32);
@@ -173,34 +122,24 @@ test("getPasskeyPrfOutput rejects a custom client response with no PRF output", 
   const { client } = stubClient({ getPrfOutput: () => undefined });
 
   await expect(
-    getPasskeyPrfOutput({ rpId: "example.com", webAuthnClient: client }),
+    getPasskeyPrfOutput({ rpId: rp.id, webAuthnClient: client }),
   ).rejects.toMatchObject({ code: "PRF_UNAVAILABLE" });
 });
 
 test("getPasskeyPrfOutput rejects an empty credentialId without prompting", async () => {
   // A malformed stored ID must fail closed instead of silently widening the
   // request to any discoverable credential for the relying party.
-  let asserted = false;
+  const { client, calls } = stubClient();
 
-  const navigator = {
-    credentials: {
-      async get() {
-        asserted = true;
-        throw new Error("passkey request must not start");
-      },
-    },
-  };
-
-  await withStubbedGlobal("navigator", navigator, async () => {
-    await expect(
-      getPasskeyPrfOutput({
-        rpId: "example.com",
-        credential: { credentialId: "" },
-        prfSalt: new Uint8Array(32),
-      }),
-    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
-    expect(asserted).toBe(false);
-  });
+  await expect(
+    getPasskeyPrfOutput({
+      rpId: rp.id,
+      credential: { credentialId: "" },
+      prfSalt: new Uint8Array(32),
+      webAuthnClient: client,
+    }),
+  ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+  expect(calls.get).toHaveLength(0);
 });
 
 test("PRF output helpers default to Mera's fixed salt", async () => {
@@ -224,22 +163,16 @@ test("PRF output helpers default to Mera's fixed salt", async () => {
 
   await withStubbedGlobal("navigator", navigator, async () => {
     const expected = DEFAULT_PRF_SALT;
-    const created = await createPasskeyWithPrfOutput({
-      rp: { id: "example.com", name: "Mera Test" },
-      user: { name: "nad", displayName: "nad" },
-    });
+    const created = await createPasskeyWithPrfOutput({ rp, user });
     expect(created.prfSalt).toEqual(expected);
     expect(created.prfOutput).toEqual(expected);
 
     created.prfSalt.fill(255);
 
-    const recreated = await createPasskeyWithPrfOutput({
-      rp: { id: "example.com", name: "Mera Test" },
-      user: { name: "nad", displayName: "nad" },
-    });
+    const recreated = await createPasskeyWithPrfOutput({ rp, user });
     expect(recreated.prfSalt).toEqual(expected);
 
-    const asserted = await getPasskeyPrfOutput({ rpId: "example.com" });
+    const asserted = await getPasskeyPrfOutput({ rpId: rp.id });
     expect(asserted.prfOutput).toEqual(expected);
   });
 
@@ -250,60 +183,41 @@ test("PRF output helpers default to Mera's fixed salt", async () => {
 });
 
 test("PRF output helpers reject an explicit salt of the wrong length", async () => {
-  let prompted = false;
-  const navigator = {
-    credentials: {
-      async create() {
-        prompted = true;
-        throw new Error("creation must not start");
-      },
-      async get() {
-        prompted = true;
-        throw new Error("passkey request must not start");
-      },
-    },
-  };
+  const { client, calls } = stubClient();
 
-  await withStubbedGlobal("navigator", navigator, async () => {
-    await expect(
-      createPasskeyWithPrfOutput({
-        rp: { id: "example.com", name: "Mera Test" },
-        user: { name: "nad", displayName: "nad" },
-        prfSalt: new Uint8Array(31),
-      }),
-    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+  await expect(
+    createPasskeyWithPrfOutput({
+      rp,
+      user,
+      prfSalt: new Uint8Array(31),
+      webAuthnClient: client,
+    }),
+  ).rejects.toMatchObject({ code: "INPUT_INVALID" });
 
-    await expect(
-      getPasskeyPrfOutput({
-        rpId: "example.com",
-        prfSalt: new Uint8Array(31),
-      }),
-    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
-  });
+  await expect(
+    getPasskeyPrfOutput({
+      rpId: rp.id,
+      prfSalt: new Uint8Array(31),
+      webAuthnClient: client,
+    }),
+  ).rejects.toMatchObject({ code: "INPUT_INVALID" });
 
-  expect(prompted).toBe(false);
+  expect(calls.create).toHaveLength(0);
+  expect(calls.get).toHaveLength(0);
 });
 
 test("passkey helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavailable", async () => {
   // The internal challenge is generated before the passkey request, so the
   // crypto failure is reachable without a credentials stub.
   await withStubbedGlobal("crypto", undefined, async () => {
-    const user = { name: "nad", displayName: "nad" };
     const prfSalt = new Uint8Array(32);
 
     await expect(
-      getPasskeyPrfOutput({
-        rpId: "example.com",
-        prfSalt,
-      }),
+      getPasskeyPrfOutput({ rpId: rp.id, prfSalt }),
     ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
 
     await expect(
-      createPasskeyWithPrfOutput({
-        rp: { id: "example.com", name: "Mera Test" },
-        user,
-        prfSalt,
-      }),
+      createPasskeyWithPrfOutput({ rp, user, prfSalt }),
     ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
   });
 });
@@ -313,7 +227,7 @@ test("getPasskeyPrfOutput refuses immediate with a credential before any prompt"
 
   await expect(
     getPasskeyPrfOutput({
-      rpId: "example.com",
+      rpId: rp.id,
       credential: { credentialId: CREDENTIAL_ID_BASE64URL },
       immediate: true,
       webAuthnClient: client,
@@ -337,8 +251,8 @@ test("the browser client sets uiMode only for immediate assertions", async () =>
   };
 
   await withStubbedGlobal("navigator", navigator, async () => {
-    await getPasskeyPrfOutput({ rpId: "example.com", immediate: true });
-    await getPasskeyPrfOutput({ rpId: "example.com" });
+    await getPasskeyPrfOutput({ rpId: rp.id, immediate: true });
+    await getPasskeyPrfOutput({ rpId: rp.id });
   });
 
   expect(requests[0]).toHaveProperty("uiMode", "immediate");
@@ -353,7 +267,7 @@ test("passkey functions keep the cause of custom client errors", async () => {
   });
 
   for (const runPasskeyRequest of [
-    () => getPasskeyPrfOutput({ rpId: "example.com", webAuthnClient: client }),
+    () => getPasskeyPrfOutput({ rpId: rp.id, webAuthnClient: client }),
     () => createPasskeyWithPrfOutput({ rp, user, webAuthnClient: client }),
   ]) {
     await expect(runPasskeyRequest()).rejects.toMatchObject({
@@ -385,12 +299,8 @@ test("createPasskeyWithPrfOutput generates a fresh user ID for each passkey", as
   };
 
   await withStubbedGlobal("navigator", navigator, async () => {
-    const options = {
-      rp: { id: "example.com", name: "Mera Test" },
-      user: { name: "nad", displayName: "nad" },
-    };
-    await createPasskeyWithPrfOutput(options);
-    await createPasskeyWithPrfOutput(options);
+    await createPasskeyWithPrfOutput({ rp, user });
+    await createPasskeyWithPrfOutput({ rp, user });
   });
 
   expect(handles[0]).toHaveLength(32);
@@ -473,11 +383,7 @@ test("createPasskeyWithPrfOutput copies prfSalt for its second request and resul
   };
 
   await withStubbedGlobal("navigator", navigator, async () => {
-    const pending = createPasskeyWithPrfOutput({
-      rp: { id: "example.com", name: "Mera Test" },
-      user: { name: "nad", displayName: "nad" },
-      prfSalt,
-    });
+    const pending = createPasskeyWithPrfOutput({ rp, user, prfSalt });
 
     prfSalt.fill(255);
 

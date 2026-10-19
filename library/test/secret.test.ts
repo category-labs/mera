@@ -11,13 +11,15 @@ import {
   decryptSecretVaultWithPasskey,
   parseSecretVault,
 } from "../dist/secret.js";
-import type { WebAuthnClient } from "../dist/webauthn.js";
 import {
   CREDENTIAL_ID_BASE64URL,
   DEFAULT_PRF_SALT,
   expectError,
   readEvaluatedPrfSalt,
+  rp,
+  stubClient,
   stubPublicKeyCredential,
+  user,
   withCountedRandomness,
   withStubbedGlobal,
 } from "./helpers.js";
@@ -67,38 +69,27 @@ test("creates a secret vault and decrypts the exact bytes", async () => {
 });
 
 test("secret-vault creation rejects an empty secret before prompting", async () => {
-  let passkeyRequestCount = 0;
-  const navigator = {
-    credentials: {
-      async create() {
-        passkeyRequestCount += 1;
-        throw new Error("creation must not start");
-      },
-      async get() {
-        passkeyRequestCount += 1;
-        throw new Error("passkey request must not start");
-      },
-    },
-  };
+  const { client, calls } = stubClient();
 
-  await withStubbedGlobal("navigator", navigator, async () => {
-    await expect(
-      createSecretVaultWithNewPasskey({
-        rp: { id: "example.com", name: "Mera Test" },
-        user: { name: "nad", displayName: "nad" },
-        secret: new Uint8Array(0),
-      }),
-    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+  await expect(
+    createSecretVaultWithNewPasskey({
+      rp,
+      user,
+      secret: new Uint8Array(0),
+      webAuthnClient: client,
+    }),
+  ).rejects.toMatchObject({ code: "INPUT_INVALID" });
 
-    await expect(
-      createSecretVaultWithExistingPasskey({
-        rpId: "example.com",
-        secret: new Uint8Array(0),
-      }),
-    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
-  });
+  await expect(
+    createSecretVaultWithExistingPasskey({
+      rpId: rp.id,
+      secret: new Uint8Array(0),
+      webAuthnClient: client,
+    }),
+  ).rejects.toMatchObject({ code: "INPUT_INVALID" });
 
-  expect(passkeyRequestCount).toBe(0);
+  expect(calls.create).toHaveLength(0);
+  expect(calls.get).toHaveLength(0);
 });
 
 test("secret-vault creation keeps PRF errors and does not change input secrets", async () => {
@@ -117,16 +108,12 @@ test("secret-vault creation keeps PRF errors and does not change input secrets",
 
   await withStubbedGlobal("navigator", navigator, async () => {
     await expect(
-      createSecretVaultWithNewPasskey({
-        rp: { id: "example.com", name: "Mera Test" },
-        user: { name: "nad", displayName: "nad" },
-        secret: newPasskeySecret,
-      }),
+      createSecretVaultWithNewPasskey({ rp, user, secret: newPasskeySecret }),
     ).rejects.toMatchObject({ code: "PRF_UNAVAILABLE" });
 
     await expect(
       createSecretVaultWithExistingPasskey({
-        rpId: "example.com",
+        rpId: rp.id,
         secret: existingPasskeySecret,
       }),
     ).rejects.toMatchObject({ code: "PRF_UNAVAILABLE" });
@@ -137,17 +124,14 @@ test("secret-vault creation keeps PRF errors and does not change input secrets",
 });
 
 test("createSecretVaultWithNewPasskey uses a fresh salt and copies the secret", async () => {
-  let releaseCreation: (() => void) | undefined;
-  const creationGate = new Promise<void>((resolve) => {
-    releaseCreation = resolve;
-  });
+  const creationGate = Promise.withResolvers<void>();
   let evaluatedSalt: Uint8Array<ArrayBuffer> | undefined;
 
   const navigator = {
     credentials: {
       async create({ publicKey }: CredentialCreationOptions) {
         evaluatedSalt = readEvaluatedPrfSalt(publicKey);
-        await creationGate;
+        await creationGate.promise;
         return stubPublicKeyCredential({
           prf: {
             enabled: true,
@@ -161,14 +145,10 @@ test("createSecretVaultWithNewPasskey uses a fresh salt and copies the secret", 
 
   await withStubbedGlobal("navigator", navigator, async () => {
     const secret = new Uint8Array(SECRET);
-    const pending = createSecretVaultWithNewPasskey({
-      rp: { id: "example.com", name: "Mera Test" },
-      user: { name: "nad", displayName: "nad" },
-      secret,
-    });
+    const pending = createSecretVaultWithNewPasskey({ rp, user, secret });
 
     secret.fill(0);
-    releaseCreation?.();
+    creationGate.resolve();
 
     const vault = await pending;
     if (evaluatedSalt === undefined) {
@@ -189,17 +169,14 @@ test("createSecretVaultWithNewPasskey uses a fresh salt and copies the secret", 
 });
 
 test("createSecretVaultWithExistingPasskey copies inputs and keeps transports", async () => {
-  let releaseRequest: (() => void) | undefined;
-  const requestGate = new Promise<void>((resolve) => {
-    releaseRequest = resolve;
-  });
+  const requestGate = Promise.withResolvers<void>();
   let evaluatedSalt: Uint8Array<ArrayBuffer> | undefined;
 
   const navigator = {
     credentials: {
       async get({ publicKey }: CredentialRequestOptions) {
         evaluatedSalt = readEvaluatedPrfSalt(publicKey);
-        await requestGate;
+        await requestGate.promise;
         return stubPublicKeyCredential({
           prf: { results: { first: evaluatedSalt?.buffer } },
         });
@@ -212,7 +189,7 @@ test("createSecretVaultWithExistingPasskey copies inputs and keeps transports", 
     const credential = { credentialId: CREDENTIAL_ID_BASE64URL, transports };
     const secret = new Uint8Array(SECRET);
     const pending = createSecretVaultWithExistingPasskey({
-      rpId: "example.com",
+      rpId: rp.id,
       credential,
       secret,
     });
@@ -220,7 +197,7 @@ test("createSecretVaultWithExistingPasskey copies inputs and keeps transports", 
     credential.credentialId = "BQYHCA";
     transports[0] = "nfc";
     secret.fill(0);
-    releaseRequest?.();
+    requestGate.resolve();
 
     const vault = await pending;
     if (evaluatedSalt === undefined) {
@@ -247,26 +224,17 @@ test("decryptSecretVault fails with the wrong PRF output", async () => {
 
 test("decryptSecretVaultWithPasskey rejects a malformed vault without prompting", async () => {
   const vault = await createTestVault();
-  let asserted = false;
-  const navigator = {
-    credentials: {
-      async get() {
-        asserted = true;
-        throw new Error("passkey request must not start");
-      },
-    },
-  };
+  const { client, calls } = stubClient();
 
-  await withStubbedGlobal("navigator", navigator, async () => {
-    await expect(
-      decryptSecretVaultWithPasskey({
-        rpId: "example.com",
-        vault: { ...vault, ciphertext: "!!!!" },
-      }),
-    ).rejects.toMatchObject({ code: "VAULT_FORMAT_INVALID" });
-  });
+  await expect(
+    decryptSecretVaultWithPasskey({
+      rpId: rp.id,
+      vault: { ...vault, ciphertext: "!!!!" },
+      webAuthnClient: client,
+    }),
+  ).rejects.toMatchObject({ code: "VAULT_FORMAT_INVALID" });
 
-  expect(asserted).toBe(false);
+  expect(calls.get).toHaveLength(0);
 });
 
 test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto or HKDF is unavailable", async () => {
@@ -293,33 +261,24 @@ test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto or HKDF is 
 });
 
 test("createSecretVaultWithNewPasskey checks crypto.subtle before creating a passkey", async () => {
-  const { getRandomValues } = globalThis.crypto;
   const randomOnly = {
-    getRandomValues: getRandomValues.bind(globalThis.crypto),
+    getRandomValues: globalThis.crypto.getRandomValues.bind(globalThis.crypto),
   };
-  let passkeyCreated = false;
-  const webAuthnClient: WebAuthnClient = {
-    async createCredential() {
-      passkeyCreated = true;
-      throw new Error("creation must not start");
-    },
-    async getCredential() {
-      throw new Error("sign-in must not start");
-    },
-  };
+  const { client, calls } = stubClient();
 
   await withStubbedGlobal("crypto", randomOnly, async () => {
     await expect(
       createSecretVaultWithNewPasskey({
-        rp: { id: "example.com", name: "Mera Test" },
-        user: { name: "nad", displayName: "nad" },
+        rp,
+        user,
         secret: new Uint8Array([1, 2, 3]),
-        webAuthnClient,
+        webAuthnClient: client,
       }),
     ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
   });
 
-  expect(passkeyCreated).toBe(false);
+  expect(calls.create).toHaveLength(0);
+  expect(calls.get).toHaveLength(0);
 });
 
 test("zeroes the PRF output and secret handed to Web Crypto", async () => {
@@ -382,13 +341,13 @@ test("zeroes the PRF output and secret handed to Web Crypto", async () => {
   await withStubbedGlobal("navigator", navigator, async () => {
     await withStubbedGlobal("crypto", capturing, async () => {
       const vault = await createSecretVaultWithNewPasskey({
-        rp: { id: "example.com", name: "Mera Test" },
-        user: { name: "nad", displayName: "nad" },
+        rp,
+        user,
         secret: SECRET,
       });
 
       await expect(
-        decryptSecretVaultWithPasskey({ rpId: "example.com", vault }),
+        decryptSecretVaultWithPasskey({ rpId: rp.id, vault }),
       ).resolves.toEqual(SECRET);
     });
   });
@@ -407,9 +366,10 @@ test("changing the credential ID or PRF salt does not change decryption", async 
   const edited = parseSecretVault({
     ...vault,
     credential: { ...vault.credential, credentialId: "BQYHCA" },
-    prfSalt: "CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk",
+    prfSalt: Buffer.from(new Uint8Array(32).fill(1)).toString("base64url"),
   });
 
+  expect(edited.prfSalt).not.toBe(vault.prfSalt);
   await expect(
     decryptSecretVault({ vault: edited, prfOutput: PRF_OUTPUT }),
   ).resolves.toEqual(SECRET);

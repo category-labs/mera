@@ -1,37 +1,16 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
-  "files": {
-    "includes": [
-      "**",
-      "!**/dist",
-      "!**/node_modules",
-      "!**/.astro",
-      "!docs/public/demo",
-      "!docs/public/prf-demo",
-      "!.claude/worktrees",
-      "!**/playwright-report",
-      "!**/test-results",
-      "!demos/web/network/evm/out",
-      "!demos/web/network/evm/cache",
-      "!demos/mobile/.expo",
-      "!demos/mobile/ios",
-      "!demos/mobile/android"
-    ]
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
   },
   "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2
+    "indentStyle": "space"
   },
   "html": {
     "formatter": {
       "enabled": true
-    }
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "preset": "recommended"
     }
   },
   "overrides": [

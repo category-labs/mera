@@ -8,7 +8,7 @@
     "rootDir": ".",
     // Tests run on the repository's Node, which has ES2024 built-ins such as
     // Promise.withResolvers.
-    "lib": ["ES2024", "ESNext.Disposable", "DOM", "DOM.Iterable"],
+    "lib": ["ES2024", "ESNext.Disposable", "DOM"],
     "types": ["node"]
   },
   "include": ["test/**/*.ts", "playwright.config.ts"]

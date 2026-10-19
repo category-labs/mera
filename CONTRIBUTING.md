@@ -28,7 +28,7 @@ npm run check:pack    # package contents, exports, and public types
 npm run check:all     # every check above
 ```
 
-`npm run check` applies to every change; biome verifies formatting and lint across the repository, including CSS and SVG files, and `npm run format` fixes the formatting failures it reports. Run `npm test` for library or test changes. Run `npm run check:pack` when packaged files, exports, types, or package metadata change; it also typechecks the built public types without the DOM libs, so they stay usable from React Native.
+`npm run check` applies to every change; biome verifies formatting and lint across the repository, including CSS and SVG files, and `npm run format` applies its safe fixes, such as formatting and import order. Run `npm test` for library or test changes. Run `npm run check:pack` when packaged files, exports, types, or package metadata change; it also typechecks the built public types without the DOM libs, so they stay usable from React Native.
 
 Workspace commands run from the repository root. The web demo compiles against the built library and writes to `docs/public/demo`:
 

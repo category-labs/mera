@@ -36,12 +36,10 @@ import {
 } from "../dist/index.js";
 import { mera } from "../dist/wagmi.js";
 import type { WebAuthnClient } from "../dist/webauthn.js";
-import { DEFAULT_PRF_SALT, expectError } from "./helpers.js";
+import { DEFAULT_PRF_SALT, expectError, rp, user } from "./helpers.js";
 
-const rp = { id: "example.com", name: "Mera Test" };
 // wagmi prefixes the connector's "mera.account" key with its own "wagmi.".
 const STORED_ACCOUNT_KEY = "wagmi.mera.account";
-const user = { name: "nad", displayName: "nad" };
 const recipient = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
 
 // Pads gas estimates the documented way for chains that charge the limit.

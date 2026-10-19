@@ -1,5 +1,6 @@
 import { hexToBytes } from "@noble/hashes/utils.js";
 import { expect } from "@playwright/test";
+import type { WebAuthnClient } from "../dist/webauthn.js";
 
 // sha256("mera.prf.salt.v1"): the fixed default salt documented on
 // getPasskeyPrfOutput.
@@ -11,6 +12,9 @@ const SEQUENCE_PRF_OUTPUT = Uint8Array.from({ length: 32 }, (_, i) => i);
 
 const CREDENTIAL_ID_BYTES = new Uint8Array([1, 2, 3, 4]);
 const CREDENTIAL_ID_BASE64URL = "AQIDBA";
+
+const rp = { id: "example.com", name: "Mera Test" };
+const user = { name: "nad", displayName: "nad" };
 
 // WebAuthn credential stub for navigator.credentials fakes: `prf` becomes the
 // client extension results, and `transports` adds a create-style response
@@ -49,14 +53,7 @@ function readEvaluatedPrfSalt(
 }
 
 function expectError(fn: () => unknown, code: string): void {
-  try {
-    fn();
-  } catch (error) {
-    expect(error).toMatchObject({ code });
-    return;
-  }
-
-  throw new Error(`expected fn to throw with code ${code}`);
+  expect(fn).toThrow(expect.objectContaining({ code }));
 }
 
 // Replaces a globalThis property for the duration of fn, then restores the
@@ -100,14 +97,67 @@ async function withCountedRandomness<T>(
   return { result, calls, bytesDrawn };
 }
 
+type ClientCalls = {
+  create: Parameters<WebAuthnClient["createCredential"]>[0][];
+  get: Parameters<WebAuthnClient["getCredential"]>[0][];
+};
+
+// WebAuthnClient stub that records every request. Unless `getPrfOutput` says
+// otherwise, an assertion's PRF output is a copy of the salt it evaluated.
+function stubClient(
+  answers: {
+    prfEnabled?: boolean;
+    createPrfOutput?: Uint8Array;
+    getPrfOutput?: (prfSalt: Uint8Array) => Uint8Array | undefined;
+    createError?: Error;
+    getError?: Error;
+  } = {},
+): { client: WebAuthnClient; calls: ClientCalls } {
+  const calls: ClientCalls = { create: [], get: [] };
+  const getPrfOutput =
+    answers.getPrfOutput ?? ((prfSalt) => new Uint8Array(prfSalt));
+
+  const client: WebAuthnClient = {
+    async createCredential(request) {
+      calls.create.push(request);
+      if (answers.createError !== undefined) {
+        throw answers.createError;
+      }
+
+      return {
+        credentialId: new Uint8Array(CREDENTIAL_ID_BYTES),
+        transports: ["internal"],
+        prfEnabled: answers.prfEnabled ?? true,
+        prfOutput: answers.createPrfOutput,
+      };
+    },
+    async getCredential(request) {
+      calls.get.push(request);
+      if (answers.getError !== undefined) {
+        throw answers.getError;
+      }
+
+      return {
+        credentialId: new Uint8Array(CREDENTIAL_ID_BYTES),
+        prfOutput: getPrfOutput(request.prfSalt),
+      };
+    },
+  };
+
+  return { client, calls };
+}
+
 export {
   CREDENTIAL_ID_BASE64URL,
   CREDENTIAL_ID_BYTES,
   DEFAULT_PRF_SALT,
   expectError,
   readEvaluatedPrfSalt,
+  rp,
   SEQUENCE_PRF_OUTPUT,
+  stubClient,
   stubPublicKeyCredential,
+  user,
   withCountedRandomness,
   withStubbedGlobal,
 };

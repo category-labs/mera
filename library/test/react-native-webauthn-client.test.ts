@@ -1,16 +1,17 @@
 import { expect, test } from "@playwright/test";
+import type {
+  PasskeyCreateRequest,
+  PasskeyCreateResult,
+  PasskeyGetRequest,
+  PasskeyGetResult,
+} from "react-native-passkey";
 import { createReactNativeWebAuthnClient } from "../dist/react-native-webauthn-client-internal.js";
 
 type PlatformApi = Parameters<typeof createReactNativeWebAuthnClient>[0];
 
-type NativeCreateRequest = Parameters<PlatformApi["createPlatformKey"]>[0];
-type NativeGetRequest = Parameters<PlatformApi["getPlatformKey"]>[0];
-type NativeCreateResult = Awaited<ReturnType<PlatformApi["createPlatformKey"]>>;
-type NativeGetResult = Awaited<ReturnType<PlatformApi["getPlatformKey"]>>;
-
 function createResult(
-  overrides: Partial<NativeCreateResult> = {},
-): NativeCreateResult {
+  overrides: Partial<PasskeyCreateResult> = {},
+): PasskeyCreateResult {
   return {
     id: "AQID",
     rawId: "AQID",
@@ -19,7 +20,9 @@ function createResult(
   };
 }
 
-function getResult(overrides: Partial<NativeGetResult> = {}): NativeGetResult {
+function getResult(
+  overrides: Partial<PasskeyGetResult> = {},
+): PasskeyGetResult {
   return {
     id: "AQID",
     response: {
@@ -33,18 +36,18 @@ function getResult(overrides: Partial<NativeGetResult> = {}): NativeGetResult {
 
 function stubPlatformApi(
   options: {
-    createResult?: NativeCreateResult;
-    getResult?: NativeGetResult;
+    createResult?: PasskeyCreateResult;
+    getResult?: PasskeyGetResult;
   } = {},
 ): {
   platformApi: PlatformApi;
-  createRequests: NativeCreateRequest[];
-  getRequests: NativeGetRequest[];
-  immediateRequests: NativeGetRequest[];
+  createRequests: PasskeyCreateRequest[];
+  getRequests: PasskeyGetRequest[];
+  immediateRequests: PasskeyGetRequest[];
 } {
-  const createRequests: NativeCreateRequest[] = [];
-  const getRequests: NativeGetRequest[] = [];
-  const immediateRequests: NativeGetRequest[] = [];
+  const createRequests: PasskeyCreateRequest[] = [];
+  const getRequests: PasskeyGetRequest[] = [];
+  const immediateRequests: PasskeyGetRequest[] = [];
 
   const platformApi: PlatformApi = {
     async createPlatformKey(request) {
@@ -71,7 +74,7 @@ test("createCredential converts data to and from createPlatformKey", async () =>
       clientDataJSON: "",
       attestationObject: "",
       transports: ["internal", "hybrid"] as NonNullable<
-        NativeCreateResult["response"]["transports"]
+        PasskeyCreateResult["response"]["transports"]
       >,
     },
     clientExtensionResults: {

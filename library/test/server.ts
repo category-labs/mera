@@ -16,25 +16,19 @@ const contentTypes: Record<string, string> = {
 };
 
 // The test page imports the library by its package name, which transitively
-// pulls in bare specifiers from `@noble/*`. Browsers can't resolve bare
-// specifiers, so we map them to files the server already serves.
+// pulls in bare specifiers from `@noble/*` and `@scure/*`. Browsers can't
+// resolve bare specifiers, so we map them to files the server already serves.
+// The prefix entries ending in `/` work because these packages export each
+// subpath under its own file name.
 const importMap = JSON.stringify({
   imports: {
     "@category-labs/mera": "/library/dist/index.js",
-    "@noble/curves/ed25519.js": "/node_modules/@noble/curves/ed25519.js",
-    "@noble/curves/secp256k1.js": "/node_modules/@noble/curves/secp256k1.js",
-    "@noble/hashes/hmac.js": "/node_modules/@noble/hashes/hmac.js",
-    "@noble/hashes/legacy.js": "/node_modules/@noble/hashes/legacy.js",
-    "@noble/hashes/pbkdf2.js": "/node_modules/@noble/hashes/pbkdf2.js",
-    "@noble/hashes/sha2.js": "/node_modules/@noble/hashes/sha2.js",
-    "@noble/hashes/sha3.js": "/node_modules/@noble/hashes/sha3.js",
-    "@noble/hashes/utils.js": "/node_modules/@noble/hashes/utils.js",
-    "@noble/hashes/webcrypto.js": "/node_modules/@noble/hashes/webcrypto.js",
+    "@noble/curves/": "/node_modules/@noble/curves/",
+    "@noble/hashes/": "/node_modules/@noble/hashes/",
     "@scure/base": "/node_modules/@scure/base/index.js",
     "@scure/bip32": "/node_modules/@scure/bip32/index.js",
     "@scure/bip39": "/node_modules/@scure/bip39/index.js",
-    "@scure/bip39/wordlists/english.js":
-      "/node_modules/@scure/bip39/wordlists/english.js",
+    "@scure/bip39/": "/node_modules/@scure/bip39/",
   },
 });
 

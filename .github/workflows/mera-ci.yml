@@ -41,7 +41,7 @@ jobs:
           gh api --paginate "$PR_URL/files" --jq '.[].filename' > changed-files.txt
 
           matches() { grep -qE "$1" changed-files.txt && echo true || echo false; }
-          graph='^(package\.json|package-lock\.json|\.nvmrc|\.github/workflows/)'
+          graph='^(package\.json|package-lock\.json|\.nvmrc|\.github/workflows/mera-ci\.yml)'
           library="^library/|$graph"
           packaged='^(LICENSE-MIT|LICENSE-APACHE)$'
 
@@ -64,7 +64,6 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          check-latest: true
 
       - name: Use repository npm version
         run: corepack enable npm
@@ -90,7 +89,6 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          check-latest: true
 
       - name: Use repository npm version
         run: corepack enable npm
@@ -99,7 +97,7 @@ jobs:
         run: npm ci --include-workspace-root -w library
 
       - name: Install Playwright browser
-        run: npm exec -w library -- playwright install --with-deps chromium
+        run: npm exec -w library -- playwright install --only-shell chromium
 
       - name: Run tests
         run: npm test
@@ -117,7 +115,6 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          check-latest: true
 
       - name: Use repository npm version
         run: corepack enable npm
@@ -144,7 +141,6 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          check-latest: true
 
       - name: Use repository npm version
         run: corepack enable npm
@@ -168,7 +164,6 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          check-latest: true
 
       - name: Use repository npm version
         run: corepack enable npm
@@ -197,7 +192,6 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          check-latest: true
 
       - name: Use repository npm version
         run: corepack enable npm

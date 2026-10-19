@@ -31,25 +31,34 @@ async function deriveEncryptionKey(
   }
 
   const subtle = getSubtleCrypto();
-  const material = await subtle.importKey("raw", prfOutput, "HKDF", false, [
-    "deriveKey",
-  ]);
 
-  return subtle.deriveKey(
-    {
-      name: "HKDF",
-      hash: "SHA-256",
-      salt: new Uint8Array(0),
-      info: SECRET_ENCRYPTION_INFO,
-    },
-    material,
-    {
-      name: "AES-GCM",
-      length: 256,
-    },
-    false,
-    ["encrypt", "decrypt"],
-  );
+  try {
+    const material = await subtle.importKey("raw", prfOutput, "HKDF", false, [
+      "deriveKey",
+    ]);
+
+    return await subtle.deriveKey(
+      {
+        name: "HKDF",
+        hash: "SHA-256",
+        salt: new Uint8Array(0),
+        info: SECRET_ENCRYPTION_INFO,
+      },
+      material,
+      {
+        name: "AES-GCM",
+        length: 256,
+      },
+      false,
+      ["encrypt", "decrypt"],
+    );
+  } catch (error) {
+    // The PRF output is valid by now, so a rejection means the runtime cannot
+    // run HKDF or create AES-GCM keys.
+    throw new MeraError("CRYPTO_UNAVAILABLE", "Vault key derivation failed", {
+      cause: error,
+    });
+  }
 }
 
 function parseJsonVault(value: string): unknown {
@@ -114,14 +123,16 @@ async function createSecretVault({
   credential,
   secret,
 }: CreateSecretVaultOptions): Promise<PasskeySecretVault> {
+  const encryptionKey = await deriveEncryptionKey(credential.prfOutput);
+
   // The GCM nonce is generated internally so callers cannot accidentally reuse
   // one.
   const nonce = randomBytes(NONCE_LENGTH);
+  const subtle = getSubtleCrypto();
   let ciphertext: ArrayBuffer;
 
   try {
-    const encryptionKey = await deriveEncryptionKey(credential.prfOutput);
-    ciphertext = await getSubtleCrypto().encrypt(
+    ciphertext = await subtle.encrypt(
       {
         name: "AES-GCM",
         iv: nonce,
@@ -130,13 +141,11 @@ async function createSecretVault({
       secret,
     );
   } catch (error) {
-    // The inputs are valid by now, so a Web Crypto rejection means the runtime
-    // cannot run HKDF or AES-GCM.
-    throw error instanceof MeraError
-      ? error
-      : new MeraError("CRYPTO_UNAVAILABLE", "Secret encryption failed", {
-          cause: error,
-        });
+    // The key and nonce are valid, so a rejection means the runtime cannot run
+    // AES-GCM.
+    throw new MeraError("CRYPTO_UNAVAILABLE", "Secret encryption failed", {
+      cause: error,
+    });
   }
 
   return {
@@ -306,7 +315,7 @@ type DecryptSecretVaultOptions = {
  * @returns The decrypted secret bytes in a fresh allocation.
  * @throws MeraError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url.
  * @throws MeraError with code `DECRYPT_FAILED` when AES-GCM authentication fails.
- * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.subtle` is unavailable.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.subtle` is unavailable, or lacks the HKDF or AES-GCM support the vault needs.
  * @internal
  */
 async function decryptSecretVault({
@@ -419,7 +428,7 @@ type DecryptSecretVaultWithPasskeyOptions = Omit<
  * @throws MeraError with code `VAULT_FORMAT_INVALID` when the vault's required structure, version, or encoded data is invalid.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `DECRYPT_FAILED` when AES-GCM authentication fails.
- * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.getRandomValues` or `crypto.subtle` is unavailable.
+ * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.getRandomValues` or `crypto.subtle` is unavailable, or `crypto.subtle` lacks the HKDF or AES-GCM support the vault needs.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
  */
 async function decryptSecretVaultWithPasskey({

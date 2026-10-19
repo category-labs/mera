@@ -30,6 +30,18 @@ const PRF_SALT = new Uint8Array(32).fill(9);
 const SECRET = new TextEncoder().encode(
   "legal winner thank year wave sausage worth useful legal winner thank yellow",
 );
+const HKDF_UNSUPPORTED = new DOMException(
+  "HKDF is unsupported",
+  "NotSupportedError",
+);
+const CRYPTO_WITHOUT_HKDF = {
+  getRandomValues: globalThis.crypto.getRandomValues.bind(globalThis.crypto),
+  subtle: {
+    async importKey() {
+      throw HKDF_UNSUPPORTED;
+    },
+  },
+};
 
 async function createTestVault(
   secret: Uint8Array<ArrayBuffer> = SECRET,
@@ -270,17 +282,19 @@ test("decryptSecretVaultWithPasskey rejects a malformed vault without prompting"
   expect(asserted).toBe(false);
 });
 
-test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavailable", async () => {
+test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto or HKDF is unavailable", async () => {
   const vault = await createTestVault();
 
-  await withStubbedGlobal("crypto", undefined, async () => {
-    await expect(createTestVault()).rejects.toMatchObject({
-      code: "CRYPTO_UNAVAILABLE",
+  for (const runtimeCrypto of [undefined, CRYPTO_WITHOUT_HKDF]) {
+    await withStubbedGlobal("crypto", runtimeCrypto, async () => {
+      await expect(createTestVault()).rejects.toMatchObject({
+        code: "CRYPTO_UNAVAILABLE",
+      });
+      await expect(
+        decryptSecretVault({ vault, prfOutput: PRF_OUTPUT }),
+      ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
     });
-    await expect(
-      decryptSecretVault({ vault, prfOutput: PRF_OUTPUT }),
-    ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
-  });
+  }
 });
 
 test("createSecretVaultWithNewPasskey checks crypto.subtle before creating a passkey", async () => {
@@ -314,18 +328,6 @@ test("createSecretVaultWithNewPasskey checks crypto.subtle before creating a pas
 });
 
 test("createSecretVaultWithNewPasskey names the new passkey when encryption fails", async () => {
-  const unsupported = new DOMException(
-    "HKDF is unsupported",
-    "NotSupportedError",
-  );
-  const cryptoWithoutHkdf = {
-    getRandomValues: globalThis.crypto.getRandomValues.bind(globalThis.crypto),
-    subtle: {
-      async importKey() {
-        throw unsupported;
-      },
-    },
-  };
   const webAuthnClient: WebAuthnClient = {
     async createCredential({ prfSalt }) {
       return {
@@ -340,7 +342,7 @@ test("createSecretVaultWithNewPasskey names the new passkey when encryption fail
     },
   };
 
-  await withStubbedGlobal("crypto", cryptoWithoutHkdf, async () => {
+  await withStubbedGlobal("crypto", CRYPTO_WITHOUT_HKDF, async () => {
     await expect(
       createSecretVaultWithNewPasskey({
         rp: { id: "example.com", name: "Mera Test" },
@@ -350,7 +352,7 @@ test("createSecretVaultWithNewPasskey names the new passkey when encryption fail
       }),
     ).rejects.toMatchObject({
       code: "CRYPTO_UNAVAILABLE",
-      cause: unsupported,
+      cause: HKDF_UNSUPPORTED,
       credential: {
         credentialId: CREDENTIAL_ID_BASE64URL,
         transports: ["internal"],

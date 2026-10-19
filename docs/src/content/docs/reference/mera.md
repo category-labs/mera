@@ -3,7 +3,7 @@ title: mera
 description: A wagmi connector for passkey accounts.
 ---
 
-Creates a [wagmi](https://wagmi.sh) connector for a [passkey account](/concepts/passkey-accounts/). Connecting and every signing request each run a passkey ceremony, which shows a prompt. A request's [signing session](/concepts/signing-sessions/) ends once the request settles, so no key stays in memory between requests. The connector lives in the `@category-labs/mera/wagmi` entry point, which requires `@wagmi/core` (`^3.0.0`) and `viem` (`^2.28.0`) as optional peer dependencies.
+Creates a [wagmi](https://wagmi.sh) connector for a [passkey account](/concepts/passkey-accounts/). Connecting runs a passkey ceremony, which shows a prompt. By default, every signing request runs its own ceremony and ends its [signing session](/concepts/signing-sessions/) once it settles, so no key stays in memory between requests. The connector lives in the `@category-labs/mera/wagmi` entry point, which requires `@wagmi/core` (`^3.0.0`) and `viem` (`^2.28.0`) as optional peer dependencies.
 
 ## Import
 
@@ -53,6 +53,13 @@ Account number passed to [deriveEvmPrivateKey](/reference/derive-evm-private-key
 
 Client that runs the ceremonies. [WebAuthnClient](/reference/web-authn-client/) covers supplying one for a runtime without `navigator.credentials`.
 
+### options.keepSessionOpen
+
+- Type: `boolean`
+- Optional; defaults to `false`
+
+Keeps the signing session that connecting opens, or that the first signing request after a page load opens, so later requests sign without a prompt. The derived key stays in memory until `disconnect`, a `connect` to another account, or a page unload. The [signing sessions](/concepts/signing-sessions/#how-long-to-keep-a-session) page covers the trade-off.
+
 ## Returns
 
 A wagmi `CreateConnectorFn` for a connector with the id `"mera"` and the name `"Passkey"`.
@@ -61,7 +68,7 @@ A wagmi `CreateConnectorFn` for a connector with the id `"mera"` and the name `"
 
 `connect({ connector })` asks for any passkey the relying party has and connects its account. `connect({ connector, create: { user } })` creates a passkey for `user`, the `{ name, displayName }` pair [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) takes, and connects its account. `create` runs one ceremony, or two on authenticators that evaluate the PRF only at sign-in. When the second prompt of a `create` is dismissed, the new passkey stays on the authenticator, and a later `connect` without `create` offers it.
 
-Reconnecting after a page load restores the stored account and shows no prompt. Each signing request runs a ceremony restricted to the stored credential, and requests made together prompt one after another. A passkey that opens a different address than the stored one is refused with `UnauthorizedProviderError` (code 4100).
+Reconnecting after a page load restores the stored account and shows no prompt. Signing requests run one at a time. Each runs a ceremony restricted to the stored credential, so requests made together prompt one after another. With `keepSessionOpen`, signing after a connect shows no prompt, and only the first request after a page load runs one. A passkey that opens a different address than the stored one is refused with `UnauthorizedProviderError` (code 4100).
 
 ### Provider
 

@@ -84,10 +84,13 @@ type Properties = {
  * @returns A wagmi connector function with id `"mera"`.
  * @remarks
  * Connecting runs one passkey ceremony, or two when it creates a passkey on an
- * authenticator that evaluates the PRF only at sign-in, and keeps no key.
- * Every signing request runs its own ceremony, restricted to the stored
- * credential, after earlier requests finish, and ends its signing session
- * once it settles. A passkey that opens a different address is refused.
+ * authenticator that evaluates the PRF only at sign-in. Signing requests run
+ * one at a time. Each runs its own ceremony, restricted to the stored
+ * credential, and ends its signing session once it settles. With
+ * `keepSessionOpen`, the session that connecting opens, or that the first
+ * signing request after a page load opens, stays open and signs later
+ * requests without a prompt. A passkey that opens a different address is
+ * refused.
  *
  * The connector keeps the account's address and credential metadata in
  * wagmi's storage, never key material, so reconnecting after a page load
@@ -110,6 +113,7 @@ function mera({
   rp,
   accountIndex = 0,
   webAuthnClient = browserWebAuthnClient,
+  keepSessionOpen = false,
 }: mera.Options): CreateConnectorFn<Provider, Properties, StorageItem> {
   checkAccountIndex(accountIndex);
 
@@ -119,7 +123,7 @@ function mera({
     // storage disabled still signs until it disconnects.
     let connection: Connection | undefined;
     // Signing requests run one at a time: WebAuthn allows one ceremony per
-    // page, and each request asks for its own.
+    // page, and each request may ask for its own.
     let signing: Promise<unknown> = Promise.resolve();
     // One client per chain: each new client starts its transport, and a
     // ranked `fallback` transport then pings its RPCs for good.
@@ -194,17 +198,22 @@ function mera({
       const { credentialId, transports, prfOutput } =
         await ceremony.catch(rejectCeremony);
       const opened = openAccount(prfOutput, accountIndex);
-      opened.session.end();
+      if (!keepSessionOpen) opened.session.end();
       const account: StoredAccount = {
         address: opened.account.address,
         credential: { credentialId, transports },
         rpId: rp.id,
         accountIndex,
       };
-      await config.storage?.setItem(STORAGE_KEY, account);
+      try {
+        await config.storage?.setItem(STORAGE_KEY, account);
+      } catch (error) {
+        opened.session.end();
+        throw error;
+      }
 
       forget();
-      connection = { account };
+      connection = keepSessionOpen ? { account, opened } : { account };
       return account;
     }
 
@@ -224,8 +233,8 @@ function mera({
 
     /**
      * Runs `sign` with the account for `address`. Each call waits for earlier
-     * ones, asks for the stored passkey, and ends its session once `sign`
-     * settles.
+     * ones, asks for the stored passkey unless a kept session is open, and
+     * ends its session once `sign` settles unless `keepSessionOpen` is set.
      */
     async function withSigner<T>(
       address: unknown,
@@ -253,15 +262,33 @@ function mera({
       current: Connection,
       sign: (account: LocalAccount) => Promise<T>,
     ): Promise<T> {
-      const { account } = current;
       checkConnected(current);
+      const opened = current.opened ?? (await openStoredAccount(current));
+      try {
+        return await sign(opened.account);
+      } finally {
+        if (!keepSessionOpen) {
+          opened.session.end();
+          current.opened = undefined;
+        }
+      }
+    }
+
+    /**
+     * Asks for the stored passkey and sets `current.opened` to its account.
+     * Ends the session and throws when the connection changed during the
+     * ceremony or the passkey opened a different address.
+     */
+    async function openStoredAccount(
+      current: Connection,
+    ): Promise<OpenedAccount> {
+      const { account } = current;
       const { prfOutput } = await getPasskeyPrfOutput({
         rpId: rp.id,
         credential: account.credential,
         webAuthnClient,
       }).catch(rejectCeremony);
       const opened = openAccount(prfOutput, accountIndex);
-
       try {
         checkConnected(current);
         if (!isAddressEqual(opened.account.address, account.address)) {
@@ -271,13 +298,13 @@ function mera({
             ),
           );
         }
-        // Disconnecting ends this session, which stops `sign` mid-request.
-        current.opened = opened;
-        return await sign(opened.account);
-      } finally {
+      } catch (error) {
         opened.session.end();
-        current.opened = undefined;
+        throw error;
       }
+      // Disconnecting ends this session, which stops `sign` mid-request.
+      current.opened = opened;
+      return opened;
     }
 
     /** Every connect and disconnect replaces `connection`. */
@@ -435,6 +462,15 @@ declare namespace mera {
      * browser client, which calls `navigator.credentials`.
      */
     webAuthnClient?: WebAuthnClient | undefined;
+    /**
+     * Keeps the signing session that connecting opens, or that the first
+     * signing request after a page load opens, so later requests sign without
+     * a prompt. The derived key then stays in memory until the connector
+     * disconnects, connects another account, or the page unloads. Defaults to
+     * false: each request runs its own ceremony and ends its session once it
+     * settles.
+     */
+    keepSessionOpen?: boolean | undefined;
   };
 }
 
@@ -444,7 +480,10 @@ type OpenedAccount = {
   account: LocalAccount;
 };
 
-/** One connection: its account and the session of the request signing now. */
+/**
+ * One connection: its account and the open session, if any. Without
+ * `keepSessionOpen`, the session belongs to the request signing now.
+ */
 type Connection = {
   account: StoredAccount;
   opened?: OpenedAccount | undefined;

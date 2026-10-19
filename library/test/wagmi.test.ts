@@ -182,11 +182,13 @@ function openPage(
   {
     items = new Map<string, string>(),
     accountIndex,
+    keepSessionOpen,
     persist = true,
     beforeNonce,
   }: {
     items?: Map<string, string>;
     accountIndex?: number | undefined;
+    keepSessionOpen?: boolean | undefined;
     persist?: boolean;
     beforeNonce?: () => Promise<void>;
   } = {},
@@ -199,6 +201,7 @@ function openPage(
         rp,
         webAuthnClient: authenticator.client,
         accountIndex,
+        keepSessionOpen,
       }),
     ],
     transports: {
@@ -309,6 +312,38 @@ test("reconnects after a reload without a prompt, then asks for the stored passk
       signature: typedSignature,
     }),
   ).toBe(true);
+});
+
+test("with keepSessionOpen, signs after a connect without a prompt and asks once after a reload", async () => {
+  const authenticator = fakeAuthenticator();
+  const first = openPage(authenticator, { keepSessionOpen: true });
+  const { accounts } = await connect(first.config, {
+    connector: first.connector,
+    create: { user },
+  });
+  const reloaded = openPage(authenticator, {
+    items: first.items,
+    keepSessionOpen: true,
+  });
+  await reconnect(reloaded.config);
+
+  const message = "like";
+  const [signature] = await Promise.all([
+    signMessage(reloaded.config, { message }),
+    signTypedData(reloaded.config, typedData),
+  ]);
+  await sendTransaction(reloaded.config, { to: recipient, value: 1n });
+
+  expect(authenticator.prompts()).toBe(2);
+  expect(
+    await verifyMessage({ address: accounts[0], message, signature }),
+  ).toBe(true);
+
+  await disconnect(reloaded.config);
+  await connect(reloaded.config, { connector: reloaded.connector });
+  await signMessage(reloaded.config, { message });
+
+  expect(authenticator.prompts()).toBe(3);
 });
 
 test("sends transactions signed in the page through the configured chain and transport", async () => {

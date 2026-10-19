@@ -89,6 +89,10 @@ const hash = await sendTransaction(config, {
 
 After a page load, `reconnect`, which wagmi's React provider runs on mount, restores the account without a prompt.
 
+## Sign without a prompt each time
+
+`mera({ rp, keepSessionOpen: true })` keeps the [signing session](/concepts/signing-sessions/#how-long-to-keep-a-session) that connecting opens, so signing after a connect shows no prompt and only the first signature after a page load asks for the passkey. The derived key stays in memory until `disconnect` or a page unload.
+
 ## Handle a dismissed prompt
 
 A dismissed or timed-out prompt rejects with viem's `UserRejectedRequestError`, the error a wallet app gives when the person declines. Other failures reject with a [`MeraError`](/reference/errors/#meraerror), such as [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable) for an authenticator without PRF:

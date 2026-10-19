@@ -40,7 +40,8 @@ const PASSKEY_COSE_ALGORITHMS = [-7, -257];
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator reports no PRF support and returns no create-time output, returns an output that is not 32 bytes, or returns none on the fallback ceremony.
  * @throws MeraError with code `INPUT_INVALID` when an explicit `prfSalt` is not 32 bytes.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.getRandomValues` is unavailable.
- * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential.
+ * @throws MeraError with code `PASSKEY_CANCELLED` when the person dismisses a prompt, it times out, or no passkey answers.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, fails for another reason, or returns an unexpected credential.
  */
 async function createPasskeyWithPrfOutput({
   rp,
@@ -175,7 +176,8 @@ declare namespace createPasskeyWithPrfOutput {
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when an explicit `prfSalt` is not 32 bytes, `credential.credentialId` is empty or not canonical base64url, or `immediate` is combined with `credential`.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.getRandomValues` is unavailable.
- * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, cancelled, or returns an unexpected credential, or an `immediate` request finds no passkey.
+ * @throws MeraError with code `PASSKEY_CANCELLED` when the person dismisses the prompt, it times out, or no passkey answers, including an `immediate` request that finds none.
+ * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, fails for another reason, or returns an unexpected credential.
  */
 async function getPasskeyPrfOutput({
   rpId,

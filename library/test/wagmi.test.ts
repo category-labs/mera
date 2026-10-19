@@ -33,7 +33,9 @@ import {
   createSecp256k1SigningSession,
   deriveEvmPrivateKey,
   getEvmAddress,
+  MeraError,
 } from "../dist/index.js";
+import { createReactNativeWebAuthnClient } from "../dist/react-native-webauthn-client-internal.js";
 import { mera } from "../dist/wagmi.js";
 import type { WebAuthnClient } from "../dist/webauthn.js";
 import { DEFAULT_PRF_SALT, expectError, rp, user } from "./helpers.js";
@@ -109,10 +111,7 @@ function fakeAuthenticator(
           : [...passkeys.keys()][0];
       const secret = id === undefined ? undefined : passkeys.get(id);
       if (id === undefined || secret === undefined) {
-        throw new DOMException(
-          "The operation either timed out or was not allowed.",
-          "NotAllowedError",
-        );
+        throw new MeraError("PASSKEY_CANCELLED", "No passkey answered");
       }
       return {
         credentialId: hexToBytes(id),
@@ -176,7 +175,7 @@ function fakeRpc(beforeNonce?: () => Promise<void>): {
  * browser.
  */
 function openPage(
-  authenticator: ReturnType<typeof fakeAuthenticator>,
+  authenticator: { client: WebAuthnClient },
   {
     items = new Map<string, string>(),
     accountIndex,
@@ -484,7 +483,14 @@ test("rejects a dismissed prompt as the person's choice and keeps other failures
 
   // react-native-passkey rejects with plain objects that name the outcome.
   for (const error of ["UserCancelled", "TimedOut", "NoCredentials"]) {
-    const native = openPage(fakeAuthenticator({ get: { error, message: "" } }));
+    const reject = () => Promise.reject({ error, message: "" });
+    const native = openPage({
+      client: createReactNativeWebAuthnClient({
+        createPlatformKey: reject,
+        getPlatformKey: reject,
+        getImmediate: reject,
+      }),
+    });
     await expect(
       connect(native.config, { connector: native.connector }),
     ).rejects.toMatchObject({ code: 4001 });

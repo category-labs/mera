@@ -1,7 +1,8 @@
 /**
  * Stable error codes thrown by this package.
  *
- * - `PASSKEY_OPERATION_FAILED`: WebAuthn failed, was cancelled, returned an unexpected credential, or the credential API is unavailable.
+ * - `PASSKEY_OPERATION_FAILED`: WebAuthn failed, returned an unexpected credential, or the credential API is unavailable.
+ * - `PASSKEY_CANCELLED`: the person dismissed the passkey prompt, it timed out, or no passkey answered.
  * - `CRYPTO_UNAVAILABLE`: the runtime lacks a needed Web Crypto primitive. The passkey APIs need `crypto.getRandomValues`; the secret-vault APIs also need `crypto.subtle`.
  * - `PRF_UNAVAILABLE`: the authenticator did not enable or return a usable 32-byte WebAuthn PRF output.
  * - `SESSION_ENDED`: a signing call was made after `end()`.
@@ -11,6 +12,7 @@
  */
 type MeraErrorCode =
   | "PASSKEY_OPERATION_FAILED"
+  | "PASSKEY_CANCELLED"
   | "CRYPTO_UNAVAILABLE"
   | "PRF_UNAVAILABLE"
   | "SESSION_ENDED"

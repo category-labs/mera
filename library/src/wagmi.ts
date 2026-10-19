@@ -143,9 +143,10 @@ type MeraOptions = {
  * default RPC when the config has none. Transactions sent together get
  * consecutive nonces. Other signing and `wallet_` methods, including
  * `wallet_sendCalls`, reject with `MethodNotSupportedRpcError` (code -32004);
- * other methods go to the transport. A dismissed or timed-out passkey prompt
- * rejects with `UserRejectedRequestError` (code 4001); other ceremony failures
- * reject with their `MeraError`, which viem wraps for signing requests.
+ * other methods go to the transport. A ceremony that fails with
+ * `PASSKEY_CANCELLED`, such as a dismissed or timed-out prompt, rejects with
+ * `UserRejectedRequestError` (code 4001); other ceremony failures reject with
+ * their `MeraError`, which viem wraps for signing requests.
  * @throws MeraError with code `INPUT_INVALID` when `accountIndex` is not an integer from 0 to 2^31 - 1.
  */
 function mera({
@@ -527,23 +528,12 @@ function openAccount(
 }
 
 /**
- * Rethrows a dismissed or timed-out prompt as `UserRejectedRequestError`,
- * which wagmi apps treat as the person's choice, and any other failure as is.
- * Browsers reject both with `NotAllowedError`, as they do when no passkey
- * answers; react-native-passkey reports `UserCancelled` or `TimedOut`, or
- * `NoCredentials` when the device holds no passkey.
+ * Rethrows `PASSKEY_CANCELLED` as `UserRejectedRequestError`, which wagmi apps
+ * treat as the person's choice, and any other failure as is.
  */
 function rejectCeremony(error: unknown): never {
-  if (error instanceof MeraError && error.code === "PASSKEY_OPERATION_FAILED") {
-    const cause = error.cause as { name?: unknown; error?: unknown } | null;
-    if (
-      cause?.name === "NotAllowedError" ||
-      cause?.error === "UserCancelled" ||
-      cause?.error === "TimedOut" ||
-      cause?.error === "NoCredentials"
-    ) {
-      throw new UserRejectedRequestError(error);
-    }
+  if (error instanceof MeraError && error.code === "PASSKEY_CANCELLED") {
+    throw new UserRejectedRequestError(error);
   }
   throw error;
 }

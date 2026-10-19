@@ -85,7 +85,8 @@ type ReturnType = Promise<createPasskeyWithPrfOutput.Result>;
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator reported no PRF support and returned no create-time output, returned an output that is not 32 bytes, or returned none on the fallback ceremony.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): an explicit `prfSalt` is not 32 bytes.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the runtime provides no `crypto.getRandomValues`.
-- [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, cancelled, or returns an unexpected credential.
+- [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled): the person dismissed a prompt, it timed out, or no passkey answered.
+- [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, fails for another reason, or returns an unexpected credential.
 
 ## Notes
 

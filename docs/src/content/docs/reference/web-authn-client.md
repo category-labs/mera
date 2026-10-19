@@ -43,7 +43,7 @@ The credential ID that answered and its optional PRF output.
 
 Requests and results use `Uint8Array` for binary values. When creation enables PRF but returns no output, mera calls `getCredential` with the same client and salt.
 
-A PRF output that is not 32 bytes fails with [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable). Anything a client throws surfaces as [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed) with the original error as its `cause`.
+A PRF output that is not 32 bytes fails with [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable). A [`MeraError`](/reference/errors/#meraerror) that a client throws reaches the caller unchanged, and anything else surfaces as [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed) with the original error as its `cause`. The built-in clients reject with [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled) when the person dismisses the prompt, it times out, or no passkey answers.
 
 ## Usage
 
@@ -61,7 +61,7 @@ const { prfOutput } = await getPasskeyPrfOutput({
 
 The React Native client requires [react-native-passkey](https://github.com/f-23/react-native-passkey). It lives in a separate entry point, so the root package loads no React Native code.
 
-The `cause` inside [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed) is react-native-passkey's `PasskeyError`.
+The client rejects with [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled) when react-native-passkey reports `UserCancelled`, `TimedOut`, or `NoCredentials`. In that error and in [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed), the `cause` is react-native-passkey's `PasskeyError`.
 
 ## See also
 

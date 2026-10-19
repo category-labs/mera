@@ -94,7 +94,7 @@ async function signInOnThisDevice(): Promise<Uint8Array | undefined> {
   } catch (error) {
     if (
       !(error instanceof MeraError) ||
-      error.code !== "PASSKEY_OPERATION_FAILED"
+      error.code !== "PASSKEY_CANCELLED"
     ) {
       throw error;
     }

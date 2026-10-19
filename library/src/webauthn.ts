@@ -5,6 +5,15 @@ import type {
   PasskeyRelyingParty,
 } from "./types.js";
 
+/**
+ * Runs the WebAuthn ceremonies behind mera's passkey functions.
+ *
+ * @remarks
+ * A `MeraError` that a client rejects with reaches the caller unchanged. Any
+ * other rejection surfaces as `PASSKEY_OPERATION_FAILED` with the original
+ * error as its `cause`. The built-in clients reject with `PASSKEY_CANCELLED`
+ * when the person dismisses the prompt, it times out, or no passkey answers.
+ */
 type WebAuthnClient = {
   readonly createCredential: (
     request: WebAuthnClient.CreateCredentialRequest,
@@ -111,7 +120,7 @@ type CredentialRequestOptionsWithUiMode = CredentialRequestOptions & {
 
 const browserWebAuthnClient: WebAuthnClient = {
   async createCredential(request) {
-    const credential = await globalThis.navigator?.credentials?.create({
+    const options: CredentialCreationOptions = {
       publicKey: {
         rp: request.rp,
         user: request.user,
@@ -133,7 +142,10 @@ const browserWebAuthnClient: WebAuthnClient = {
           prf: { eval: { first: request.prfSalt } },
         },
       },
-    });
+    };
+    const credential = await globalThis.navigator?.credentials
+      ?.create(options)
+      .catch(rejectCancelledCeremony);
 
     const publicKeyCredential = assertPublicKeyCredential(credential);
     const prf = readPrfExtension(publicKeyCredential);
@@ -182,7 +194,9 @@ const browserWebAuthnClient: WebAuthnClient = {
           : {}),
       },
     };
-    const credential = await globalThis.navigator?.credentials?.get(options);
+    const credential = await globalThis.navigator?.credentials
+      ?.get(options)
+      .catch(rejectCancelledCeremony);
     const publicKeyCredential = assertPublicKeyCredential(credential);
     const prf = readPrfExtension(publicKeyCredential);
 
@@ -192,6 +206,21 @@ const browserWebAuthnClient: WebAuthnClient = {
     };
   },
 };
+
+/**
+ * Rethrows `NotAllowedError`, which browsers raise when the person dismisses
+ * the prompt, it times out, or no passkey answers, as `PASSKEY_CANCELLED`.
+ */
+function rejectCancelledCeremony(error: unknown): never {
+  if ((error as { name?: unknown } | null)?.name === "NotAllowedError") {
+    throw new MeraError(
+      "PASSKEY_CANCELLED",
+      "The passkey prompt was dismissed, timed out, or found no passkey",
+      { cause: error },
+    );
+  }
+  throw error;
+}
 
 function assertPublicKeyCredential(
   credential: Credential | null | undefined,

@@ -1,4 +1,3 @@
-import { copyBytes } from "./encoding.js";
 import { MeraError } from "./errors.js";
 
 /** Session-owned signing key whose lifetime is gated by `end`. */
@@ -29,8 +28,9 @@ function createSigningKey(
   privateKey: Uint8Array,
   derivePublicKey: (privateKey: Uint8Array) => Uint8Array<ArrayBuffer>,
 ): SigningKey {
-  let activePrivateKey: Uint8Array<ArrayBuffer> | undefined =
-    copyBytes(privateKey);
+  let activePrivateKey: Uint8Array<ArrayBuffer> | undefined = new Uint8Array(
+    privateKey,
+  );
   let publicKey: Uint8Array<ArrayBuffer>;
 
   try {

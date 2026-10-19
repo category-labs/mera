@@ -1,5 +1,5 @@
 import { base64urlnopad } from "@scure/base";
-import { base64UrlDecode, copyBytes } from "./encoding.js";
+import { base64UrlDecode, isRecord, isStringArray } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import {
   createPasskeyWithPrfOutput,
@@ -83,16 +83,6 @@ function readVaultBase64Url(
 
   base64UrlDecode(value, { name, code: "VAULT_FORMAT_INVALID", ...options });
   return value;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isStringArray(value: unknown): value is string[] {
-  return (
-    Array.isArray(value) && value.every((item) => typeof item === "string")
-  );
 }
 
 /** Inputs for `createSecretVault`. */
@@ -184,7 +174,7 @@ function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
     throw new MeraError("INPUT_INVALID", "secret must not be empty");
   }
 
-  return copyBytes(secret);
+  return new Uint8Array(secret);
 }
 
 /**
@@ -300,9 +290,6 @@ type DecryptSecretVaultOptions = {
 /**
  * Decrypts the secret from a secret vault with a PRF output.
  *
- * Decoding the vault's `nonce` and `ciphertext` strings here doubles as
- * validation for direct callers that skip `parseSecretVault`.
- *
  * @returns The decrypted secret bytes in a fresh allocation.
  * @throws MeraError with code `INPUT_INVALID` when `prfOutput` is not 32 bytes, or the vault's `nonce` or `ciphertext` is not valid base64url.
  * @throws MeraError with code `DECRYPT_FAILED` when AES-GCM authentication fails.
@@ -316,10 +303,6 @@ async function decryptSecretVault({
   const encryptionKey = await deriveEncryptionKey(prfOutput);
   const nonce = base64UrlDecode(vault.nonce);
   const ciphertext = base64UrlDecode(vault.ciphertext);
-
-  // Only the decrypt call sits in the try: its catch maps every failure to
-  // DECRYPT_FAILED, so getSubtleCrypto's CRYPTO_UNAVAILABLE must be raised
-  // first.
   const subtle = getSubtleCrypto();
 
   try {
@@ -395,7 +378,6 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
     minByteLength: GCM_TAG_LENGTH,
   });
 
-  // Allowlist: only v1 schema fields are copied, so unknown input keys are dropped.
   return { version: 1, credential, prfSalt, nonce, ciphertext };
 }
 

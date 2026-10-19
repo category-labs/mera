@@ -25,9 +25,14 @@ import {
   type WalletClient,
 } from "viem";
 import { deriveEvmPrivateKey } from "./chains/evm.js";
+import { isRecord, isStringArray } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import { checkAccountIndex } from "./hd.js";
-import { createPasskeyWithPrfOutput, getPasskeyPrfOutput } from "./passkey.js";
+import {
+  createPasskeyWithPrfOutput,
+  getPasskeyPrfOutput,
+  toCredentialMetadata,
+} from "./passkey.js";
 import { createSecp256k1SigningSession } from "./secp256k1.js";
 import type {
   PasskeyCredentialMetadata,
@@ -214,7 +219,7 @@ function mera({
       if (!keepSessionOpen) opened.session.end();
       const account: StoredAccount = {
         address: opened.account.address,
-        credential: { credentialId, transports },
+        credential: toCredentialMetadata(credentialId, transports),
         rpId: rp.id,
         accountIndex,
       };
@@ -546,16 +551,13 @@ function rejectCeremony(error: unknown): never {
 }
 
 function isStoredAccount(value: unknown): value is StoredAccount {
-  if (typeof value !== "object" || value === null) return false;
-  const { address, credential } = value as Record<string, unknown>;
-  if (!isAddressString(address)) return false;
-  if (typeof credential !== "object" || credential === null) return false;
-  const { credentialId, transports } = credential as Record<string, unknown>;
   return (
-    typeof credentialId === "string" &&
-    (transports === undefined ||
-      (Array.isArray(transports) &&
-        transports.every((transport) => typeof transport === "string")))
+    isRecord(value) &&
+    isAddressString(value.address) &&
+    isRecord(value.credential) &&
+    typeof value.credential.credentialId === "string" &&
+    (value.credential.transports === undefined ||
+      isStringArray(value.credential.transports))
   );
 }
 

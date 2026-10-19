@@ -1,6 +1,10 @@
 import { base64urlnopad } from "@scure/base";
-import type { Passkey } from "react-native-passkey";
-import { base64UrlDecode, normalizeByteArray } from "./encoding.js";
+import type {
+  Passkey,
+  PasskeyGetRequest,
+  PasskeyGetResult,
+} from "react-native-passkey";
+import { base64UrlDecode, normalizePrfOutput } from "./encoding.js";
 import type { MeraErrorCode } from "./errors.js";
 import type { WebAuthnClient } from "./webauthn.js";
 
@@ -9,16 +13,14 @@ type PlatformApi = Pick<
   "createPlatformKey" | "getImmediate" | "getPlatformKey"
 >;
 
-type NativeGetRequest = Parameters<PlatformApi["getPlatformKey"]>[0];
-type NativeGetResult = Awaited<ReturnType<PlatformApi["getPlatformKey"]>>;
-type NativeExtensions = NonNullable<NativeGetRequest["extensions"]>;
+type NativeExtensions = NonNullable<PasskeyGetRequest["extensions"]>;
 
 type NativeTransport = NonNullable<
-  NonNullable<NativeGetRequest["allowCredentials"]>[number]["transports"]
+  NonNullable<PasskeyGetRequest["allowCredentials"]>[number]["transports"]
 >[number];
 type NativePrfValue = NonNullable<
   NonNullable<
-    NonNullable<NativeGetResult["clientExtensionResults"]>["prf"]
+    NonNullable<PasskeyGetResult["clientExtensionResults"]>["prf"]
   >["results"]
 >["first"];
 
@@ -67,7 +69,7 @@ function createReactNativeWebAuthnClient(
 
     async getCredential(request) {
       const { allowCredential } = request;
-      const nativeRequest: NativeGetRequest = {
+      const nativeRequest: PasskeyGetRequest = {
         rpId: request.rpId,
         challenge: base64urlnopad.encode(request.challenge),
         userVerification: request.userVerification,
@@ -80,9 +82,8 @@ function createReactNativeWebAuthnClient(
                   id: base64urlnopad.encode(allowCredential.credentialId),
                   ...(allowCredential.transports !== undefined
                     ? {
-                        transports: [
-                          ...allowCredential.transports,
-                        ] as NativeTransport[],
+                        transports:
+                          allowCredential.transports as NativeTransport[],
                       }
                     : {}),
                 },
@@ -138,10 +139,7 @@ function readPrfOutput(
   if (typeof value === "string") {
     return decodeNativeBase64Url(value, "PRF output", "PRF_UNAVAILABLE");
   }
-  return normalizeByteArray(value, {
-    name: "PRF output",
-    code: "PRF_UNAVAILABLE",
-  });
+  return normalizePrfOutput(value);
 }
 
 export { createReactNativeWebAuthnClient };

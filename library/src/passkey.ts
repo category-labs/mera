@@ -8,7 +8,11 @@ import type {
   PasskeyCredentialTransport,
   PasskeyRelyingParty,
 } from "./types.js";
-import { browserWebAuthnClient, type WebAuthnClient } from "./webauthn.js";
+import {
+  browserWebAuthnClient,
+  builtInWebAuthnClients,
+  type WebAuthnClient,
+} from "./webauthn.js";
 import { randomBytes } from "./webcrypto.js";
 
 const DEFAULT_PRF_SALT = sha256(utf8ToBytes("mera.prf.salt.v1"));
@@ -81,7 +85,7 @@ async function createPasskeyWithPrfOutput({
 
     const prfOutput =
       created.prfOutput !== undefined
-        ? copyPrfOutput(created.prfOutput)
+        ? copyPrfOutput(created.prfOutput, webAuthnClient)
         : (
             await getPasskeyPrfOutput({
               rpId: rp.id,
@@ -214,7 +218,7 @@ async function getPasskeyPrfOutput({
 
     return {
       credentialId: base64urlnopad.encode(asserted.credentialId),
-      prfOutput: copyPrfOutput(asserted.prfOutput),
+      prfOutput: copyPrfOutput(asserted.prfOutput, webAuthnClient),
     };
   } catch (error) {
     throw toPasskeyError(error, "Passkey assertion failed");
@@ -306,12 +310,25 @@ function copyPrfSalt(
   return new Uint8Array(prfSalt);
 }
 
-function copyPrfOutput(prfOutput: Uint8Array): Uint8Array<ArrayBuffer> {
-  if (prfOutput.length !== 32) {
-    throw new MeraError("PRF_UNAVAILABLE", "PRF output must be 32 bytes");
-  }
+/**
+ * Zeroes `prfOutput` when a built-in client returned it, since that client
+ * allocated it for this call. A custom client may still hold its buffer.
+ */
+function copyPrfOutput(
+  prfOutput: Uint8Array,
+  webAuthnClient: WebAuthnClient,
+): Uint8Array<ArrayBuffer> {
+  try {
+    if (prfOutput.length !== 32) {
+      throw new MeraError("PRF_UNAVAILABLE", "PRF output must be 32 bytes");
+    }
 
-  return new Uint8Array(prfOutput);
+    return new Uint8Array(prfOutput);
+  } finally {
+    if (builtInWebAuthnClients.has(webAuthnClient)) {
+      prfOutput.fill(0);
+    }
+  }
 }
 
 /**

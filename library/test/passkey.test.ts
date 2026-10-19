@@ -3,15 +3,18 @@ import {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
 } from "../dist/passkey.js";
+import { browserWebAuthnClient } from "../dist/webauthn.js";
 import {
   CREDENTIAL_ID_BASE64URL,
   CREDENTIAL_ID_BYTES,
   DEFAULT_PRF_SALT,
   readEvaluatedPrfSalt,
   rp,
+  SEQUENCE_PRF_OUTPUT,
   stubClient,
   stubPublicKeyCredential,
   user,
+  withRecordedPrfOutputs,
   withStubbedGlobal,
 } from "./helpers.js";
 
@@ -116,6 +119,48 @@ test("getPasskeyPrfOutput rejects PRF output that is not 32 bytes", async () => 
   await expect(getPrfOutputWithStub([1, 2, 3])).rejects.toMatchObject({
     code: "PRF_UNAVAILABLE",
   });
+});
+
+test("getPasskeyPrfOutput zeroes the browser client's copy of the PRF output", async () => {
+  const browserBytes = new Uint8Array(SEQUENCE_PRF_OUTPUT);
+  const plainArray = [...SEQUENCE_PRF_OUTPUT];
+  const shortArray = [1, 2, 3];
+
+  const { prfOutputs } = await withRecordedPrfOutputs(
+    browserWebAuthnClient,
+    async () => {
+      for (const first of [browserBytes, browserBytes.buffer, plainArray]) {
+        await expect(getPrfOutputWithStub(first)).resolves.toEqual(
+          SEQUENCE_PRF_OUTPUT,
+        );
+      }
+      await expect(getPrfOutputWithStub(shortArray)).rejects.toMatchObject({
+        code: "PRF_UNAVAILABLE",
+      });
+    },
+  );
+
+  const zeroed = new Uint8Array(32);
+  expect(prfOutputs).toEqual([
+    zeroed,
+    zeroed,
+    zeroed,
+    new Uint8Array(shortArray.length),
+  ]);
+  expect(browserBytes).toEqual(SEQUENCE_PRF_OUTPUT);
+});
+
+test("getPasskeyPrfOutput leaves a custom client's PRF output as returned", async () => {
+  const clientPrfOutput = new Uint8Array(SEQUENCE_PRF_OUTPUT);
+  const { client } = stubClient({ getPrfOutput: () => clientPrfOutput });
+
+  const { prfOutput } = await getPasskeyPrfOutput({
+    rpId: rp.id,
+    webAuthnClient: client,
+  });
+
+  expect(prfOutput).toEqual(SEQUENCE_PRF_OUTPUT);
+  expect(clientPrfOutput).toEqual(SEQUENCE_PRF_OUTPUT);
 });
 
 test("getPasskeyPrfOutput rejects a custom client response with no PRF output", async () => {

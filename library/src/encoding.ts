@@ -1,15 +1,19 @@
 import { base64urlnopad } from "@scure/base";
 import { MeraError, type MeraErrorCode } from "./errors.js";
 
-function normalizePrfOutput(
+function copyPlatformPrfOutput(
   value: ArrayBuffer | ArrayBufferView | ArrayLike<number>,
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   if (ArrayBuffer.isView(value)) {
-    return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+    return new Uint8Array(
+      value.buffer,
+      value.byteOffset,
+      value.byteLength,
+    ).slice();
   }
 
   if (value instanceof ArrayBuffer) {
-    return new Uint8Array(value);
+    return new Uint8Array(value).slice();
   }
 
   return Uint8Array.from(value, (byte) => {
@@ -77,4 +81,4 @@ function isStringArray(value: unknown): value is string[] {
   );
 }
 
-export { base64UrlDecode, isStringArray, normalizePrfOutput };
+export { base64UrlDecode, copyPlatformPrfOutput, isStringArray };

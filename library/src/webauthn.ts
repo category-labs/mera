@@ -1,4 +1,4 @@
-import { normalizePrfOutput } from "./encoding.js";
+import { copyPlatformPrfOutput } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import type {
   PasskeyCredentialTransport,
@@ -193,6 +193,14 @@ const browserWebAuthnClient: WebAuthnClient = {
   },
 };
 
+/**
+ * The built-in clients. Each PRF output they return is a new buffer that only
+ * the caller holds, so a passkey function that calls one zeroes it.
+ */
+const builtInWebAuthnClients: WeakSet<WebAuthnClient> = new WeakSet([
+  browserWebAuthnClient,
+]);
+
 function assertPublicKeyCredential(
   credential: Credential | null | undefined,
 ): PublicKeyCredential {
@@ -224,9 +232,9 @@ function readPrfExtension(credential: PublicKeyCredential): {
 
   return {
     enabled: prf?.enabled === true,
-    output: first ? normalizePrfOutput(first) : undefined,
+    output: first ? copyPlatformPrfOutput(first) : undefined,
   };
 }
 
 export type { WebAuthnClient };
-export { browserWebAuthnClient };
+export { browserWebAuthnClient, builtInWebAuthnClients };

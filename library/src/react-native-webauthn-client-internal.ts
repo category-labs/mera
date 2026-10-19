@@ -4,9 +4,9 @@ import type {
   PasskeyGetRequest,
   PasskeyGetResult,
 } from "react-native-passkey";
-import { base64UrlDecode, normalizePrfOutput } from "./encoding.js";
+import { base64UrlDecode, copyPlatformPrfOutput } from "./encoding.js";
 import type { MeraErrorCode } from "./errors.js";
-import type { WebAuthnClient } from "./webauthn.js";
+import { builtInWebAuthnClients, type WebAuthnClient } from "./webauthn.js";
 
 type PlatformApi = Pick<
   typeof Passkey,
@@ -27,7 +27,7 @@ type NativePrfValue = NonNullable<
 function createReactNativeWebAuthnClient(
   platformApi: PlatformApi,
 ): WebAuthnClient {
-  return {
+  const client: WebAuthnClient = {
     async createCredential(request) {
       // The general iOS entry point can offer a security key, whose result has
       // no PRF output. Android treats the platform-only flag as a no-op.
@@ -110,6 +110,9 @@ function createReactNativeWebAuthnClient(
       };
     },
   };
+  builtInWebAuthnClients.add(client);
+
+  return client;
 }
 
 /**
@@ -139,7 +142,7 @@ function readPrfOutput(
   if (typeof value === "string") {
     return decodeNativeBase64Url(value, "PRF output", "PRF_UNAVAILABLE");
   }
-  return normalizePrfOutput(value);
+  return copyPlatformPrfOutput(value);
 }
 
 export { createReactNativeWebAuthnClient };

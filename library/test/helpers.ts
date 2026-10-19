@@ -147,6 +147,33 @@ function stubClient(
   return { client, calls };
 }
 
+// Records each PRF output client.getCredential returns while fn runs. The
+// method is patched in place because a wrapper would be a custom client, whose
+// PRF output the passkey functions leave as returned.
+async function withRecordedPrfOutputs<T>(
+  client: WebAuthnClient,
+  fn: () => T | Promise<T>,
+): Promise<{ result: T; prfOutputs: Uint8Array[] }> {
+  const { getCredential } = client;
+  const prfOutputs: Uint8Array[] = [];
+  const recordingGetCredential: WebAuthnClient["getCredential"] = async (
+    request,
+  ) => {
+    const asserted = await getCredential(request);
+    if (asserted.prfOutput !== undefined) {
+      prfOutputs.push(asserted.prfOutput);
+    }
+    return asserted;
+  };
+
+  Object.assign(client, { getCredential: recordingGetCredential });
+  try {
+    return { result: await fn(), prfOutputs };
+  } finally {
+    Object.assign(client, { getCredential });
+  }
+}
+
 export {
   CREDENTIAL_ID_BASE64URL,
   CREDENTIAL_ID_BYTES,
@@ -159,5 +186,6 @@ export {
   stubPublicKeyCredential,
   user,
   withCountedRandomness,
+  withRecordedPrfOutputs,
   withStubbedGlobal,
 };

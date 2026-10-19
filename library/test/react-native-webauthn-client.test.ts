@@ -5,7 +5,9 @@ import type {
   PasskeyGetRequest,
   PasskeyGetResult,
 } from "react-native-passkey";
+import { getPasskeyPrfOutput } from "../dist/passkey.js";
 import { createReactNativeWebAuthnClient } from "../dist/react-native-webauthn-client-internal.js";
+import { SEQUENCE_PRF_OUTPUT, withRecordedPrfOutputs } from "./helpers.js";
 
 type PlatformApi = Parameters<typeof createReactNativeWebAuthnClient>[0];
 
@@ -189,4 +191,29 @@ test("getCredential converts data to and from getPlatformKey", async () => {
     credentialId: new Uint8Array([251, 255]),
     prfOutput: new Uint8Array([4, 5, 6]),
   });
+});
+
+test("getPasskeyPrfOutput zeroes the PRF output the client decodes", async () => {
+  const { platformApi } = stubPlatformApi({
+    getResult: getResult({
+      clientExtensionResults: {
+        prf: {
+          results: {
+            first: Buffer.from(SEQUENCE_PRF_OUTPUT).toString("base64url"),
+          },
+        },
+      },
+    }),
+  });
+  const client = createReactNativeWebAuthnClient(platformApi);
+
+  const { result, prfOutputs } = await withRecordedPrfOutputs(client, () =>
+    getPasskeyPrfOutput({
+      rpId: "account.example.com",
+      webAuthnClient: client,
+    }),
+  );
+
+  expect(result.prfOutput).toEqual(SEQUENCE_PRF_OUTPUT);
+  expect(prfOutputs).toEqual([new Uint8Array(32)]);
 });

@@ -82,6 +82,34 @@ type Properties = {
   }>;
 };
 
+/** Inputs for the passkey account connector. */
+type MeraOptions = {
+  /**
+   * Relying party the passkeys belong to. `rp.name` is shown when a passkey
+   * is created.
+   */
+  rp: PasskeyRelyingParty;
+  /**
+   * Account number passed to {@link deriveEvmPrivateKey}. Defaults to 0,
+   * the first account.
+   */
+  accountIndex?: number | undefined;
+  /**
+   * Client that runs the WebAuthn ceremonies. Defaults to the built-in
+   * browser client, which calls `navigator.credentials`.
+   */
+  webAuthnClient?: WebAuthnClient | undefined;
+  /**
+   * Keeps the signing session that connecting opens, or that the first
+   * signing request after a page load opens, so later requests sign without
+   * a prompt. The derived key then stays in memory until the connector
+   * disconnects, connects another account, or the page unloads. Defaults to
+   * false: each request runs its own ceremony and ends its session once it
+   * settles.
+   */
+  keepSessionOpen?: boolean | undefined;
+};
+
 /**
  * Creates a wagmi connector for a passkey account: an EVM account whose key
  * derives from a passkey's PRF output.
@@ -120,7 +148,7 @@ function mera({
   accountIndex = 0,
   webAuthnClient = browserWebAuthnClient,
   keepSessionOpen = false,
-}: mera.Options): CreateConnectorFn<Provider, Properties, StorageItem> {
+}: MeraOptions): CreateConnectorFn<Provider, Properties, StorageItem> {
   checkAccountIndex(accountIndex);
 
   return createConnector<Provider, Properties, StorageItem>((config) => {
@@ -460,36 +488,6 @@ function mera({
   });
 }
 
-declare namespace mera {
-  /** Inputs for the passkey account connector. */
-  type Options = {
-    /**
-     * Relying party the passkeys belong to. `rp.name` is shown when a passkey
-     * is created.
-     */
-    rp: PasskeyRelyingParty;
-    /**
-     * Account number passed to {@link deriveEvmPrivateKey}. Defaults to 0,
-     * the first account.
-     */
-    accountIndex?: number | undefined;
-    /**
-     * Client that runs the WebAuthn ceremonies. Defaults to the built-in
-     * browser client, which calls `navigator.credentials`.
-     */
-    webAuthnClient?: WebAuthnClient | undefined;
-    /**
-     * Keeps the signing session that connecting opens, or that the first
-     * signing request after a page load opens, so later requests sign without
-     * a prompt. The derived key then stays in memory until the connector
-     * disconnects, connects another account, or the page unloads. Defaults to
-     * false: each request runs its own ceremony and ends its session once it
-     * settles.
-     */
-    keepSessionOpen?: boolean | undefined;
-  };
-}
-
 /** A live session and the viem account that signs with it. */
 type OpenedAccount = {
   session: Secp256k1SigningSession;
@@ -699,4 +697,5 @@ function isAddressString(value: unknown): value is Address {
   return typeof value === "string" && isAddress(value, { strict: false });
 }
 
+export type { MeraOptions };
 export { mera };

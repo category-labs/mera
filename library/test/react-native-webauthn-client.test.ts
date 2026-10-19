@@ -6,8 +6,36 @@ import type {
   PasskeyGetResult,
 } from "react-native-passkey";
 import { createReactNativeWebAuthnClient } from "../dist/react-native-webauthn-client-internal.js";
+import type { WebAuthnClient } from "../dist/webauthn.js";
 
 type PlatformApi = Parameters<typeof createReactNativeWebAuthnClient>[0];
+
+const createRequest: WebAuthnClient.CreateCredentialRequest = {
+  rp: { id: "account.example.com", name: "Example" },
+  user: { id: new Uint8Array([1]), name: "account", displayName: "Account" },
+  challenge: new Uint8Array([1, 2, 3]),
+  algorithms: [-7],
+  prfSalt: new Uint8Array([9, 8, 7]),
+  residentKey: "required",
+  userVerification: "required",
+  attestation: "none",
+};
+
+const getRequest: WebAuthnClient.GetCredentialRequest = {
+  rpId: "account.example.com",
+  challenge: new Uint8Array([1, 2, 3]),
+  prfSalt: new Uint8Array([9, 8, 7]),
+  userVerification: "required",
+};
+
+function rejectingClient(failure: unknown): WebAuthnClient {
+  const reject = () => Promise.reject(failure);
+  return createReactNativeWebAuthnClient({
+    createPlatformKey: reject,
+    getPlatformKey: reject,
+    getImmediate: reject,
+  });
+}
 
 function createResult(
   overrides: Partial<PasskeyCreateResult> = {},
@@ -189,4 +217,29 @@ test("getCredential converts data to and from getPlatformKey", async () => {
     credentialId: new Uint8Array([251, 255]),
     prfOutput: new Uint8Array([4, 5, 6]),
   });
+});
+
+test("a cancelled native ceremony rejects with PASSKEY_CANCELLED", async () => {
+  for (const error of ["UserCancelled", "TimedOut", "NoCredentials"]) {
+    const failure = { error, message: "" };
+    const client = rejectingClient(failure);
+    const cancelled = { code: "PASSKEY_CANCELLED", cause: failure };
+
+    await expect(client.createCredential(createRequest)).rejects.toMatchObject(
+      cancelled,
+    );
+    for (const immediate of [false, true]) {
+      await expect(
+        client.getCredential({ ...getRequest, immediate }),
+      ).rejects.toMatchObject(cancelled);
+    }
+  }
+});
+
+test("other native failures reach the caller unchanged", async () => {
+  const failure = { error: "RequestFailed", message: "" };
+  const client = rejectingClient(failure);
+
+  await expect(client.createCredential(createRequest)).rejects.toBe(failure);
+  await expect(client.getCredential(getRequest)).rejects.toBe(failure);
 });

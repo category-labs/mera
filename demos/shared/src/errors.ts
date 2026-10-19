@@ -13,8 +13,10 @@ function describeError(error: unknown): string {
         return "The session has ended. Connect again.";
       case "CRYPTO_UNAVAILABLE":
         return "This browser doesn't provide the Web Crypto APIs this demo needs.";
+      case "PASSKEY_CANCELLED":
+        return "The passkey request was cancelled.";
       case "PASSKEY_OPERATION_FAILED":
-        return "The passkey request was cancelled or failed.";
+        return "The passkey request failed.";
       case "VAULT_FORMAT_INVALID":
         return "Stored vault is malformed.";
     }

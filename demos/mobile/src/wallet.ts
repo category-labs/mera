@@ -101,6 +101,7 @@ function describeError(error: unknown): string {
     switch (error.code) {
       case "PRF_UNAVAILABLE":
         return "This passkey provider does not support the WebAuthn PRF extension. iOS needs 18 or newer; on Android, Google Password Manager and 1Password both supply it.";
+      case "PASSKEY_CANCELLED":
       case "PASSKEY_OPERATION_FAILED":
         return describePasskeyFailure(error.cause);
       case "CRYPTO_UNAVAILABLE":

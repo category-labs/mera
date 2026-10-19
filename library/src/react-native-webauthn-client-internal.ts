@@ -1,11 +1,12 @@
 import { base64urlnopad } from "@scure/base";
 import type {
   Passkey,
+  PasskeyCreateRequest,
   PasskeyGetRequest,
   PasskeyGetResult,
 } from "react-native-passkey";
 import { base64UrlDecode, normalizePrfOutput } from "./encoding.js";
-import type { MeraErrorCode } from "./errors.js";
+import { MeraError, type MeraErrorCode } from "./errors.js";
 import type { WebAuthnClient } from "./webauthn.js";
 
 type PlatformApi = Pick<
@@ -29,9 +30,7 @@ function createReactNativeWebAuthnClient(
 ): WebAuthnClient {
   return {
     async createCredential(request) {
-      // The general iOS entry point can offer a security key, whose result has
-      // no PRF output. Android treats the platform-only flag as a no-op.
-      const created = await platformApi.createPlatformKey({
+      const nativeRequest: PasskeyCreateRequest = {
         rp: request.rp,
         user: {
           id: base64urlnopad.encode(request.user.id),
@@ -51,7 +50,12 @@ function createReactNativeWebAuthnClient(
         attestation: request.attestation,
         extensions: prfExtension(request.prfSalt),
         ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
-      });
+      };
+      // The general iOS entry point can offer a security key, whose result has
+      // no PRF output. Android treats the platform-only flag as a no-op.
+      const created = await platformApi
+        .createPlatformKey(nativeRequest)
+        .catch(rejectCancelledCeremony);
 
       const prf = created.clientExtensionResults?.prf;
 
@@ -93,10 +97,11 @@ function createReactNativeWebAuthnClient(
         ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
       };
       // getImmediate sends only the platform request, as getPlatformKey does.
-      const asserted =
+      const assertion =
         request.immediate === true
-          ? await platformApi.getImmediate(nativeRequest)
-          : await platformApi.getPlatformKey(nativeRequest);
+          ? platformApi.getImmediate(nativeRequest)
+          : platformApi.getPlatformKey(nativeRequest);
+      const asserted = await assertion.catch(rejectCancelledCeremony);
 
       return {
         credentialId: decodeNativeBase64Url(
@@ -110,6 +115,26 @@ function createReactNativeWebAuthnClient(
       };
     },
   };
+}
+
+/**
+ * Rethrows react-native-passkey's `UserCancelled`, `TimedOut`, and
+ * `NoCredentials` rejections as `PASSKEY_CANCELLED`.
+ */
+function rejectCancelledCeremony(error: unknown): never {
+  const reason = (error as { error?: unknown } | null)?.error;
+  if (
+    reason === "UserCancelled" ||
+    reason === "TimedOut" ||
+    reason === "NoCredentials"
+  ) {
+    throw new MeraError(
+      "PASSKEY_CANCELLED",
+      "The passkey prompt was dismissed, timed out, or found no passkey",
+      { cause: error },
+    );
+  }
+  throw error;
 }
 
 /**

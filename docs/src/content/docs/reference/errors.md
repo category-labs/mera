@@ -42,7 +42,11 @@ try {
 
 ### PASSKEY_OPERATION_FAILED
 
-WebAuthn failed, was cancelled, returned an unexpected credential, or the credential API is unavailable. Cancellation is the everyday case: the person dismissed the prompt.
+WebAuthn failed, returned an unexpected credential, or the credential API is unavailable.
+
+### PASSKEY_CANCELLED
+
+The person dismissed the passkey prompt, it timed out, or no passkey answered. Dismissal is the everyday case. Browsers report all three with the same `NotAllowedError`, so they cannot be told apart.
 
 ### CRYPTO_UNAVAILABLE
 

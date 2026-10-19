@@ -83,7 +83,7 @@ Other `eth_sign*`, `personal_*`, and `wallet_*` methods reject with `MethodNotSu
 
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `accountIndex` is not an integer from 0 to 2³¹ − 1, which `mera` throws when called, or `connect` gets both `create` and `immediate`.
 
-A dismissed or timed-out prompt rejects `connect` or the signing request with viem's `UserRejectedRequestError` (code 4001). Browsers give the same `NotAllowedError` when the page lacks focus or runs in a cross-origin iframe without the WebAuthn permissions, so those cases reject the same way.
+A ceremony that fails with [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled), such as a dismissed or timed-out prompt, rejects `connect` or the signing request with viem's `UserRejectedRequestError` (code 4001). Browsers give the same `NotAllowedError` when the page lacks focus or runs in a cross-origin iframe without the WebAuthn permissions, so those cases reject the same way.
 
 Every other ceremony failure rejects `connect` with its `MeraError`, such as [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable) or [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed). A signing request reaches the connector through viem, which wraps the `MeraError` in its own error; `error.walk((cause) => cause instanceof MeraError)` returns it.
 

@@ -259,6 +259,35 @@ test("the browser client sets uiMode only for immediate assertions", async () =>
   expect(requests[1]).not.toHaveProperty("uiMode");
 });
 
+test("the browser client reports NotAllowedError as PASSKEY_CANCELLED", async () => {
+  const dismissed = new DOMException(
+    "The operation either timed out or was not allowed.",
+    "NotAllowedError",
+  );
+  const misconfigured = new DOMException(
+    "The RP ID is invalid.",
+    "SecurityError",
+  );
+
+  for (const [failure, code] of [
+    [dismissed, "PASSKEY_CANCELLED"],
+    [misconfigured, "PASSKEY_OPERATION_FAILED"],
+  ] as const) {
+    const reject = () => Promise.reject(failure);
+    const navigator = { credentials: { create: reject, get: reject } };
+
+    await withStubbedGlobal("navigator", navigator, async () => {
+      await expect(getPasskeyPrfOutput({ rpId: rp.id })).rejects.toMatchObject({
+        code,
+        cause: failure,
+      });
+      await expect(
+        createPasskeyWithPrfOutput({ rp, user }),
+      ).rejects.toMatchObject({ code, cause: failure });
+    });
+  }
+});
+
 test("passkey functions keep the cause of custom client errors", async () => {
   const platformFailure = new Error("the person dismissed the prompt");
   const { client } = stubClient({

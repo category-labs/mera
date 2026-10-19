@@ -1,18 +1,8 @@
 import { base64urlnopad } from "@scure/base";
 import { MeraError, type MeraErrorCode } from "./errors.js";
 
-/**
- * Copies bytes into a standalone `Uint8Array`.
- *
- * @internal
- */
-function copyBytes(value: Uint8Array): Uint8Array<ArrayBuffer> {
-  return new Uint8Array(value);
-}
-
-function normalizeByteArray(
+function normalizePrfOutput(
   value: ArrayBuffer | ArrayBufferView | ArrayLike<number>,
-  options: { name: string; code: MeraErrorCode },
 ): Uint8Array {
   if (ArrayBuffer.isView(value)) {
     return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
@@ -25,8 +15,8 @@ function normalizeByteArray(
   return Uint8Array.from(value, (byte) => {
     if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
       throw new MeraError(
-        options.code,
-        `${options.name} must contain only byte values (integers 0-255)`,
+        "PRF_UNAVAILABLE",
+        "PRF output must contain only byte values (integers 0-255)",
       );
     }
     return byte;
@@ -81,4 +71,14 @@ function base64UrlDecode(
   return bytes;
 }
 
-export { base64UrlDecode, copyBytes, normalizeByteArray };
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === "string")
+  );
+}
+
+export { base64UrlDecode, isRecord, isStringArray, normalizePrfOutput };

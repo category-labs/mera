@@ -1,7 +1,7 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { base64urlnopad } from "@scure/base";
-import { base64UrlDecode, copyBytes } from "./encoding.js";
+import { base64UrlDecode } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import type {
   PasskeyCredentialMetadata,
@@ -303,7 +303,7 @@ function copyPrfSalt(
     throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");
   }
 
-  return copyBytes(prfSalt);
+  return new Uint8Array(prfSalt);
 }
 
 function copyPrfOutput(prfOutput: Uint8Array): Uint8Array<ArrayBuffer> {
@@ -311,7 +311,7 @@ function copyPrfOutput(prfOutput: Uint8Array): Uint8Array<ArrayBuffer> {
     throw new MeraError("PRF_UNAVAILABLE", "PRF output must be 32 bytes");
   }
 
-  return copyBytes(prfOutput);
+  return new Uint8Array(prfOutput);
 }
 
 /**

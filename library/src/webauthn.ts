@@ -1,4 +1,4 @@
-import { normalizeByteArray } from "./encoding.js";
+import { normalizePrfOutput } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import type {
   PasskeyCredentialTransport,
@@ -224,12 +224,7 @@ function readPrfExtension(credential: PublicKeyCredential): {
 
   return {
     enabled: prf?.enabled === true,
-    output: first
-      ? normalizeByteArray(first, {
-          name: "PRF output",
-          code: "PRF_UNAVAILABLE",
-        })
-      : undefined,
+    output: first ? normalizePrfOutput(first) : undefined,
   };
 }
 

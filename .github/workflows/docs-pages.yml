@@ -37,8 +37,6 @@ jobs:
         with:
           node-version-file: .nvmrc
           check-latest: true
-          cache: npm
-          cache-dependency-path: package-lock.json
 
       - name: Use repository npm version
         run: corepack enable npm

@@ -1,5 +1,5 @@
 import { base64urlnopad } from "@scure/base";
-import { base64UrlDecode, isRecord, isStringArray } from "./encoding.js";
+import { base64UrlDecode, isStringArray } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import {
   createPasskeyWithPrfOutput,
@@ -336,28 +336,31 @@ async function decryptSecretVault({
 function parseSecretVault(value: unknown): PasskeySecretVault {
   const vault = typeof value === "string" ? parseJsonVault(value) : value;
 
-  if (!isRecord(vault)) {
+  if (typeof vault !== "object" || vault === null || Array.isArray(vault)) {
     throw new MeraError("VAULT_FORMAT_INVALID", "Vault must be an object");
   }
 
-  if (vault.version !== 1) {
+  const { version, credential, prfSalt, nonce, ciphertext } = vault as Record<
+    string,
+    unknown
+  >;
+
+  if (version !== 1) {
     throw new MeraError("VAULT_FORMAT_INVALID", "Vault version must be 1");
   }
 
-  if (!isRecord(vault.credential)) {
+  if (
+    typeof credential !== "object" ||
+    credential === null ||
+    Array.isArray(credential)
+  ) {
     throw new MeraError(
       "VAULT_FORMAT_INVALID",
       "Vault credential must be an object",
     );
   }
 
-  const credentialId = readVaultBase64Url(
-    vault.credential.credentialId,
-    "credential.credentialId",
-    { minByteLength: 1 },
-  );
-
-  const { transports } = vault.credential;
+  const { credentialId, transports } = credential as Record<string, unknown>;
 
   if (transports !== undefined && !isStringArray(transports)) {
     throw new MeraError(
@@ -366,19 +369,22 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
     );
   }
 
-  const credential = toCredentialMetadata(credentialId, transports);
-
-  const prfSalt = readVaultBase64Url(vault.prfSalt, "prfSalt", {
-    byteLength: PRF_SALT_LENGTH,
-  });
-  const nonce = readVaultBase64Url(vault.nonce, "nonce", {
-    byteLength: NONCE_LENGTH,
-  });
-  const ciphertext = readVaultBase64Url(vault.ciphertext, "ciphertext", {
-    minByteLength: GCM_TAG_LENGTH,
-  });
-
-  return { version: 1, credential, prfSalt, nonce, ciphertext };
+  return {
+    version: 1,
+    credential: toCredentialMetadata(
+      readVaultBase64Url(credentialId, "credential.credentialId", {
+        minByteLength: 1,
+      }),
+      transports,
+    ),
+    prfSalt: readVaultBase64Url(prfSalt, "prfSalt", {
+      byteLength: PRF_SALT_LENGTH,
+    }),
+    nonce: readVaultBase64Url(nonce, "nonce", { byteLength: NONCE_LENGTH }),
+    ciphertext: readVaultBase64Url(ciphertext, "ciphertext", {
+      minByteLength: GCM_TAG_LENGTH,
+    }),
+  };
 }
 
 /** Inputs for decrypting a secret vault with a passkey. */

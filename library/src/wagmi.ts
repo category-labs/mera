@@ -25,7 +25,7 @@ import {
   type WalletClient,
 } from "viem";
 import { deriveEvmPrivateKey } from "./chains/evm.js";
-import { isRecord, isStringArray } from "./encoding.js";
+import { isStringArray } from "./encoding.js";
 import { MeraError } from "./errors.js";
 import { checkAccountIndex } from "./hd.js";
 import {
@@ -551,13 +551,14 @@ function rejectCeremony(error: unknown): never {
 }
 
 function isStoredAccount(value: unknown): value is StoredAccount {
+  if (typeof value !== "object" || value === null) return false;
+  const { address, credential } = value as Record<string, unknown>;
+  if (!isAddressString(address)) return false;
+  if (typeof credential !== "object" || credential === null) return false;
+  const { credentialId, transports } = credential as Record<string, unknown>;
   return (
-    isRecord(value) &&
-    isAddressString(value.address) &&
-    isRecord(value.credential) &&
-    typeof value.credential.credentialId === "string" &&
-    (value.credential.transports === undefined ||
-      isStringArray(value.credential.transports))
+    typeof credentialId === "string" &&
+    (transports === undefined || isStringArray(transports))
   );
 }
 

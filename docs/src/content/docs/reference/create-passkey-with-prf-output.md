@@ -25,8 +25,6 @@ const { credentialId, prfSalt, prfOutput } = await createPasskeyWithPrfOutput({
 
 ## Parameters
 
-`options` is a `createPasskeyWithPrfOutput.Options`.
-
 ### options.rp
 
 - Type: `{ id: string; name: string }`

@@ -32,8 +32,6 @@ try {
 
 ## Parameters
 
-`options` is a `CreateSecretVaultWithNewPasskeyOptions`.
-
 ### options.rp
 
 - Type: `{ id: string; name: string }`

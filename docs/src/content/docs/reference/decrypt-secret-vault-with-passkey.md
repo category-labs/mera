@@ -33,8 +33,6 @@ try {
 
 ## Parameters
 
-`options` is a `DecryptSecretVaultWithPasskeyOptions`.
-
 ### options.rpId
 
 - Type: `string`

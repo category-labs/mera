@@ -30,8 +30,6 @@ await connect(config, { connector: passkey });
 
 ## Parameters
 
-`options` is a `mera.Options`.
-
 ### options.rp
 
 - Type: `{ id: string; name: string }`

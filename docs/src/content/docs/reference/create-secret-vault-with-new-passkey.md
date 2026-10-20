@@ -89,8 +89,8 @@ A JSON-safe vault with `version`, `credential`, `prfSalt`, `nonce`, and `ciphert
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not enable PRF or return a usable 32-byte output.
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `secret` is empty.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the runtime provides no `crypto.getRandomValues` or `crypto.subtle`, or its `crypto.subtle` lacks the HKDF or AES-GCM support the vault needs. A missing `crypto.subtle` fails before any prompt.
-- [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled): the person dismissed a prompt, it timed out, or no passkey answered.
-- [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, fails for another reason, or returns an unexpected credential.
+- [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled)
+- [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed)
 
 ## Notes
 

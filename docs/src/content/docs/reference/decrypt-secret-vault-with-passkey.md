@@ -75,8 +75,8 @@ The decrypted secret bytes as a fresh allocation.
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not return a usable 32-byte PRF output.
 - [`DECRYPT_FAILED`](/reference/errors/#decrypt_failed): [AES-GCM](/concepts/secret-vaults/#how-a-vault-works) authentication failed because the PRF output was wrong or the vault was modified.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the runtime provides no `crypto.getRandomValues` or `crypto.subtle`, or its `crypto.subtle` lacks the HKDF or AES-GCM support the vault needs.
-- [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled): the person dismissed the prompt, it timed out, or no passkey answered.
-- [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed): WebAuthn is unavailable, fails for another reason, or returns an unexpected credential.
+- [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled)
+- [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed)
 
 ## Notes
 

@@ -21,7 +21,7 @@ Run the checks relevant to the change:
 ```sh
 npm run check         # repository lint and format checks
 npm test              # library tests
-npm run test:demos    # web, Vue, extension, and PRF demos
+npm run test:demos    # web, Vue, extension, PRF, and shared demo code
 npm run check:mobile  # mobile typecheck and Android export
 npm run check:docs    # documentation snippets and site build
 npm run check:pack    # package contents, exports, and public types
@@ -30,44 +30,15 @@ npm run check:all     # every check above
 
 `npm run check` applies to every change; biome verifies formatting and lint across the repository, including CSS and SVG files, and `npm run format` applies its safe fixes, such as formatting and import order. Run `npm test` for library or test changes. Run `npm run check:pack` when packaged files, exports, types, or package metadata change; it also typechecks the built public types without the DOM libs, so they stay usable from React Native.
 
-Workspace commands run from the repository root. The web demo compiles against the built library and writes to `docs/public/demo`:
+Each demo's README covers running it on its own: [extension](./demos/extension/README.md), [mobile](./demos/mobile/README.md), and [PRF model](./demos/prf/README.md). The web and Vue demos build against the library, so build it first:
 
 ```sh
 npm run build
 npm run dev -w demos/web
-npm run build -w demos/web
-```
-
-The Vue version of the web demo writes to `demos/vue/dist`:
-
-```sh
-npm run build
 npm run dev -w demos/vue
-npm run build -w demos/vue
 ```
 
-The Chrome side-panel demo writes its unpacked extension to `demos/extension/dist`:
-
-```sh
-npm test -w demos/extension
-```
-
-The passkey PRF model writes to `docs/public/prf-demo`:
-
-```sh
-npm test -w demos/prf
-npm run build -w demos/prf
-```
-
-Typecheck and bundle the mobile demo to check Metro resolution:
-
-```sh
-npm run check:mobile
-```
-
-Running it on a device needs Xcode or Android Studio, a passkey provider with PRF, and the domain association files described in [demos/mobile/README.md](./demos/mobile/README.md).
-
-Build the complete production site, including both embedded demos:
+Build the production site, including the web demo and the PRF model it embeds:
 
 ```sh
 npm run build:site

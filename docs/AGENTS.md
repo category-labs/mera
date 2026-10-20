@@ -8,7 +8,7 @@ The reader is a strong software engineer who may know none of blockchain, crypto
 
 ## Concept ownership
 
-Each concept is taught on exactly one page. The foundations page (`concepts/entropy-keys-and-accounts`) owns the blockchain background, each concept page owns its title subject, and each reference page owns the exact behavior of its function.
+Each concept is taught on exactly one page. The foundations page (`concepts/entropy-keys-and-accounts`) owns the blockchain background, each concept page owns its title subject, each reference page owns the exact behavior of its function, and the recipe that adapts demo code owns that demo's internals (derivation schemes, storage, UI).
 
 Every other page uses the term plainly and does not define it. A definition repeated at each mention is noise for the reader who knows the term and a detour for the one who does not. When a sentence cannot stand without the meaning, add a gloss of a few words at most ("the rpId, the domain the passkey is bound to").
 
@@ -21,7 +21,7 @@ The site follows the Diátaxis split (<https://diataxis.fr/>): each page does on
 - **Getting started** teaches one first success, end to end. Its lead states what the reader will do, not how the mechanism works. Each step states what to do and leaves the mechanism to the owning page; a detail the reader does not need for the next step is cut.
 - **Concepts** explain how something works and why it is designed that way. No step-by-step instructions.
 - **Recipes** solve one task each. A recipe assumes a competent reader with a goal, states its prerequisites, and gets to the point.
-- **Reference** states facts about the public API, one exported function per page. Keep instructions, opinions, and long explanations out of it; link to them instead.
+- **Reference** states facts about the public API. Keep instructions, opinions, and long explanations out of it; link to them instead.
 
 When content feels misplaced, move it and link to it: a reference page that starts teaching hands that material to a recipe; a recipe that pauses to explain links a concept page.
 
@@ -56,7 +56,7 @@ Source of truth is the JSDoc in `library/src/`. Write reference prose from it. W
 
 ## Voice
 
-The bar is simple, concise, and detailed at once: detail survives the cut, filler does not. Every sentence must add information a reader can act on; delete sentences that only set up, restate, or editorialize ("that choice is what makes this repeatable", "what happens next is the app's decision").
+The prose bar in the root [AGENTS.md](../AGENTS.md) applies: every sentence adds information a reader can act on. Typical filler on these pages: "that choice is what makes this repeatable", "what happens next is the app's decision".
 
 Design rationale meets the same bar: keep the why only when it changes what the reader does. A sentence that explains the library to itself ("rejecting an unknown version keeps an old library from misreading newer data", "the two cases are indistinguishable by design") is filler next to the behavior it decorates. The same goes for restating a guarantee the adjacent text already carries.
 
@@ -70,7 +70,6 @@ The rules:
 - Calm explanation, no marketing. If a sentence would fit in a product brochure, rewrite it. An accurate behavior claim can still be marketing: if it exists to impress rather than to move the reader forward, cut it and let the owning page state the behavior.
 - Named wallet apps are examples, never an exhaustive list.
 - Prefer a concrete statement over an abstract one. "The salt is 32 bytes" beats "the salt has a fixed size".
-- Neutral possessives: "the passkey", "the secret". Avoid "your passkey".
 
 ## Sentence mechanics
 
@@ -94,10 +93,8 @@ The rules:
 ## Accuracy
 
 - Every claim must be checkable against the JSDoc, implementation, or tests.
-- Implementation details live only on the page that owns them: error codes and library internals on the reference, demo internals (derivation schemes, storage, UI) in the recipes that adapt its code. Every other page links to the owning page instead of restating the detail, so a demo or library change touches one page.
 - Examples import only the public API plus explicitly declared app-side dependencies.
 - Examples define every identifier they use. Values the app supplies enter through a placeholder with realistic shape and provenance: `crypto.getRandomValues(new Uint8Array(32))` for key material, `new TextEncoder().encode(...)` for secret text, a literal for addresses and rpIds. Never use an all-zero buffer where the library validates the value; an all-zero secp256k1 key throws.
-- A value carries its meaning in a descriptive variable name (`recipient`, `privateKey`), not in a comment and not in prose after the block. A literal worth explaining becomes a named variable. A comment that restates the variable name is deleted; provenance worth stating moves to prose.
 - Security-sensitive behavior (key material lifetimes, zeroing, nonce handling, prompt counts, what the library cannot protect against) is stated plainly on the concept and reference pages that own it, and in a recipe at the step that acts on the risk. Getting started links to it instead of restating.
 - Support claims are date-stamped. The authenticator matrix lives on the authenticator-support page and is maintained there only.
 
@@ -112,7 +109,6 @@ The rules:
 - A bracketed name followed by parentheses, `[Symbol.dispose]()`, is markdown link syntax and renders as a link with an empty target. Escape the opening bracket: `\[Symbol.dispose]()`.
 - Link the first mention of a spec'd name on each page to its spec (BIP-32/BIP-39/BIP-44 to the bips repo, SLIP-0010 to the slips repo, WebAuthn to the W3C spec, CTAP and `hmac-secret` to the FIDO spec); later mentions on the page stay plain.
 - Never reference sections by number; name the thing and link it.
-- `npm run check:docs` from the repository root must pass before a PR.
 
 ## Before opening a PR
 

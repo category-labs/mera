@@ -39,7 +39,7 @@ session.end();
 
 ## Parameters
 
-The session is positional; `options` is a `ToViemAccountOptions` and may be omitted.
+`options` may be omitted.
 
 ### session
 

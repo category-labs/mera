@@ -32,8 +32,6 @@ session.end();
 
 ## Parameters
 
-`options` is a `CreateSigningSessionOptions`.
-
 ### options.privateKey
 
 - Type: `Uint8Array`

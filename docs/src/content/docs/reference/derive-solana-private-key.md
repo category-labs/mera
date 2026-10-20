@@ -32,8 +32,6 @@ const address = getSolanaAddress(session.publicKey);
 
 ## Parameters
 
-`options` is a `DerivePrivateKeyOptions`.
-
 ### options.prfOutput
 
 - Type: `Uint8Array`

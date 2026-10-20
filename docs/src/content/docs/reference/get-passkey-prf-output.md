@@ -24,8 +24,6 @@ const { credentialId, prfOutput } = await getPasskeyPrfOutput({
 
 ## Parameters
 
-`options` is a `getPasskeyPrfOutput.Options`.
-
 ### options.rpId
 
 - Type: `string`

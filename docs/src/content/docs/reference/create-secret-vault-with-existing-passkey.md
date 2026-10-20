@@ -35,8 +35,6 @@ try {
 
 ## Parameters
 
-`options` is a `CreateSecretVaultWithExistingPasskeyOptions`.
-
 ### options.rpId
 
 - Type: `string`

@@ -1,4 +1,6 @@
-### Core Values
+# mera repository guidance
+
+## Core Values
 
 Simplicity, elegance, and correctness are the bar for everything here — code, documentation, tests, and examples alike.
 
@@ -7,7 +9,7 @@ Simplicity, elegance, and correctness are the bar for everything here — code, 
 - Treat elegance as what remains after removing the unnecessary — fewer moving parts and clearer names, not more abstraction.
 - Write documentation in plain language: explain things directly, avoid jargon, and define a domain term only when the reader genuinely needs it.
 
-### API Design Philosophy
+## API Design Philosophy
 
 This repository is a library. Its API is part of its documentation.
 
@@ -21,37 +23,36 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 - Make limits and failure behavior obvious in names, types, docs, or thrown errors.
 - Do not add thin convenience layers that obscure ordering, length limits, revert behavior, or transport assumptions.
 - Do not wrap dependency primitives unless the wrapper adds library-specific behavior, a stable package error boundary, or a meaningful format guarantee.
-- Keep generic utilities out of the root SDK API unless callers need them to complete a documented library workflow. Wire-format helpers may remain internal when they provide a stable package error boundary or format guarantee.
+- Keep generic utilities out of the root SDK API unless callers need them to complete a documented library workflow.
 - Prefer one canonical representation for raw bytes at public boundaries. Use `Uint8Array` unless a wire format or browser API boundary requires a different shape.
 - Preserve runtime validation at cryptographic, string, wire, and untrusted JSON boundaries. Avoid "perfect validation" of typed internal invariants that TypeScript or a dependency already owns.
 - Keep object-parameter APIs when the operation is likely to gain optional parameters or when named fields make security-sensitive inputs harder to mix up.
 
-### Secret Handling
+## Secret Handling
 
-- Zero buffers the library allocated. Inputs belong to the caller, and so are the returned buffers.
+- Zero buffers the library allocated. Inputs belong to the caller, and so do returned buffers.
 - Treat zeroing as a bound on secret lifetime and reachability, not as erasure from the process. Documentation must not claim more.
 
-### Documentation and Examples
+## Documentation and Examples
 
 - Documentation prose is technical writing held to a hard bar: simple, concise, and detailed at once. Every sentence must add information; cut sentences that only set up, restate, or editorialize on what adjacent sentences already show.
-- Comments and JSDoc must add information beyond a symbol's name, type, and nearby code. Omit them when the code already states the contract.
-- Prefer names that carry stable context over comments that explain it. When a comment remains useful after renaming, keep only the fact the name cannot express.
-- Public SDK functions should have complete, accurate JSDoc.
-- Use appropriate JSDoc tags to describe the API contract, return behavior, input constraints, observable side effects, and failure modes.
-- Document security-sensitive behavior explicitly, especially for key material, randomness, WebAuthn prompts, encryption nonces, storage formats, and mutation/zeroing behavior.
-- Document thrown `MeraError` codes with the appropriate JSDoc tag.
-- Examples should be runnable, concise, and focused on library behavior, not on provider boilerplate.
-- Give each demo a clear teaching goal. Keep only the code, UI, configuration, and documentation needed to teach or run that workflow.
-- In examples, a value's meaning lives in a descriptive variable name (`recipient`, `privateKey`), never in a comment. Extract inline literals to named variables, delete comments that restate a name, and move provenance worth keeping into surrounding prose.
-- The root README is a nontechnical project overview. Installation, examples, compatibility, security details, API documentation, and the demo live on the documentation website.
 - Keep documentation prose neutral: name keys, secrets, and passkeys plainly ("the passkey", "one encrypted secret") rather than attributing them to the reader ("your passkey", "a secret you provide" / "you own").
-- Internal helpers with non-obvious invariants should have short `//` comments or full JSDoc.
 - Document observable behavior, not caller instructions: state what a function does to its inputs and outputs rather than what the caller may or should do with them. Callers derive correct usage from the stated facts.
 - Omit behavior a reader assumes by default and facts a reader cannot act on: not modifying inputs, internal copies, internal zeroing. Silence implies the default; document the exceptions.
 - When a comment or doc gives a rationale, explain the mechanism, not just the claim: a reader should see *why* from the text (for example, "signing reads the buffer after an await, so copy it first") rather than having to reconstruct the cause.
+- Comments and JSDoc must add information beyond a symbol's name, type, and nearby code. Omit them when the code already states the contract.
+- Prefer names that carry stable context over comments that explain it. When a comment remains useful after renaming, keep only the fact the name cannot express.
+- Internal helpers with non-obvious invariants should have short `//` comments or full JSDoc.
+- Public SDK functions should have complete, accurate JSDoc. Use JSDoc tags to describe the API contract, return behavior, input constraints, observable side effects, and failure modes, with `@throws` for each `MeraError` code.
+- Document security-sensitive behavior explicitly, especially for key material, randomness, WebAuthn prompts, encryption nonces, storage formats, and mutation/zeroing behavior.
 - For section-style JSDoc/TSDoc block tags, use one tag per semantic section and continue with paragraphs until the next block tag. Put the tag on its own line when the content is multi-sentence. Repeat only naturally repeatable tags such as `@param`, `@throws`, `@example`, and `@see`; do not repeat section-style tags such as `@remarks` just to split paragraphs.
+- Examples should be runnable, concise, and focused on library behavior, not on provider boilerplate.
+- In examples, a value's meaning lives in a descriptive variable name (`recipient`, `privateKey`), never in a comment or in prose after the block. Extract inline literals to named variables, delete comments that restate a name, and move provenance worth keeping into surrounding prose.
+- Give each demo a clear teaching goal. Keep only the code, UI, configuration, and documentation needed to teach or run that workflow.
+- The root README is a nontechnical project overview. Installation, examples, compatibility, security details, API documentation, and the demo live on the documentation website.
+- Pages on the documentation website also follow [docs/AGENTS.md](./docs/AGENTS.md).
 
-### TypeScript Conventions
+## TypeScript Conventions
 
 - Use strict typing and avoid `any`.
 - Prefer `type` aliases unless an `interface` is clearly better.
@@ -59,44 +60,19 @@ The library exposes unopinionated primitives ("Lego blocks") that consumers comp
 - Type optional properties in public types as `name?: T | undefined`, so callers that enable `exactOptionalPropertyTypes` can pass along a value that may be `undefined`.
 - Keep central type files for durable shared/public data shapes. When a function or public contract owns two or more named types, put them in a merged `declare namespace` beside it, using names such as `functionName.Options` and `functionName.Result` directly in its signature. Keep a lone function-owned type near the implementation as a prefixed name such as `<FunctionName>Options`; do not create a namespace with one member or keep parallel aliases for namespaced types.
 - Keep exports grouped at the end of hand-written TypeScript files instead of scattering `export` keywords through declarations.
-- Use runtime validation at string and wire boundaries, where TypeScript cannot protect callers.
-- Do not add runtime checks for typed internal invariants that TypeScript already proves, such as required callbacks or disallowed fields within SDK-only control flow.
-- Avoid unnecessary assertions and wrappers; use them only when narrowing external input or bridging third-party type limitations.
+- Avoid type assertions except when narrowing external input or bridging third-party type limitations.
 
-### Checks
+## Checks
 
 Before pushing, run the checks documented in [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-### Pull Requests
+## Pull Requests
 
 - Write PR descriptions for reviewers who need to understand the reason for the change, not just the diff.
 - Start with the problem or risk that motivated the change. If the PR replaces one path with another, explain why the replacement is equivalent or better, including what behavior still runs and what coverage is added or preserved.
 - Add only context that is not visible in the diff or CI, such as a related discussion, a non-obvious constraint or trade-off, manual validation, requested review focus, or follow-up outside the diff.
 - Do not restate the implementation or automated validation that reviewers can inspect directly.
 
-## File Scope Guidelines
+## Maintaining This File
 
-This file should stay stable and process-oriented.
-
-### What to Include
-
-- architectural decisions
-- coding and API design principles
-- safety and review expectations
-
-Project commands and the testing workflow live in [CONTRIBUTING.md](./CONTRIBUTING.md).
-
-### What Not to Include
-
-- temporary TODOs
-- volatile implementation details
-- dependency-version churn
-- issue-specific notes that belong in code or PR discussion
-- library-specific preferences that do not matter to this repository
-
-### Maintenance Principles
-
-1. Prefer durable guidance over exhaustive detail.
-2. Document how to work in the codebase, not every fact about it.
-3. Favor principles over brittle instructions.
-4. Keep the file aligned with the repository's actual structure and workflows.
+Keep this file to durable principles: architecture, API and code design, safety, and review expectations. Commands and the testing workflow belong in [CONTRIBUTING.md](./CONTRIBUTING.md); temporary TODOs, implementation details, and issue-specific notes belong in code or PR discussion.

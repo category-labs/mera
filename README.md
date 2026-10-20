@@ -9,8 +9,10 @@ mera is a TypeScript library for creating accounts from a passkey. It derives 32
 Developers can use mera to:
 
 - create new accounts from a passkey without requiring a smart-account contract or custody service;
-- provide users with an account that is instantly backed up and recoverable on any device with a passkey;
+- give users an account they can recover on any device that has the passkey;
+- export accounts as a standard recovery phrase that wallet apps can import;
 - secure an existing recovery phrase, private key, or other data with a passkey;
+- use the same passkey across web, iOS, and Android applications tied to the same domain.
 
 ## Supported platforms
 

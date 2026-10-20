@@ -44,7 +44,7 @@ const digest32 = new Uint8Array(32);
 ## Errors
 
 - [`INPUT_INVALID`](/reference/errors/#input_invalid): `digest32` is not 32 bytes.
-- [`SESSION_ENDED`](/reference/errors/#session_ended): `signDigest` was called after `end`.
+- [`SESSION_ENDED`](/reference/errors/#session_ended)
 
 ## See also
 

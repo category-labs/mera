@@ -14,7 +14,6 @@ import {
 import {
   CREDENTIAL_ID_BASE64URL,
   DEFAULT_PRF_SALT,
-  expectError,
   readEvaluatedPrfSalt,
   rp,
   stubClient,
@@ -393,88 +392,37 @@ test("parseSecretVault drops fields outside the v1 format", async () => {
   ).toEqual(vault);
 });
 
-test("parseSecretVault reports VAULT_FORMAT_INVALID for malformed base64url", async () => {
+test("parseSecretVault reports VAULT_FORMAT_INVALID for malformed vaults", async () => {
   const vault = await createTestVault();
+  const { version, credential, prfSalt, nonce, ciphertext } = vault;
+  const malformed = {
+    "invalid JSON": "{not json",
+    "a non-object": 42,
+    "a missing version": { credential, prfSalt, nonce, ciphertext },
+    "an unsupported version": { ...vault, version: 2 },
+    "a missing credential": { version, prfSalt, nonce, ciphertext },
+    "a non-object credential": { ...vault, credential: "nope" },
+    "non-string transports": {
+      ...vault,
+      credential: { ...credential, transports: ["internal", 42] },
+    },
+    "a missing prfSalt": { version, credential, nonce, ciphertext },
+    "a missing nonce": { version, credential, prfSalt, ciphertext },
+    "a missing ciphertext": { version, credential, prfSalt, nonce },
+    "a nonce that is not base64url": { ...vault, nonce: "!!!!" },
+    "a wrong-length nonce": { ...vault, nonce: "AQ" },
+    // 20 base64url characters decode to 15 bytes.
+    "a ciphertext shorter than the GCM tag": {
+      ...vault,
+      ciphertext: "A".repeat(20),
+    },
+  };
 
-  expectError(
-    () => parseSecretVault({ ...vault, nonce: "!!!!" }),
-    "VAULT_FORMAT_INVALID",
-  );
-});
-
-test("parseSecretVault rejects a wrong-length nonce", async () => {
-  const vault = await createTestVault();
-
-  expectError(
-    () => parseSecretVault({ ...vault, nonce: "AQ" }),
-    "VAULT_FORMAT_INVALID",
-  );
-});
-
-test("parseSecretVault rejects invalid JSON and non-object input", async () => {
-  expectError(() => parseSecretVault("{not json"), "VAULT_FORMAT_INVALID");
-  expectError(() => parseSecretVault(42), "VAULT_FORMAT_INVALID");
-});
-
-test("parseSecretVault rejects a missing or unsupported version", async () => {
-  const { credential, prfSalt, nonce, ciphertext } = await createTestVault();
-
-  // Missing version entirely.
-  expectError(
-    () => parseSecretVault({ credential, prfSalt, nonce, ciphertext }),
-    "VAULT_FORMAT_INVALID",
-  );
-  // Present but not 1.
-  expectError(
-    () =>
-      parseSecretVault({ version: 2, credential, prfSalt, nonce, ciphertext }),
-    "VAULT_FORMAT_INVALID",
-  );
-});
-
-test("parseSecretVault rejects a missing or non-object credential", async () => {
-  const { version, prfSalt, nonce, ciphertext } = await createTestVault();
-
-  expectError(
-    () => parseSecretVault({ version, prfSalt, nonce, ciphertext }),
-    "VAULT_FORMAT_INVALID",
-  );
-  expectError(
-    () =>
-      parseSecretVault({
-        version,
-        credential: "nope",
-        prfSalt,
-        nonce,
-        ciphertext,
-      }),
-    "VAULT_FORMAT_INVALID",
-  );
-});
-
-test("parseSecretVault rejects non-string transports", async () => {
-  const vault = await createTestVault();
-
-  expectError(
-    () =>
-      parseSecretVault({
-        ...vault,
-        credential: { ...vault.credential, transports: ["internal", 42] },
-      }),
-    "VAULT_FORMAT_INVALID",
-  );
-});
-
-test("parseSecretVault rejects a ciphertext shorter than the GCM tag", async () => {
-  const vault = await createTestVault();
-
-  // 20 base64url chars decode to 15 bytes: one byte short of the 16-byte
-  // AES-GCM tag, so it cannot be an authentic ciphertext even though the
-  // encoded string is non-empty.
-  expectError(
-    () => parseSecretVault({ ...vault, ciphertext: "A".repeat(20) }),
-    "VAULT_FORMAT_INVALID",
-  );
+  for (const [label, value] of Object.entries(malformed)) {
+    expect(() => parseSecretVault(value), label).toThrow(
+      expect.objectContaining({ code: "VAULT_FORMAT_INVALID" }),
+    );
+  }
 });
 
 test("parseSecretVault accepts a ciphertext of exactly the GCM tag length", async () => {
@@ -492,21 +440,4 @@ test("decryptSecretVault rejects a wrong-length PRF output", async () => {
   await expect(
     decryptSecretVault({ vault, prfOutput: new Uint8Array(31) }),
   ).rejects.toMatchObject({ code: "INPUT_INVALID" });
-});
-
-test("parseSecretVault rejects a missing prfSalt, nonce, or ciphertext", async () => {
-  const { prfSalt, nonce, ciphertext, ...base } = await createTestVault();
-
-  expectError(
-    () => parseSecretVault({ ...base, nonce, ciphertext }),
-    "VAULT_FORMAT_INVALID",
-  );
-  expectError(
-    () => parseSecretVault({ ...base, prfSalt, ciphertext }),
-    "VAULT_FORMAT_INVALID",
-  );
-  expectError(
-    () => parseSecretVault({ ...base, prfSalt, nonce }),
-    "VAULT_FORMAT_INVALID",
-  );
 });

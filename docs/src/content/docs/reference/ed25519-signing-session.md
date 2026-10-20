@@ -43,7 +43,7 @@ const message = new TextEncoder().encode("hello mera");
 
 ## Errors
 
-- [`SESSION_ENDED`](/reference/errors/#session_ended): `signMessage` was called after `end`.
+- [`SESSION_ENDED`](/reference/errors/#session_ended)
 
 ## See also
 

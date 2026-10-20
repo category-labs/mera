@@ -41,7 +41,7 @@ A validated vault with `version`, `credential`, `prfSalt`, `nonce`, and `ciphert
 
 ## Errors
 
-- [`VAULT_FORMAT_INVALID`](/reference/errors/#vault_format_invalid): the required structure, version, or encoded data is invalid. The underlying parse failure, when there is one, is attached as `cause`.
+- [`VAULT_FORMAT_INVALID`](/reference/errors/#vault_format_invalid)
 
 ## See also
 

@@ -37,7 +37,7 @@ Fixed section order:
 4. `## Usage`: one focused, compilable example.
 5. `## Parameters`: one `### options.field` subheading per field (dotted for nested fields). Under each: a `- Type:` line, a `- Required` or `- Optional` line (with the default or omission behavior), then prose. Functions without an options object use one `### name` subheading per positional parameter.
 6. `## Returns`: the named result type and what it contains. When the return value has members of its own, each member is documented here.
-7. `## Errors`: one bullet per error code with its trigger condition, each code linked to its anchor on the errors page.
+7. `## Errors`: one bullet per error code, linked to its anchor on the errors page, which states what the code means. A bullet adds only what is specific to the function, such as the inputs that fail `INPUT_INVALID`; a code that means the same for every function gets the link alone.
 8. `## Notes`: copy and zeroing semantics, determinism statements, caveats. Omit the section when there is nothing to say.
 9. `## See also`: related functions, the owning concept page, the recipe that uses it.
 

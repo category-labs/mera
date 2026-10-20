@@ -22,7 +22,6 @@ jobs:
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     permissions:
       pull-requests: read
     outputs:
@@ -38,9 +37,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.url }}
         run: |
-          gh api --paginate "$PR_URL/files" --jq '.[].filename' > changed-files.txt
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            gh api --paginate "$PR_URL/files" --jq '.[].filename' > changed-files.txt
+            matches() { grep -qE "$1" changed-files.txt && echo true || echo false; }
+          else
+            matches() { echo true; }
+          fi
 
-          matches() { grep -qE "$1" changed-files.txt && echo true || echo false; }
           graph='^(package\.json|package-lock\.json|\.nvmrc|\.github/workflows/mera-ci\.yml)'
           library="^library/|$graph"
           packaged='^(LICENSE-MIT|LICENSE-APACHE)$'
@@ -77,10 +80,8 @@ jobs:
   test:
     name: Library tests
     runs-on: ubuntu-latest
-    # On non-PR events `changes` is skipped, which would skip dependents too;
-    # `!cancelled()` keeps them eligible so the event check can run everything.
     needs: changes
-    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.library == 'true') }}
+    if: needs.changes.outputs.library == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -106,7 +107,7 @@ jobs:
     name: Demos
     runs-on: ubuntu-latest
     needs: changes
-    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.demo == 'true') }}
+    if: needs.changes.outputs.demo == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -132,7 +133,7 @@ jobs:
     name: Mobile demo
     runs-on: ubuntu-latest
     needs: changes
-    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.mobile == 'true') }}
+    if: needs.changes.outputs.mobile == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -155,7 +156,7 @@ jobs:
     name: Docs
     runs-on: ubuntu-latest
     needs: changes
-    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.docs == 'true') }}
+    if: needs.changes.outputs.docs == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -183,7 +184,7 @@ jobs:
     name: Publish check
     runs-on: ubuntu-latest
     needs: changes
-    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.package == 'true') }}
+    if: needs.changes.outputs.package == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

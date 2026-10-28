@@ -20,7 +20,7 @@
     "build:site": "npm run build && npm run build -w demos/web && npm run build -w demos/prf && npm run build -w docs"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.15",
+    "@biomejs/biome": "2.6.2",
     "typescript": "5.9.3"
   },
   "overrides": {

@@ -3,7 +3,7 @@
 [profile.default]
 src = "contracts"
 out = "out"
-solc = "0.8.36"
+solc = "0.8.38"
 optimizer = false
 # Omit the metadata hash so comment-only edits to the source do not change
 # the bytecode.

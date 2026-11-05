@@ -18,7 +18,7 @@ The app can:
 
 ## Requirements
 
-- Node.js 24 or newer.
+- Node.js 26 or newer.
 - Xcode for iOS or Android Studio for Android.
 - An iOS 18 or newer device or simulator, or an Android device or emulator with
   a passkey provider that supports PRF.

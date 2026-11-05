@@ -3,7 +3,7 @@
 # refuses anvil's cheat methods, and funds accounts through demo_fundAccount
 # (see server.mts). State is in memory only; a restart resets every balance,
 # which the demo heals by asking for funds again on the next balance poll.
-FROM node:24-alpine
+FROM node:26-alpine
 
 # The alpine (musl) build must run on an alpine base; the linux build is glibc.
 RUN apk add --no-cache ca-certificates curl \
@@ -15,6 +15,6 @@ COPY server.mts demoStock.mts /srv/
 EXPOSE 8545
 
 # The guard reads PORT itself and starts anvil on localhost, so anvil is
-# never reachable from outside the container. Node 24 runs the TypeScript
+# never reachable from outside the container. Node 26 runs the TypeScript
 # source directly by stripping the (erasable-only) type syntax.
 CMD ["node", "/srv/server.mts"]

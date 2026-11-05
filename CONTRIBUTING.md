@@ -10,7 +10,7 @@ Participation in the project is governed by [CODE_OF_CONDUCT.md](./CODE_OF_CONDU
 
 ## Development
 
-The repository requires Node.js 24 or newer and npm 12. Install every workspace from the root:
+The repository requires Node.js 26 or newer and npm 12. Install every workspace from the root:
 
 ```sh
 npm ci

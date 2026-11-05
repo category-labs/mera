@@ -26,7 +26,9 @@ jobs:
         with:
           node-version-file: .nvmrc
       - name: Use repository npm version
-        run: corepack enable npm
+        run: |
+          npm install --global corepack@0.36.0
+          corepack enable npm
       - name: Install Socket Firewall (free)
         uses: SocketDev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
         with:

@@ -10,7 +10,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.42.7",
+    "@astrojs/starlight": "^0.42.9",
     "@category-labs/mera": "*",
     "@ec-ts/twoslash": "1.0.0",
     "@expressive-code/core": "0.44.3",
@@ -18,15 +18,15 @@
     "@noble/hashes": "2.4.0",
     "@scure/bip32": "2.4.0",
     "@scure/bip39": "2.4.0",
-    "@wagmi/core": "3.6.7",
-    "astro": "^7.4.3",
+    "@wagmi/core": "3.6.9",
+    "astro": "^7.4.5",
     "expo-crypto": "58.0.7",
-    "expo-modules-core": "58.0.27",
+    "expo-modules-core": "58.0.30",
     "expressive-code": "0.44.3",
     "expressive-code-twoslash": "0.6.1",
     "react-native-passkey": "3.6.2",
     "sharp": "^0.35.5",
     "typescript": "5.9.3",
-    "viem": "2.57.13"
+    "viem": "2.57.16"
   }
 }

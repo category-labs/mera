@@ -18,6 +18,9 @@ const demoChain = defineChain({
   name: NETWORK_NAME,
   nativeCurrency: { name: "Demon", symbol: "DEMON", decimals: 18 },
   rpcUrls: { default: { http: [DEMO_RPC_URL] } },
+  // The network mines a block a second. viem polls for receipts at half the
+  // block time, or every 4 s when it is unset, so a fill shows within a second.
+  blockTime: 1_000,
 });
 
 // The methods the network's guard adds to JSON-RPC. The market reply is

@@ -49,9 +49,13 @@ const MAX_BODY_BYTES = 128 * 1024;
 // Anvil runs as a child on localhost, so the cheat methods are reachable
 // only from this process. The guard exits when anvil dies and the platform
 // restarts the container, which is the network's designed recovery path.
-// Mixed mining mines transactions instantly and adds an interval block every
-// second, so the head timestamp, and with it the stock price, moves at the
-// finest pace a second-granular timestamp allows.
+// Interval mining mines one block a second holding every transaction sent
+// since the last, so a transaction waits up to a second to mine. Block
+// timestamps count whole seconds and anvil makes each one later than its
+// parent's, so mining a block per transaction (mixed mining) would move the
+// head a second ahead of the wall clock on each trade, and the stock
+// contract's fills, priced at the head's timestamp, would drift from the
+// demo's chart, priced at the wall clock.
 // That pace also means anvil, which by default keeps every block and a state
 // snapshot per block in memory, grows without bound and gets killed by the
 // platform's memory cap within a day. The pruning flags cap it: keep only the
@@ -67,7 +71,6 @@ const anvil = spawn(
     "127.0.0.1",
     "--port",
     "8546",
-    "--mixed-mining",
     "--block-time",
     "1",
     "--prune-history",
@@ -160,8 +163,8 @@ async function deployMarket(): Promise<string> {
   const hash = await anvilRequest("eth_sendTransaction", [
     { from: deployer, data: DEMO_STOCK_CREATION_BYTECODE },
   ]);
-  // anvil mines each transaction into its own block, but the receipt can lag
-  // the send by a moment, so poll briefly instead of reading once.
+  // The deploy mines in the next interval block, up to a second after the
+  // send, so poll for the receipt instead of reading it once.
   for (let attempt = 0; attempt < 100; attempt++) {
     const receipt = (await anvilRequest("eth_getTransactionReceipt", [
       hash,

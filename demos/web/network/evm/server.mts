@@ -8,7 +8,7 @@
 // The guard also deploys the demo's stock contract at boot and reports its
 // address through demo_market.
 //
-// The file runs directly under Node 24's type stripping, so it must stay
+// The file runs directly under Node 26's type stripping, so it must stay
 // within erasable TypeScript syntax; tsconfig.json enforces that. The .mts
 // extension pins the module format to ESM: a plain .ts file's format depends
 // on the nearest package.json, and the container copies this file without

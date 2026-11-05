@@ -40,7 +40,9 @@ jobs:
           package-manager-cache: false
 
       - name: Use repository npm version
-        run: corepack enable npm
+        run: |
+          npm install --global corepack@0.36.0
+          corepack enable npm
 
       - name: Install dependencies
         run: npm ci --include-workspace-root -w library
@@ -79,7 +81,9 @@ jobs:
           package-manager-cache: false
 
       - name: Use repository npm version
-        run: corepack enable npm
+        run: |
+          npm install --global corepack@0.36.0
+          corepack enable npm
 
       - name: Install dependencies
         run: npm ci --include-workspace-root -w library

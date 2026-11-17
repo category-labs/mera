@@ -129,8 +129,10 @@ const features = [
     padding-block: 0.5rem;
   }
 
-  :global([data-has-hero] main) {
-    padding-bottom: 0;
+  /* Starlight's scoped `main` rule wins over an override of `main` itself,
+     so clear the padding through the variable that rule reads. */
+  :global([data-has-hero]) {
+    --sl-main-pad: 0;
   }
 
   /* The landing has no markdown body and needs no page footer. */

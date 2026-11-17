@@ -161,7 +161,7 @@ test("getCredential asks getImmediate for an immediate request", async () => {
   const { platformApi, getRequests, immediateRequests } = stubPlatformApi();
   const client = createReactNativeWebAuthnClient(platformApi);
 
-  await client.getCredential({
+  const result = await client.getCredential({
     rpId: "account.example.com",
     challenge: new Uint8Array([1, 2, 3]),
     prfSalt: new Uint8Array([9, 8, 7]),
@@ -171,12 +171,19 @@ test("getCredential asks getImmediate for an immediate request", async () => {
 
   expect(getRequests).toHaveLength(0);
   expect(immediateRequests).toHaveLength(1);
+  expect(result).not.toHaveProperty("userHandle");
 });
 
 test("getCredential converts data to and from getPlatformKey", async () => {
   const { platformApi, getRequests } = stubPlatformApi({
     getResult: getResult({
       id: "-_8",
+      response: {
+        authenticatorData: "",
+        clientDataJSON: "",
+        signature: "",
+        userHandle: "-_8",
+      },
       clientExtensionResults: {
         prf: { results: { first: new Uint8Array([4, 5, 6]) } },
       },
@@ -216,6 +223,7 @@ test("getCredential converts data to and from getPlatformKey", async () => {
   expect(result).toEqual({
     credentialId: new Uint8Array([251, 255]),
     prfOutput: new Uint8Array([4, 5, 6]),
+    userHandle: new Uint8Array([251, 255]),
   });
 });
 

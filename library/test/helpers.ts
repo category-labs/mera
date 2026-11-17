@@ -18,24 +18,20 @@ const user = { name: "nad", displayName: "nad" };
 
 // WebAuthn credential stub for navigator.credentials fakes: `prf` becomes the
 // client extension results, and `transports` adds a create-style response
-// implementing getTransports (otherwise the response is a sign-in's, carrying
-// `userHandle` or null).
+// implementing getTransports (otherwise the response is empty, as it is after
+// sign-in).
 function stubPublicKeyCredential({
   prf,
   transports,
-  userHandle,
 }: {
   prf: unknown;
   transports?: string[];
-  userHandle?: ArrayBuffer;
 }) {
   return {
     type: "public-key",
     rawId: new Uint8Array(CREDENTIAL_ID_BYTES).buffer,
     response:
-      transports !== undefined
-        ? { getTransports: () => transports }
-        : { userHandle: userHandle ?? null },
+      transports !== undefined ? { getTransports: () => transports } : {},
     getClientExtensionResults: () => ({ prf }),
   };
 }

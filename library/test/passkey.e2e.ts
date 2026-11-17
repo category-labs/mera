@@ -22,6 +22,9 @@ const importMap = JSON.stringify({
 const indexHtml = `<!doctype html><html><head><script type="importmap">${importMap}</script></head><body></body></html>`;
 const repositoryPath = fileURLToPath(new URL("../..", import.meta.url));
 
+// Set for each test: how many passkeys its virtual authenticator holds.
+let storedPasskeyCount: () => Promise<number>;
+
 test.beforeEach(async ({ page }) => {
   await page.route("http://localhost/**", (route) => {
     const { pathname } = new URL(route.request().url());
@@ -35,18 +38,27 @@ test.beforeEach(async ({ page }) => {
 
   const client = await page.context().newCDPSession(page);
   await client.send("WebAuthn.enable");
-  await client.send("WebAuthn.addVirtualAuthenticator", {
-    options: {
-      protocol: "ctap2",
-      ctap2Version: "ctap2_1",
-      transport: "internal",
-      hasResidentKey: true,
-      hasUserVerification: true,
-      isUserVerified: true,
-      hasPrf: true,
-      automaticPresenceSimulation: true,
+  const { authenticatorId } = await client.send(
+    "WebAuthn.addVirtualAuthenticator",
+    {
+      options: {
+        protocol: "ctap2",
+        ctap2Version: "ctap2_1",
+        transport: "internal",
+        hasResidentKey: true,
+        hasUserVerification: true,
+        isUserVerified: true,
+        hasPrf: true,
+        automaticPresenceSimulation: true,
+      },
     },
-  });
+  );
+  storedPasskeyCount = async () => {
+    const { credentials } = await client.send("WebAuthn.getCredentials", {
+      authenticatorId,
+    });
+    return credentials.length;
+  };
 
   await page.goto("http://localhost/");
 });
@@ -98,6 +110,47 @@ test("creates a PRF-capable passkey and returns stable PRF output", async ({
   expect(result.discoveredCredentialId).toBe(result.credentialId);
   expect(result.discovered).toEqual(result.second);
   expect(result.initial).not.toEqual(result.other);
+});
+
+test("a passkey created with an earlier passkey's user ID replaces it", async ({
+  page,
+}) => {
+  const replaced = await page.evaluate(async () => {
+    const mera = await import("@category-labs/mera");
+    const rp = { id: "localhost", name: "Mera Test" };
+    const id = new TextEncoder().encode("account-1");
+    const user = { id, name: "nad", displayName: "nad" };
+
+    const first = await mera.createPasskeyWithPrfOutput({ rp, user });
+    const second = await mera.createPasskeyWithPrfOutput({ rp, user });
+    const discovered = await mera.getPasskeyPrfOutput({ rpId: "localhost" });
+
+    return {
+      id: Array.from(id),
+      firstPrfOutput: Array.from(first.prfOutput),
+      secondCredentialId: second.credentialId,
+      secondPrfOutput: Array.from(second.prfOutput),
+      discoveredCredentialId: discovered.credentialId,
+      discoveredUserHandle: Array.from(discovered.userHandle ?? []),
+      discoveredPrfOutput: Array.from(discovered.prfOutput),
+    };
+  });
+
+  expect(await storedPasskeyCount()).toBe(1);
+  expect(replaced.discoveredCredentialId).toBe(replaced.secondCredentialId);
+  expect(replaced.discoveredUserHandle).toEqual(replaced.id);
+  expect(replaced.discoveredPrfOutput).toEqual(replaced.secondPrfOutput);
+  expect(replaced.discoveredPrfOutput).not.toEqual(replaced.firstPrfOutput);
+
+  // Without a user ID the handle is random, so the passkey above stays.
+  await page.evaluate(async () => {
+    const mera = await import("@category-labs/mera");
+    await mera.createPasskeyWithPrfOutput({
+      rp: { id: "localhost", name: "Mera Test" },
+      user: { name: "nad", displayName: "nad" },
+    });
+  });
+  expect(await storedPasskeyCount()).toBe(2);
 });
 
 test("PRF output helpers use the default salt when prfSalt is omitted", async ({

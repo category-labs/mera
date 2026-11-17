@@ -75,6 +75,7 @@ type ReturnType = Promise<getPasskeyPrfOutput.Result>;
 ```
 
 - `credentialId` (`string`): the selected credential ID as canonical unpadded base64url.
+- `userHandle` (`Uint8Array<ArrayBuffer> | undefined`): the [user handle](/concepts/passkeys-and-prf/#user-handles) the selected credential was created with, absent when the authenticator does not report one.
 - `prfOutput` (`Uint8Array<ArrayBuffer>`): the 32-byte PRF output.
 
 When `credential` is omitted, the result may identify any discoverable credential for the relying party.

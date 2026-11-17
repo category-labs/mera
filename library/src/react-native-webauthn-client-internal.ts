@@ -109,6 +109,15 @@ function createReactNativeWebAuthnClient(
           "Credential ID",
           "PASSKEY_OPERATION_FAILED",
         ),
+        ...(asserted.response.userHandle
+          ? {
+              userHandle: decodeNativeBase64Url(
+                asserted.response.userHandle,
+                "User handle",
+                "PASSKEY_OPERATION_FAILED",
+              ),
+            }
+          : {}),
         prfOutput: readPrfOutput(
           asserted.clientExtensionResults?.prf?.results?.first,
         ),

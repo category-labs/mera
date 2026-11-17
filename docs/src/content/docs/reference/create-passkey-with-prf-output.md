@@ -32,6 +32,13 @@ const { credentialId, prfSalt, prfOutput } = await createPasskeyWithPrfOutput({
 
 Relying party identity, passed to WebAuthn. `rp.id` lets the fallback ceremony target the same relying party.
 
+### options.user.id
+
+- Type: `Uint8Array`
+- Optional; defaults to 32 random bytes
+
+[User handle](/concepts/passkeys-and-prf/#user-handles) of the new credential, 1 to 64 bytes. An authenticator that holds a discoverable credential with the same `rp.id` and user handle replaces it. [getPasskeyPrfOutput](/reference/get-passkey-prf-output/) returns the handle of an existing passkey.
+
 ### options.user.name
 
 - Type: `string`
@@ -83,7 +90,7 @@ type ReturnType = Promise<createPasskeyWithPrfOutput.Result>;
 ## Errors
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator reported no PRF support and returned no create-time output, returned an output that is not 32 bytes, or returned none on the fallback ceremony.
-- [`INPUT_INVALID`](/reference/errors/#input_invalid): an explicit `prfSalt` is not 32 bytes.
+- [`INPUT_INVALID`](/reference/errors/#input_invalid): an explicit `prfSalt` is not 32 bytes, or an explicit `user.id` is empty or longer than 64 bytes.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the runtime provides no `crypto.getRandomValues`.
 - [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled)
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed)
@@ -92,7 +99,7 @@ type ReturnType = Promise<createPasskeyWithPrfOutput.Result>;
 
 The credential is requested with fixed parameters: ES256 or RS256 key types, attestation `"none"` (no statement about the authenticator's make is requested), a required resident key, and required user verification. Resident key is the WebAuthn term for a [discoverable](/concepts/passkeys-and-prf/) credential. The user-verification requirement is not configurable ([Passkeys and the PRF extension](/concepts/passkeys-and-prf/#user-verification) explains the mechanism).
 
-WebAuthn challenges and the credential's [user handle](/concepts/passkeys-and-prf/#user-handles) (`user.id`) are generated internally, 32 random bytes each. A fresh handle per call means each call adds a passkey and never overwrites one.
+WebAuthn challenges are generated internally, 32 random bytes each. So is the credential's [user handle](/concepts/passkeys-and-prf/#user-handles) when `user.id` is omitted: a fresh handle per call means each call adds a passkey and never overwrites one. A call that repeats the handle of an earlier passkey replaces it, and the PRF outputs of the earlier passkey cannot be derived again.
 
 Any failure after the creation ceremony completes leaves the passkey on the authenticator: it appears in the authenticator's passkey list, but the thrown error does not carry its metadata.
 

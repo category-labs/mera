@@ -39,7 +39,7 @@ The relying party ID, challenge, optional allowed credential, PRF salt, and opti
 
 ### WebAuthnClient.GetCredentialResult
 
-The credential ID that answered and its optional PRF output.
+The credential ID that answered, its user handle when the authenticator reports one, and its optional PRF output.
 
 Requests and results use `Uint8Array` for binary values. When creation enables PRF but returns no output, mera calls `getCredential` with the same client and salt.
 

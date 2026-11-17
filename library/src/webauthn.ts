@@ -93,6 +93,8 @@ declare namespace WebAuthnClient {
   type GetCredentialResult = {
     /** Credential ID that answered, as raw bytes. */
     credentialId: Uint8Array;
+    /** User handle (`user.id`) of the credential that answered, when reported. */
+    userHandle?: Uint8Array | undefined;
     /** First PRF output for the requested salt. */
     prfOutput?: Uint8Array | undefined;
   };
@@ -199,9 +201,12 @@ const browserWebAuthnClient: WebAuthnClient = {
       .catch(rejectCancelledCeremony);
     const publicKeyCredential = assertPublicKeyCredential(credential);
     const prf = readPrfExtension(publicKeyCredential);
+    const { userHandle } =
+      publicKeyCredential.response as AuthenticatorAssertionResponse;
 
     return {
       credentialId: new Uint8Array(publicKeyCredential.rawId),
+      ...(userHandle != null ? { userHandle: new Uint8Array(userHandle) } : {}),
       prfOutput: prf.output,
     };
   },

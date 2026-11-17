@@ -26,10 +26,11 @@ const PASSKEY_COSE_ALGORITHMS = [-7, -257];
  * authenticators that do not evaluate PRF during creation, a fallback
  * assertion evaluates the same salt and shows a second prompt.
  *
- * WebAuthn challenges and the credential's user handle (`user.id`) are
- * generated internally, 32 random bytes each. An authenticator overwrites a
- * discoverable credential that has the same `rp.id` and `user.id`, so a fresh
- * handle per call adds a passkey instead of replacing one.
+ * WebAuthn challenges are generated internally, 32 random bytes each. So is
+ * the credential's user handle (`user.id`), unless `user.id` supplies one. An
+ * authenticator overwrites a discoverable credential that has the same `rp.id`
+ * and `user.id`: a fresh handle per call adds a passkey, and a repeated handle
+ * replaces the earlier passkey, whose PRF outputs cannot be derived again.
  *
  * The credential is requested with fixed parameters: ES256 or RS256 key types,
  * attestation `"none"`, a required resident key, and required user
@@ -38,7 +39,7 @@ const PASSKEY_COSE_ALGORITHMS = [-7, -257];
  * Any failure after the creation ceremony completes leaves the passkey on the
  * authenticator, but the thrown error does not carry its metadata.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator reports no PRF support and returns no create-time output, returns an output that is not 32 bytes, or returns none on the fallback ceremony.
- * @throws MeraError with code `INPUT_INVALID` when an explicit `prfSalt` is not 32 bytes.
+ * @throws MeraError with code `INPUT_INVALID` when an explicit `prfSalt` is not 32 bytes, or an explicit `user.id` is empty or longer than 64 bytes.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.getRandomValues` is unavailable.
  * @throws MeraError with code `PASSKEY_CANCELLED` when the person dismisses a prompt, it times out, or no passkey answers.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, fails for another reason, or returns an unexpected credential.
@@ -55,7 +56,7 @@ async function createPasskeyWithPrfOutput({
     const created = await webAuthnClient.createCredential({
       rp,
       user: {
-        id: randomBytes(32),
+        id: user.id === undefined ? randomBytes(32) : copyUserId(user.id),
         name: user.name,
         displayName: user.displayName,
       },
@@ -113,6 +114,12 @@ declare namespace createPasskeyWithPrfOutput {
     rp: PasskeyRelyingParty;
     /** User identity passed to WebAuthn. */
     user: {
+      /**
+       * User handle of the new credential, 1 to 64 bytes. An authenticator
+       * that holds a discoverable credential with the same `rp.id` and
+       * `user.id` replaces it. Defaults to 32 random bytes, which replace none.
+       */
+      id?: Uint8Array | undefined;
       /** User name displayed or stored by the authenticator. */
       name: string;
       /** Human-readable display name for the authenticator UI. */
@@ -147,7 +154,7 @@ declare namespace createPasskeyWithPrfOutput {
  * Requests a passkey PRF evaluation and returns the first output.
  *
  * @param options - Passkey PRF request inputs.
- * @returns The selected credential ID and first WebAuthn PRF output.
+ * @returns The selected credential's ID, its user handle when reported, and the first WebAuthn PRF output.
  * @remarks
  * Runs one assertion ceremony and shows one user-verification prompt.
  *
@@ -216,6 +223,9 @@ async function getPasskeyPrfOutput({
 
     return {
       credentialId: base64urlnopad.encode(asserted.credentialId),
+      ...(asserted.userHandle !== undefined
+        ? { userHandle: new Uint8Array(asserted.userHandle) }
+        : {}),
       prfOutput: copyPrfOutput(asserted.prfOutput),
     };
   } catch (error) {
@@ -258,6 +268,11 @@ declare namespace getPasskeyPrfOutput {
   type Result = {
     /** Credential ID selected by the platform, as canonical unpadded base64url. */
     readonly credentialId: string;
+    /**
+     * User handle (`user.id`) the selected credential was created with. Absent
+     * when the authenticator does not report one.
+     */
+    readonly userHandle?: Uint8Array<ArrayBuffer> | undefined;
     /** First PRF output from WebAuthn. Always 32 bytes. */
     readonly prfOutput: Uint8Array<ArrayBuffer>;
   };
@@ -292,6 +307,15 @@ function toAllowCredential(
     }),
     transports: credential.transports?.slice(),
   };
+}
+
+// WebAuthn rejects a user handle that is empty or longer than 64 bytes.
+function copyUserId(userId: Uint8Array): Uint8Array<ArrayBuffer> {
+  if (userId.length < 1 || userId.length > 64) {
+    throw new MeraError("INPUT_INVALID", "user.id must be 1 to 64 bytes");
+  }
+
+  return new Uint8Array(userId);
 }
 
 /**

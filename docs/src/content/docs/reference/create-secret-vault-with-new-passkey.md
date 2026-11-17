@@ -39,6 +39,13 @@ try {
 
 Relying party identity passed to [WebAuthn](https://www.w3.org/TR/webauthn-3/). The required ID is reused by the fallback [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts).
 
+### options.user.id
+
+- Type: `Uint8Array`
+- Optional; defaults to 32 random bytes
+
+[User handle](/concepts/passkeys-and-prf/#user-handles) of the new credential, 1 to 64 bytes. An authenticator that holds a discoverable credential with the same `rp.id` and user handle replaces it.
+
 ### options.user.name
 
 - Type: `string`
@@ -87,14 +94,14 @@ A JSON-safe vault with `version`, `credential`, `prfSalt`, `nonce`, and `ciphert
 ## Errors
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not enable PRF or return a usable 32-byte output.
-- [`INPUT_INVALID`](/reference/errors/#input_invalid): `secret` is empty.
+- [`INPUT_INVALID`](/reference/errors/#input_invalid): `secret` is empty, or an explicit `user.id` is empty or longer than 64 bytes.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the runtime provides no `crypto.getRandomValues` or `crypto.subtle`, or its `crypto.subtle` lacks the HKDF or AES-GCM support the vault needs. A missing `crypto.subtle` fails before any prompt.
 - [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled)
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed)
 
 ## Notes
 
-The credential's [user handle](/concepts/passkeys-and-prf/#user-handles) (`user.id`) is 32 random bytes, generated per call, so each call adds a passkey and never overwrites one.
+Without `user.id`, the credential's [user handle](/concepts/passkeys-and-prf/#user-handles) is 32 random bytes, generated per call, so each call adds a passkey and never overwrites one.
 
 If the fallback ceremony or vault encryption fails after creation, the passkey remains on the authenticator and the error does not contain its metadata.
 

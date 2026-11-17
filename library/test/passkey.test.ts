@@ -337,6 +337,71 @@ test("createPasskeyWithPrfOutput generates a fresh user ID for each passkey", as
   expect(handles[0]).not.toEqual(handles[1]);
 });
 
+test("a passkey created with the user ID of an earlier one takes its place", async () => {
+  // Models an authenticator's discoverable credentials: one per user handle,
+  // each with its own PRF.
+  const stored = new Map<string, { userHandle: Uint8Array; prf: number }>();
+  let created = 0;
+  const navigator = {
+    credentials: {
+      async create({ publicKey }: CredentialCreationOptions) {
+        const userHandle = new Uint8Array(publicKey?.user.id as Uint8Array);
+        created += 1;
+        stored.set(userHandle.join(), { userHandle, prf: created });
+        return stubPublicKeyCredential({
+          prf: {
+            enabled: true,
+            results: { first: new Uint8Array(32).fill(created).buffer },
+          },
+          transports: ["internal"],
+        });
+      },
+      async get() {
+        const [credential] = stored.values();
+        if (credential === undefined) {
+          throw new DOMException("no passkey", "NotAllowedError");
+        }
+        return stubPublicKeyCredential({
+          prf: { results: { first: new Uint8Array(32).fill(credential.prf) } },
+          userHandle: credential.userHandle.slice().buffer,
+        });
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    await createPasskeyWithPrfOutput({ rp, user });
+    const existing = await getPasskeyPrfOutput({ rpId: rp.id });
+    expect(existing.userHandle).toHaveLength(32);
+
+    const replacement = await createPasskeyWithPrfOutput({
+      rp,
+      user: { ...user, id: existing.userHandle },
+    });
+
+    expect(stored.size).toBe(1);
+    expect(replacement.prfOutput).not.toEqual(existing.prfOutput);
+    expect((await getPasskeyPrfOutput({ rpId: rp.id })).prfOutput).toEqual(
+      replacement.prfOutput,
+    );
+  });
+});
+
+test("createPasskeyWithPrfOutput rejects a user ID WebAuthn would refuse before any prompt", async () => {
+  const { client, calls } = stubClient();
+
+  for (const id of [new Uint8Array(0), new Uint8Array(65)]) {
+    await expect(
+      createPasskeyWithPrfOutput({
+        rp,
+        user: { ...user, id },
+        webAuthnClient: client,
+      }),
+    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+  }
+  expect(calls.create).toHaveLength(0);
+});
+
 test("createPasskeyWithPrfOutput sends its options to a custom client", async () => {
   const createPrfOutput = new Uint8Array(32).fill(7);
   const { client, calls } = stubClient({ createPrfOutput });

@@ -10,8 +10,6 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
-    labels:
-      - "dependencies"
     commit-message:
       prefix: "build"
       include: "scope"
@@ -68,9 +66,6 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
-    labels:
-      - "dependencies"
-      - "github-actions"
     commit-message:
       prefix: "ci"
       include: "scope"

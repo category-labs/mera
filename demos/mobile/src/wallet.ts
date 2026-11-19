@@ -14,7 +14,9 @@ import { newPasskeyOptions } from "@category-labs/mera-demo-shared/passkey";
 import type { PasskeyError } from "react-native-passkey";
 import { rpId } from "./config";
 import {
+  loadKnownCredential,
   readStoredPrfResult,
+  saveKnownCredential,
   saveStoredAccount,
   storePrfResult,
 } from "./storage";
@@ -22,12 +24,17 @@ import {
 type Wallet = EvmAccount & { credentialId: string };
 
 async function createAccount(): Promise<Wallet> {
-  return storeAndOpen(
-    await createPasskeyWithPrfOutput({
-      ...newPasskeyOptions(rpId),
-      webAuthnClient: reactNativeWebAuthnClient,
-    }),
-  );
+  const known = loadKnownCredential();
+  const result = await createPasskeyWithPrfOutput({
+    ...newPasskeyOptions(rpId),
+    excludeCredentials: known ? [known] : undefined,
+    webAuthnClient: reactNativeWebAuthnClient,
+  });
+  saveKnownCredential({
+    credentialId: result.credentialId,
+    transports: result.transports,
+  });
+  return storeAndOpen(result);
 }
 
 /**
@@ -35,12 +42,14 @@ async function createAccount(): Promise<Wallet> {
  * every passkey for the relying party.
  */
 async function signIn(): Promise<Wallet> {
-  return storeAndOpen(
+  const wallet = await storeAndOpen(
     await getPasskeyPrfOutput({
       rpId,
       webAuthnClient: reactNativeWebAuthnClient,
     }),
   );
+  saveKnownCredential({ credentialId: wallet.credentialId });
+  return wallet;
 }
 
 /**
@@ -49,7 +58,7 @@ async function signIn(): Promise<Wallet> {
  * before rethrowing.
  */
 async function storeAndOpen(
-  result: getPasskeyPrfOutput.Result,
+  result: createPasskeyWithPrfOutput.Result | getPasskeyPrfOutput.Result,
 ): Promise<Wallet> {
   await storePrfResult(result);
   const wallet = toWallet(result);

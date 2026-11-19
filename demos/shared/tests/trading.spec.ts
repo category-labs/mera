@@ -242,3 +242,103 @@ test("a failed refresh after buying preserves the saved basis until balances rec
   await expect(page.locator(".holding-value").nth(1)).toHaveText("0 · 0.00");
   await expect.poll(storedBasis).toBe("0");
 });
+
+test("creating an account excludes the remembered passkey until it is removed", async ({
+  page,
+  context,
+}) => {
+  await routeRpc(page, (method) => ({ result: readResult(method, 0n) }));
+  await page.goto("/");
+  const client = await context.newCDPSession(page);
+  await client.send("WebAuthn.enable");
+  const { authenticatorId } = await client.send(
+    "WebAuthn.addVirtualAuthenticator",
+    {
+      options: {
+        protocol: "ctap2",
+        transport: "internal",
+        hasResidentKey: true,
+        hasUserVerification: true,
+        isUserVerified: true,
+        automaticPresenceSimulation: true,
+        hasPrf: true,
+      },
+    },
+  );
+
+  await page
+    .getByRole("button", { name: "Create account", exact: true })
+    .click();
+  await expect(page.locator(".holding-value").first()).toHaveText("10,000.00");
+  const firstCredential = await page.evaluate(() =>
+    localStorage.getItem("mera.demo.credential"),
+  );
+  expect(firstCredential).not.toBeNull();
+
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Create account", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem("mera.demo.account")),
+  ).toBeNull();
+  expect(
+    await page.evaluate(() => localStorage.getItem("mera.demo.credential")),
+  ).toBe(firstCredential);
+
+  await page
+    .getByRole("button", { name: "Create account", exact: true })
+    .click();
+  await expect(
+    page.getByText("A passkey already exists for this demo. Sign in instead."),
+  ).toBeVisible();
+
+  const { credentials } = await client.send("WebAuthn.getCredentials", {
+    authenticatorId,
+  });
+  for (const credential of credentials) {
+    await client.send("WebAuthn.removeCredential", {
+      authenticatorId,
+      credentialId: credential.credentialId,
+    });
+  }
+
+  await page
+    .getByRole("button", { name: "Create account", exact: true })
+    .click();
+  await expect(page.locator(".holding-value").first()).toHaveText("10,000.00");
+  const secondCredential = await page.evaluate(() =>
+    localStorage.getItem("mera.demo.credential"),
+  );
+  expect(secondCredential).not.toBeNull();
+  expect(secondCredential).not.toBe(firstCredential);
+
+  // Signing out from an existing cached account (before mera.demo.credential
+  // existed) backfills the remembered credential before clearing the cache.
+  await page.evaluate(() => localStorage.removeItem("mera.demo.credential"));
+  await page.reload();
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  expect(
+    await page.evaluate(() => localStorage.getItem("mera.demo.credential")),
+  ).toBe(secondCredential);
+  await page
+    .getByRole("button", { name: "Create account", exact: true })
+    .click();
+  await expect(
+    page.getByText("A passkey already exists for this demo. Sign in instead."),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: /Import existing secret/u }).click();
+  await page.getByRole("button", { name: "Generate", exact: true }).click();
+  await page.getByRole("button", { name: "Open account", exact: true }).click();
+  await expect(page.locator(".holding-value").first()).toHaveText("10,000.00");
+
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await page.getByRole("button", { name: "Generate", exact: true }).click();
+  await page.getByRole("button", { name: "Open account", exact: true }).click();
+  await expect(
+    page.getByText(
+      "The saved vault's passkey already exists. Sign in to open the saved vault's account.",
+    ),
+  ).toBeVisible();
+});

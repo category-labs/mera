@@ -4,7 +4,9 @@ import {
   accountAddress,
   type CachedAccount,
   clearCachedAccount,
+  loadKnownCredential,
   saveCachedAccount,
+  saveKnownCredential,
 } from "@category-labs/mera-demo-shared/account";
 import {
   type ConnectedWallet,
@@ -165,9 +167,12 @@ function TradingPanel({
     setError(null);
     let wallet: ConnectedWallet | undefined;
     try {
-      wallet = walletFromPrf(
-        await requestPrf(action === "create" ? "create" : "get"),
+      const prf = await requestPrf(
+        action === "create" ? "create" : "get",
+        action === "create" ? loadKnownCredential() : undefined,
       );
+      if (action === "create") saveKnownCredential(prf.credential);
+      wallet = walletFromPrf(prf);
       if (locks.current !== started) return;
       // Fund and read the account first, so the connect buttons give way to
       // settled balances.
@@ -181,6 +186,7 @@ function TradingPanel({
       }
       if (locks.current !== started) return;
       saveCachedAccount(cachedAccount(wallet));
+      if (action === "signin") saveKnownCredential(prf.credential);
       if (portfolio !== null) adopt(wallet.address, portfolio);
       unlockWith(wallet);
       setDraft(clearedDraft);

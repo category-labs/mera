@@ -15,6 +15,8 @@ function describeError(error: unknown): string {
         return "This browser doesn't provide the Web Crypto APIs this demo needs.";
       case "PASSKEY_CANCELLED":
         return "The passkey request was cancelled.";
+      case "PASSKEY_EXISTS":
+        return "A passkey already exists for this demo. Sign in instead.";
       case "PASSKEY_OPERATION_FAILED":
         return "The passkey request failed.";
       case "VAULT_FORMAT_INVALID":

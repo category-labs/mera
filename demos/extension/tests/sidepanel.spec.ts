@@ -15,6 +15,7 @@ const extensionDir = resolve(
 );
 const rpcUrl = "https://evm-network-production.up.railway.app/";
 const accountKey = "mera.demo.account";
+const credentialKey = "mera.demo.credential";
 const fundedBalance = "0x21e19e0c9bab2400000";
 const marketAddress = "0x1111111111111111111111111111111111111111";
 const transactionHash = `0x${"12".repeat(32)}`;
@@ -325,6 +326,27 @@ test("runs the side-panel account lifecycle", async ({
   ).toBeVisible();
   await page.reload();
   await expect(page.getByRole("button", { name: "Lock" })).toHaveCount(0);
+  const initialRemembered = await page.evaluate(
+    (key) => localStorage.getItem(key),
+    credentialKey,
+  );
+  expect(initialRemembered).not.toBeNull();
+
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(
+    page.getByText("A passkey already exists for this demo. Sign in instead."),
+  ).toBeVisible();
+
+  const { credentials: existingCredentials } = await client.send(
+    "WebAuthn.getCredentials",
+    { authenticatorId },
+  );
+  for (const credential of existingCredentials) {
+    await client.send("WebAuthn.removeCredential", {
+      authenticatorId,
+      credentialId: credential.credentialId,
+    });
+  }
 
   await holdNextCredentialResult(page, "create");
   await page.getByRole("button", { name: "Create account" }).click();
@@ -341,6 +363,35 @@ test("runs the side-panel account lifecycle", async ({
   expect(
     await page.evaluate((key) => localStorage.getItem(key), accountKey),
   ).toBeNull();
+  const createdWhileHidden = await page.evaluate(
+    (key) => localStorage.getItem(key),
+    credentialKey,
+  );
+  expect(createdWhileHidden).not.toBeNull();
+  expect(createdWhileHidden).not.toBe(initialRemembered);
+  await setVisibility(page, "visible");
+
+  const priorCredential = JSON.stringify({ credentialId: "AQID" });
+  await page.evaluate(([key, value]) => localStorage.setItem(key, value), [
+    credentialKey,
+    priorCredential,
+  ] as const);
+  await holdNextCredentialResult(page, "get");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(
+    page.getByRole("button", { name: "Waiting for passkey…" }),
+  ).toBeVisible();
+  await waitForHeldCredentialResult(page);
+  await setVisibility(page, "hidden");
+  await releaseCredentialResult(page);
+  await expect(page.getByRole("button", { name: "Sign in" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: /^0x/u })).toHaveCount(0);
+  expect(
+    await page.evaluate((key) => localStorage.getItem(key), accountKey),
+  ).toBeNull();
+  expect(
+    await page.evaluate((key) => localStorage.getItem(key), credentialKey),
+  ).toBe(priorCredential);
   await setVisibility(page, "visible");
 
   await client.send("WebAuthn.removeVirtualAuthenticator", {
@@ -432,4 +483,36 @@ test("opens a passkey tab from the side panel", async ({
   });
   await popup.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("button", { name: /^0x/u })).toBeVisible();
+
+  const readRememberedId = () =>
+    page.evaluate((key) => {
+      const raw = localStorage.getItem(key);
+      return raw
+        ? (JSON.parse(raw) as { credentialId: string }).credentialId
+        : null;
+    }, credentialKey);
+  const remembered = await readRememberedId();
+  if (remembered === null) throw new Error("Missing remembered credential.");
+
+  // Signing out keeps the remembered credential and forwards it in the next
+  // creation tab URL so the page passes it in excludeCredentials; completing
+  // creation updates the remembered credential ID.
+  await page.getByRole("button", { name: "Sign out" }).click();
+  const secondPopupPromise = context.waitForEvent("page");
+  await page.getByRole("button", { name: "Create account" }).click();
+  const secondPopup = await secondPopupPromise;
+  const secondUrl = new URL(secondPopup.url());
+  expect(secondUrl.searchParams.get("action")).toBe("create");
+  expect(secondUrl.searchParams.get("credentialId")).toBe(remembered);
+
+  const secondClient = await context.newCDPSession(secondPopup);
+  await secondClient.send("WebAuthn.enable");
+  await secondClient.send("WebAuthn.addVirtualAuthenticator", {
+    options: authenticator(true),
+  });
+  await secondPopup.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByRole("button", { name: /^0x/u })).toBeVisible();
+  const replacement = await readRememberedId();
+  expect(replacement).not.toBeNull();
+  expect(replacement).not.toBe(remembered);
 });

@@ -107,6 +107,56 @@ const prfOutput = await signInOnThisDevice();
 
 The trade-off: `immediate` skips passkeys on other devices, so a person whose passkey is on their phone gets `undefined` too. When `prfOutput` is `undefined`, the app offers "Create a passkey" and "Use a passkey from another device", a sign-in without `immediate`. Browsers without immediate mode ignore the option and show their usual prompt.
 
+## Avoid duplicate passkeys
+
+When the app still has a remembered credential ID, pass it in `excludeCredentials` during creation. When the selected authenticator honors `excludeCredentials` and still holds that passkey, creation rejects with [`PASSKEY_EXISTS`](/reference/errors/#passkey_exists) instead of creating a duplicate, and the app can sign in with it:
+
+```ts
+const rpId = "account.example.com";
+
+// ---cut---
+import {
+  createPasskeyWithPrfOutput,
+  getPasskeyPrfOutput,
+  MeraError,
+  type PasskeyCredentialMetadata,
+} from "@category-labs/mera";
+
+async function createOrReusePasskey() {
+  const stored = localStorage.getItem("app.derivedCredential");
+  const known: PasskeyCredentialMetadata | undefined = stored
+    ? JSON.parse(stored)
+    : undefined;
+
+  try {
+    const created = await createPasskeyWithPrfOutput({
+      rp: { id: rpId, name: "Example" },
+      user: { name: "account@example.com", displayName: "Example account" },
+      excludeCredentials: known ? [known] : undefined,
+    });
+    localStorage.setItem(
+      "app.derivedCredential",
+      JSON.stringify({
+        credentialId: created.credentialId,
+        transports: created.transports,
+      }),
+    );
+    return created;
+  } catch (error) {
+    if (
+      known &&
+      error instanceof MeraError &&
+      error.code === "PASSKEY_EXISTS"
+    ) {
+      return await getPasskeyPrfOutput({ rpId, credential: known });
+    }
+    throw error;
+  }
+}
+```
+
+Credential IDs hold no key material, so the app can keep them after sign-out. The authenticator prompts before rejecting with [`PASSKEY_EXISTS`](/reference/errors/#passkey_exists), so falling back to `getPasskeyPrfOutput` shows a second prompt when the passkey still exists. Success does not prove the old passkey is gone: the authenticator may ignore `excludeCredentials`, or the passkey may live in another provider or device.
+
 ## Derive numbered accounts
 
 `deriveEvmPrivateKey` and `deriveSolanaPrivateKey` number accounts by `accountIndex`. These helpers open one account of each kind:

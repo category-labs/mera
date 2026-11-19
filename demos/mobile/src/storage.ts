@@ -1,4 +1,8 @@
-import type { EvmAddress, getPasskeyPrfOutput } from "@category-labs/mera";
+import type {
+  EvmAddress,
+  getPasskeyPrfOutput,
+  PasskeyCredentialMetadata,
+} from "@category-labs/mera";
 import type { CostBasisStore } from "@category-labs/mera-demo-shared/position";
 import { base64urlnopad } from "@scure/base";
 import {
@@ -14,6 +18,7 @@ import { isAddress } from "viem";
 
 const PRF_KEY = "mera.prf.v1";
 const ACCOUNT_KEY = "mera.account.v1";
+const CREDENTIAL_KEY = "mera.credential.v1";
 const COST_BASIS_PREFIX = "mera.costBasis.v1.";
 
 // Reading the PRF item asks for a biometric or device credential.
@@ -91,7 +96,60 @@ function saveStoredAccount(account: StoredAccount): void {
 
 /** Removes the stored account: the PRF output and the metadata. */
 async function clearStoredAccount(): Promise<void> {
+  if (loadKnownCredential() === undefined) {
+    const stored = loadStoredAccount();
+    if (stored !== undefined && stored.credentialId.length > 0) {
+      saveKnownCredential({ credentialId: stored.credentialId });
+    }
+  }
   await Promise.all([deleteItemAsync(PRF_KEY), deleteItemAsync(ACCOUNT_KEY)]);
+}
+
+/**
+ * The remembered passkey credential, kept across sign-outs so creating a new
+ * passkey can exclude it while it still exists on the device. Holds no key
+ * material.
+ */
+function loadKnownCredential(): PasskeyCredentialMetadata | undefined {
+  try {
+    const { credentialId, transports } = (JSON.parse(
+      getItem(CREDENTIAL_KEY) ?? "null",
+    ) ?? {}) as Record<string, unknown>;
+    if (
+      typeof credentialId !== "string" ||
+      credentialId.length === 0 ||
+      (transports !== undefined &&
+        (!Array.isArray(transports) ||
+          !transports.every((transport) => typeof transport === "string")))
+    ) {
+      return undefined;
+    }
+    return {
+      credentialId,
+      transports: transports as PasskeyCredentialMetadata["transports"],
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Remembers `credential` for future passkey creation. Preserves stored
+ * transports when a sign-in returns the same credential ID without them.
+ */
+function saveKnownCredential(credential: PasskeyCredentialMetadata): void {
+  try {
+    const existing = loadKnownCredential();
+    const merged: PasskeyCredentialMetadata =
+      existing !== undefined &&
+      existing.credentialId === credential.credentialId &&
+      credential.transports === undefined
+        ? existing
+        : credential;
+    setItem(CREDENTIAL_KEY, JSON.stringify(merged), UNGATED);
+  } catch {
+    // A failed write leaves the credential unremembered.
+  }
 }
 
 /** Cost bases in SecureStore; an unreadable one reads as zero. */
@@ -115,8 +173,10 @@ const storedCostBasis: CostBasisStore = {
 export type { StoredAccount };
 export {
   clearStoredAccount,
+  loadKnownCredential,
   loadStoredAccount,
   readStoredPrfResult,
+  saveKnownCredential,
   saveStoredAccount,
   storedCostBasis,
   storePrfResult,

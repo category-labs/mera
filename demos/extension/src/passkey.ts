@@ -34,7 +34,7 @@ async function requestPrf(
 ): Promise<PasskeyPrf> {
   if (!inSidePanel) {
     return action === "create"
-      ? createPasskeyPrf(RP_ID)
+      ? createPasskeyPrf(RP_ID, credential ? [credential] : undefined)
       : getPasskeyPrf(RP_ID, credential);
   }
   const url = new URL(`${RP_ORIGIN}/demo/passkey.html`);

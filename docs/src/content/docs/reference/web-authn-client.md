@@ -27,7 +27,7 @@ Related types: [`WebAuthnClient.CreateCredentialRequest`](#webauthnclientcreatec
 
 ### WebAuthnClient.CreateCredentialRequest
 
-The relying party, user, challenge, credential policy, and PRF salt for a creation ceremony.
+The relying party, user, challenge, credential policy, optional excluded credentials, and PRF salt for a creation ceremony.
 
 ### WebAuthnClient.CreateCredentialResult
 
@@ -43,7 +43,7 @@ The credential ID that answered and its optional PRF output.
 
 Requests and results use `Uint8Array` for binary values. When creation enables PRF but returns no output, mera calls `getCredential` with the same client and salt.
 
-A PRF output that is not 32 bytes fails with [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable). A [`MeraError`](/reference/errors/#meraerror) that a client throws reaches the caller unchanged, and anything else surfaces as [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed) with the original error as its `cause`. The built-in clients reject a cancelled ceremony with [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled).
+A PRF output that is not 32 bytes fails with [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable). A [`MeraError`](/reference/errors/#meraerror) that a client throws reaches the caller unchanged, and anything else surfaces as [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed) with the original error as its `cause`. The built-in clients reject a cancelled ceremony with [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled) and reject creation with [`PASSKEY_EXISTS`](/reference/errors/#passkey_exists) when `excludeCredentials` is non-empty and the authenticator reports a matched excluded credential.
 
 ## Usage
 
@@ -61,7 +61,7 @@ const { prfOutput } = await getPasskeyPrfOutput({
 
 The React Native client requires [react-native-passkey](https://github.com/f-23/react-native-passkey). It lives in a separate entry point, so the root package loads no React Native code.
 
-The client rejects with [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled) when react-native-passkey reports `UserCancelled`, `TimedOut`, or `NoCredentials`. In that error and in [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed), the `cause` is react-native-passkey's `PasskeyError`.
+The client rejects with [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled) when react-native-passkey reports `UserCancelled`, `TimedOut`, or `NoCredentials`, and rejects creation with [`PASSKEY_EXISTS`](/reference/errors/#passkey_exists) when `excludeCredentials` is non-empty and react-native-passkey reports `CredentialAlreadyExists`. With an omitted or empty `excludeCredentials`, `CredentialAlreadyExists` is left unmapped and surfaces through the passkey API as [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed). In all of these `MeraError` rejections, the `cause` is react-native-passkey's `PasskeyError`.
 
 ## See also
 

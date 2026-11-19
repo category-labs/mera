@@ -284,8 +284,123 @@ test("the browser client reports NotAllowedError as PASSKEY_CANCELLED", async ()
       await expect(
         createPasskeyWithPrfOutput({ rp, user }),
       ).rejects.toMatchObject({ code, cause: failure });
+      await expect(
+        createPasskeyWithPrfOutput({
+          rp,
+          user,
+          excludeCredentials: [{ credentialId: CREDENTIAL_ID_BASE64URL }],
+        }),
+      ).rejects.toMatchObject({ code, cause: failure });
     });
   }
+});
+
+test("the browser client reports InvalidStateError on create as PASSKEY_EXISTS only with exclusions", async () => {
+  const exists = new DOMException(
+    "The authenticator was previously registered.",
+    "InvalidStateError",
+  );
+  const reject = () => Promise.reject(exists);
+  const navigator = { credentials: { create: reject, get: reject } };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    await expect(
+      createPasskeyWithPrfOutput({
+        rp,
+        user,
+        excludeCredentials: [{ credentialId: CREDENTIAL_ID_BASE64URL }],
+      }),
+    ).rejects.toMatchObject({ code: "PASSKEY_EXISTS", cause: exists });
+
+    // Without exclusions, InvalidStateError comes from another condition
+    // (such as a detached document) and must not be reported as PASSKEY_EXISTS.
+    await expect(
+      createPasskeyWithPrfOutput({ rp, user }),
+    ).rejects.toMatchObject({
+      code: "PASSKEY_OPERATION_FAILED",
+      cause: exists,
+    });
+    await expect(
+      createPasskeyWithPrfOutput({ rp, user, excludeCredentials: [] }),
+    ).rejects.toMatchObject({
+      code: "PASSKEY_OPERATION_FAILED",
+      cause: exists,
+    });
+
+    // InvalidStateError is only a duplicate-passkey signal during creation.
+    await expect(getPasskeyPrfOutput({ rpId: rp.id })).rejects.toMatchObject({
+      code: "PASSKEY_OPERATION_FAILED",
+      cause: exists,
+    });
+  });
+});
+
+test("createPasskeyWithPrfOutput forwards excludeCredentials and omits an empty list", async () => {
+  const requests: CredentialCreationOptions[] = [];
+  const navigator = {
+    credentials: {
+      async create(request: CredentialCreationOptions) {
+        requests.push(request);
+        return stubPublicKeyCredential({
+          prf: {
+            enabled: true,
+            results: { first: new Uint8Array(32).buffer },
+          },
+          transports: ["internal"],
+        });
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    await createPasskeyWithPrfOutput({
+      rp,
+      user,
+      excludeCredentials: [
+        {
+          credentialId: CREDENTIAL_ID_BASE64URL,
+          transports: ["internal", "hybrid"],
+        },
+        { credentialId: "BQYHCA" },
+      ],
+    });
+    await createPasskeyWithPrfOutput({ rp, user, excludeCredentials: [] });
+  });
+
+  expect(requests[0]?.publicKey?.excludeCredentials).toEqual([
+    {
+      id: CREDENTIAL_ID_BYTES,
+      type: "public-key",
+      transports: ["internal", "hybrid"],
+    },
+    {
+      id: new Uint8Array([5, 6, 7, 8]),
+      type: "public-key",
+    },
+  ]);
+  expect(requests[1]?.publicKey).not.toHaveProperty("excludeCredentials");
+});
+
+test("createPasskeyWithPrfOutput rejects invalid excludeCredentials before prompting", async () => {
+  const { client, calls } = stubClient();
+
+  for (const excludeCredentials of [
+    [{ credentialId: "" }],
+    [{ credentialId: `${CREDENTIAL_ID_BASE64URL}==` }],
+    [{ credentialId: "not+valid/" }],
+    [{ credentialId: CREDENTIAL_ID_BASE64URL }, { credentialId: "" }],
+  ]) {
+    await expect(
+      createPasskeyWithPrfOutput({
+        rp,
+        user,
+        excludeCredentials,
+        webAuthnClient: client,
+      }),
+    ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+  }
+
+  expect(calls.create).toHaveLength(0);
 });
 
 test("passkey functions keep the cause of custom client errors", async () => {

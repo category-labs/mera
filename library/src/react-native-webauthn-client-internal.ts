@@ -15,9 +15,12 @@ type PlatformApi = Pick<
 >;
 
 type NativeExtensions = NonNullable<PasskeyGetRequest["extensions"]>;
+type NativeCredentialDescriptor = NonNullable<
+  PasskeyGetRequest["allowCredentials"]
+>[number];
 
 type NativeTransport = NonNullable<
-  NonNullable<PasskeyGetRequest["allowCredentials"]>[number]["transports"]
+  NativeCredentialDescriptor["transports"]
 >[number];
 type NativePrfValue = NonNullable<
   NonNullable<
@@ -30,6 +33,9 @@ function createReactNativeWebAuthnClient(
 ): WebAuthnClient {
   return {
     async createCredential(request) {
+      const { excludeCredentials } = request;
+      const hasExcludedCredentials =
+        excludeCredentials !== undefined && excludeCredentials.length > 0;
       const nativeRequest: PasskeyCreateRequest = {
         rp: request.rp,
         user: {
@@ -42,6 +48,13 @@ function createReactNativeWebAuthnClient(
           type: "public-key",
           alg,
         })),
+        ...(hasExcludedCredentials
+          ? {
+              excludeCredentials: excludeCredentials.map(
+                toNativeCredentialDescriptor,
+              ),
+            }
+          : {}),
         authenticatorSelection: {
           residentKey: request.residentKey,
           requireResidentKey: true,
@@ -55,7 +68,11 @@ function createReactNativeWebAuthnClient(
       // no PRF output. Android treats the platform-only flag as a no-op.
       const created = await platformApi
         .createPlatformKey(nativeRequest)
-        .catch(rejectCancelledCeremony);
+        .catch(
+          hasExcludedCredentials
+            ? rejectCreateCeremony
+            : rejectCancelledCeremony,
+        );
 
       const prf = created.clientExtensionResults?.prf;
 
@@ -80,18 +97,7 @@ function createReactNativeWebAuthnClient(
         extensions: prfExtension(request.prfSalt),
         ...(allowCredential !== undefined
           ? {
-              allowCredentials: [
-                {
-                  type: "public-key" as const,
-                  id: base64urlnopad.encode(allowCredential.credentialId),
-                  ...(allowCredential.transports !== undefined
-                    ? {
-                        transports:
-                          allowCredential.transports as NativeTransport[],
-                      }
-                    : {}),
-                },
-              ],
+              allowCredentials: [toNativeCredentialDescriptor(allowCredential)],
             }
           : {}),
         ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
@@ -115,6 +121,37 @@ function createReactNativeWebAuthnClient(
       };
     },
   };
+}
+
+function toNativeCredentialDescriptor(
+  descriptor: WebAuthnClient.CredentialDescriptor,
+): NativeCredentialDescriptor {
+  return {
+    type: "public-key",
+    id: base64urlnopad.encode(descriptor.credentialId),
+    ...(descriptor.transports !== undefined
+      ? {
+          transports: descriptor.transports as NativeTransport[],
+        }
+      : {}),
+  };
+}
+
+/**
+ * Rethrows react-native-passkey's `CredentialAlreadyExists` rejection as
+ * `PASSKEY_EXISTS`, and delegates cancellation errors to
+ * {@link rejectCancelledCeremony}.
+ */
+function rejectCreateCeremony(error: unknown): never {
+  const reason = (error as { error?: unknown } | null)?.error;
+  if (reason === "CredentialAlreadyExists") {
+    throw new MeraError(
+      "PASSKEY_EXISTS",
+      "An excluded passkey already exists on this authenticator",
+      { cause: error },
+    );
+  }
+  rejectCancelledCeremony(error);
 }
 
 /**

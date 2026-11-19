@@ -48,6 +48,10 @@ WebAuthn failed, returned an unexpected credential, or the credential API is una
 
 The person dismissed the passkey prompt, it timed out, or no passkey answered. Dismissal is the everyday case. Browsers report all three with the same `NotAllowedError`, so they cannot be told apart.
 
+### PASSKEY_EXISTS
+
+The authenticator refused to create a passkey because it already holds one listed in `excludeCredentials`.
+
 ### CRYPTO_UNAVAILABLE
 
 A Web Crypto primitive is unavailable. The passkey APIs need `crypto.getRandomValues`; the secret-vault APIs also need `crypto.subtle` (requires HTTPS or `localhost` during development).

@@ -38,20 +38,23 @@ const PASSKEY_COSE_ALGORITHMS = [-7, -257];
  * Any failure after the creation ceremony completes leaves the passkey on the
  * authenticator, but the thrown error does not carry its metadata.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator reports no PRF support and returns no create-time output, returns an output that is not 32 bytes, or returns none on the fallback ceremony.
- * @throws MeraError with code `INPUT_INVALID` when an explicit `prfSalt` is not 32 bytes.
+ * @throws MeraError with code `INPUT_INVALID` when an explicit `prfSalt` is not 32 bytes, or an `excludeCredentials` entry has an empty or non-canonical base64url `credentialId`.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.getRandomValues` is unavailable.
+ * @throws MeraError with code `PASSKEY_EXISTS` when the authenticator already holds a passkey listed in `excludeCredentials`.
  * @throws MeraError with code `PASSKEY_CANCELLED` when the person dismisses a prompt, it times out, or no passkey answers.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, fails for another reason, or returns an unexpected credential.
  */
 async function createPasskeyWithPrfOutput({
   rp,
   user,
+  excludeCredentials,
   timeout,
   prfSalt,
   webAuthnClient = browserWebAuthnClient,
 }: createPasskeyWithPrfOutput.Options): Promise<createPasskeyWithPrfOutput.Result> {
   try {
     const prfSaltCopy = copyPrfSalt(prfSalt);
+    const excluded = toExcludeCredentials(excludeCredentials);
     const created = await webAuthnClient.createCredential({
       rp,
       user: {
@@ -61,6 +64,7 @@ async function createPasskeyWithPrfOutput({
       },
       challenge: randomBytes(32),
       algorithms: PASSKEY_COSE_ALGORITHMS,
+      excludeCredentials: excluded,
       prfSalt: prfSaltCopy,
       residentKey: "required",
       userVerification: "required",
@@ -118,6 +122,13 @@ declare namespace createPasskeyWithPrfOutput {
       /** Human-readable display name for the authenticator UI. */
       displayName: string;
     };
+    /**
+     * Passkeys the authenticator should refuse to duplicate. When the
+     * authenticator still holds one of these credentials, creation rejects
+     * with `PASSKEY_EXISTS` instead of creating another. An authenticator that
+     * ignores `excludeCredentials` creates a new passkey as usual.
+     */
+    excludeCredentials?: readonly PasskeyCredentialMetadata[] | undefined;
     /** WebAuthn timeout in milliseconds. Platform defaults apply when omitted. */
     timeout?: number | undefined;
     /**
@@ -202,7 +213,9 @@ async function getPasskeyPrfOutput({
       challenge: randomBytes(32),
       prfSalt: prfSaltCopy,
       userVerification: "required",
-      allowCredential: allowCredential && toAllowCredential(allowCredential),
+      allowCredential:
+        allowCredential &&
+        toCredentialDescriptor(allowCredential, "credential.credentialId"),
       timeout,
       immediate,
     });
@@ -276,22 +289,38 @@ function toCredentialMetadata(
 }
 
 /**
- * Decodes the stored credential ID and rejects an empty ID, which would
- * otherwise allow any passkey.
+ * Decodes a stored credential ID and rejects an empty ID, which would
+ * otherwise fail to pin or exclude a credential.
  *
  * @throws MeraError with code `INPUT_INVALID` when the ID is empty or not
  * canonical unpadded base64url.
  */
-function toAllowCredential(
+function toCredentialDescriptor(
   credential: PasskeyCredentialMetadata,
-): WebAuthnClient.AllowCredential {
+  name: string,
+): WebAuthnClient.CredentialDescriptor {
   return {
     credentialId: base64UrlDecode(credential.credentialId, {
-      name: "credential.credentialId",
+      name,
       minByteLength: 1,
     }),
     transports: credential.transports?.slice(),
   };
+}
+
+function toExcludeCredentials(
+  credentials: readonly PasskeyCredentialMetadata[] | undefined,
+): WebAuthnClient.CredentialDescriptor[] | undefined {
+  if (credentials === undefined || credentials.length === 0) {
+    return undefined;
+  }
+
+  return credentials.map((credential, index) =>
+    toCredentialDescriptor(
+      credential,
+      `excludeCredentials[${index}].credentialId`,
+    ),
+  );
 }
 
 /**

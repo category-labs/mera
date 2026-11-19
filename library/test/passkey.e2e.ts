@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, test } from "@playwright/test";
+import { test as base, type CDPSession, expect } from "@playwright/test";
 
 // The test page imports the library by its package name, which transitively
 // pulls in bare specifiers from `@noble/*` and `@scure/*`. Browsers can't
@@ -22,33 +22,44 @@ const importMap = JSON.stringify({
 const indexHtml = `<!doctype html><html><head><script type="importmap">${importMap}</script></head><body></body></html>`;
 const repositoryPath = fileURLToPath(new URL("../..", import.meta.url));
 
-test.beforeEach(async ({ page }) => {
-  await page.route("http://localhost/**", (route) => {
-    const { pathname } = new URL(route.request().url());
-    if (pathname === "/") {
-      return route.fulfill({ contentType: "text/html", body: indexHtml });
-    }
-    return route
-      .fulfill({ path: join(repositoryPath, pathname) })
-      .catch(() => route.fulfill({ status: 404 }));
-  });
+const test = base.extend<{
+  authenticator: { session: CDPSession; id: string };
+}>({
+  authenticator: [
+    async ({ page }, use) => {
+      await page.route("http://localhost/**", (route) => {
+        const { pathname } = new URL(route.request().url());
+        if (pathname === "/") {
+          return route.fulfill({ contentType: "text/html", body: indexHtml });
+        }
+        return route
+          .fulfill({ path: join(repositoryPath, pathname) })
+          .catch(() => route.fulfill({ status: 404 }));
+      });
 
-  const client = await page.context().newCDPSession(page);
-  await client.send("WebAuthn.enable");
-  await client.send("WebAuthn.addVirtualAuthenticator", {
-    options: {
-      protocol: "ctap2",
-      ctap2Version: "ctap2_1",
-      transport: "internal",
-      hasResidentKey: true,
-      hasUserVerification: true,
-      isUserVerified: true,
-      hasPrf: true,
-      automaticPresenceSimulation: true,
+      const session = await page.context().newCDPSession(page);
+      await session.send("WebAuthn.enable");
+      const { authenticatorId } = await session.send(
+        "WebAuthn.addVirtualAuthenticator",
+        {
+          options: {
+            protocol: "ctap2",
+            ctap2Version: "ctap2_1",
+            transport: "internal",
+            hasResidentKey: true,
+            hasUserVerification: true,
+            isUserVerified: true,
+            hasPrf: true,
+            automaticPresenceSimulation: true,
+          },
+        },
+      );
+
+      await page.goto("http://localhost/");
+      await use({ session, id: authenticatorId });
     },
-  });
-
-  await page.goto("http://localhost/");
+    { auto: true },
+  ],
 });
 
 test("creates a PRF-capable passkey and returns stable PRF output", async ({
@@ -209,4 +220,66 @@ test("secret-vault functions create separate vaults and decrypt them", async ({
   expect(result.firstSalt).not.toBe(result.secondSalt);
   expect(result.secondCredential).toEqual(result.firstCredential);
   expect(result.tamperCode).toBe("DECRYPT_FAILED");
+});
+
+test("excludeCredentials rejects with PASSKEY_EXISTS while the credential exists and succeeds after removal", async ({
+  page,
+  authenticator,
+}) => {
+  const first = await page.evaluate(async () => {
+    const mera = await import("@category-labs/mera");
+    const created = await mera.createPasskeyWithPrfOutput({
+      rp: { id: "localhost", name: "Mera Test" },
+      user: { name: "nad", displayName: "nad" },
+    });
+
+    let duplicateCode: string | undefined;
+    try {
+      await mera.createPasskeyWithPrfOutput({
+        rp: { id: "localhost", name: "Mera Test" },
+        user: { name: "nad", displayName: "nad" },
+        excludeCredentials: [created],
+      });
+    } catch (error) {
+      duplicateCode = error instanceof mera.MeraError ? error.code : undefined;
+    }
+
+    return {
+      credentialId: created.credentialId,
+      transports: created.transports,
+      duplicateCode,
+    };
+  });
+
+  expect(first.duplicateCode).toBe("PASSKEY_EXISTS");
+
+  const { credentials } = await authenticator.session.send(
+    "WebAuthn.getCredentials",
+    { authenticatorId: authenticator.id },
+  );
+  expect(credentials).toHaveLength(1);
+  const [stored] = credentials;
+  if (stored === undefined) {
+    throw new Error("expected a stored credential");
+  }
+  await authenticator.session.send("WebAuthn.removeCredential", {
+    authenticatorId: authenticator.id,
+    credentialId: stored.credentialId,
+  });
+
+  const replacement = await page.evaluate(
+    async (excluded) => {
+      const mera = await import("@category-labs/mera");
+      const created = await mera.createPasskeyWithPrfOutput({
+        rp: { id: "localhost", name: "Mera Test" },
+        user: { name: "nad", displayName: "nad" },
+        excludeCredentials: [excluded],
+      });
+      return { credentialId: created.credentialId };
+    },
+    { credentialId: first.credentialId, transports: first.transports },
+  );
+
+  expect(replacement.credentialId).toMatch(/^[A-Za-z0-9_-]+$/u);
+  expect(replacement.credentialId).not.toBe(first.credentialId);
 });

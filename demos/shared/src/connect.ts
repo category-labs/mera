@@ -1,10 +1,15 @@
 import {
   createSecretVaultWithNewPasskey,
   decryptSecretVaultWithPasskey,
+  MeraError,
   type PasskeyCredentialMetadata,
   parseSecretVault,
 } from "@category-labs/mera";
-import { saveCachedAccount } from "./account";
+import {
+  loadKnownCredential,
+  saveCachedAccount,
+  saveKnownCredential,
+} from "./account";
 import {
   type EvmAccount,
   evmAccountFromMnemonic,
@@ -54,11 +59,15 @@ async function connect(
   action: "create" | "signin",
   phrase = "",
 ): Promise<ConnectedWallet> {
+  const known =
+    mode === "passkey" && action === "create"
+      ? loadKnownCredential()
+      : undefined;
   const wallet: ConnectedWallet =
     mode === "passkey"
       ? walletFromPrf(
           action === "create"
-            ? await createPasskeyPrf(rpId)
+            ? await createPasskeyPrf(rpId, known ? [known] : undefined)
             : await getPasskeyPrf(rpId),
         )
       : {
@@ -69,6 +78,9 @@ async function connect(
               : await decryptStoredVault(),
           ),
         };
+  if (action === "create" && wallet.credential !== undefined) {
+    saveKnownCredential(wallet.credential);
+  }
   try {
     saveCachedAccount({
       mode,
@@ -79,7 +91,19 @@ async function connect(
     wallet.session.end();
     throw error;
   }
+  if (action === "signin" && wallet.credential !== undefined) {
+    saveKnownCredential(wallet.credential);
+  }
   return wallet;
+}
+
+function loadVaultCredential(): PasskeyCredentialMetadata | undefined {
+  try {
+    const raw = localStorage.getItem(VAULT_KEY);
+    return raw === null ? undefined : parseSecretVault(raw).credential;
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -92,13 +116,23 @@ async function createVault(phrase: string): Promise<string> {
   if (!isValidMnemonic(trimmed)) {
     throw new Error("Enter a valid recovery phrase, or generate a fresh one.");
   }
+  const existing = loadVaultCredential();
   const secret = new TextEncoder().encode(trimmed);
   try {
     const vault = await createSecretVaultWithNewPasskey({
       ...newPasskeyOptions(rpId),
+      excludeCredentials: existing ? [existing] : undefined,
       secret,
     });
     localStorage.setItem(VAULT_KEY, JSON.stringify(vault));
+  } catch (error) {
+    if (error instanceof MeraError && error.code === "PASSKEY_EXISTS") {
+      throw new Error(
+        "The saved vault's passkey already exists. Sign in to open the saved vault's account.",
+        { cause: error },
+      );
+    }
+    throw error;
   } finally {
     secret.fill(0);
   }

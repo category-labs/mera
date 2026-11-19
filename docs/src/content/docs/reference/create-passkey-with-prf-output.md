@@ -53,6 +53,13 @@ Human-readable display name for the authenticator UI.
 
 32-byte PRF salt evaluated during creation or by the fallback [assertion](/concepts/passkeys-and-prf/#ceremonies-and-prompts). An explicit value supports custom PRF namespaces.
 
+### options.excludeCredentials
+
+- Type: `readonly PasskeyCredentialMetadata[]`
+- Optional; an empty list excludes nothing
+
+Credentials to exclude from creation. When the selected authenticator honors `excludeCredentials` and still holds one of these credentials, creation rejects with [`PASSKEY_EXISTS`](/reference/errors/#passkey_exists) instead of creating a duplicate. An authenticator that ignores `excludeCredentials` creates a new passkey as usual. Each `credentialId` must be non-empty canonical unpadded base64url.
+
 ### options.timeout
 
 - Type: `number`
@@ -83,9 +90,10 @@ type ReturnType = Promise<createPasskeyWithPrfOutput.Result>;
 ## Errors
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator reported no PRF support and returned no create-time output, returned an output that is not 32 bytes, or returned none on the fallback ceremony.
-- [`INPUT_INVALID`](/reference/errors/#input_invalid): an explicit `prfSalt` is not 32 bytes.
+- [`INPUT_INVALID`](/reference/errors/#input_invalid): an explicit `prfSalt` is not 32 bytes, or an `excludeCredentials` entry has an empty or non-canonical `credentialId`.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the runtime provides no `crypto.getRandomValues`.
 - [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled)
+- [`PASSKEY_EXISTS`](/reference/errors/#passkey_exists)
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed)
 
 ## Notes

@@ -133,6 +133,18 @@ type WebAuthnClientTypes = [
       WebAuthnClient.GetCredentialResult
     >
   >,
+  Expect<
+    Equal<
+      WebAuthnClient.CreateCredentialRequest["excludeCredentials"],
+      readonly WebAuthnClient.CredentialDescriptor[] | undefined
+    >
+  >,
+  Expect<
+    Equal<
+      WebAuthnClient.GetCredentialRequest["allowCredential"],
+      WebAuthnClient.CredentialDescriptor | undefined
+    >
+  >,
 ];
 
 type RemovedRootAliases = [

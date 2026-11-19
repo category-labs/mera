@@ -12,7 +12,9 @@ import type {
  * A `MeraError` that a client rejects with reaches the caller unchanged. Any
  * other rejection surfaces as `PASSKEY_OPERATION_FAILED` with the original
  * error as its `cause`. The built-in clients reject with `PASSKEY_CANCELLED`
- * when the person dismisses the prompt, it times out, or no passkey answers.
+ * when the person dismisses the prompt, it times out, or no passkey answers,
+ * and with `PASSKEY_EXISTS` when creation fails because the authenticator
+ * already holds a passkey listed in `excludeCredentials`.
  */
 type WebAuthnClient = {
   readonly createCredential: (
@@ -37,6 +39,11 @@ declare namespace WebAuthnClient {
     challenge: Uint8Array<ArrayBuffer>;
     /** COSE algorithm identifiers for the credential key, most preferred first. */
     algorithms: readonly number[];
+    /**
+     * Credentials the authenticator should refuse to duplicate. When omitted or
+     * empty, no existing credentials are excluded.
+     */
+    excludeCredentials?: readonly CredentialDescriptor[] | undefined;
     /** PRF salt to evaluate during creation, as 32 raw bytes. */
     prfSalt: Uint8Array<ArrayBuffer>;
     /** Discoverable-credential requirement. */
@@ -59,8 +66,8 @@ declare namespace WebAuthnClient {
     prfOutput?: Uint8Array | undefined;
   };
 
-  /** Credential an assertion is restricted to. */
-  type AllowCredential = {
+  /** Existing passkey identified by raw credential ID. */
+  type CredentialDescriptor = {
     credentialId: Uint8Array<ArrayBuffer>;
     /** Authenticator transports, which the platform reads as hints. */
     transports?: readonly PasskeyCredentialTransport[] | undefined;
@@ -75,7 +82,7 @@ declare namespace WebAuthnClient {
      * Credential the assertion is restricted to. When omitted, any discoverable
      * credential for `rpId` may answer.
      */
-    allowCredential?: AllowCredential | undefined;
+    allowCredential?: CredentialDescriptor | undefined;
     /** PRF salt to evaluate, as 32 raw bytes. */
     prfSalt: Uint8Array<ArrayBuffer>;
     userVerification: "required";
@@ -120,6 +127,9 @@ type CredentialRequestOptionsWithUiMode = CredentialRequestOptions & {
 
 const browserWebAuthnClient: WebAuthnClient = {
   async createCredential(request) {
+    const { excludeCredentials } = request;
+    const hasExcludedCredentials =
+      excludeCredentials !== undefined && excludeCredentials.length > 0;
     const options: CredentialCreationOptions = {
       publicKey: {
         rp: request.rp,
@@ -129,6 +139,13 @@ const browserWebAuthnClient: WebAuthnClient = {
           type: "public-key" as const,
           alg,
         })),
+        ...(hasExcludedCredentials
+          ? {
+              excludeCredentials: excludeCredentials.map(
+                toPublicKeyCredentialDescriptor,
+              ),
+            }
+          : {}),
         ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
         attestation: request.attestation,
         authenticatorSelection: {
@@ -145,7 +162,9 @@ const browserWebAuthnClient: WebAuthnClient = {
     };
     const credential = await globalThis.navigator?.credentials
       ?.create(options)
-      .catch(rejectCancelledCeremony);
+      .catch(
+        hasExcludedCredentials ? rejectCreateCeremony : rejectCancelledCeremony,
+      );
 
     const publicKeyCredential = assertPublicKeyCredential(credential);
     const prf = readPrfExtension(publicKeyCredential);
@@ -175,20 +194,7 @@ const browserWebAuthnClient: WebAuthnClient = {
         ...(allowCredential !== undefined
           ? {
               allowCredentials: [
-                {
-                  id: allowCredential.credentialId,
-                  type: "public-key" as const,
-                  ...(allowCredential.transports !== undefined
-                    ? {
-                        // The library's transport type admits future strings
-                        // beyond lib.dom's closed AuthenticatorTransport union.
-                        // The cast is safe: transports are hints, and WebAuthn
-                        // ignores values it does not recognize.
-                        transports:
-                          allowCredential.transports as AuthenticatorTransport[],
-                      }
-                    : {}),
-                },
+                toPublicKeyCredentialDescriptor(allowCredential),
               ],
             }
           : {}),
@@ -206,6 +212,39 @@ const browserWebAuthnClient: WebAuthnClient = {
     };
   },
 };
+
+function toPublicKeyCredentialDescriptor(
+  descriptor: WebAuthnClient.CredentialDescriptor,
+): PublicKeyCredentialDescriptor {
+  return {
+    id: descriptor.credentialId,
+    type: "public-key",
+    ...(descriptor.transports !== undefined
+      ? {
+          // The library's transport type admits future strings beyond lib.dom's
+          // closed AuthenticatorTransport union. The cast is safe: transports
+          // are hints, and WebAuthn ignores values it does not recognize.
+          transports: descriptor.transports as AuthenticatorTransport[],
+        }
+      : {}),
+  };
+}
+
+/**
+ * Rethrows `InvalidStateError`, which browsers raise when an authenticator
+ * already holds a passkey listed in `excludeCredentials`, as `PASSKEY_EXISTS`,
+ * and delegates cancellation errors to {@link rejectCancelledCeremony}.
+ */
+function rejectCreateCeremony(error: unknown): never {
+  if ((error as { name?: unknown } | null)?.name === "InvalidStateError") {
+    throw new MeraError(
+      "PASSKEY_EXISTS",
+      "An excluded passkey already exists on this authenticator",
+      { cause: error },
+    );
+  }
+  rejectCancelledCeremony(error);
+}
 
 /**
  * Rethrows `NotAllowedError`, which browsers raise when the person dismisses

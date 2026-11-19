@@ -37,7 +37,7 @@ const action = params.get("action");
 const credentialId = params.get("credentialId");
 const transports = params.get("transports");
 const credential: PasskeyCredentialMetadata | undefined =
-  credentialId === null
+  credentialId === null || credentialId === ""
     ? undefined
     : {
         credentialId,
@@ -67,7 +67,7 @@ function PasskeyPage({ action }: { action: Action }): ReactElement {
     try {
       const material =
         action === "create"
-          ? await createPasskeyPrf(RP_ID)
+          ? await createPasskeyPrf(RP_ID, credential ? [credential] : undefined)
           : await getPasskeyPrf(RP_ID, credential);
       postToExtension({ channel: PASSKEY_TAB_CHANNEL, kind: "prf", material });
       // postMessage sent a copy.

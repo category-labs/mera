@@ -27,6 +27,7 @@ type CachedAccount = {
 };
 
 const STORAGE_KEY = "mera.demo.account";
+const CREDENTIAL_KEY = "mera.demo.credential";
 
 function accountAddress(account: AccountState): EvmAddress | null {
   switch (account.status) {
@@ -55,7 +56,48 @@ function saveCachedAccount(account: CachedAccount): void {
 }
 
 function clearCachedAccount(): void {
+  if (loadKnownCredential() === undefined) {
+    const cached = loadCachedAccount();
+    if (cached?.credential !== undefined) {
+      saveKnownCredential(cached.credential);
+    }
+  }
   localStorage.removeItem(STORAGE_KEY);
+}
+
+/**
+ * The remembered passkey credential, kept across sign-outs so creating a new
+ * passkey can exclude it while it still exists on the authenticator. Holds no
+ * key material.
+ */
+function loadKnownCredential(): PasskeyCredentialMetadata | undefined {
+  try {
+    const value: unknown = JSON.parse(
+      localStorage.getItem(CREDENTIAL_KEY) ?? "null",
+    );
+    return isCredential(value) ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Remembers `credential` for future passkey creation. Preserves stored
+ * transports when a sign-in returns the same credential ID without them.
+ */
+function saveKnownCredential(credential: PasskeyCredentialMetadata): void {
+  try {
+    const existing = loadKnownCredential();
+    const merged: PasskeyCredentialMetadata =
+      existing !== undefined &&
+      existing.credentialId === credential.credentialId &&
+      credential.transports === undefined
+        ? existing
+        : credential;
+    localStorage.setItem(CREDENTIAL_KEY, JSON.stringify(merged));
+  } catch {
+    // Unavailable storage leaves the credential unremembered.
+  }
 }
 
 function isCachedAccount(value: unknown): value is CachedAccount {
@@ -76,6 +118,7 @@ function isCredential(value: unknown): value is PasskeyCredentialMetadata {
   const { credentialId, transports } = (value ?? {}) as Record<string, unknown>;
   return (
     typeof credentialId === "string" &&
+    credentialId.length > 0 &&
     (transports === undefined ||
       (Array.isArray(transports) &&
         transports.every((transport) => typeof transport === "string")))
@@ -87,5 +130,7 @@ export {
   accountAddress,
   clearCachedAccount,
   loadCachedAccount,
+  loadKnownCredential,
   saveCachedAccount,
+  saveKnownCredential,
 };

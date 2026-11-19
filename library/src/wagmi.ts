@@ -59,7 +59,10 @@ type Provider = {
 };
 
 /** The `create` connect parameter. */
-type CreatePasskey = { user: createPasskeyWithPrfOutput.Options["user"] };
+type CreatePasskey = Pick<
+  createPasskeyWithPrfOutput.Options,
+  "user" | "excludeCredentials"
+>;
 
 type Properties = {
   connect<withCapabilities extends boolean = false>(parameters?: {
@@ -85,6 +88,11 @@ type Properties = {
       : readonly Address[];
     chainId: number;
   }>;
+  /**
+   * Returns the connected account's passkey credential metadata, or
+   * `undefined` when no account is connected.
+   */
+  getCredential(): PasskeyCredentialMetadata | undefined;
 };
 
 /** Inputs for the passkey account connector. */
@@ -134,7 +142,9 @@ type MeraOptions = {
  * The connector keeps the account's address and credential metadata in
  * wagmi's storage, never key material, so reconnecting after a page load
  * shows no prompt. It ignores a record stored for another `rp.id` or
- * `accountIndex`. The connector starts on the config's first chain.
+ * `accountIndex`. `getCredential()` returns the connected account's credential
+ * metadata while connected, including when wagmi's storage is disabled. The
+ * connector starts on the config's first chain.
  *
  * The provider signs `personal_sign`, `eth_signTypedData_v4`, and
  * `eth_sendTransaction` itself, and refuses typed data whose domain names
@@ -240,6 +250,7 @@ function mera({
           : createPasskeyWithPrfOutput({
               rp,
               user: create.user,
+              excludeCredentials: create.excludeCredentials,
               webAuthnClient,
             });
       const { credentialId, transports, prfOutput } =
@@ -473,6 +484,14 @@ function mera({
       },
       async getAccounts() {
         return connectedAddresses();
+      },
+      getCredential() {
+        return connection === undefined
+          ? undefined
+          : toCredentialMetadata(
+              connection.account.credential.credentialId,
+              connection.account.credential.transports,
+            );
       },
       async getChainId() {
         return chain.id;

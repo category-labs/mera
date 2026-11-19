@@ -24,7 +24,7 @@ type PasskeyCredentialTransport =
   | "usb"
   | (string & {});
 
-/** Metadata needed to ask WebAuthn for a previously created passkey. */
+/** Metadata identifying a previously created passkey for WebAuthn. */
 type PasskeyCredentialMetadata = {
   /** Credential ID encoded as canonical unpadded base64url. */
   readonly credentialId: string;

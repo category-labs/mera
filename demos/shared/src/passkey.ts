@@ -37,9 +37,15 @@ function newPasskeyOptions(
   };
 }
 
-async function createPasskeyPrf(rpId: string): Promise<PasskeyPrf> {
+async function createPasskeyPrf(
+  rpId: string,
+  excludeCredentials?: readonly PasskeyCredentialMetadata[],
+): Promise<PasskeyPrf> {
   const { prfOutput, credentialId, transports } =
-    await createPasskeyWithPrfOutput(newPasskeyOptions(rpId));
+    await createPasskeyWithPrfOutput({
+      ...newPasskeyOptions(rpId),
+      excludeCredentials,
+    });
   return { prfOutput, credential: { credentialId, transports } };
 }
 

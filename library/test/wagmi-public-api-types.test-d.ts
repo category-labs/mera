@@ -1,3 +1,4 @@
+import type { PasskeyCredentialMetadata } from "../dist/index.js";
 import type { MeraOptions, mera } from "../dist/wagmi.js";
 
 type Equal<Left, Right> =
@@ -13,7 +14,18 @@ type WagmiFunctionOptions = Expect<
   Equal<Parameters<typeof mera>[0], MeraOptions>
 >;
 
+type WagmiConnectorCredential = Expect<
+  Equal<
+    ReturnType<ReturnType<typeof mera>>["getCredential"],
+    () => PasskeyCredentialMetadata | undefined
+  >
+>;
+
 // @ts-expect-error A lone options type stays standalone.
 type NoSingleMemberNamespace = mera.Options;
 
-export type { NoSingleMemberNamespace, WagmiFunctionOptions };
+export type {
+  NoSingleMemberNamespace,
+  WagmiConnectorCredential,
+  WagmiFunctionOptions,
+};

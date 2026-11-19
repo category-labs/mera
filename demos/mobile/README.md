@@ -111,9 +111,10 @@ appears.
 
 **Lock** ends the signing session but keeps the stored account. **Sign out**
 ends the session and removes the stored account. It does not delete the
-passkey from the passkey provider, and the position's cost basis stays for the
-next sign-in. **Export account** asks for the passkey again and shows the
-recovery phrase.
+passkey from the passkey provider. The remembered credential ID stays so
+creating a new account passes it in `excludeCredentials`, and the position's
+cost basis stays for the next sign-in. **Export account** asks for the passkey
+again and shows the recovery phrase.
 
 SecureStore data may remain after an iOS app is removed and installed again.
 Android removes it when the app is removed.

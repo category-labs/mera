@@ -60,6 +60,13 @@ Human-readable display name for the authenticator UI.
 
 Secret bytes to encrypt. Any non-empty length.
 
+### options.excludeCredentials
+
+- Type: `readonly PasskeyCredentialMetadata[]`
+- Optional; an empty list excludes nothing
+
+Credentials to exclude from creation. When the selected authenticator honors `excludeCredentials` and still holds one of these credentials, creation rejects with [`PASSKEY_EXISTS`](/reference/errors/#passkey_exists) instead of creating a duplicate. An authenticator that ignores `excludeCredentials` creates a new passkey as usual. Each `credentialId` must be non-empty canonical unpadded base64url.
+
 ### options.timeout
 
 - Type: `number`
@@ -87,9 +94,10 @@ A JSON-safe vault with `version`, `credential`, `prfSalt`, `nonce`, and `ciphert
 ## Errors
 
 - [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable): the authenticator did not enable PRF or return a usable 32-byte output.
-- [`INPUT_INVALID`](/reference/errors/#input_invalid): `secret` is empty.
+- [`INPUT_INVALID`](/reference/errors/#input_invalid): `secret` is empty, or an `excludeCredentials` entry has an empty or non-canonical `credentialId`.
 - [`CRYPTO_UNAVAILABLE`](/reference/errors/#crypto_unavailable): the runtime provides no `crypto.getRandomValues` or `crypto.subtle`, or its `crypto.subtle` lacks the HKDF or AES-GCM support the vault needs. A missing `crypto.subtle` fails before any prompt.
 - [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled)
+- [`PASSKEY_EXISTS`](/reference/errors/#passkey_exists)
 - [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed)
 
 ## Notes

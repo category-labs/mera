@@ -198,8 +198,9 @@ function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
  * ceremony still exists on the authenticator, but the thrown error does not
  * carry its metadata.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF or return a usable 32-byte PRF output.
- * @throws MeraError with code `INPUT_INVALID` when `secret` is empty.
+ * @throws MeraError with code `INPUT_INVALID` when `secret` is empty, or an `excludeCredentials` entry has an empty or non-canonical base64url `credentialId`.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.getRandomValues` or `crypto.subtle` is unavailable, or `crypto.subtle` lacks the HKDF or AES-GCM support the vault needs.
+ * @throws MeraError with code `PASSKEY_EXISTS` when the authenticator already holds a passkey listed in `excludeCredentials`.
  * @throws MeraError with code `PASSKEY_CANCELLED` when the person dismisses a prompt, it times out, or no passkey answers.
  * @throws MeraError with code `PASSKEY_OPERATION_FAILED` when WebAuthn is unavailable, fails for another reason, or returns an unexpected credential.
  */

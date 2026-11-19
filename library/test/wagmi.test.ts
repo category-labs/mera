@@ -88,8 +88,14 @@ function fakeAuthenticator(
     sha256(new Uint8Array([...secret, ...salt]));
 
   const client: WebAuthnClient = {
-    async createCredential({ prfSalt }) {
+    async createCredential({ prfSalt, excludeCredentials }) {
       prompts += 1;
+      const excluded = excludeCredentials?.some((credential) =>
+        passkeys.has(bytesToHex(credential.credentialId)),
+      );
+      if (excluded) {
+        throw new MeraError("PASSKEY_EXISTS", "Passkey already exists");
+      }
       const credentialId = crypto.getRandomValues(new Uint8Array(16));
       const secret = crypto.getRandomValues(new Uint8Array(32));
       passkeys.set(bytesToHex(credentialId), secret);
@@ -597,6 +603,48 @@ test("switches between the config's chains and refuses others", async () => {
   await expect(
     provider.request({ method: "wallet_switchEthereumChain", params: [null] }),
   ).rejects.toMatchObject({ code: -32602 });
+});
+
+test("exposes credential metadata via getCredential and forwards excludeCredentials on create", async () => {
+  const authenticator = fakeAuthenticator();
+  const page = openPage(authenticator, { persist: false });
+  expect(page.connector.getCredential()).toBeUndefined();
+
+  await connect(page.config, { connector: page.connector, create: { user } });
+  const created = page.connector.getCredential();
+  expect(created).toMatchObject({ transports: ["internal"] });
+  if (created === undefined) throw new Error("credential missing");
+  // Mutating the returned copy does not affect the connector's stored metadata.
+  (created.transports as string[] | undefined)?.push("usb");
+  const remembered = page.connector.getCredential();
+  expect(remembered?.transports).toEqual(["internal"]);
+  if (remembered === undefined) throw new Error("credential missing");
+
+  await disconnect(page.config);
+  expect(page.connector.getCredential()).toBeUndefined();
+
+  await expect(
+    connect(page.config, {
+      connector: page.connector,
+      create: {
+        user,
+        excludeCredentials: [remembered],
+      },
+    }),
+  ).rejects.toMatchObject({ name: "MeraError", code: "PASSKEY_EXISTS" });
+
+  const persisted = openPage(authenticator);
+  await connect(persisted.config, { connector: persisted.connector });
+  expect(persisted.connector.getCredential()).toEqual({
+    credentialId: created.credentialId,
+  });
+
+  const reloaded = openPage(authenticator, { items: persisted.items });
+  expect(reloaded.connector.getCredential()).toBeUndefined();
+  await reconnect(reloaded.config);
+  expect(reloaded.connector.getCredential()).toEqual({
+    credentialId: created.credentialId,
+  });
 });
 
 test("rejects signing methods and transaction fields it does not support", async () => {

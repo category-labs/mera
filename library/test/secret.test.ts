@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
-import type {
-  PasskeyCredentialTransport,
-  PasskeySecretVault,
+import {
+  MeraError,
+  type PasskeyCredentialTransport,
+  type PasskeySecretVault,
 } from "../dist/index.js";
 import {
   createSecretVault,
@@ -432,6 +433,45 @@ test("parseSecretVault accepts a ciphertext of exactly the GCM tag length", asyn
   // AES-GCM output (a bare tag), so parsing passes it through unchanged.
   const parsed = parseSecretVault({ ...vault, ciphertext: "A".repeat(22) });
   expect(parsed.ciphertext).toBe("A".repeat(22));
+});
+
+test("createSecretVaultWithNewPasskey forwards excludeCredentials and surfaces PASSKEY_EXISTS", async () => {
+  const secret = new Uint8Array(SECRET);
+  const { client, calls } = stubClient({
+    createError: new MeraError("PASSKEY_EXISTS", "Already exists"),
+  });
+
+  await expect(
+    createSecretVaultWithNewPasskey({
+      rp,
+      user,
+      secret,
+      excludeCredentials: [{ credentialId: CREDENTIAL_ID_BASE64URL }],
+      webAuthnClient: client,
+    }),
+  ).rejects.toMatchObject({ code: "PASSKEY_EXISTS" });
+
+  expect(calls.create).toHaveLength(1);
+  expect(calls.create[0]?.excludeCredentials).toEqual([
+    { credentialId: new Uint8Array([1, 2, 3, 4]), transports: undefined },
+  ]);
+  expect(secret).toEqual(SECRET);
+});
+
+test("createSecretVaultWithNewPasskey rejects invalid excludeCredentials before prompting", async () => {
+  const { client, calls } = stubClient();
+
+  await expect(
+    createSecretVaultWithNewPasskey({
+      rp,
+      user,
+      secret: SECRET,
+      excludeCredentials: [{ credentialId: "" }],
+      webAuthnClient: client,
+    }),
+  ).rejects.toMatchObject({ code: "INPUT_INVALID" });
+
+  expect(calls.create).toHaveLength(0);
 });
 
 test("decryptSecretVault rejects a wrong-length PRF output", async () => {

@@ -305,3 +305,35 @@ test("other native failures reach the caller unchanged", async () => {
   ).rejects.toBe(failure);
   await expect(client.getCredential(getRequest)).rejects.toBe(failure);
 });
+
+test("createCredential attaches the created passkey when native PRF output parsing fails", async () => {
+  for (const first of ["not!valid", [0, 256]] as unknown[]) {
+    const { platformApi } = stubPlatformApi({
+      createResult: createResult({
+        rawId: "++//==",
+        response: {
+          clientDataJSON: "",
+          attestationObject: "",
+          transports: ["internal", "hybrid"] as NonNullable<
+            PasskeyCreateResult["response"]["transports"]
+          >,
+        },
+        clientExtensionResults: {
+          prf: {
+            enabled: true,
+            results: { first: first as string },
+          },
+        },
+      }),
+    });
+    const client = createReactNativeWebAuthnClient(platformApi);
+
+    await expect(client.createCredential(createRequest)).rejects.toMatchObject({
+      code: "PRF_UNAVAILABLE",
+      credential: {
+        credentialId: "--__",
+        transports: ["internal", "hybrid"],
+      },
+    });
+  }
+});

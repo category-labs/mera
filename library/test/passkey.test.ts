@@ -544,6 +544,31 @@ test("createPasskeyWithPrfOutput errors carry the passkey only once its creation
   ).rejects.toBe(dismissed);
 });
 
+test("the browser client attaches the created passkey when PRF output parsing fails", async () => {
+  const navigator = {
+    credentials: {
+      async create() {
+        return stubPublicKeyCredential({
+          prf: { enabled: true, results: { first: [0, 256] } },
+          transports: ["internal"],
+        });
+      },
+    },
+  };
+
+  await withStubbedGlobal("navigator", navigator, async () => {
+    await expect(
+      createPasskeyWithPrfOutput({ rp, user }),
+    ).rejects.toMatchObject({
+      code: "PRF_UNAVAILABLE",
+      credential: {
+        credentialId: CREDENTIAL_ID_BASE64URL,
+        transports: ["internal"],
+      },
+    });
+  });
+});
+
 test("createPasskeyWithPrfOutput copies prfSalt for its second request and result", async () => {
   const originalSalt = Uint8Array.from({ length: 32 }, (_, index) => index);
   const prfSalt = new Uint8Array(originalSalt);

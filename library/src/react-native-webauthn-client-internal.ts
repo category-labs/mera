@@ -6,7 +6,12 @@ import type {
   PasskeyGetResult,
 } from "react-native-passkey";
 import { base64UrlDecode, normalizePrfOutput } from "./encoding.js";
-import { MeraError, type MeraErrorCode } from "./errors.js";
+import {
+  MeraError,
+  type MeraErrorCode,
+  toPasskeyError,
+  withCreatedCredential,
+} from "./errors.js";
 import type { WebAuthnClient } from "./webauthn.js";
 
 type PlatformApi = Pick<
@@ -74,17 +79,28 @@ function createReactNativeWebAuthnClient(
             : rejectCancelledCeremony,
         );
 
+      const credentialId = decodeNativeBase64Url(
+        created.rawId,
+        "Credential ID",
+        "PASSKEY_OPERATION_FAILED",
+      );
+      const transports = created.response.transports;
       const prf = created.clientExtensionResults?.prf;
+      let prfOutput: Uint8Array | undefined;
+      try {
+        prfOutput = readPrfOutput(prf?.results?.first);
+      } catch (error) {
+        throw withCreatedCredential(
+          toPasskeyError(error, "Passkey creation failed"),
+          { credentialId: base64urlnopad.encode(credentialId), transports },
+        );
+      }
 
       return {
-        credentialId: decodeNativeBase64Url(
-          created.rawId,
-          "Credential ID",
-          "PASSKEY_OPERATION_FAILED",
-        ),
-        transports: created.response.transports,
+        credentialId,
+        transports,
         prfEnabled: prf?.enabled === true,
-        prfOutput: readPrfOutput(prf?.results?.first),
+        prfOutput,
       };
     },
 

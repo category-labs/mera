@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { MeraError } from "../dist/errors.js";
 import {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
@@ -497,9 +498,50 @@ test("createPasskeyWithPrfOutput stops when a custom client reports no PRF suppo
 
   await expect(
     createPasskeyWithPrfOutput({ rp, user, webAuthnClient: client }),
-  ).rejects.toMatchObject({ code: "PRF_UNAVAILABLE" });
+  ).rejects.toMatchObject({
+    code: "PRF_UNAVAILABLE",
+    credential: {
+      credentialId: CREDENTIAL_ID_BASE64URL,
+      transports: ["internal"],
+    },
+  });
 
   expect(calls.get).toHaveLength(0);
+});
+
+test("createPasskeyWithPrfOutput errors carry the passkey only once its creation ceremony completed", async () => {
+  const platformFailure = new Error("the person dismissed the prompt");
+  const dismissed = new MeraError("PASSKEY_CANCELLED", "Prompt dismissed", {
+    cause: platformFailure,
+  });
+
+  const secondPrompt = stubClient({ getError: dismissed });
+  await expect(
+    createPasskeyWithPrfOutput({
+      rp,
+      user,
+      webAuthnClient: secondPrompt.client,
+    }),
+  ).rejects.toMatchObject({
+    code: "PASSKEY_CANCELLED",
+    message: "Prompt dismissed",
+    cause: platformFailure,
+    credential: {
+      credentialId: CREDENTIAL_ID_BASE64URL,
+      transports: ["internal"],
+    },
+  });
+  // A client may reject every call with one error, so it stays unmarked.
+  expect(dismissed).not.toHaveProperty("credential");
+
+  const firstPrompt = stubClient({ createError: dismissed });
+  await expect(
+    createPasskeyWithPrfOutput({
+      rp,
+      user,
+      webAuthnClient: firstPrompt.client,
+    }),
+  ).rejects.toBe(dismissed);
 });
 
 test("createPasskeyWithPrfOutput copies prfSalt for its second request and result", async () => {

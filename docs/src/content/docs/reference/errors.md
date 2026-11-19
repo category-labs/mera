@@ -8,15 +8,21 @@ The library uses `MeraError` for its documented failure modes. It carries a stab
 ## MeraError
 
 ```ts
-import type { MeraErrorCode } from "@category-labs/mera";
+import type {
+  MeraErrorCode,
+  PasskeyCredentialMetadata,
+} from "@category-labs/mera";
 
 // ---cut---
 declare class MeraError extends Error {
   readonly code: MeraErrorCode;
+  readonly credential?: PasskeyCredentialMetadata | undefined;
 }
 ```
 
 `name` is always `"MeraError"`. When a lower-level failure triggered the error (a [WebAuthn](https://www.w3.org/TR/webauthn-3/) rejection, a Web Crypto failure), it is attached as `cause`.
+
+`credential` is present only when [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) or [createSecretVaultWithNewPasskey](/reference/create-secret-vault-with-new-passkey/) fails after its creation ceremony completed. It holds the metadata of the passkey that ceremony left on the authenticator.
 
 `instanceof MeraError` narrows a caught value so `code` can be branched on:
 

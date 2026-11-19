@@ -1,5 +1,6 @@
+import { base64urlnopad } from "@scure/base";
 import { normalizePrfOutput } from "./encoding.js";
-import { MeraError } from "./errors.js";
+import { MeraError, toPasskeyError, withCreatedCredential } from "./errors.js";
 import type {
   PasskeyCredentialTransport,
   PasskeyRelyingParty,
@@ -12,8 +13,9 @@ import type {
  * A `MeraError` that a client rejects with reaches the caller unchanged. Any
  * other rejection surfaces as `PASSKEY_OPERATION_FAILED` with the original
  * error as its `cause`. When `getCredential` rejects during a creation's
- * fallback assertion, the caller gets a new `MeraError` with the same `code`,
- * `message`, and `cause`, plus the created passkey as `credential`.
+ * fallback assertion, the thrown `MeraError` also carries the created passkey
+ * as `credential`, copying a client-thrown `MeraError` with the same `code`,
+ * `message`, and `cause`.
  *
  * The built-in clients reject with `PASSKEY_CANCELLED` when the person
  * dismisses the prompt, it times out, or no passkey answers, and with
@@ -171,13 +173,23 @@ const browserWebAuthnClient: WebAuthnClient = {
       );
 
     const publicKeyCredential = assertPublicKeyCredential(credential);
-    const prf = readPrfExtension(publicKeyCredential);
+    const credentialId = new Uint8Array(publicKeyCredential.rawId);
     const response =
       publicKeyCredential.response as AuthenticatorAttestationResponse;
+    const transports = response.getTransports?.();
+    let prf: { enabled: boolean; output: Uint8Array | undefined };
+    try {
+      prf = readPrfExtension(publicKeyCredential);
+    } catch (error) {
+      throw withCreatedCredential(
+        toPasskeyError(error, "Passkey creation failed"),
+        { credentialId: base64urlnopad.encode(credentialId), transports },
+      );
+    }
 
     return {
-      credentialId: new Uint8Array(publicKeyCredential.rawId),
-      transports: response.getTransports?.(),
+      credentialId,
+      transports,
       prfEnabled: prf.enabled,
       prfOutput: prf.output,
     };

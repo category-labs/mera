@@ -1,11 +1,10 @@
 import { base64urlnopad } from "@scure/base";
 import { base64UrlDecode, isStringArray } from "./encoding.js";
-import { MeraError } from "./errors.js";
+import { MeraError, withCreatedCredential } from "./errors.js";
 import {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
   toCredentialMetadata,
-  withCreatedCredential,
 } from "./passkey.js";
 import type { PasskeySecretVault } from "./types.js";
 import { getSubtleCrypto, randomBytes } from "./webcrypto.js";

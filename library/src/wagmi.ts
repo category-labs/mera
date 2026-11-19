@@ -73,7 +73,9 @@ type Properties = {
      * Creates a passkey for this user and connects its account. Without it,
      * connecting asks for any passkey the relying party already has. When the
      * second prompt that some authenticators need is dismissed, the new
-     * passkey stays, and a later connect without `create` offers it.
+     * passkey stays, and a later connect without `create` offers it; the
+     * rejection's `cause` is the `MeraError` carrying its metadata as
+     * `credential`.
      */
     create?: CreatePasskey | undefined;
     /**

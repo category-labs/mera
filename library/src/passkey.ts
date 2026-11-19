@@ -2,7 +2,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { base64urlnopad } from "@scure/base";
 import { base64UrlDecode } from "./encoding.js";
-import { MeraError } from "./errors.js";
+import { MeraError, toPasskeyError, withCreatedCredential } from "./errors.js";
 import type {
   PasskeyCredentialMetadata,
   PasskeyCredentialTransport,
@@ -349,35 +349,8 @@ function copyPrfOutput(prfOutput: Uint8Array): Uint8Array<ArrayBuffer> {
   return new Uint8Array(prfOutput);
 }
 
-/**
- * Keeps a `MeraError` as is and wraps any other failure, such as a WebAuthn
- * rejection, as `PASSKEY_OPERATION_FAILED`.
- */
-function toPasskeyError(error: unknown, message: string): MeraError {
-  return error instanceof MeraError
-    ? error
-    : new MeraError("PASSKEY_OPERATION_FAILED", message, { cause: error });
-}
-
-/**
- * Copies a failure that followed a completed creation ceremony, adding the
- * passkey the authenticator now holds. The original stays as is, because a
- * client may reject every call with one shared error. Only `credentialId` and
- * `transports` are read, because a creation result also holds the PRF output.
- */
-function withCreatedCredential(
-  error: MeraError,
-  { credentialId, transports }: PasskeyCredentialMetadata,
-): MeraError {
-  return new MeraError(error.code, error.message, {
-    ...(error.cause !== undefined ? { cause: error.cause } : {}),
-    credential: toCredentialMetadata(credentialId, transports),
-  });
-}
-
 export {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
   toCredentialMetadata,
-  withCreatedCredential,
 };

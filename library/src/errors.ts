@@ -53,5 +53,34 @@ class MeraError extends Error {
   }
 }
 
+/**
+ * Keeps a `MeraError` as is and wraps any other failure, such as a WebAuthn
+ * rejection, as `PASSKEY_OPERATION_FAILED`.
+ */
+function toPasskeyError(error: unknown, message: string): MeraError {
+  return error instanceof MeraError
+    ? error
+    : new MeraError("PASSKEY_OPERATION_FAILED", message, { cause: error });
+}
+
+/**
+ * Copies a failure that followed a completed creation ceremony, adding the
+ * passkey the authenticator now holds. The original stays as is, because a
+ * client may reject every call with one shared error. Only `credentialId` and
+ * `transports` are read, because a creation result also holds the PRF output.
+ */
+function withCreatedCredential(
+  error: MeraError,
+  { credentialId, transports }: PasskeyCredentialMetadata,
+): MeraError {
+  return new MeraError(error.code, error.message, {
+    ...(error.cause !== undefined ? { cause: error.cause } : {}),
+    credential: {
+      credentialId,
+      ...(transports !== undefined ? { transports: [...transports] } : {}),
+    },
+  });
+}
+
 export type { MeraErrorCode };
-export { MeraError };
+export { MeraError, toPasskeyError, withCreatedCredential };

@@ -13,6 +13,8 @@ import type {
   deriveEvmPrivateKey,
   deriveSolanaPrivateKey,
   getPasskeyPrfOutput,
+  MeraError,
+  PasskeyCredentialMetadata,
   WebAuthnClient,
 } from "../dist/index.js";
 
@@ -168,7 +170,12 @@ type RemovedRootAliases = [
   import("../dist/index.js").WebAuthnAllowCredential,
 ];
 
+type MeraErrorTypes = [
+  Expect<Equal<MeraError["credential"], PasskeyCredentialMetadata | undefined>>,
+];
+
 export type {
+  MeraErrorTypes,
   NoSingleMemberNamespaces,
   PublicFunctionOptions,
   PublicFunctionResults,

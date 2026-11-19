@@ -74,7 +74,11 @@ const typedData = {
  * failure to throw; `beforeGet` holds an assertion prompt open.
  */
 function fakeAuthenticator(
-  options: { get?: unknown; beforeGet?: () => Promise<void> } = {},
+  options: {
+    createPrfOutput?: boolean;
+    get?: unknown;
+    beforeGet?: () => Promise<void>;
+  } = {},
 ): {
   client: WebAuthnClient;
   prompts(): number;
@@ -103,7 +107,9 @@ function fakeAuthenticator(
         credentialId,
         transports: ["internal"],
         prfEnabled: true,
-        prfOutput: prf(secret, prfSalt),
+        ...(options.createPrfOutput === false
+          ? {}
+          : { prfOutput: prf(secret, prfSalt) }),
       };
     },
     async getCredential(request) {
@@ -645,6 +651,40 @@ test("exposes credential metadata via getCredential and forwards excludeCredenti
   expect(reloaded.connector.getCredential()).toEqual({
     credentialId: created.credentialId,
   });
+});
+
+test("carries the created passkey on UserRejectedRequestError.cause when the fallback prompt is dismissed", async () => {
+  const authenticator = fakeAuthenticator({
+    createPrfOutput: false,
+    get: new MeraError("PASSKEY_CANCELLED", "Prompt dismissed"),
+  });
+  const page = openPage(authenticator, { persist: false });
+
+  const error: unknown = await connect(page.config, {
+    connector: page.connector,
+    create: { user },
+  }).catch((caught: unknown) => caught);
+
+  expect(error).toMatchObject({
+    name: "UserRejectedRequestError",
+    code: 4001,
+    cause: {
+      name: "MeraError",
+      code: "PASSKEY_CANCELLED",
+      credential: { transports: ["internal"] },
+    },
+  });
+  const { cause } = error as BaseError;
+  if (!(cause instanceof MeraError) || cause.credential === undefined) {
+    throw new Error("expected MeraError cause with credential");
+  }
+
+  await expect(
+    connect(page.config, {
+      connector: page.connector,
+      create: { user, excludeCredentials: [cause.credential] },
+    }),
+  ).rejects.toMatchObject({ name: "MeraError", code: "PASSKEY_EXISTS" });
 });
 
 test("rejects signing methods and transaction fields it does not support", async () => {

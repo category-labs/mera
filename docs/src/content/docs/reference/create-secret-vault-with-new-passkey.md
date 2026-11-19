@@ -104,7 +104,7 @@ A JSON-safe vault with `version`, `credential`, `prfSalt`, `nonce`, and `ciphert
 
 The credential's [user handle](/concepts/passkeys-and-prf/#user-handles) (`user.id`) is 32 random bytes, generated per call, so each call adds a passkey and never overwrites one.
 
-If the fallback ceremony or vault encryption fails after creation, the passkey remains on the authenticator and the error does not contain its metadata.
+If the fallback ceremony or vault encryption fails after creation, the passkey remains on the authenticator and the error carries its metadata as [`credential`](/reference/errors/#meraerror).
 
 ## See also
 

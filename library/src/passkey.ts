@@ -36,7 +36,7 @@ const PASSKEY_COSE_ALGORITHMS = [-7, -257];
  * verification ({@link getPasskeyPrfOutput} explains the requirement).
  *
  * Any failure after the creation ceremony completes leaves the passkey on the
- * authenticator, but the thrown error does not carry its metadata.
+ * authenticator, and the thrown error carries its metadata as `credential`.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator reports no PRF support and returns no create-time output, returns an output that is not 32 bytes, or returns none on the fallback ceremony.
  * @throws MeraError with code `INPUT_INVALID` when an explicit `prfSalt` is not 32 bytes, or an `excludeCredentials` entry has an empty or non-canonical base64url `credentialId`.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.getRandomValues` is unavailable.
@@ -52,6 +52,8 @@ async function createPasskeyWithPrfOutput({
   prfSalt,
   webAuthnClient = browserWebAuthnClient,
 }: createPasskeyWithPrfOutput.Options): Promise<createPasskeyWithPrfOutput.Result> {
+  let createdCredential: PasskeyCredentialMetadata | undefined;
+
   try {
     const prfSaltCopy = copyPrfSalt(prfSalt);
     const excluded = toExcludeCredentials(excludeCredentials);
@@ -71,6 +73,10 @@ async function createPasskeyWithPrfOutput({
       attestation: "none",
       timeout,
     });
+    createdCredential = toCredentialMetadata(
+      base64urlnopad.encode(created.credentialId),
+      created.transports,
+    );
 
     if (created.prfOutput === undefined && !created.prfEnabled) {
       throw new MeraError(
@@ -79,18 +85,13 @@ async function createPasskeyWithPrfOutput({
       );
     }
 
-    const credentialMetadata = toCredentialMetadata(
-      base64urlnopad.encode(created.credentialId),
-      created.transports,
-    );
-
     const prfOutput =
       created.prfOutput !== undefined
         ? copyPrfOutput(created.prfOutput)
         : (
             await getPasskeyPrfOutput({
               rpId: rp.id,
-              credential: credentialMetadata,
+              credential: createdCredential,
               prfSalt: prfSaltCopy,
               webAuthnClient,
               timeout,
@@ -98,12 +99,15 @@ async function createPasskeyWithPrfOutput({
           ).prfOutput;
 
     return {
-      ...credentialMetadata,
+      ...createdCredential,
       prfSalt: prfSaltCopy,
       prfOutput,
     };
   } catch (error) {
-    throw toPasskeyError(error, "Passkey creation failed");
+    const failure = toPasskeyError(error, "Passkey creation failed");
+    throw createdCredential === undefined
+      ? failure
+      : withCreatedCredential(failure, createdCredential);
   }
 }
 
@@ -355,8 +359,25 @@ function toPasskeyError(error: unknown, message: string): MeraError {
     : new MeraError("PASSKEY_OPERATION_FAILED", message, { cause: error });
 }
 
+/**
+ * Copies a failure that followed a completed creation ceremony, adding the
+ * passkey the authenticator now holds. The original stays as is, because a
+ * client may reject every call with one shared error. Only `credentialId` and
+ * `transports` are read, because a creation result also holds the PRF output.
+ */
+function withCreatedCredential(
+  error: MeraError,
+  { credentialId, transports }: PasskeyCredentialMetadata,
+): MeraError {
+  return new MeraError(error.code, error.message, {
+    ...(error.cause !== undefined ? { cause: error.cause } : {}),
+    credential: toCredentialMetadata(credentialId, transports),
+  });
+}
+
 export {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
   toCredentialMetadata,
+  withCreatedCredential,
 };

@@ -5,6 +5,7 @@ import {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
   toCredentialMetadata,
+  withCreatedCredential,
 } from "./passkey.js";
 import type { PasskeySecretVault } from "./types.js";
 import { getSubtleCrypto, randomBytes } from "./webcrypto.js";
@@ -195,8 +196,8 @@ function copyNonEmptySecret(secret: Uint8Array): Uint8Array<ArrayBuffer> {
  *
  * A runtime without `crypto.subtle` fails before any prompt. If the fallback
  * ceremony or vault encryption fails, the passkey from the completed creation
- * ceremony still exists on the authenticator, but the thrown error does not
- * carry its metadata.
+ * ceremony still exists on the authenticator, and the thrown error carries its
+ * metadata as `credential`.
  * @throws MeraError with code `PRF_UNAVAILABLE` when the authenticator does not enable PRF or return a usable 32-byte PRF output.
  * @throws MeraError with code `INPUT_INVALID` when `secret` is empty, or an `excludeCredentials` entry has an empty or non-canonical base64url `credentialId`.
  * @throws MeraError with code `CRYPTO_UNAVAILABLE` when `crypto.getRandomValues` or `crypto.subtle` is unavailable, or `crypto.subtle` lacks the HKDF or AES-GCM support the vault needs.
@@ -221,7 +222,13 @@ async function createSecretVaultWithNewPasskey({
     });
     prfOutput = credential.prfOutput;
 
-    return await createSecretVault({ credential, secret: secretCopy });
+    try {
+      return await createSecretVault({ credential, secret: secretCopy });
+    } catch (error) {
+      throw error instanceof MeraError
+        ? withCreatedCredential(error, credential)
+        : error;
+    }
   } finally {
     secretCopy.fill(0);
     prfOutput?.fill(0);

@@ -1,3 +1,5 @@
+import type { PasskeyCredentialMetadata } from "./types.js";
+
 /**
  * Stable error codes thrown by this package.
  *
@@ -26,11 +28,28 @@ type MeraErrorCode =
 class MeraError extends Error {
   /** Stable machine-readable category for the failure. */
   readonly code: MeraErrorCode;
+  // Declared without a class field, so other errors have no such property.
+  /**
+   * The passkey a creation ceremony left on the authenticator. Present only
+   * when `createPasskeyWithPrfOutput` or `createSecretVaultWithNewPasskey`
+   * fails after its creation ceremony completed.
+   */
+  declare readonly credential?: PasskeyCredentialMetadata | undefined;
 
-  constructor(code: MeraErrorCode, message: string, options?: ErrorOptions) {
+  constructor(
+    code: MeraErrorCode,
+    message: string,
+    options?: ErrorOptions & {
+      /** Value for {@link MeraError.credential}. */
+      credential?: PasskeyCredentialMetadata | undefined;
+    },
+  ) {
     super(message, options);
     this.name = "MeraError";
     this.code = code;
+    if (options?.credential !== undefined) {
+      this.credential = options.credential;
+    }
   }
 }
 

@@ -143,6 +143,12 @@ async function createOrReusePasskey() {
     );
     return created;
   } catch (error) {
+    if (error instanceof MeraError && error.credential) {
+      localStorage.setItem(
+        "app.derivedCredential",
+        JSON.stringify(error.credential),
+      );
+    }
     if (
       known &&
       error instanceof MeraError &&
@@ -156,6 +162,8 @@ async function createOrReusePasskey() {
 ```
 
 Credential IDs hold no key material, so the app can keep them after sign-out. The authenticator prompts before rejecting with [`PASSKEY_EXISTS`](/reference/errors/#passkey_exists), so falling back to `getPasskeyPrfOutput` shows a second prompt when the passkey still exists. Success does not prove the old passkey is gone: the authenticator may ignore `excludeCredentials`, or the passkey may live in another provider or device.
+
+A creation can fail after its ceremony completed, for example when the person dismisses the second prompt that [createPasskeyWithPrfOutput](/reference/create-passkey-with-prf-output/) shows on some authenticators. The passkey then stays on the authenticator, and the error carries its metadata as `credential`. The function stores it, so on the next call creation rejects with [`PASSKEY_EXISTS`](/reference/errors/#passkey_exists) and the function signs in with that passkey.
 
 ## Derive numbered accounts
 

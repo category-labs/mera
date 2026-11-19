@@ -67,7 +67,9 @@ async function connect(
     mode === "passkey"
       ? walletFromPrf(
           action === "create"
-            ? await createPasskeyPrf(rpId, known ? [known] : undefined)
+            ? await createPasskeyPrf(rpId, known ? [known] : undefined).catch(
+                rememberCreatedCredential,
+              )
             : await getPasskeyPrf(rpId),
         )
       : {
@@ -95,6 +97,17 @@ async function connect(
     saveKnownCredential(wallet.credential);
   }
   return wallet;
+}
+
+/**
+ * Remembers the passkey a failed creation left on the authenticator, so the
+ * next creation excludes it, then rethrows.
+ */
+function rememberCreatedCredential(error: unknown): never {
+  if (error instanceof MeraError && error.credential !== undefined) {
+    saveKnownCredential(error.credential);
+  }
+  throw error;
 }
 
 function loadVaultCredential(): PasskeyCredentialMetadata | undefined {

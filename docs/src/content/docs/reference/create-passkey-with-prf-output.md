@@ -102,7 +102,7 @@ The credential is requested with fixed parameters: ES256 or RS256 key types, att
 
 WebAuthn challenges and the credential's [user handle](/concepts/passkeys-and-prf/#user-handles) (`user.id`) are generated internally, 32 random bytes each. A fresh handle per call means each call adds a passkey and never overwrites one.
 
-Any failure after the creation ceremony completes leaves the passkey on the authenticator: it appears in the authenticator's passkey list, but the thrown error does not carry its metadata.
+Any failure after the creation ceremony completes leaves the passkey on the authenticator: it appears in the authenticator's passkey list, and the thrown error carries its metadata as [`credential`](/reference/errors/#meraerror).
 
 ## See also
 

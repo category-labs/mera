@@ -237,16 +237,17 @@ test("decryptSecretVaultWithPasskey rejects a malformed vault without prompting"
   expect(calls.get).toHaveLength(0);
 });
 
+const cryptoWithoutHkdf = {
+  getRandomValues: globalThis.crypto.getRandomValues.bind(globalThis.crypto),
+  subtle: {
+    async importKey() {
+      throw new DOMException("HKDF is unsupported", "NotSupportedError");
+    },
+  },
+};
+
 test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto or HKDF is unavailable", async () => {
   const vault = await createTestVault();
-  const cryptoWithoutHkdf = {
-    getRandomValues: globalThis.crypto.getRandomValues.bind(globalThis.crypto),
-    subtle: {
-      async importKey() {
-        throw new DOMException("HKDF is unsupported", "NotSupportedError");
-      },
-    },
-  };
 
   for (const runtimeCrypto of [undefined, cryptoWithoutHkdf]) {
     await withStubbedGlobal("crypto", runtimeCrypto, async () => {
@@ -279,6 +280,30 @@ test("createSecretVaultWithNewPasskey checks crypto.subtle before creating a pas
 
   expect(calls.create).toHaveLength(0);
   expect(calls.get).toHaveLength(0);
+});
+
+test("createSecretVaultWithNewPasskey errors carry the created passkey when encryption fails", async () => {
+  const { client } = stubClient();
+
+  const error: unknown = await withStubbedGlobal(
+    "crypto",
+    cryptoWithoutHkdf,
+    () =>
+      createSecretVaultWithNewPasskey({
+        rp,
+        user,
+        secret: SECRET,
+        webAuthnClient: client,
+      }).catch((caught: unknown) => caught),
+  );
+
+  expect(error).toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
+  // The creation result also holds the PRF salt and output, which must stay
+  // off the error.
+  expect((error as MeraError).credential).toEqual({
+    credentialId: CREDENTIAL_ID_BASE64URL,
+    transports: ["internal"],
+  });
 });
 
 test("zeroes the PRF output and secret handed to Web Crypto", async () => {

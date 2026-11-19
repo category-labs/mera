@@ -11,10 +11,14 @@ import type {
  * @remarks
  * A `MeraError` that a client rejects with reaches the caller unchanged. Any
  * other rejection surfaces as `PASSKEY_OPERATION_FAILED` with the original
- * error as its `cause`. The built-in clients reject with `PASSKEY_CANCELLED`
- * when the person dismisses the prompt, it times out, or no passkey answers,
- * and with `PASSKEY_EXISTS` when creation fails because the authenticator
- * already holds a passkey listed in `excludeCredentials`.
+ * error as its `cause`. When `getCredential` rejects during a creation's
+ * fallback assertion, the caller gets a new `MeraError` with the same `code`,
+ * `message`, and `cause`, plus the created passkey as `credential`.
+ *
+ * The built-in clients reject with `PASSKEY_CANCELLED` when the person
+ * dismisses the prompt, it times out, or no passkey answers, and with
+ * `PASSKEY_EXISTS` when creation fails because the authenticator already holds
+ * a passkey listed in `excludeCredentials`.
  */
 type WebAuthnClient = {
   readonly createCredential: (

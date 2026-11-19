@@ -43,7 +43,7 @@ The credential ID that answered and its optional PRF output.
 
 Requests and results use `Uint8Array` for binary values. When creation enables PRF but returns no output, mera calls `getCredential` with the same client and salt.
 
-A PRF output that is not 32 bytes fails with [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable). A [`MeraError`](/reference/errors/#meraerror) that a client throws reaches the caller unchanged, and anything else surfaces as [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed) with the original error as its `cause`. The built-in clients reject a cancelled ceremony with [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled) and reject creation with [`PASSKEY_EXISTS`](/reference/errors/#passkey_exists) when `excludeCredentials` is non-empty and the authenticator reports a matched excluded credential.
+A PRF output that is not 32 bytes fails with [`PRF_UNAVAILABLE`](/reference/errors/#prf_unavailable). A [`MeraError`](/reference/errors/#meraerror) that a client throws reaches the caller unchanged, and anything else surfaces as [`PASSKEY_OPERATION_FAILED`](/reference/errors/#passkey_operation_failed) with the original error as its `cause`. When `getCredential` rejects during a creation's fallback assertion, the caller gets a new `MeraError` with the same `code`, `message`, and `cause`, plus the created passkey as `credential`. The built-in clients reject a cancelled ceremony with [`PASSKEY_CANCELLED`](/reference/errors/#passkey_cancelled) and reject creation with [`PASSKEY_EXISTS`](/reference/errors/#passkey_exists) when `excludeCredentials` is non-empty and the authenticator reports a matched excluded credential.
 
 ## Usage
 

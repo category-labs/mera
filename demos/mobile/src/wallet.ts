@@ -29,6 +29,12 @@ async function createAccount(): Promise<Wallet> {
     ...newPasskeyOptions(rpId),
     excludeCredentials: known ? [known] : undefined,
     webAuthnClient: reactNativeWebAuthnClient,
+  }).catch((error: unknown) => {
+    // A creation that fails after its ceremony leaves a passkey to exclude.
+    if (error instanceof MeraError && error.credential !== undefined) {
+      saveKnownCredential(error.credential);
+    }
+    throw error;
   });
   saveKnownCredential({
     credentialId: result.credentialId,

@@ -189,7 +189,7 @@ test("a failed refresh after buying preserves the saved basis until balances rec
     },
   });
   await page
-    .getByRole("button", { name: "Create account", exact: true })
+    .getByRole("button", { name: "Create a new wallet", exact: true })
     .click();
   await expect(page.locator(".holding-value").first()).toHaveText("10,000.00");
   await page.getByLabel("Amount (DEMOCASH)").fill("100");
@@ -267,7 +267,7 @@ test("creating an account excludes the remembered passkey until it is removed", 
   );
 
   await page
-    .getByRole("button", { name: "Create account", exact: true })
+    .getByRole("button", { name: "Create a new wallet", exact: true })
     .click();
   await expect(page.locator(".holding-value").first()).toHaveText("10,000.00");
   const firstCredential = await page.evaluate(() =>
@@ -277,7 +277,7 @@ test("creating an account excludes the remembered passkey until it is removed", 
 
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Create account", exact: true }),
+    page.getByRole("button", { name: "Create a new wallet", exact: true }),
   ).toBeVisible();
   expect(
     await page.evaluate(() => localStorage.getItem("mera.demo.account")),
@@ -287,7 +287,7 @@ test("creating an account excludes the remembered passkey until it is removed", 
   ).toBe(firstCredential);
 
   await page
-    .getByRole("button", { name: "Create account", exact: true })
+    .getByRole("button", { name: "Create a new wallet", exact: true })
     .click();
   await expect(
     page.getByText("A passkey already exists for this demo. Sign in instead."),
@@ -304,7 +304,7 @@ test("creating an account excludes the remembered passkey until it is removed", 
   }
 
   await page
-    .getByRole("button", { name: "Create account", exact: true })
+    .getByRole("button", { name: "Create a new wallet", exact: true })
     .click();
   await expect(page.locator(".holding-value").first()).toHaveText("10,000.00");
   const secondCredential = await page.evaluate(() =>
@@ -322,7 +322,7 @@ test("creating an account excludes the remembered passkey until it is removed", 
     await page.evaluate(() => localStorage.getItem("mera.demo.credential")),
   ).toBe(secondCredential);
   await page
-    .getByRole("button", { name: "Create account", exact: true })
+    .getByRole("button", { name: "Create a new wallet", exact: true })
     .click();
   await expect(
     page.getByText("A passkey already exists for this demo. Sign in instead."),
@@ -341,4 +341,94 @@ test("creating an account excludes the remembered passkey until it is removed", 
       "The saved vault's passkey already exists. Sign in to open the saved vault's account.",
     ),
   ).toBeVisible();
+});
+
+test("a fresh launch makes existing-passkey sign-in primary", async ({
+  page,
+}) => {
+  await routeRpc(page, (method) => ({ result: readResult(method, 0n) }));
+  await page.goto("/");
+  await expect(page.locator(".connect-cta .actions button").first()).toHaveText(
+    "Sign in with a passkey",
+  );
+  await expect(page.locator(".connect-cta .btn.primary")).toHaveText(
+    "Sign in with a passkey",
+  );
+  await expect(
+    page.getByRole("button", { name: "Create a new wallet", exact: true }),
+  ).not.toHaveClass(/primary/u);
+});
+
+test("an incomplete sign-in can be retried without creating a passkey", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    navigator.credentials.get = async () => {
+      throw new DOMException("No matching credential", "NotAllowedError");
+    };
+    navigator.credentials.create = async () => {
+      throw new Error("Sign-in must not create a passkey");
+    };
+  });
+  await routeRpc(page, (method) => ({ result: readResult(method, 0n) }));
+  await page.goto("/");
+  const signin = page.getByRole("button", { name: /^Sign in/u });
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await signin.click();
+    await expect(
+      page.getByText(
+        "The passkey request didn't complete. Try again or use a passkey from another device.",
+      ),
+    ).toBeVisible();
+    await expect(signin).toBeEnabled();
+    expect(
+      await page.evaluate(() => localStorage.getItem("mera.demo.account")),
+    ).toBeNull();
+  }
+});
+
+test("sign-in discovers an existing passkey without a saved credential ID", async ({
+  page,
+  context,
+}) => {
+  await routeRpc(page, (method) => ({ result: readResult(method, 0n) }));
+  await page.goto("/");
+  const client = await context.newCDPSession(page);
+  await client.send("WebAuthn.enable");
+  const { authenticatorId } = await client.send(
+    "WebAuthn.addVirtualAuthenticator",
+    {
+      options: {
+        protocol: "ctap2",
+        transport: "internal",
+        hasResidentKey: true,
+        hasUserVerification: true,
+        isUserVerified: true,
+        automaticPresenceSimulation: true,
+        hasPrf: true,
+      },
+    },
+  );
+  await page
+    .getByRole("button", { name: "Create a new wallet", exact: true })
+    .click();
+  await expect(page.locator(".holding-value").first()).toHaveText("10,000.00");
+  const original = await page.evaluate(() =>
+    localStorage.getItem("mera.demo.account"),
+  );
+  expect(original).not.toBeNull();
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.getByRole("button", { name: /^Sign in/u }).click();
+  await expect(page.locator(".holding-value").first()).toHaveText("10,000.00");
+  expect(
+    await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("mera.demo.account") ?? "null").address,
+    ),
+  ).toBe(JSON.parse(original ?? "null").address);
+  const { credentials } = await client.send("WebAuthn.getCredentials", {
+    authenticatorId,
+  });
+  expect(credentials).toHaveLength(1);
 });

@@ -121,21 +121,21 @@ function ConnectPanel({
         <button
           type="button"
           className="btn primary"
+          onClick={() => void run("signin")}
+          disabled={busy !== null}
+        >
+          {actionLabel("signin", "Sign in with a passkey")}
+        </button>
+        <button
+          type="button"
+          className="btn"
           onClick={() => void run("create")}
           disabled={busy !== null || (mode === "vault" && !secretValid)}
         >
           {actionLabel(
             "create",
-            mode === "vault" ? "Open account" : "Create account",
+            mode === "vault" ? "Open account" : "Create a new wallet",
           )}
-        </button>
-        <button
-          type="button"
-          className="btn"
-          onClick={() => void run("signin")}
-          disabled={busy !== null}
-        >
-          {actionLabel("signin", "Sign in")}
         </button>
       </div>
       {error && <p className="status error">{error}</p>}

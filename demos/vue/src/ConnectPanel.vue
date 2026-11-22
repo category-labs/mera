@@ -109,18 +109,18 @@ function actionLabel(action: ConnectAction, idle: string): string {
       <button
         type="button"
         class="btn primary"
-        :disabled="busy !== null || (mode === 'vault' && !secretValid)"
-        @click="run('create')"
+        :disabled="busy !== null"
+        @click="run('signin')"
       >
-        {{ actionLabel("create", mode === "vault" ? "Open account" : "Create account") }}
+        {{ actionLabel("signin", "Sign in with a passkey") }}
       </button>
       <button
         type="button"
         class="btn"
-        :disabled="busy !== null"
-        @click="run('signin')"
+        :disabled="busy !== null || (mode === 'vault' && !secretValid)"
+        @click="run('create')"
       >
-        {{ actionLabel("signin", "Sign in") }}
+        {{ actionLabel("create", mode === "vault" ? "Open account" : "Create a new wallet") }}
       </button>
     </div>
     <p v-if="error" class="status error">{{ error }}</p>

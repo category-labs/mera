@@ -1,12 +1,51 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.6.8/schema.json",
+  "extends": [
+    "ultracite/biome/core",
+    "ultracite/biome/react",
+    "ultracite/biome/vue",
+    "ultracite/biome/astro",
+    "ultracite/biome/playwright"
+  ],
   "vcs": {
     "enabled": true,
     "clientKind": "git",
     "useIgnoreFile": true
   },
-  "formatter": {
-    "indentStyle": "space"
+  "linter": {
+    "rules": {
+      "performance": {
+        "noJsxPropsBind": "off"
+      },
+      "style": {
+        "noNamespace": "off",
+        "useConsistentTypeDefinitions": {
+          "level": "error",
+          "options": {
+            "style": "type"
+          }
+        },
+        "useErrorCause": "off",
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "requireAscii": true,
+            "filenameCases": ["camelCase", "kebab-case", "PascalCase"]
+          }
+        }
+      },
+      "suspicious": {
+        "noEmptyBlockStatements": "off",
+        "noEmptySource": {
+          "level": "error",
+          "options": {
+            "allowComments": true
+          }
+        },
+        "useAwait": "off",
+        "useExpect": "off"
+      }
+    }
   },
   "html": {
     "formatter": {
@@ -25,7 +64,23 @@
         "rules": {
           "correctness": {
             "noUnusedVariables": "off",
-            "noUnusedImports": "off"
+            "noUnusedImports": "off",
+            "useHookAtTopLevel": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.astro"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noUnknownAttribute": {
+              "level": "error",
+              "options": {
+                "ignore": ["class", "set:html"]
+              }
+            }
           }
         }
       }
@@ -40,7 +95,41 @@
               "options": {
                 "skip": ["SvgText"]
               }
-            }
+            },
+            "useReactNativePlatformComponents": "error"
+          },
+          "style": {
+            "noReactNativeLiteralColors": "error"
+          },
+          "suspicious": {
+            "noReactNativeDeepImports": "error"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["demos/extension/public/**"],
+      "javascript": {
+        "globals": ["chrome"]
+      }
+    },
+    {
+      "includes": ["**/*.d.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useConsistentTypeDefinitions": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/test/**", "**/tests/**"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noAwaitInLoops": "off",
+            "useTopLevelRegex": "off"
           }
         }
       }

@@ -45,7 +45,7 @@ type RpcReply = { result: unknown } | { error: string };
 
 async function routeRpc(
   page: Page,
-  reply: (method: string) => RpcReply,
+  reply: (method: string) => RpcReply
 ): Promise<void> {
   await page.route(`${DEMO_RPC_URL}/`, async (route) => {
     const { id, method } = route.request().postDataJSON() as {
@@ -100,7 +100,7 @@ test("Sell Max remains enabled after the quote falls; typing restores amount val
         mode: "passkey",
         address: cachedAddress,
         credential: { credentialId: "AQID" },
-      }),
+      })
     );
   }, address);
   await routeRpc(page, (method) => ({ result: readResult(method, shares) }));
@@ -133,7 +133,7 @@ test("a failed clipboard write shows on the copy button", async ({ page }) => {
         mode: "passkey",
         address: cachedAddress,
         credential: { credentialId: "AQID" },
-      }),
+      })
     );
     navigator.clipboard.writeText = () =>
       Promise.reject(new DOMException("Denied", "NotAllowedError"));
@@ -196,13 +196,13 @@ test("a failed refresh after buying preserves the saved basis until balances rec
   await page.getByLabel("Amount (DEMOCASH)").fill("100");
   await page.getByRole("button", { name: "Buy", exact: true }).click();
   await expect(
-    page.getByText("Bought 1 NAD for 100.00 DEMOCASH"),
+    page.getByText("Bought 1 NAD for 100.00 DEMOCASH")
   ).toBeVisible();
   await expect(page.locator(".card > .status.error")).toBeVisible();
   const storedBasis = () =>
     page.evaluate((prefix) => {
       const key = Object.keys(localStorage).find((entry) =>
-        entry.startsWith(prefix),
+        entry.startsWith(prefix)
       );
       return key === undefined ? null : localStorage.getItem(key);
     }, basisKey);
@@ -210,16 +210,16 @@ test("a failed refresh after buying preserves the saved basis until balances rec
   await expect(page.locator(".holding-value").first()).toHaveText("…");
   await expect(page.locator(".holding-value").nth(1)).toHaveText(/^1 · /u);
   await expect(
-    page.locator(".holding-row").filter({ hasText: "P&L" }),
+    page.locator(".holding-row").filter({ hasText: "P&L" })
   ).toContainText("-");
   await page.getByLabel("Amount (DEMOCASH)").fill("1");
   await expect(
-    page.getByRole("button", { name: "Buy", exact: true }),
+    page.getByRole("button", { name: "Buy", exact: true })
   ).toBeDisabled();
   failReads = false;
   await page.clock.runFor(5000);
   await expect(
-    page.locator(".holding-row").filter({ hasText: "P&L" }),
+    page.locator(".holding-row").filter({ hasText: "P&L" })
   ).toContainText("-");
   expect(await storedBasis()).toBe((100n * UNIT).toString());
   traded = false;
@@ -264,7 +264,7 @@ test("creating an account excludes the remembered passkey until it is removed", 
         automaticPresenceSimulation: true,
         hasPrf: true,
       },
-    },
+    }
   );
 
   await page
@@ -272,26 +272,26 @@ test("creating an account excludes the remembered passkey until it is removed", 
     .click();
   await expect(page.locator(".holding-value").first()).toHaveText("10,000.00");
   const firstCredential = await page.evaluate(() =>
-    localStorage.getItem("mera.demo.credential"),
+    localStorage.getItem("mera.demo.credential")
   );
   expect(firstCredential).not.toBeNull();
 
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Create account", exact: true }),
+    page.getByRole("button", { name: "Create account", exact: true })
   ).toBeVisible();
   expect(
-    await page.evaluate(() => localStorage.getItem("mera.demo.account")),
+    await page.evaluate(() => localStorage.getItem("mera.demo.account"))
   ).toBeNull();
   expect(
-    await page.evaluate(() => localStorage.getItem("mera.demo.credential")),
+    await page.evaluate(() => localStorage.getItem("mera.demo.credential"))
   ).toBe(firstCredential);
 
   await page
     .getByRole("button", { name: "Create account", exact: true })
     .click();
   await expect(
-    page.getByText("A passkey already exists for this demo. Sign in instead."),
+    page.getByText("A passkey already exists for this demo. Sign in instead.")
   ).toBeVisible();
 
   const { credentials } = await client.send("WebAuthn.getCredentials", {
@@ -309,7 +309,7 @@ test("creating an account excludes the remembered passkey until it is removed", 
     .click();
   await expect(page.locator(".holding-value").first()).toHaveText("10,000.00");
   const secondCredential = await page.evaluate(() =>
-    localStorage.getItem("mera.demo.credential"),
+    localStorage.getItem("mera.demo.credential")
   );
   expect(secondCredential).not.toBeNull();
   expect(secondCredential).not.toBe(firstCredential);
@@ -320,13 +320,13 @@ test("creating an account excludes the remembered passkey until it is removed", 
   await page.reload();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   expect(
-    await page.evaluate(() => localStorage.getItem("mera.demo.credential")),
+    await page.evaluate(() => localStorage.getItem("mera.demo.credential"))
   ).toBe(secondCredential);
   await page
     .getByRole("button", { name: "Create account", exact: true })
     .click();
   await expect(
-    page.getByText("A passkey already exists for this demo. Sign in instead."),
+    page.getByText("A passkey already exists for this demo. Sign in instead.")
   ).toBeVisible();
 
   await page.getByRole("button", { name: /Import existing secret/u }).click();
@@ -339,7 +339,7 @@ test("creating an account excludes the remembered passkey until it is removed", 
   await page.getByRole("button", { name: "Open account", exact: true }).click();
   await expect(
     page.getByText(
-      "The saved vault's passkey already exists. Sign in to open the saved vault's account.",
-    ),
+      "The saved vault's passkey already exists. Sign in to open the saved vault's account."
+    )
   ).toBeVisible();
 });

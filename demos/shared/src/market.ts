@@ -35,7 +35,7 @@ const BASE_PRICE = 40n * UNIT;
 /** Signed unit noise in [-1e18, 1e18], deterministic per (layerId, bucket). */
 function noise(layerId: bigint, bucket: bigint): bigint {
   const hashed = BigInt(
-    keccak256(encodePacked(["uint256", "uint256"], [layerId, bucket])),
+    keccak256(encodePacked(["uint256", "uint256"], [layerId, bucket]))
   );
   return (hashed % (2n * UNIT + 1n)) - UNIT;
 }
@@ -50,7 +50,7 @@ function noiseLayerAt(
   timestamp: bigint,
   layerId: bigint,
   period: bigint,
-  amplitude: bigint,
+  amplitude: bigint
 ): bigint {
   const bucket = timestamp / period;
   const startNoise = noise(layerId, bucket);
@@ -93,7 +93,7 @@ type Fill =
 
 async function readPortfolio(
   evm: EvmContext,
-  address: EvmAddress,
+  address: EvmAddress
 ): Promise<Portfolio> {
   const [cash, shares] = await Promise.all([
     evm.publicClient.getBalance({ address }),
@@ -163,7 +163,7 @@ async function filledShares(evm: EvmContext, hash: Hash): Promise<bigint> {
     abi: MARKET_ABI,
     eventName: "Transfer",
     logs: receipt.logs.filter((log) =>
-      isAddressEqual(log.address, evm.marketAddress),
+      isAddressEqual(log.address, evm.marketAddress)
     ),
   });
   if (transfer === undefined) {

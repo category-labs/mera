@@ -16,7 +16,7 @@ export default defineEcConfig({
         twoslash: {
           // Version 0.6.1 ignores `false`; an always-matching trigger applies
           // Twoslash to every block in the configured languages.
-          explicitTrigger: /^/,
+          explicitTrigger: /^/u,
           languages: ["ts", "tsx"],
         },
       },

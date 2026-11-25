@@ -48,33 +48,29 @@ const features = [
     </header>
 
     <div class="code-frame">
-      <Code code={installCommand} lang="sh" frame="none" />
+      <Code code={installCommand} frame="none" lang="sh" />
     </div>
 
     <ol class="features">
-      {
-        features.map((feature, index) => (
-          <li>
-            <span class="feature-number" aria-hidden="true">
-              {String(index + 1).padStart(2, "0")}
-            </span>
-            <div>
-              <a href={feature.link}>{feature.title}</a>
-              <p>{feature.text}</p>
-            </div>
-          </li>
-        ))
-      }
+      {features.map((feature, index) => (
+        <li>
+          <span aria-hidden="true" class="feature-number">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <div>
+            <a href={feature.link}>{feature.title}</a>
+            <p>{feature.text}</p>
+          </div>
+        </li>
+      ))}
     </ol>
 
     <div class="actions">
-      {
-        actions.map(({ icon, link, text, variant }) => (
-          <LinkButton href={link} {variant} icon={icon?.name}>
-            {text}
-          </LinkButton>
-        ))
-      }
+      {actions.map(({ icon, link, text, variant }) => (
+        <LinkButton href={link} {variant} icon={icon?.name}>
+          {text}
+        </LinkButton>
+      ))}
     </div>
 
     <div class="legal">
@@ -148,17 +144,16 @@ const features = [
   .tagline {
     max-width: 36ch;
     margin: 0;
-    color: var(--sl-color-white);
     font-size: clamp(1.65rem, 1.25rem + 1.7vw, 2.5rem);
     font-weight: 500;
-    letter-spacing: -0.025em;
     line-height: 1.12;
+    color: var(--sl-color-white);
+    letter-spacing: -0.025em;
   }
 
   /* Restyle the embedded code block through Expressive Code's documented
      style-setting variables, which inherit into its rendered markup. */
   .code-frame {
-    grid-area: code;
     --ec-brdCol: var(--sl-color-hairline);
     --ec-brdRad: 6px;
     --ec-codeBg: var(--sl-color-bg-inline-code);
@@ -166,6 +161,7 @@ const features = [
     --ec-codeLineHt: 1.6;
     --ec-codePadBlk: 0.7rem;
     --ec-codePadInl: 1rem;
+    grid-area: code;
   }
 
   .demo-column {
@@ -178,9 +174,9 @@ const features = [
     flex-direction: column;
     margin: 0;
     overflow: hidden;
+    background: #f5f6f8;
     border: 1px solid var(--sl-color-hairline);
     border-radius: 8px;
-    background: #f5f6f8;
   }
 
   .demo :global(iframe) {
@@ -193,8 +189,8 @@ const features = [
     display: grid;
     grid-area: features;
     grid-template-columns: minmax(0, 1fr);
-    margin: 0;
     padding: 0;
+    margin: 0;
     list-style: none;
     border-bottom: 1px solid var(--sl-color-hairline);
   }
@@ -208,31 +204,31 @@ const features = [
   }
 
   .feature-number {
-    color: var(--sl-color-accent-high);
     font-family: var(--sl-font-mono);
     font-size: 0.82rem;
     line-height: 1.6;
+    color: var(--sl-color-accent-high);
   }
 
   .features a {
-    color: var(--sl-color-white);
     font-weight: 500;
+    color: var(--sl-color-white);
     letter-spacing: -0.01em;
     text-decoration: none;
   }
 
   .features a:hover {
     text-decoration: underline;
-    text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
     text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
     text-underline-offset: 0.16em;
   }
 
   .features p {
     margin: 0.2rem 0 0;
-    color: var(--sl-color-gray-2);
     font-size: 0.9rem;
     line-height: 1.5;
+    color: var(--sl-color-gray-2);
   }
 
   .actions {
@@ -247,9 +243,9 @@ const features = [
   }
 
   .actions :global(.sl-link-button.minimal) {
+    color: var(--sl-color-white);
     border: 1px solid var(--sl-color-hairline);
     border-radius: 10px;
-    color: var(--sl-color-white);
   }
 
   .legal {
@@ -280,10 +276,10 @@ const features = [
     }
 
     .demo-column {
-      grid-column: 2;
-      grid-row: 1;
       position: sticky;
       top: calc(var(--sl-nav-height) + 1.5rem);
+      grid-row: 1;
+      grid-column: 2;
       align-self: start;
       height: calc(100dvh - var(--sl-nav-height) - 3rem);
       padding-inline-start: clamp(0.75rem, 2vw, 3rem);
@@ -302,8 +298,8 @@ const features = [
     .actions {
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
       gap: 1rem 1.5rem;
+      align-items: center;
     }
 
     .actions :global(.sl-link-button) {
@@ -311,9 +307,9 @@ const features = [
     }
 
     .actions :global(.sl-link-button.minimal) {
+      color: var(--sl-color-text-accent);
       border: 0;
       border-radius: 0;
-      color: var(--sl-color-text-accent);
     }
   }
 

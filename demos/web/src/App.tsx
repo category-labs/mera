@@ -30,9 +30,9 @@ function App(): ReactElement {
         />
       </header>
       <TradingCard
+        account={account}
         evm={evm}
         evmError={evmError}
-        account={account}
         onAccountChange={setAccount}
       />
     </main>

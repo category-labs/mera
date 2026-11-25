@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "build": "npm run build -w library",
+    "build:site": "npm run build && npm run build -w demos/web && npm run build -w demos/prf && npm run build -w docs",
     "check": "biome check .",
     "check:all": "npm run check && npm test && npm run test:demos && npm run check:mobile && npm run check:docs && npm run check:pack",
     "check:docs": "npm run build && npm run build -w docs",
@@ -16,12 +17,7 @@
     "format": "biome check --write .",
     "test": "npm test -w library",
     "test:demos": "npm run build && npm run build -w demos/web && npm run build -w demos/vue && npm test -w demos/shared && npm test -w demos/extension && npm test -w demos/prf && npm run build -w demos/prf",
-    "test:e2e": "npm run test:e2e -w library",
-    "build:site": "npm run build && npm run build -w demos/web && npm run build -w demos/prf && npm run build -w docs"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.6.8",
-    "typescript": "5.9.3"
+    "test:e2e": "npm run test:e2e -w library"
   },
   "overrides": {
     "expressive-code-twoslash@0.6.1": {
@@ -29,10 +25,15 @@
       "expressive-code": ">=0.44.1"
     }
   },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.8",
+    "typescript": "5.9.3",
+    "ultracite": "8.3.1"
+  },
+  "packageManager": "npm@12.2.3+sha512.a2f98d4517bbe89bdca7513a88e78f43a1fd66be1730eaea81f69e18d86d46f3f75d29762e8fdaf42d4de7f8d194b2ebb2a09e9bfa268067591e96796baca7d5",
   "engines": {
     "node": ">=26"
   },
-  "packageManager": "npm@12.2.3+sha512.a2f98d4517bbe89bdca7513a88e78f43a1fd66be1730eaea81f69e18d86d46f3f75d29762e8fdaf42d4de7f8d194b2ebb2a09e9bfa268067591e96796baca7d5",
   "allowScripts": {
     "fsevents@2.3.3": true
   }

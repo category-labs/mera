@@ -41,7 +41,7 @@ type ToViemAccountOptions = {
  */
 function toViemAccount(
   session: Secp256k1SigningSession,
-  { nonceManager }: ToViemAccountOptions = {},
+  { nonceManager }: ToViemAccountOptions = {}
 ): LocalAccount<"mera"> {
   const address = getEvmAddress(session.publicKey);
 
@@ -73,7 +73,7 @@ function toViemAccount(
         authorization.address) as Hex;
       const { chainId, nonce } = authorization;
       const signature = signHash(
-        hashAuthorization({ address: contract, chainId, nonce }),
+        hashAuthorization({ address: contract, chainId, nonce })
       );
       return { address: contract, chainId, nonce, ...signature };
     },
@@ -82,7 +82,7 @@ function toViemAccount(
     },
     async signTransaction(
       transaction,
-      { serializer = serializeTransaction } = {},
+      { serializer = serializeTransaction } = {}
     ) {
       // EIP-4844 transactions sign the payload without sidecars; serializing
       // the full transaction below reattaches them.
@@ -91,7 +91,7 @@ function toViemAccount(
           ? { ...transaction, sidecars: false as const }
           : transaction;
       const signature = signHash(
-        keccak256(await serializer(signableTransaction)),
+        keccak256(await serializer(signableTransaction))
       );
       return serializer(transaction, signature);
     },

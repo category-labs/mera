@@ -1,10 +1,10 @@
 <svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 680 276"
-  width="680"
+  class="mera-diagram"
   height="276"
   role="img"
-  class="mera-diagram"
+  viewBox="0 0 680 276"
+  width="680"
+  xmlns="http://www.w3.org/2000/svg"
 >
   <title>
     The trust boundary. The app runs in a page under the rpId with mera embedded
@@ -17,47 +17,47 @@
   <defs>
     <marker
       id="tb-arrow"
-      viewBox="0 0 10 10"
+      markerHeight="7"
+      markerWidth="7"
+      orient="auto-start-reverse"
       refX="8"
       refY="5"
-      markerWidth="7"
-      markerHeight="7"
-      orient="auto-start-reverse"
+      viewBox="0 0 10 10"
     >
-      <path d="M0 0 L10 5 L0 10 z" class="d-head" />
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" />
     </marker>
   </defs>
 
-  <rect class="d-zone" x="24" y="24" width="372" height="228" rx="10" />
-  <text x="38" y="46" class="d-sub">any page under the rpId</text>
+  <rect class="d-zone" height="228" rx="10" width="372" x="24" y="24" />
+  <text class="d-sub" x="38" y="46">any page under the rpId</text>
 
-  <rect class="d-node" x="48" y="72" width="324" height="140" rx="8" />
-  <text x="210" y="98" text-anchor="middle">The app</text>
-  <text x="210" y="117" text-anchor="middle" class="d-sub">
+  <rect class="d-node" height="140" rx="8" width="324" x="48" y="72" />
+  <text text-anchor="middle" x="210" y="98">The app</text>
+  <text class="d-sub" text-anchor="middle" x="210" y="117">
     holds the derived key in memory
   </text>
 
-  <rect class="d-node" x="72" y="136" width="276" height="52" rx="8" />
-  <text x="210" y="167" text-anchor="middle">mera</text>
+  <rect class="d-node" height="52" rx="8" width="276" x="72" y="136" />
+  <text text-anchor="middle" x="210" y="167">mera</text>
 
   <path
     class="d-edge"
     d="M348 162 H478"
-    marker-start="url(#tb-arrow)"
     marker-end="url(#tb-arrow)"
+    marker-start="url(#tb-arrow)"
   />
-  <text x="440" y="152" text-anchor="middle" class="d-sub">WebAuthn</text>
-  <text x="440" y="182" text-anchor="middle" class="d-sub">ceremonies</text>
+  <text class="d-sub" text-anchor="middle" x="440" y="152">WebAuthn</text>
+  <text class="d-sub" text-anchor="middle" x="440" y="182">ceremonies</text>
 
-  <rect class="d-secret" x="484" y="92" width="180" height="140" rx="8" />
-  <text x="574" y="128" text-anchor="middle">Authenticator</text>
-  <text x="574" y="150" text-anchor="middle" class="d-sub">
+  <rect class="d-secret" height="140" rx="8" width="180" x="484" y="92" />
+  <text text-anchor="middle" x="574" y="128">Authenticator</text>
+  <text class="d-sub" text-anchor="middle" x="574" y="150">
     holds the passkey and PRF
   </text>
-  <text x="574" y="168" text-anchor="middle" class="d-sub">
+  <text class="d-sub" text-anchor="middle" x="574" y="168">
     the key never leaves
   </text>
-  <text x="574" y="186" text-anchor="middle" class="d-sub">
+  <text class="d-sub" text-anchor="middle" x="574" y="186">
     asks for user verification
   </text>
 </svg>

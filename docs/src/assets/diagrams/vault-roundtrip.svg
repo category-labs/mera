@@ -1,10 +1,10 @@
 <svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 680 468"
-  width="680"
+  class="mera-diagram"
   height="468"
   role="img"
-  class="mera-diagram"
+  viewBox="0 0 680 468"
+  width="680"
+  xmlns="http://www.w3.org/2000/svg"
 >
   <title>
     The vault round trip. A secret, a phrase, a key, or any bytes, is encrypted
@@ -18,39 +18,39 @@
   <defs>
     <marker
       id="vr-arrow"
-      viewBox="0 0 10 10"
+      markerHeight="7"
+      markerWidth="7"
+      orient="auto-start-reverse"
       refX="8"
       refY="5"
-      markerWidth="7"
-      markerHeight="7"
-      orient="auto-start-reverse"
+      viewBox="0 0 10 10"
     >
-      <path d="M0 0 L10 5 L0 10 z" class="d-head" />
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" />
     </marker>
   </defs>
 
-  <rect class="d-secret" x="60" y="24" width="240" height="56" rx="8" />
-  <text x="180" y="57" text-anchor="middle">Secret</text>
+  <rect class="d-secret" height="56" rx="8" width="240" x="60" y="24" />
+  <text text-anchor="middle" x="180" y="57">Secret</text>
 
   <path class="d-edge" d="M180 80 V140" marker-end="url(#vr-arrow)" />
 
-  <rect class="d-node" x="60" y="144" width="240" height="56" rx="8" />
-  <text x="180" y="177" text-anchor="middle">AES-256-GCM</text>
+  <rect class="d-node" height="56" rx="8" width="240" x="60" y="144" />
+  <text text-anchor="middle" x="180" y="177">AES-256-GCM</text>
 
-  <rect class="d-node" x="380" y="144" width="260" height="56" rx="8" />
-  <text x="510" y="177" text-anchor="middle">Passkey ceremony</text>
+  <rect class="d-node" height="56" rx="8" width="260" x="380" y="144" />
+  <text text-anchor="middle" x="510" y="177">Passkey ceremony</text>
 
   <path class="d-edge" d="M380 172 H308" marker-end="url(#vr-arrow)" />
-  <text x="344" y="164" text-anchor="middle" class="d-sub">PRF output</text>
+  <text class="d-sub" text-anchor="middle" x="344" y="164">PRF output</text>
 
   <path class="d-edge" d="M180 200 V260" marker-end="url(#vr-arrow)" />
 
-  <rect class="d-node" x="60" y="264" width="240" height="64" rx="8" />
-  <text x="180" y="301" text-anchor="middle">Vault JSON</text>
+  <rect class="d-node" height="64" rx="8" width="240" x="60" y="264" />
+  <text text-anchor="middle" x="180" y="301">Vault JSON</text>
 
   <path class="d-edge" d="M180 328 V388" marker-end="url(#vr-arrow)" />
-  <text x="192" y="362" class="d-sub">unlock</text>
+  <text class="d-sub" x="192" y="362">unlock</text>
 
-  <rect class="d-secret" x="60" y="392" width="240" height="56" rx="8" />
-  <text x="180" y="425" text-anchor="middle">Secret</text>
+  <rect class="d-secret" height="56" rx="8" width="240" x="60" y="392" />
+  <text text-anchor="middle" x="180" y="425">Secret</text>
 </svg>

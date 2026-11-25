@@ -239,12 +239,12 @@ function mera({
      */
     async function signIn(
       create: CreatePasskey | undefined,
-      immediate: boolean,
+      immediate: boolean
     ): Promise<StoredAccount> {
       if (create !== undefined && immediate) {
         throw new MeraError(
           "INPUT_INVALID",
-          "immediate cannot be combined with create",
+          "immediate cannot be combined with create"
         );
       }
       const ceremony: Promise<
@@ -305,18 +305,18 @@ function mera({
      */
     async function withSigner<T>(
       address: unknown,
-      sign: (account: LocalAccount) => Promise<T>,
+      sign: (account: LocalAccount) => Promise<T>
     ): Promise<T> {
       const current = connection;
       if (current === undefined) {
         throw new UnauthorizedProviderError(
-          new Error("No passkey account is connected"),
+          new Error("No passkey account is connected")
         );
       }
       const { address: connected } = current.account;
-      if (!isAddressString(address) || !isAddressEqual(address, connected)) {
+      if (!(isAddressString(address) && isAddressEqual(address, connected))) {
         throw new UnauthorizedProviderError(
-          new Error(`The connected passkey account is ${connected}`),
+          new Error(`The connected passkey account is ${connected}`)
         );
       }
 
@@ -327,7 +327,7 @@ function mera({
 
     async function signOnce<T>(
       current: Connection,
-      sign: (account: LocalAccount) => Promise<T>,
+      sign: (account: LocalAccount) => Promise<T>
     ): Promise<T> {
       checkConnected(current);
       const opened = current.opened ?? (await openStoredAccount(current));
@@ -347,7 +347,7 @@ function mera({
      * ceremony or the passkey opened a different address.
      */
     async function openStoredAccount(
-      current: Connection,
+      current: Connection
     ): Promise<OpenedAccount> {
       const { account } = current;
       const { prfOutput } = await getPasskeyPrfOutput({
@@ -361,8 +361,8 @@ function mera({
         if (!isAddressEqual(opened.account.address, account.address)) {
           throw new UnauthorizedProviderError(
             new Error(
-              `The passkey opened ${opened.account.address}, not ${account.address}`,
-            ),
+              `The passkey opened ${opened.account.address}, not ${account.address}`
+            )
           );
         }
       } catch (error) {
@@ -378,7 +378,7 @@ function mera({
     function checkConnected(current: Connection): void {
       if (connection !== current) {
         throw new UserRejectedRequestError(
-          new Error("The passkey account disconnected during the request"),
+          new Error("The passkey account disconnected during the request")
         );
       }
     }
@@ -395,7 +395,7 @@ function mera({
         case "eth_requestAccounts":
           if (connection === undefined) {
             throw new UnauthorizedProviderError(
-              new Error("Connect the passkey account first"),
+              new Error("Connect the passkey account first")
             );
           }
           return [connection.account.address];
@@ -414,14 +414,14 @@ function mera({
             throw new InvalidParamsRpcError(new Error("message must be hex"));
           }
           return withSigner(address, (account) =>
-            account.signMessage({ message: { raw: message } }),
+            account.signMessage({ message: { raw: message } })
           );
         }
         case "eth_signTypedData_v4": {
           const [address, typedData] = args;
           const definition = parseTypedData(typedData, chain.id);
           return withSigner(address, (account) =>
-            account.signTypedData(definition),
+            account.signTypedData(definition)
           );
         }
         case "eth_sendTransaction": {
@@ -437,7 +437,7 @@ function mera({
               ...parsed.request,
               account,
               chain: current,
-            } as never),
+            } as never)
           );
         }
       }
@@ -451,7 +451,7 @@ function mera({
         // one eth_sendTransaction per call only on a "not supported" error.
         throw new MethodNotSupportedRpcError(
           new Error(`${method} is not supported by the passkey account`),
-          { method },
+          { method }
         );
       }
 
@@ -503,7 +503,7 @@ function mera({
           ? undefined
           : toCredentialMetadata(
               connection.account.credential.credentialId,
-              connection.account.credential.transports,
+              connection.account.credential.transports
             );
       },
       async getChainId() {
@@ -544,7 +544,7 @@ type Connection = {
 /** Opens the account at `accountIndex`. Zeroes `prfOutput` and the derived key. */
 function openAccount(
   prfOutput: Uint8Array,
-  accountIndex: number,
+  accountIndex: number
 ): OpenedAccount {
   let privateKey: Uint8Array | undefined;
   try {
@@ -610,7 +610,7 @@ function parseTypedData(value: unknown, chainId: number): TypedDataDefinition {
   const domainChainId = definition.domain?.chainId;
   if (domainChainId !== undefined && Number(domainChainId) !== chainId) {
     throw new InvalidParamsRpcError(
-      new Error(`The passkey account is on chain ${chainId}`),
+      new Error(`The passkey account is on chain ${chainId}`)
     );
   }
   return definition;
@@ -629,7 +629,7 @@ const TRANSACTION_TYPES = new Map([
  */
 function parseTransactionRequest(
   transaction: unknown,
-  chainId: number,
+  chainId: number
 ): { from: unknown; request: Record<string, unknown> } {
   if (typeof transaction !== "object" || transaction === null) {
     throw new InvalidParamsRpcError(new Error("transaction must be an object"));
@@ -652,11 +652,11 @@ function parseTransactionRequest(
     ...unsupported
   } = transaction as Record<string, unknown>;
   const field = Object.keys(unsupported).find(
-    (key) => unsupported[key] !== undefined,
+    (key) => unsupported[key] !== undefined
   );
   if (field !== undefined) {
     throw new InvalidParamsRpcError(
-      new Error(`Unsupported transaction field: ${field}`),
+      new Error(`Unsupported transaction field: ${field}`)
     );
   }
 
@@ -665,7 +665,7 @@ function parseTransactionRequest(
     quantity("chainId", requestedChainId) !== BigInt(chainId)
   ) {
     throw new InvalidParamsRpcError(
-      new Error(`The passkey account is on chain ${chainId}`),
+      new Error(`The passkey account is on chain ${chainId}`)
     );
   }
 
@@ -698,7 +698,7 @@ function parseTransactionRequest(
       typeof type === "string" ? TRANSACTION_TYPES.get(type) : undefined;
     if (request.type === undefined) {
       throw new InvalidParamsRpcError(
-        new Error(`Unsupported transaction type: ${String(type)}`),
+        new Error(`Unsupported transaction type: ${String(type)}`)
       );
     }
   }

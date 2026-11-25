@@ -76,7 +76,7 @@ function fakeAuthenticator(
     createPrfOutput?: boolean;
     get?: unknown;
     beforeGet?: () => Promise<void>;
-  } = {},
+  } = {}
 ): {
   client: WebAuthnClient;
   prompts(): number;
@@ -93,7 +93,7 @@ function fakeAuthenticator(
     async createCredential({ prfSalt, excludeCredentials }) {
       prompts += 1;
       const excluded = excludeCredentials?.some((credential) =>
-        passkeys.has(bytesToHex(credential.credentialId)),
+        passkeys.has(bytesToHex(credential.credentialId))
       );
       if (excluded) {
         throw new MeraError("PASSKEY_EXISTS", "Passkey already exists");
@@ -118,9 +118,9 @@ function fakeAuthenticator(
         throw options.get;
       }
       const id =
-        request.allowCredential !== undefined
-          ? bytesToHex(request.allowCredential.credentialId)
-          : [...passkeys.keys()][0];
+        request.allowCredential === undefined
+          ? [...passkeys.keys()][0]
+          : bytesToHex(request.allowCredential.credentialId);
       const secret = id === undefined ? undefined : passkeys.get(id);
       if (id === undefined || secret === undefined) {
         throw new MeraError("PASSKEY_CANCELLED", "No passkey answered");
@@ -202,7 +202,7 @@ function openPage(
     keepSessionOpen?: boolean | undefined;
     persist?: boolean;
     beforeNonce?: () => Promise<void>;
-  } = {},
+  } = {}
 ) {
   const rpc = fakeRpc(beforeNonce);
   const config = createConfig({
@@ -250,7 +250,7 @@ test("creates a passkey account and asks for the passkey again to sign, without 
 
   expect(authenticator.prompts()).toBe(2);
   expect(
-    await verifyMessage({ address: accounts[0], message, signature }),
+    await verifyMessage({ address: accounts[0], message, signature })
   ).toBe(true);
   expect(await page.connector.isAuthorized()).toBe(false);
 });
@@ -264,7 +264,7 @@ test("opens the account deriveEvmPrivateKey derives at accountIndex", async () =
   });
   const { credential } = readStoredAccount(creator.items);
   const prfOutput = authenticator.prfOutputOf(
-    base64urlnopad.decode(credential.credentialId),
+    base64urlnopad.decode(credential.credentialId)
   );
 
   for (const accountIndex of [undefined, 1]) {
@@ -313,17 +313,17 @@ test("reconnects after a reload without a prompt, then asks for the stored passk
 
   const storedId = base64urlnopad.decode(credential.credentialId);
   expect(
-    authenticator.gets.map((get) => get.allowCredential?.credentialId),
+    authenticator.gets.map((get) => get.allowCredential?.credentialId)
   ).toEqual([storedId, storedId]);
   expect(
-    await verifyMessage({ address: accounts[0], message, signature }),
+    await verifyMessage({ address: accounts[0], message, signature })
   ).toBe(true);
   expect(
     await verifyTypedData({
       ...typedData,
       address: accounts[0],
       signature: typedSignature,
-    }),
+    })
   ).toBe(true);
 });
 
@@ -349,7 +349,7 @@ test("with keepSessionOpen, signs after a connect without a prompt and asks once
 
   expect(authenticator.prompts()).toBe(2);
   expect(
-    await verifyMessage({ address: accounts[0], message, signature }),
+    await verifyMessage({ address: accounts[0], message, signature })
   ).toBe(true);
 
   await disconnect(reloaded.config);
@@ -384,7 +384,7 @@ test("sends transactions signed in the page through the configured chain and tra
     gas: 23_100n,
   });
   expect(await recoverTransactionAddress({ serializedTransaction: raw })).toBe(
-    accounts[0],
+    accounts[0]
   );
 });
 
@@ -464,8 +464,8 @@ test("disconnecting ends the session, stops a send in flight, and forgets the ac
   const error = (await sending.catch((caught: unknown) => caught)) as BaseError;
   expect(
     error.walk(
-      (cause) => (cause as { code?: unknown }).code === "SESSION_ENDED",
-    ),
+      (cause) => (cause as { code?: unknown }).code === "SESSION_ENDED"
+    )
   ).toBeTruthy();
   expect(await page.connector.isAuthorized()).toBe(false);
 });
@@ -496,7 +496,7 @@ test("rejects a dismissed prompt as the person's choice and keeps other failures
   // A fake without passkeys rejects like a dismissed prompt.
   const dismissedPage = openPage(fakeAuthenticator());
   await expect(
-    connect(dismissedPage.config, { connector: dismissedPage.connector }),
+    connect(dismissedPage.config, { connector: dismissedPage.connector })
   ).rejects.toMatchObject({ name: "UserRejectedRequestError", code: 4001 });
 
   // react-native-passkey rejects with plain objects that name the outcome.
@@ -510,7 +510,7 @@ test("rejects a dismissed prompt as the person's choice and keeps other failures
       }),
     });
     await expect(
-      connect(native.config, { connector: native.connector }),
+      connect(native.config, { connector: native.connector })
     ).rejects.toMatchObject({ code: 4001 });
   }
 
@@ -520,7 +520,7 @@ test("rejects a dismissed prompt as the person's choice and keeps other failures
   const reloaded = openPage(fakeAuthenticator(), { items: first.items });
   await reconnect(reloaded.config);
   await expect(
-    signMessage(reloaded.config, { message: "hello" }),
+    signMessage(reloaded.config, { message: "hello" })
   ).rejects.toMatchObject({ code: 4001 });
 
   // A relying party ID the page cannot use fails the same ceremony with
@@ -528,12 +528,12 @@ test("rejects a dismissed prompt as the person's choice and keeps other failures
   const misconfiguredPage = openPage(
     fakeAuthenticator({
       get: new DOMException("The RP ID is invalid.", "SecurityError"),
-    }),
+    })
   );
   await expect(
     connect(misconfiguredPage.config, {
       connector: misconfiguredPage.connector,
-    }),
+    })
   ).rejects.toMatchObject({
     name: "MeraError",
     code: "PASSKEY_OPERATION_FAILED",
@@ -562,7 +562,7 @@ test("signs in with an immediate ceremony, and refuses immediate with create", a
       connector: fresh.connector,
       create: { user },
       immediate: true,
-    }),
+    })
   ).rejects.toMatchObject({ code: "INPUT_INVALID" });
   expect(authenticator.prompts()).toBe(2);
 });
@@ -574,13 +574,13 @@ test("refuses to sign when the passkey opens a different account than the stored
 
   page.items.set(
     STORED_ACCOUNT_KEY,
-    JSON.stringify({ ...readStoredAccount(page.items), address: recipient }),
+    JSON.stringify({ ...readStoredAccount(page.items), address: recipient })
   );
   const reloaded = openPage(authenticator, { items: page.items });
   await reconnect(reloaded.config);
 
   await expect(
-    signMessage(reloaded.config, { message: "hello" }),
+    signMessage(reloaded.config, { message: "hello" })
   ).rejects.toMatchObject({ code: 4100 });
 });
 
@@ -592,7 +592,7 @@ test("switches between the config's chains and refuses others", async () => {
       connector: unconnectedPage.connector,
       chainId: 1 as never,
       create: { user },
-    }),
+    })
   ).rejects.toMatchObject({ name: "SwitchChainError" });
   expect(unconnected.prompts()).toBe(0);
 
@@ -604,16 +604,16 @@ test("switches between the config's chains and refuses others", async () => {
 
   expect(getChainId(page.config)).toBe(otherChain.id);
   expect(await provider.request({ method: "eth_chainId" })).toBe(
-    numberToHex(otherChain.id),
+    numberToHex(otherChain.id)
   );
   await expect(
     provider.request({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: numberToHex(1) }],
-    }),
+    })
   ).rejects.toMatchObject({ code: 4902 });
   await expect(
-    provider.request({ method: "wallet_switchEthereumChain", params: [null] }),
+    provider.request({ method: "wallet_switchEthereumChain", params: [null] })
   ).rejects.toMatchObject({ code: -32_602 });
 });
 
@@ -646,7 +646,7 @@ test("exposes credential metadata via getCredential and forwards excludeCredenti
         user,
         excludeCredentials: [remembered],
       },
-    }),
+    })
   ).rejects.toMatchObject({ name: "MeraError", code: "PASSKEY_EXISTS" });
 
   const persisted = openPage(authenticator);
@@ -693,7 +693,7 @@ test("carries the created passkey on UserRejectedRequestError.cause when the fal
     connect(page.config, {
       connector: page.connector,
       create: { user, excludeCredentials: [cause.credential] },
-    }),
+    })
   ).rejects.toMatchObject({ name: "MeraError", code: "PASSKEY_EXISTS" });
 });
 
@@ -712,13 +712,13 @@ test("rejects signing methods and transaction fields it does not support", async
         accounts[0],
         { ...typedData, domain: { ...typedData.domain, chainId: 1 } },
       ],
-    }),
+    })
   ).rejects.toMatchObject({ code: -32_602 });
   await expect(
     provider.request({
       method: "eth_signTransaction",
       params: [{ from: accounts[0], to: recipient }],
-    }),
+    })
   ).rejects.toMatchObject({ code: -32_004 });
   const badChecksum = recipient.replace("C", "c");
   for (const field of [
@@ -731,7 +731,7 @@ test("rejects signing methods and transaction fields it does not support", async
       provider.request({
         method: "eth_sendTransaction",
         params: [{ from: accounts[0], to: recipient, ...field }],
-      }),
+      })
     ).rejects.toMatchObject({ code: -32_602 });
   }
 });

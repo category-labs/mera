@@ -52,7 +52,7 @@ async function signIn(): Promise<Wallet> {
     await getPasskeyPrfOutput({
       rpId,
       webAuthnClient: reactNativeWebAuthnClient,
-    }),
+    })
   );
   saveKnownCredential({ credentialId: wallet.credentialId });
   return wallet;
@@ -64,7 +64,7 @@ async function signIn(): Promise<Wallet> {
  * before rethrowing.
  */
 async function storeAndOpen(
-  result: createPasskeyWithPrfOutput.Result | getPasskeyPrfOutput.Result,
+  result: createPasskeyWithPrfOutput.Result | getPasskeyPrfOutput.Result
 ): Promise<Wallet> {
   await storePrfResult(result);
   const wallet = toWallet(result);

@@ -1,12 +1,12 @@
 {
   "name": "@category-labs/mera-docs",
-  "private": true,
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "scripts": {
-    "dev": "astro dev",
-    "check:snippets": "node scripts/check-code-snippets.mjs",
     "build": "npm run check:snippets && NODE_OPTIONS=--max-old-space-size=8192 astro build",
+    "check:snippets": "node scripts/check-code-snippets.mjs",
+    "dev": "astro dev",
     "preview": "astro preview"
   },
   "dependencies": {

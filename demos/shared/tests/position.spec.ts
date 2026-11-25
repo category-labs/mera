@@ -85,14 +85,14 @@ test("reads started before or during a trade cannot replace its confirmed positi
         type: "portfolioLoaded",
         requestId,
         portfolio: { cash, shares: 0n },
-      }),
+      })
     ).toBe(confirmed);
     expect(
       positionReducer(state, {
         type: "refreshFailed",
         requestId,
         error: "Old failure",
-      }),
+      })
     ).toBe(confirmed);
   }
   state = positionReducer(state, {
@@ -162,7 +162,7 @@ test("a slow read still lands unless a newer read landed first", () => {
       type: "portfolioLoaded",
       requestId: 1,
       portfolio: { cash, shares: 0n },
-    }),
+    })
   ).toBe(state);
 });
 
@@ -223,14 +223,14 @@ test("account changes discard old reads and trade results, including switching b
       type: "portfolioLoaded",
       requestId: 1,
       portfolio: { cash, shares: UNIT },
-    }),
+    })
   ).toBe(state);
   expect(
     positionReducer(state, {
       type: "tradeConfirmed",
       tradeId: 2,
       fill: { side: "buy", shares: UNIT, spent: 40n * UNIT },
-    }),
+    })
   ).toBe(state);
 });
 
@@ -282,7 +282,7 @@ test("a cancelled trade preserves the position and ignores late confirmation", (
       type: "tradeConfirmed",
       tradeId: 1,
       fill: { side: "buy", shares: UNIT, spent: 40n * UNIT },
-    }),
+    })
   ).toBe(state);
 });
 

@@ -30,7 +30,7 @@ type NativePrfValue = NonNullable<
 >["first"];
 
 function createReactNativeWebAuthnClient(
-  platformApi: PlatformApi,
+  platformApi: PlatformApi
 ): WebAuthnClient {
   return {
     async createCredential(request) {
@@ -52,7 +52,7 @@ function createReactNativeWebAuthnClient(
         ...(hasExcludedCredentials
           ? {
               excludeCredentials: excludeCredentials.map(
-                toNativeCredentialDescriptor,
+                toNativeCredentialDescriptor
               ),
             }
           : {}),
@@ -63,7 +63,7 @@ function createReactNativeWebAuthnClient(
         },
         attestation: request.attestation,
         extensions: prfExtension(request.prfSalt),
-        ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
+        ...(request.timeout === undefined ? {} : { timeout: request.timeout }),
       };
       // The general iOS entry point can offer a security key, whose result has
       // no PRF output. Android treats the platform-only flag as a no-op.
@@ -72,13 +72,13 @@ function createReactNativeWebAuthnClient(
         .catch(
           hasExcludedCredentials
             ? rejectCreateCeremony
-            : rejectCancelledCeremony,
+            : rejectCancelledCeremony
         );
 
       const credentialId = decodeNativeBase64Url(
         created.rawId,
         "Credential ID",
-        "PASSKEY_OPERATION_FAILED",
+        "PASSKEY_OPERATION_FAILED"
       );
       const transports = created.response.transports;
       const prf = created.clientExtensionResults?.prf;
@@ -88,7 +88,7 @@ function createReactNativeWebAuthnClient(
       } catch (error) {
         throw withCreatedCredential(
           toPasskeyError(error, "Passkey creation failed"),
-          { credentialId: base64urlnopad.encode(credentialId), transports },
+          { credentialId: base64urlnopad.encode(credentialId), transports }
         );
       }
 
@@ -107,12 +107,12 @@ function createReactNativeWebAuthnClient(
         challenge: base64urlnopad.encode(request.challenge),
         userVerification: request.userVerification,
         extensions: prfExtension(request.prfSalt),
-        ...(allowCredential !== undefined
-          ? {
+        ...(allowCredential === undefined
+          ? {}
+          : {
               allowCredentials: [toNativeCredentialDescriptor(allowCredential)],
-            }
-          : {}),
-        ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
+            }),
+        ...(request.timeout === undefined ? {} : { timeout: request.timeout }),
       };
       // getImmediate sends only the platform request, as getPlatformKey does.
       const assertion =
@@ -125,10 +125,10 @@ function createReactNativeWebAuthnClient(
         credentialId: decodeNativeBase64Url(
           asserted.rawId ?? asserted.id,
           "Credential ID",
-          "PASSKEY_OPERATION_FAILED",
+          "PASSKEY_OPERATION_FAILED"
         ),
         prfOutput: readPrfOutput(
-          asserted.clientExtensionResults?.prf?.results?.first,
+          asserted.clientExtensionResults?.prf?.results?.first
         ),
       };
     },
@@ -136,16 +136,16 @@ function createReactNativeWebAuthnClient(
 }
 
 function toNativeCredentialDescriptor(
-  descriptor: WebAuthnClient.CredentialDescriptor,
+  descriptor: WebAuthnClient.CredentialDescriptor
 ): NativeCredentialDescriptor {
   return {
     type: "public-key",
     id: base64urlnopad.encode(descriptor.credentialId),
-    ...(descriptor.transports !== undefined
-      ? {
+    ...(descriptor.transports === undefined
+      ? {}
+      : {
           transports: descriptor.transports as NativeTransport[],
-        }
-      : {}),
+        }),
   };
 }
 
@@ -160,7 +160,7 @@ function rejectCreateCeremony(error: unknown): never {
     throw new MeraError(
       "PASSKEY_EXISTS",
       "An excluded passkey already exists on this authenticator",
-      { cause: error },
+      { cause: error }
     );
   }
   rejectCancelledCeremony(error);
@@ -180,7 +180,7 @@ function rejectCancelledCeremony(error: unknown): never {
     throw new MeraError(
       "PASSKEY_CANCELLED",
       "The passkey prompt was dismissed, timed out, or found no passkey",
-      { cause: error },
+      { cause: error }
     );
   }
   throw error;
@@ -198,16 +198,16 @@ function prfExtension(prfSalt: Uint8Array): NativeExtensions {
 function decodeNativeBase64Url(
   value: string,
   name: string,
-  code: MeraErrorCode,
+  code: MeraErrorCode
 ): Uint8Array {
   return base64UrlDecode(
-    value.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
-    { name, code },
+    value.replace(/\+/gu, "-").replace(/\//gu, "_").replace(/[=]+$/u, ""),
+    { name, code }
   );
 }
 
 function readPrfOutput(
-  value: NativePrfValue | undefined,
+  value: NativePrfValue | undefined
 ): Uint8Array | undefined {
   if (value === undefined) {
     return undefined;

@@ -64,9 +64,9 @@ function useEvmContext(rpcUrl: string): {
           setEvm(context);
           setEvmError(null);
         },
-        (error) => setEvmError(describeError(error)),
+        (error) => setEvmError(describeError(error))
       ),
-    [rpcUrl],
+    [rpcUrl]
   );
   return { evm, evmError };
 }
@@ -80,11 +80,11 @@ function useEvmContext(rpcUrl: string): {
 function usePosition(
   evm: EvmContext | null,
   address: EvmAddress | null,
-  costBasis: CostBasisStore,
+  costBasis: CostBasisStore
 ): UsePositionResult {
   const [position, dispatch] = useReducer(
     positionReducer,
-    initialPositionState,
+    initialPositionState
   );
   const [funding, setFunding] = useState(false);
   // Reads and trades share one increasing counter, so the reducer can order them.
@@ -198,7 +198,7 @@ function usePosition(
  */
 function useCopyButton(
   writeText: (text: string) => Promise<unknown> = (text) =>
-    navigator.clipboard.writeText(text),
+    navigator.clipboard.writeText(text)
 ): { feedback: string | null; copy: (text: string) => Promise<void> } {
   const [feedback, setFeedback] = useState<string | null>(null);
   useEffect(() => {

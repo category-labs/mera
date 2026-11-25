@@ -15,7 +15,7 @@ function getEd25519PublicKey(privateKey: Uint8Array): Uint8Array<ArrayBuffer> {
   if (privateKey.length !== 32) {
     throw new MeraError(
       "INPUT_INVALID",
-      "Ed25519 private key must be 32 bytes",
+      "Ed25519 private key must be 32 bytes"
     );
   }
 
@@ -34,7 +34,7 @@ function createEd25519SigningSession({
 }: CreateSigningSessionOptions): Ed25519SigningSession {
   const { use, end, publicKey } = createSigningKey(
     privateKey,
-    getEd25519PublicKey,
+    getEd25519PublicKey
   );
 
   return {

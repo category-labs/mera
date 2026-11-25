@@ -20,7 +20,7 @@ const parsedConfig = ts.parseJsonConfigFileContent(
   ts.sys,
   docsDirectory,
   undefined,
-  tsConfigPath,
+  tsConfigPath
 );
 if (parsedConfig.errors.length > 0) {
   throw new Error(parsedConfig.errors.map(formatDiagnostic).join("\n"));
@@ -36,7 +36,7 @@ const twoslasher = createTwoslasher({
 const failures = [];
 for (const path of await listContentFiles(contentDirectory)) {
   const source = await readFile(path, "utf8");
-  const codeFence = /^```(tsx?)(?:[^\n]*)\r?\n([\s\S]*?)^```\s*$/gm;
+  const codeFence = /^```(tsx?)(?:[^\n]*)\r?\n([\s\S]*?)^```\s*$/gmu;
 
   for (const match of source.matchAll(codeFence)) {
     const language = match[1];

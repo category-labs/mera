@@ -8,7 +8,7 @@ const extensionDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 async function readManifest(): Promise<Record<string, unknown>> {
   return JSON.parse(
-    await readFile(resolve(extensionDir, "public/manifest.json"), "utf8"),
+    await readFile(resolve(extensionDir, "public/manifest.json"), "utf8")
   ) as Record<string, unknown>;
 }
 
@@ -16,10 +16,10 @@ test("the passkey page pins the ID the manifest key produces", async () => {
   const { key } = (await readManifest()) as { key: string };
   const pageSource = await readFile(
     resolve(extensionDir, "../web/src/extensionPasskey.tsx"),
-    "utf8",
+    "utf8"
   );
   expect(pageSource).toContain(
-    `"chrome-extension://${extensionIdFromKey(key)}"`,
+    `"chrome-extension://${extensionIdFromKey(key)}"`
   );
 });
 
@@ -40,11 +40,11 @@ test("manifest has the exact permission and CSP contract", async () => {
   expect(csp).toContain("object-src 'none'");
   expect(csp).toContain("frame-src 'none'");
   expect(csp).toContain(
-    "connect-src https://evm-network-production.up.railway.app",
+    "connect-src https://evm-network-production.up.railway.app"
   );
   const builtHtml = await readFile(
     resolve(extensionDir, "dist/sidepanel.html"),
-    "utf8",
+    "utf8"
   );
   expect(builtHtml).not.toMatch(/(?:src|href)=["']https?:/u);
 });

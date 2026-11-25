@@ -15,13 +15,13 @@ test("sell-all keeps the fee reserve and accepts the smallest share balance", ()
     coversTrade({
       ...trade,
       order: { kind: "amount", side: "sell", amountWei: 40n },
-    }),
+    })
   ).toBe(false);
   expect(coversTrade({ ...trade, portfolio: { cash: 0n, shares: 1n } })).toBe(
-    false,
+    false
   );
   expect(coversTrade({ ...trade, portfolio: { cash: UNIT, shares: 0n } })).toBe(
-    false,
+    false
   );
 });
 
@@ -40,13 +40,13 @@ test("a sell within a cent of the position sends every share; a buy is only pric
       order: { kind: "amount", side: "sell", amountWei: 40n * UNIT },
       price,
       heldShares,
-    }),
+    })
   ).toBe(UNIT);
   expect(
     orderShares({
       order: { kind: "amount", side: "buy", amountWei: 80n * UNIT },
       price,
       heldShares,
-    }),
+    })
   ).toBe(2n * UNIT);
 });

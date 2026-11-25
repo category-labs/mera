@@ -26,10 +26,10 @@ type SigningKey = {
  */
 function createSigningKey(
   privateKey: Uint8Array,
-  derivePublicKey: (privateKey: Uint8Array) => Uint8Array<ArrayBuffer>,
+  derivePublicKey: (privateKey: Uint8Array) => Uint8Array<ArrayBuffer>
 ): SigningKey {
   let activePrivateKey: Uint8Array<ArrayBuffer> | undefined = new Uint8Array(
-    privateKey,
+    privateKey
   );
   let publicKey: Uint8Array<ArrayBuffer>;
 

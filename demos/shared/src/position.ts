@@ -30,7 +30,7 @@ const initialPositionState: positionReducer.State = {
  */
 function positionReducer(
   state: positionReducer.State,
-  event: positionReducer.Event,
+  event: positionReducer.Event
 ): positionReducer.State {
   switch (event.type) {
     case "accountChanged":
@@ -113,7 +113,7 @@ function positionReducer(
               basis: basisAfterSell(
                 position.basis,
                 fill.shares,
-                position.shares,
+                position.shares
               ),
             };
       return {

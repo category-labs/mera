@@ -5,7 +5,7 @@ import { createSecp256k1SigningSession } from "../dist/index.js";
 import { expectError } from "./helpers.js";
 
 const PRIVATE_KEY_ONE = hexToBytes(
-  "0000000000000000000000000000000000000000000000000000000000000001",
+  "0000000000000000000000000000000000000000000000000000000000000001"
 );
 
 test("signs 32-byte digests and ends the session", () => {
@@ -18,13 +18,13 @@ test("signs 32-byte digests and ends the session", () => {
 
   // Private key one's public key is the secp256k1 generator point.
   expect(bytesToHex(session.publicKey)).toBe(
-    "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8",
+    "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
   );
   expect(signature.compact).toHaveLength(64);
   expect(
     secp256k1.verify(signature.compact, digest, session.publicKey, {
       prehash: false,
-    }),
+    })
   ).toBe(true);
 
   session.end();
@@ -46,7 +46,7 @@ test("rejects an invalid scalar and leaves the caller's buffer unmodified", () =
 
   expectError(
     () => createSecp256k1SigningSession({ privateKey: buffer }),
-    "INPUT_INVALID",
+    "INPUT_INVALID"
   );
 
   expect(buffer).toEqual(new Uint8Array(32).fill(0xff));
@@ -54,7 +54,7 @@ test("rejects an invalid scalar and leaves the caller's buffer unmodified", () =
   // Zero is a valid length but not a valid scalar.
   expectError(
     () => createSecp256k1SigningSession({ privateKey: new Uint8Array(32) }),
-    "INPUT_INVALID",
+    "INPUT_INVALID"
   );
 });
 
@@ -71,6 +71,6 @@ test("a using declaration ends the session when its scope exits", () => {
 
   expectError(
     () => escaped.signDigest(new Uint8Array(32).fill(1)),
-    "SESSION_ENDED",
+    "SESSION_ENDED"
   );
 });

@@ -97,24 +97,24 @@ function ConnectPanel({
             <span className="field-head">
               <label htmlFor="recovery-phrase">Recovery phrase</label>
               <button
-                type="button"
                 className="link small"
-                onClick={generate}
                 disabled={busy !== null}
+                onClick={generate}
+                type="button"
               >
                 Generate
               </button>
             </span>
             <input
-              id="recovery-phrase"
-              ref={secretInput}
-              placeholder="Generate a recovery phrase, or paste one from a wallet app"
+              autoCapitalize="off"
               autoComplete="off"
               autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck={false}
-              onChange={(event) => setSecret(event.target.value)}
               disabled={busy !== null}
+              id="recovery-phrase"
+              onChange={(event) => setSecret(event.target.value)}
+              placeholder="Generate a recovery phrase, or paste one from a wallet app"
+              ref={secretInput}
+              spellCheck={false}
             />
           </div>
           {trimmedSecret.length > 0 && !secretValid && (
@@ -124,21 +124,21 @@ function ConnectPanel({
       )}
       <div className="actions">
         <button
-          type="button"
           className="btn primary"
-          onClick={() => void run("create")}
           disabled={busy !== null || (mode === "vault" && !secretValid)}
+          onClick={() => void run("create")}
+          type="button"
         >
           {actionLabel(
             "create",
-            mode === "vault" ? "Open account" : "Create account",
+            mode === "vault" ? "Open account" : "Create account"
           )}
         </button>
         <button
-          type="button"
           className="btn"
-          onClick={() => void run("signin")}
           disabled={busy !== null}
+          onClick={() => void run("signin")}
+          type="button"
         >
           {actionLabel("signin", "Sign in")}
         </button>

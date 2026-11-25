@@ -42,7 +42,7 @@ class MeraError extends Error {
     options?: ErrorOptions & {
       /** Value for {@link MeraError.credential}. */
       credential?: PasskeyCredentialMetadata | undefined;
-    },
+    }
   ) {
     super(message, options);
     this.name = "MeraError";
@@ -71,13 +71,13 @@ function toPasskeyError(error: unknown, message: string): MeraError {
  */
 function withCreatedCredential(
   error: MeraError,
-  { credentialId, transports }: PasskeyCredentialMetadata,
+  { credentialId, transports }: PasskeyCredentialMetadata
 ): MeraError {
   return new MeraError(error.code, error.message, {
-    ...(error.cause !== undefined ? { cause: error.cause } : {}),
+    ...(error.cause === undefined ? {} : { cause: error.cause }),
     credential: {
       credentialId,
-      ...(transports !== undefined ? { transports: [...transports] } : {}),
+      ...(transports === undefined ? {} : { transports: [...transports] }),
     },
   });
 }

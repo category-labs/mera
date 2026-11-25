@@ -25,6 +25,7 @@
   },
   "license": "(MIT OR Apache-2.0)",
   "author": "Category Labs",
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -44,7 +45,6 @@
       "default": "./dist/wagmi.js"
     }
   },
-  "sideEffects": false,
   "files": [
     "dist",
     "src",
@@ -52,13 +52,10 @@
     "LICENSE-MIT",
     "LICENSE-APACHE"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
     "build": "tsc",
-    "prepack": "npm run build",
     "check:pack": "npm run build && tsc -p tsconfig.public-types.json && node scripts/verify-tarball.mjs && publint --strict",
+    "prepack": "npm run build",
     "test": "npm run build && tsc -p tsconfig.test.json && playwright test",
     "test:e2e": "npm test -- --project chromium-e2e"
   },
@@ -68,6 +65,15 @@
     "@scure/base": "2.4.0",
     "@scure/bip32": "2.4.0",
     "@scure/bip39": "2.4.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/node": "26.6.6",
+    "@wagmi/core": "3.6.9",
+    "publint": "0.3.25",
+    "react-native-passkey": "3.6.2",
+    "typescript": "7.0.2",
+    "viem": "2.58.1"
   },
   "peerDependencies": {
     "@wagmi/core": "^3.0.0",
@@ -85,13 +91,7 @@
       "optional": true
     }
   },
-  "devDependencies": {
-    "@playwright/test": "1.65.1",
-    "@types/node": "26.6.6",
-    "@wagmi/core": "3.6.9",
-    "publint": "0.3.25",
-    "react-native-passkey": "3.6.2",
-    "typescript": "7.0.2",
-    "viem": "2.58.1"
+  "publishConfig": {
+    "access": "public"
   }
 }

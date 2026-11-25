@@ -32,7 +32,7 @@ function passkeyTabOpen(): boolean {
  */
 async function requestPrf(
   action: PasskeyAction,
-  credential?: PasskeyCredentialMetadata,
+  credential?: PasskeyCredentialMetadata
 ): Promise<PasskeyPrf> {
   if (!inSidePanel) {
     return action === "create"

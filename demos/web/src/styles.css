@@ -12,17 +12,17 @@ a {
 
 /* Passkey tab: a centered sign-in layout. */
 .app.signin {
-  margin-block: auto;
   flex: 0 0 auto;
   gap: 22px;
   width: min(400px, 100%);
+  margin-block: auto;
 }
 
 .signin-brand {
   display: grid;
+  gap: 16px;
   justify-items: center;
   text-align: center;
-  gap: 16px;
 }
 
 .signin-mark {
@@ -33,8 +33,8 @@ a {
 
 h1.signin-title {
   font-size: 26px;
-  letter-spacing: -0.03em;
   line-height: 1.2;
+  letter-spacing: -0.03em;
 }
 
 .signin-to {
@@ -42,8 +42,8 @@ h1.signin-title {
   margin-top: 8px;
   font-size: 16px;
   font-weight: 500;
-  letter-spacing: -0.01em;
   color: var(--muted);
+  letter-spacing: -0.01em;
 }
 
 .signin .card {
@@ -81,9 +81,9 @@ html[data-footer-pinned="true"] .app:has(.mode-switch) {
 
 html[data-footer-pinned="true"] .shell-footer {
   position: fixed;
+  right: 16px;
   /* The embedded body padding plus the `.app` margin, and the body padding
      at the sides, so the pinned footer keeps its in-flow width. */
   bottom: 24px;
   left: 16px;
-  right: 16px;
 }

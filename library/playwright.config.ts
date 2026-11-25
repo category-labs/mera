@@ -9,7 +9,7 @@ export default defineConfig({
   fullyParallel: true,
   use: devices["Desktop Chrome"],
   projects: [
-    { name: "chromium", testMatch: /.*\.test\.ts/ },
-    { name: "chromium-e2e", testMatch: /.*\.e2e\.ts/ },
+    { name: "chromium", testMatch: /.*\.test\.ts/u },
+    { name: "chromium-e2e", testMatch: /.*\.e2e\.ts/u },
   ],
 });

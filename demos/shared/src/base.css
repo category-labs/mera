@@ -1,6 +1,4 @@
 :root {
-  color-scheme: light;
-
   --bg: #f5f6f8;
   --surface: #ffffff;
   --surface-2: #f1f2f5;
@@ -18,8 +16,9 @@
     0 1px 2px rgba(15, 17, 21, 0.04), 0 12px 32px rgba(15, 17, 21, 0.06);
 
   font-family: -apple-system, system-ui, sans-serif;
-  font-synthesis: none;
   -webkit-font-smoothing: antialiased;
+  font-synthesis: none;
+  color-scheme: light;
 }
 
 * {
@@ -32,28 +31,28 @@
    mounts into `<div id="root">` between body and `.app`, so centering applied
    to body would center that full-width container instead. */
 body {
-  margin: 0;
-  min-height: 100vh;
-  padding: 24px;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
+  min-height: 100vh;
+  padding: 24px;
+  margin: 0;
   color: var(--text);
+  background: var(--bg);
 }
 
 #root {
   display: flex;
-  flex-direction: column;
   flex: 1;
+  flex-direction: column;
 }
 
 .app {
-  margin: 48px auto 0;
-  width: min(420px, 100%);
   display: flex;
-  flex-direction: column;
   flex: 1;
+  flex-direction: column;
   gap: 18px;
+  width: min(420px, 100%);
+  margin: 48px auto 0;
 }
 
 h1 {
@@ -66,35 +65,35 @@ h1 {
 /* Title row: app name on the left, account chip on the right. */
 .app-head {
   display: flex;
+  gap: 12px;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
 }
 
 .account-chip {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
   gap: 2px;
+  align-items: flex-end;
 }
 
 /* Network line under the address: the dot turns green once the network
    context resolves. */
 .chip-network {
   display: inline-flex;
-  align-items: center;
   gap: 5px;
+  align-items: center;
   font-size: 11px;
   font-weight: 550;
   color: var(--muted);
 }
 
 .chip-network::before {
-  content: "";
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  content: "";
   background: var(--muted);
+  border-radius: 50%;
 }
 
 .chip-network.connected::before {
@@ -103,22 +102,22 @@ h1 {
 
 .chip-address {
   padding: 0;
-  border: none;
-  background: none;
-  color: var(--text);
   font-size: 13px;
+  color: var(--text);
   cursor: pointer;
+  background: none;
+  border: none;
 }
 
 input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--field);
-  color: var(--text);
   font: inherit;
   font-size: 14px;
+  color: var(--text);
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: 10px;
 }
 
 input::placeholder {
@@ -146,8 +145,8 @@ input:focus-visible {
    lets footer content push itself to the page bottom with `margin-top: auto`. */
 .account-shell {
   display: flex;
-  flex-direction: column;
   flex: 1;
+  flex-direction: column;
   gap: 14px;
 }
 
@@ -162,15 +161,15 @@ input:focus-visible {
 /* Footer links under the trading card: add funds, export, sign out. */
 .account-links {
   display: flex;
-  justify-content: center;
   gap: 16px;
+  justify-content: center;
 }
 
 .disclaimer {
   margin: 0;
-  text-align: center;
   font-size: 12px;
   color: var(--muted);
+  text-align: center;
 }
 
 /* Page-bottom footer: the connect mode switch (signed out) and the
@@ -179,22 +178,22 @@ input:focus-visible {
 .shell-footer {
   display: flex;
   flex-direction: column;
+  gap: 14px;
   align-items: center;
   margin-top: auto;
-  gap: 14px;
 }
 
 /* Signed-out footer link that swaps passkey and vault connect modes.
    Quiet by default, accent on hover. */
 .mode-switch {
-  border: none;
-  background: none;
   padding: 4px 8px;
-  color: var(--muted);
   font: inherit;
   font-size: 13px;
   font-weight: 550;
+  color: var(--muted);
   cursor: pointer;
+  background: none;
+  border: none;
 }
 
 .mode-switch:hover:not(:disabled) {
@@ -202,8 +201,8 @@ input:focus-visible {
 }
 
 .mode-switch:disabled {
-  opacity: 0.5;
   cursor: default;
+  opacity: 0.5;
 }
 
 .backup {
@@ -224,35 +223,35 @@ input:focus-visible {
 .backup-title {
   font-size: 11px;
   font-weight: 650;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .mnemonic-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 6px;
-  margin: 0;
   padding: 0;
+  margin: 0;
   list-style: none;
 }
 
 .mnemonic-grid li {
   display: flex;
-  align-items: baseline;
   gap: 8px;
+  align-items: baseline;
   padding: 8px 10px;
+  font-size: 13px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
-  font-size: 13px;
 }
 
 .mnemonic-grid .num {
   min-width: 18px;
-  color: var(--muted);
   font-size: 11px;
+  color: var(--muted);
   text-align: right;
 }
 
@@ -268,22 +267,22 @@ input:focus-visible {
 
 .segment {
   padding: 8px 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 550;
+  color: var(--muted);
+  cursor: pointer;
+  background: transparent;
   border: none;
   border-radius: 8px;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-weight: 550;
-  font-size: 14px;
-  cursor: pointer;
   transition:
     background 0.15s,
     color 0.15s;
 }
 
 .segment.active {
-  background: var(--surface);
   color: var(--text);
+  background: var(--surface);
   box-shadow: 0 1px 2px rgba(15, 17, 21, 0.12);
 }
 
@@ -300,16 +299,16 @@ input:focus-visible {
 .field > span {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .field-head {
   display: flex;
+  gap: 8px;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
 }
 
 /* Buttons */
@@ -321,14 +320,14 @@ input:focus-visible {
 
 .btn {
   padding: 11px 14px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--text);
   font: inherit;
   font-size: 14px;
   font-weight: 600;
+  color: var(--text);
   cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
   transition:
     background 0.15s,
     opacity 0.15s,
@@ -344,9 +343,9 @@ input:focus-visible {
 }
 
 .btn.primary {
+  color: var(--accent-text);
   background: var(--accent);
   border-color: transparent;
-  color: var(--accent-text);
 }
 
 .btn.primary:hover:not(:disabled) {
@@ -354,29 +353,29 @@ input:focus-visible {
 }
 
 .btn:disabled {
-  opacity: 0.5;
   cursor: default;
+  opacity: 0.5;
 }
 
 .link {
-  border: none;
-  background: none;
-  color: var(--accent);
+  padding: 2px 4px;
   font: inherit;
   font-size: 14px;
   font-weight: 550;
+  color: var(--accent);
   cursor: pointer;
-  padding: 2px 4px;
+  background: none;
+  border: none;
 }
 
 .link.small {
-  font-size: 13px;
   margin-left: auto;
+  font-size: 13px;
 }
 
 .link:disabled {
-  opacity: 0.5;
   cursor: default;
+  opacity: 0.5;
 }
 
 .field-head .link {
@@ -416,9 +415,9 @@ input:focus-visible {
 /* Stock header: company and ticker on the left, live quote on the right. */
 .stock-head {
   display: flex;
+  gap: 12px;
   align-items: start;
   justify-content: space-between;
-  gap: 12px;
 }
 
 .stock-name {
@@ -428,28 +427,28 @@ input:focus-visible {
 }
 
 .stock-symbol {
+  padding: 3px 8px;
   margin-left: 8px;
   font-size: 11px;
   font-weight: 650;
-  letter-spacing: 0.04em;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  color: var(--accent);
   vertical-align: 2px;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: 999px;
 }
 
 .stock-quote {
   display: grid;
-  justify-items: end;
   gap: 2px;
+  justify-items: end;
 }
 
 .stock-price {
   font-size: 24px;
   font-weight: 700;
-  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 .stock-delta {
@@ -482,8 +481,8 @@ input:focus-visible {
 /* Fake newsroom line under the chart. */
 .news {
   display: flex;
-  align-items: baseline;
   gap: 8px;
+  align-items: baseline;
   margin: 0;
   font-size: 13px;
   line-height: 1.45;
@@ -492,14 +491,14 @@ input:focus-visible {
 
 .news-tag {
   flex: 0 0 auto;
+  padding: 2px 7px;
   font-size: 10px;
   font-weight: 650;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: var(--surface-2);
   color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--surface-2);
+  border-radius: 999px;
 }
 
 /* Cash and position rows. */
@@ -512,17 +511,17 @@ input:focus-visible {
 
 .holding-row {
   display: flex;
+  gap: 8px;
   align-items: baseline;
   justify-content: space-between;
-  gap: 8px;
 }
 
 .holding-label {
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .holding-value {
@@ -547,8 +546,8 @@ input:focus-visible {
 
 .send-row {
   display: flex;
-  align-items: end;
   gap: 10px;
+  align-items: end;
 }
 
 .field.grow {

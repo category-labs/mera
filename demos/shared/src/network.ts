@@ -75,7 +75,7 @@ async function resolveEvmContext(rpcUrl: string): Promise<EvmContext> {
 function retryingResolve<T>(
   resolve: () => Promise<T>,
   onResolved: (value: T) => void,
-  onError: (error: unknown) => void,
+  onError: (error: unknown) => void
 ): () => void {
   let stopped = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -92,7 +92,7 @@ function retryingResolve<T>(
         }
         onError(error);
         timer = setTimeout(attempt, RESOLVE_RETRY_MS);
-      },
+      }
     );
   }
   attempt();

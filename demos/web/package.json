@@ -1,11 +1,11 @@
 {
   "name": "@category-labs/mera-demo-web",
-  "private": true,
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
     "build": "tsc && tsc -p network/evm && vite build",
+    "dev": "vite",
     "preview": "vite preview",
     "typecheck": "tsc && tsc -p network/evm"
   },

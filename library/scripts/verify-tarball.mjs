@@ -18,11 +18,11 @@ const REQUIRED_FILES = [
 for (const license of ["LICENSE-MIT", "LICENSE-APACHE"]) {
   const packageLicense = readFileSync(
     new URL(`../${license}`, import.meta.url),
-    "utf8",
+    "utf8"
   );
   const repositoryLicense = readFileSync(
     new URL(`../../${license}`, import.meta.url),
-    "utf8",
+    "utf8"
   );
   if (packageLicense !== repositoryLicense) {
     console.error(`${license} differs from the repository copy`);
@@ -37,7 +37,7 @@ for (const license of ["LICENSE-MIT", "LICENSE-APACHE"]) {
 const packOutput = execFileSync(
   "npm",
   ["pack", "--dry-run", "--json", "--ignore-scripts"],
-  { encoding: "utf8" },
+  { encoding: "utf8" }
 );
 // npm <= 11 prints an array of pack reports; npm 12 prints an object keyed
 // by package name. Either way, the first value is this package's report.
@@ -58,9 +58,11 @@ const packageRootFiles = new Set([
 ]);
 const unexpected = [...shipped].filter(
   (path) =>
-    !packageRootFiles.has(path) &&
-    !path.startsWith("dist/") &&
-    !path.startsWith("src/"),
+    !(
+      packageRootFiles.has(path) ||
+      path.startsWith("dist/") ||
+      path.startsWith("src/")
+    )
 );
 if (unexpected.length > 0) {
   console.error(`Tarball contains unexpected files: ${unexpected.join(", ")}`);
@@ -68,5 +70,5 @@ if (unexpected.length > 0) {
 }
 
 console.log(
-  `Tarball OK (${shipped.size} files); verified ${REQUIRED_FILES.join(", ")}`,
+  `Tarball OK (${shipped.size} files); verified ${REQUIRED_FILES.join(", ")}`
 );

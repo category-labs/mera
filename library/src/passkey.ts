@@ -76,20 +76,19 @@ async function createPasskeyWithPrfOutput({
     });
     createdCredential = toCredentialMetadata(
       base64urlnopad.encode(created.credentialId),
-      created.transports,
+      created.transports
     );
 
     if (created.prfOutput === undefined && !created.prfEnabled) {
       throw new MeraError(
         "PRF_UNAVAILABLE",
-        "Authenticator did not enable PRF",
+        "Authenticator did not enable PRF"
       );
     }
 
     const prfOutput =
-      created.prfOutput !== undefined
-        ? copyPrfOutput(created.prfOutput)
-        : (
+      created.prfOutput === undefined
+        ? (
             await getPasskeyPrfOutput({
               rpId: rp.id,
               credential: createdCredential,
@@ -97,7 +96,8 @@ async function createPasskeyWithPrfOutput({
               webAuthnClient,
               timeout,
             })
-          ).prfOutput;
+          ).prfOutput
+        : copyPrfOutput(created.prfOutput);
 
     return {
       ...createdCredential,
@@ -209,7 +209,7 @@ async function getPasskeyPrfOutput({
     if (immediate === true && allowCredential !== undefined) {
       throw new MeraError(
         "INPUT_INVALID",
-        "immediate cannot be combined with credential",
+        "immediate cannot be combined with credential"
       );
     }
     const prfSaltCopy = copyPrfSalt(prfSalt);
@@ -228,7 +228,7 @@ async function getPasskeyPrfOutput({
     if (asserted.prfOutput === undefined) {
       throw new MeraError(
         "PRF_UNAVAILABLE",
-        "Authenticator did not return PRF output",
+        "Authenticator did not return PRF output"
       );
     }
 
@@ -285,11 +285,11 @@ declare namespace getPasskeyPrfOutput {
 // undefined field.
 function toCredentialMetadata(
   credentialId: string,
-  transports: readonly PasskeyCredentialTransport[] | undefined,
+  transports: readonly PasskeyCredentialTransport[] | undefined
 ): PasskeyCredentialMetadata {
   return {
     credentialId,
-    ...(transports !== undefined ? { transports: [...transports] } : {}),
+    ...(transports === undefined ? {} : { transports: [...transports] }),
   };
 }
 
@@ -302,7 +302,7 @@ function toCredentialMetadata(
  */
 function toCredentialDescriptor(
   credential: PasskeyCredentialMetadata,
-  name: string,
+  name: string
 ): WebAuthnClient.CredentialDescriptor {
   return {
     credentialId: base64UrlDecode(credential.credentialId, {
@@ -314,7 +314,7 @@ function toCredentialDescriptor(
 }
 
 function toExcludeCredentials(
-  credentials: readonly PasskeyCredentialMetadata[] | undefined,
+  credentials: readonly PasskeyCredentialMetadata[] | undefined
 ): WebAuthnClient.CredentialDescriptor[] | undefined {
   if (credentials === undefined || credentials.length === 0) {
     return undefined;
@@ -323,8 +323,8 @@ function toExcludeCredentials(
   return credentials.map((credential, index) =>
     toCredentialDescriptor(
       credential,
-      `excludeCredentials[${index}].credentialId`,
-    ),
+      `excludeCredentials[${index}].credentialId`
+    )
   );
 }
 
@@ -333,7 +333,7 @@ function toExcludeCredentials(
  * to the returned salt can change `DEFAULT_PRF_SALT`.
  */
 function copyPrfSalt(
-  prfSalt: Uint8Array = DEFAULT_PRF_SALT,
+  prfSalt: Uint8Array = DEFAULT_PRF_SALT
 ): Uint8Array<ArrayBuffer> {
   if (prfSalt.length !== 32) {
     throw new MeraError("INPUT_INVALID", "PRF salt must be 32 bytes");

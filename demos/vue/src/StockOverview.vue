@@ -1,26 +1,26 @@
-<script setup lang="ts">
-import {
-  CHART_HEIGHT,
-  CHART_WIDTH,
-  chartGeometry,
-} from "@category-labs/mera-demo-shared/chart";
-import { COMPANY_NAME, TICKER } from "@category-labs/mera-demo-shared/market";
-import { headlineAt } from "@category-labs/mera-demo-shared/news";
-import {
-  formatCash,
-  formatSignedCash,
-} from "@category-labs/mera-demo-shared/ui";
-import { computed } from "vue";
+<script lang="ts" setup>
+  import {
+    CHART_HEIGHT,
+    CHART_WIDTH,
+    chartGeometry,
+  } from "@category-labs/mera-demo-shared/chart";
+  import { COMPANY_NAME, TICKER } from "@category-labs/mera-demo-shared/market";
+  import { headlineAt } from "@category-labs/mera-demo-shared/news";
+  import {
+    formatCash,
+    formatSignedCash,
+  } from "@category-labs/mera-demo-shared/ui";
+  import { computed } from "vue";
 
-/**
- * The stock at `now` (Unix seconds): its quote, the last 30 minutes as a line
- * over a dotted reference at the opening price, and a fictional headline.
- */
-const { now } = defineProps<{ now: number }>();
+  /**
+   * The stock at `now` (Unix seconds): its quote, the last 30 minutes as a line
+   * over a dotted reference at the opening price, and a fictional headline.
+   */
+  const { now } = defineProps<{ now: number }>();
 
-const chart = computed(() => chartGeometry(now));
-const tone = computed(() => (chart.value.delta < 0n ? "down" : "up"));
-const label = `${TICKER} price, last 30 minutes`;
+  const chart = computed(() => chartGeometry(now));
+  const tone = computed(() => (chart.value.delta < 0n ? "down" : "up"));
+  const label = `${TICKER} price, last 30 minutes`;
 </script>
 
 <template>
@@ -38,28 +38,28 @@ const label = `${TICKER} price, last 30 minutes`;
   </div>
   <svg
     class="chart"
-    :viewBox="`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`"
     role="img"
     :aria-label="label"
+    :viewBox="`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`"
   >
     <title>{{ label }}</title>
-    <path :d="chart.area" :fill="`var(--${tone})`" opacity="0.08" />
+    <path opacity="0.08" :d="chart.area" :fill="`var(--${tone})`" />
     <line
-      x1="0"
-      :y1="chart.openY"
-      :x2="CHART_WIDTH"
-      :y2="chart.openY"
       stroke="var(--muted)"
-      stroke-opacity="0.35"
       stroke-dasharray="3 5"
+      stroke-opacity="0.35"
+      x1="0"
+      :x2="CHART_WIDTH"
+      :y1="chart.openY"
+      :y2="chart.openY"
     />
     <path
-      :d="chart.line"
       fill="none"
-      :stroke="`var(--${tone})`"
-      stroke-width="2"
-      stroke-linejoin="round"
       stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      :d="chart.line"
+      :stroke="`var(--${tone})`"
     />
     <text class="chart-label" x="6" y="14">H {{ chart.high.toFixed(2) }}</text>
     <text class="chart-label" x="6" :y="CHART_HEIGHT - 5">

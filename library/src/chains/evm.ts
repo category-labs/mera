@@ -33,7 +33,7 @@ function deriveEvmPrivateKey({
 
   try {
     const account = HDKey.fromMasterSeed(seed).derive(
-      `m/44'/60'/0'/0/${accountIndex}`,
+      `m/44'/60'/0'/0/${accountIndex}`
     );
     // HDKey types privateKey as nullable for keys built from a public key.
     return account.privateKey as Uint8Array<ArrayBuffer>;
@@ -52,7 +52,7 @@ function deriveEvmPrivateKey({
 function getEvmAddress(publicKey: Uint8Array): EvmAddress {
   const uncompressed = normalizeSecp256k1PublicKey(publicKey);
   const lowercaseHex = bytesToHex(
-    keccak_256(uncompressed.subarray(1)).slice(-20),
+    keccak_256(uncompressed.subarray(1)).slice(-20)
   );
 
   // EIP-55 uppercases each hex digit whose matching digit in
@@ -60,7 +60,7 @@ function getEvmAddress(publicKey: Uint8Array): EvmAddress {
   const hashHex = bytesToHex(keccak_256(utf8ToBytes(lowercaseHex)));
   const checksummed = [...lowercaseHex]
     .map((char, i) =>
-      Number.parseInt(hashHex.charAt(i), 16) >= 8 ? char.toUpperCase() : char,
+      Number.parseInt(hashHex.charAt(i), 16) >= 8 ? char.toUpperCase() : char
     )
     .join("");
 

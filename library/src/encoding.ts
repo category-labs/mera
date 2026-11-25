@@ -3,7 +3,7 @@ import type { MeraErrorCode } from "./errors.js";
 import { MeraError } from "./errors.js";
 
 function normalizePrfOutput(
-  value: ArrayBuffer | ArrayBufferView | ArrayLike<number>,
+  value: ArrayBuffer | ArrayBufferView | ArrayLike<number>
 ): Uint8Array {
   if (ArrayBuffer.isView(value)) {
     return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
@@ -17,7 +17,7 @@ function normalizePrfOutput(
     if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
       throw new MeraError(
         "PRF_UNAVAILABLE",
-        "PRF output must contain only byte values (integers 0-255)",
+        "PRF output must contain only byte values (integers 0-255)"
       );
     }
     return byte;
@@ -44,7 +44,7 @@ function base64UrlDecode(
     code?: MeraErrorCode;
     byteLength?: number;
     minByteLength?: number;
-  } = {},
+  } = {}
 ): Uint8Array<ArrayBuffer> {
   const { name = "value", code = "INPUT_INVALID" } = options;
 
@@ -65,7 +65,7 @@ function base64UrlDecode(
   ) {
     throw new MeraError(
       code,
-      `${name} must be at least ${options.minByteLength} bytes`,
+      `${name} must be at least ${options.minByteLength} bytes`
     );
   }
 

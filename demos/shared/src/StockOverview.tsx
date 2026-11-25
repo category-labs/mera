@@ -28,29 +28,29 @@ function StockOverview({ now }: { now: number }): ReactElement {
         </div>
       </div>
       <svg
-        className="chart"
-        viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
-        role="img"
         aria-label={CHART_LABEL}
+        className="chart"
+        role="img"
+        viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
       >
         <title>{CHART_LABEL}</title>
         <path d={chart.area} fill={`var(--${tone})`} opacity="0.08" />
         <line
-          x1="0"
-          y1={chart.openY}
-          x2={CHART_WIDTH}
-          y2={chart.openY}
           stroke="var(--muted)"
-          strokeOpacity="0.35"
           strokeDasharray="3 5"
+          strokeOpacity="0.35"
+          x1="0"
+          x2={CHART_WIDTH}
+          y1={chart.openY}
+          y2={chart.openY}
         />
         <path
           d={chart.line}
           fill="none"
           stroke={`var(--${tone})`}
-          strokeWidth="2"
-          strokeLinejoin="round"
           strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
         />
         <text className="chart-label" x="6" y="14">
           H {chart.high.toFixed(2)}

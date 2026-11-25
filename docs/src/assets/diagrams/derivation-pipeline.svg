@@ -1,10 +1,10 @@
 <svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 640 536"
-  width="640"
+  class="mera-diagram"
   height="536"
   role="img"
-  class="mera-diagram"
+  viewBox="0 0 640 536"
+  width="640"
+  xmlns="http://www.w3.org/2000/svg"
 >
   <title>
     Pipeline from entropy to an address. Entropy, encoded as a seed phrase by
@@ -16,61 +16,61 @@
   <defs>
     <marker
       id="dp-arrow"
-      viewBox="0 0 10 10"
+      markerHeight="7"
+      markerWidth="7"
+      orient="auto-start-reverse"
       refX="8"
       refY="5"
-      markerWidth="7"
-      markerHeight="7"
-      orient="auto-start-reverse"
+      viewBox="0 0 10 10"
     >
-      <path d="M0 0 L10 5 L0 10 z" class="d-head" />
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" />
     </marker>
   </defs>
 
   <!-- entropy and its BIP-39 phrase encoding -->
-  <rect class="d-secret" x="30" y="24" width="220" height="56" rx="8" />
-  <text x="140" y="57" text-anchor="middle">Entropy</text>
+  <rect class="d-secret" height="56" rx="8" width="220" x="30" y="24" />
+  <text text-anchor="middle" x="140" y="57">Entropy</text>
 
-  <rect class="d-secret" x="400" y="24" width="210" height="56" rx="8" />
-  <text x="505" y="57" text-anchor="middle">Seed phrase</text>
+  <rect class="d-secret" height="56" rx="8" width="210" x="400" y="24" />
+  <text text-anchor="middle" x="505" y="57">Seed phrase</text>
 
   <path
     class="d-edge d-dashed"
     d="M258 52 H392"
-    marker-start="url(#dp-arrow)"
     marker-end="url(#dp-arrow)"
+    marker-start="url(#dp-arrow)"
   />
-  <text x="325" y="42" text-anchor="middle" class="d-note">BIP-39</text>
+  <text class="d-note" text-anchor="middle" x="325" y="42">BIP-39</text>
 
   <!-- the derivation spine -->
   <path class="d-edge" d="M140 80 V126" marker-end="url(#dp-arrow)" />
-  <text x="152" y="107" class="d-note">key derivation (KDF)</text>
+  <text class="d-note" x="152" y="107">key derivation (KDF)</text>
 
-  <rect class="d-secret" x="30" y="132" width="220" height="56" rx="8" />
-  <text x="140" y="165" text-anchor="middle">Seed</text>
+  <rect class="d-secret" height="56" rx="8" width="220" x="30" y="132" />
+  <text text-anchor="middle" x="140" y="165">Seed</text>
 
   <path class="d-edge" d="M140 188 V234" marker-end="url(#dp-arrow)" />
-  <text x="152" y="205" class="d-note">BIP-32 / SLIP-0010 derivation</text>
-  <text x="152" y="223" class="d-mono">m/44'/60'/0'/0/0</text>
+  <text class="d-note" x="152" y="205">BIP-32 / SLIP-0010 derivation</text>
+  <text class="d-mono" x="152" y="223">m/44'/60'/0'/0/0</text>
 
-  <rect class="d-secret" x="30" y="240" width="220" height="56" rx="8" />
-  <text x="140" y="273" text-anchor="middle">Private key</text>
+  <rect class="d-secret" height="56" rx="8" width="220" x="30" y="240" />
+  <text text-anchor="middle" x="140" y="273">Private key</text>
 
   <path class="d-edge" d="M140 296 V342" marker-end="url(#dp-arrow)" />
-  <text x="152" y="323" class="d-note">one-way function</text>
+  <text class="d-note" x="152" y="323">one-way function</text>
 
-  <rect class="d-node" x="30" y="348" width="220" height="56" rx="8" />
-  <text x="140" y="381" text-anchor="middle">Public key</text>
+  <rect class="d-node" height="56" rx="8" width="220" x="30" y="348" />
+  <text text-anchor="middle" x="140" y="381">Public key</text>
 
   <path class="d-edge" d="M140 404 V450" marker-end="url(#dp-arrow)" />
-  <text x="152" y="431" class="d-note">encoding</text>
+  <text class="d-note" x="152" y="431">encoding</text>
 
-  <rect class="d-node" x="30" y="456" width="220" height="56" rx="8" />
-  <text x="140" y="489" text-anchor="middle">Address</text>
+  <rect class="d-node" height="56" rx="8" width="220" x="30" y="456" />
+  <text text-anchor="middle" x="140" y="489">Address</text>
 
   <!-- legend -->
-  <rect class="d-secret" x="402" y="152" width="14" height="14" rx="3" />
-  <text x="424" y="164" class="d-note">secret material</text>
-  <rect class="d-node" x="402" y="182" width="14" height="14" rx="3" />
-  <text x="424" y="194" class="d-note">safe to share</text>
+  <rect class="d-secret" height="14" rx="3" width="14" x="402" y="152" />
+  <text class="d-note" x="424" y="164">secret material</text>
+  <rect class="d-node" height="14" rx="3" width="14" x="402" y="182" />
+  <text class="d-note" x="424" y="194">safe to share</text>
 </svg>

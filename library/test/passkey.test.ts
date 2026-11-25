@@ -32,7 +32,7 @@ async function getPrfOutputWithStub(first: unknown): Promise<Uint8Array> {
         prfSalt: new Uint8Array(32),
       });
       return prfOutput;
-    },
+    }
   );
 }
 
@@ -40,7 +40,7 @@ test("getPasskeyPrfOutput works with a custom client outside a browser", async (
   const { client, calls } = stubClient();
 
   const result = await withStubbedGlobal("navigator", undefined, () =>
-    getPasskeyPrfOutput({ rpId: rp.id, webAuthnClient: client }),
+    getPasskeyPrfOutput({ rpId: rp.id, webAuthnClient: client })
   );
 
   expect(result.credentialId).toBe(CREDENTIAL_ID_BASE64URL);
@@ -71,7 +71,7 @@ test("getPasskeyPrfOutput copies only an ArrayBufferView's bytes", async () => {
   const backing = new Uint8Array(40);
   backing.set(
     Uint8Array.from({ length: 32 }, (_, index) => index + 1),
-    4,
+    4
   );
   const view = new Uint8Array(backing.buffer, 4, 32);
   const out = await getPrfOutputWithStub(view);
@@ -101,7 +101,7 @@ test("getPasskeyPrfOutput rejects array values outside the byte range", async ()
   // plain array must fail with PRF_UNAVAILABLE instead.
   for (const value of [256, -1, 1.5, Number.NaN]) {
     await expect(
-      getPrfOutputWithStub([value, ...new Array(31).fill(0)]),
+      getPrfOutputWithStub([value, ...new Array(31).fill(0)])
     ).rejects.toMatchObject({ code: "PRF_UNAVAILABLE" });
   }
 });
@@ -111,7 +111,7 @@ test("getPasskeyPrfOutput rejects PRF output that is not 32 bytes", async () => 
     code: "PRF_UNAVAILABLE",
   });
   await expect(getPrfOutputWithStub(new ArrayBuffer(33))).rejects.toMatchObject(
-    { code: "PRF_UNAVAILABLE" },
+    { code: "PRF_UNAVAILABLE" }
   );
   // Valid byte values, so a plain array fails on length, not element checks.
   await expect(getPrfOutputWithStub([1, 2, 3])).rejects.toMatchObject({
@@ -123,7 +123,7 @@ test("getPasskeyPrfOutput rejects a custom client response with no PRF output", 
   const { client } = stubClient({ getPrfOutput: () => undefined });
 
   await expect(
-    getPasskeyPrfOutput({ rpId: rp.id, webAuthnClient: client }),
+    getPasskeyPrfOutput({ rpId: rp.id, webAuthnClient: client })
   ).rejects.toMatchObject({ code: "PRF_UNAVAILABLE" });
 });
 
@@ -138,7 +138,7 @@ test("getPasskeyPrfOutput rejects an empty credentialId without prompting", asyn
       credential: { credentialId: "" },
       prfSalt: new Uint8Array(32),
       webAuthnClient: client,
-    }),
+    })
   ).rejects.toMatchObject({ code: "INPUT_INVALID" });
   expect(calls.get).toHaveLength(0);
 });
@@ -192,7 +192,7 @@ test("PRF output helpers reject an explicit salt of the wrong length", async () 
       user,
       prfSalt: new Uint8Array(31),
       webAuthnClient: client,
-    }),
+    })
   ).rejects.toMatchObject({ code: "INPUT_INVALID" });
 
   await expect(
@@ -200,7 +200,7 @@ test("PRF output helpers reject an explicit salt of the wrong length", async () 
       rpId: rp.id,
       prfSalt: new Uint8Array(31),
       webAuthnClient: client,
-    }),
+    })
   ).rejects.toMatchObject({ code: "INPUT_INVALID" });
 
   expect(calls.create).toHaveLength(0);
@@ -214,11 +214,11 @@ test("passkey helpers report CRYPTO_UNAVAILABLE when Web Crypto is unavailable",
     const prfSalt = new Uint8Array(32);
 
     await expect(
-      getPasskeyPrfOutput({ rpId: rp.id, prfSalt }),
+      getPasskeyPrfOutput({ rpId: rp.id, prfSalt })
     ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
 
     await expect(
-      createPasskeyWithPrfOutput({ rp, user, prfSalt }),
+      createPasskeyWithPrfOutput({ rp, user, prfSalt })
     ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
   });
 });
@@ -232,7 +232,7 @@ test("getPasskeyPrfOutput refuses immediate with a credential before any prompt"
       credential: { credentialId: CREDENTIAL_ID_BASE64URL },
       immediate: true,
       webAuthnClient: client,
-    }),
+    })
   ).rejects.toMatchObject({ code: "INPUT_INVALID" });
 
   expect(calls.get).toHaveLength(0);
@@ -263,11 +263,11 @@ test("the browser client sets uiMode only for immediate assertions", async () =>
 test("the browser client reports NotAllowedError as PASSKEY_CANCELLED", async () => {
   const dismissed = new DOMException(
     "The operation either timed out or was not allowed.",
-    "NotAllowedError",
+    "NotAllowedError"
   );
   const misconfigured = new DOMException(
     "The RP ID is invalid.",
-    "SecurityError",
+    "SecurityError"
   );
 
   for (const [failure, code] of [
@@ -283,14 +283,14 @@ test("the browser client reports NotAllowedError as PASSKEY_CANCELLED", async ()
         cause: failure,
       });
       await expect(
-        createPasskeyWithPrfOutput({ rp, user }),
+        createPasskeyWithPrfOutput({ rp, user })
       ).rejects.toMatchObject({ code, cause: failure });
       await expect(
         createPasskeyWithPrfOutput({
           rp,
           user,
           excludeCredentials: [{ credentialId: CREDENTIAL_ID_BASE64URL }],
-        }),
+        })
       ).rejects.toMatchObject({ code, cause: failure });
     });
   }
@@ -299,7 +299,7 @@ test("the browser client reports NotAllowedError as PASSKEY_CANCELLED", async ()
 test("the browser client reports InvalidStateError on create as PASSKEY_EXISTS only with exclusions", async () => {
   const exists = new DOMException(
     "The authenticator was previously registered.",
-    "InvalidStateError",
+    "InvalidStateError"
   );
   const reject = () => Promise.reject(exists);
   const navigator = { credentials: { create: reject, get: reject } };
@@ -310,19 +310,19 @@ test("the browser client reports InvalidStateError on create as PASSKEY_EXISTS o
         rp,
         user,
         excludeCredentials: [{ credentialId: CREDENTIAL_ID_BASE64URL }],
-      }),
+      })
     ).rejects.toMatchObject({ code: "PASSKEY_EXISTS", cause: exists });
 
     // Without exclusions, InvalidStateError comes from another condition
     // (such as a detached document) and must not be reported as PASSKEY_EXISTS.
     await expect(
-      createPasskeyWithPrfOutput({ rp, user }),
+      createPasskeyWithPrfOutput({ rp, user })
     ).rejects.toMatchObject({
       code: "PASSKEY_OPERATION_FAILED",
       cause: exists,
     });
     await expect(
-      createPasskeyWithPrfOutput({ rp, user, excludeCredentials: [] }),
+      createPasskeyWithPrfOutput({ rp, user, excludeCredentials: [] })
     ).rejects.toMatchObject({
       code: "PASSKEY_OPERATION_FAILED",
       cause: exists,
@@ -397,7 +397,7 @@ test("createPasskeyWithPrfOutput rejects invalid excludeCredentials before promp
         user,
         excludeCredentials,
         webAuthnClient: client,
-      }),
+      })
     ).rejects.toMatchObject({ code: "INPUT_INVALID" });
   }
 
@@ -458,7 +458,7 @@ test("createPasskeyWithPrfOutput sends its options to a custom client", async ()
   const { client, calls } = stubClient({ createPrfOutput });
 
   const created = await withStubbedGlobal("navigator", undefined, () =>
-    createPasskeyWithPrfOutput({ rp, user, webAuthnClient: client }),
+    createPasskeyWithPrfOutput({ rp, user, webAuthnClient: client })
   );
 
   expect(created.prfOutput).toEqual(createPrfOutput);
@@ -497,7 +497,7 @@ test("createPasskeyWithPrfOutput stops when a custom client reports no PRF suppo
   const { client, calls } = stubClient({ prfEnabled: false });
 
   await expect(
-    createPasskeyWithPrfOutput({ rp, user, webAuthnClient: client }),
+    createPasskeyWithPrfOutput({ rp, user, webAuthnClient: client })
   ).rejects.toMatchObject({
     code: "PRF_UNAVAILABLE",
     credential: {
@@ -521,7 +521,7 @@ test("createPasskeyWithPrfOutput errors carry the passkey only once its creation
       rp,
       user,
       webAuthnClient: secondPrompt.client,
-    }),
+    })
   ).rejects.toMatchObject({
     code: "PASSKEY_CANCELLED",
     message: "Prompt dismissed",
@@ -540,7 +540,7 @@ test("createPasskeyWithPrfOutput errors carry the passkey only once its creation
       rp,
       user,
       webAuthnClient: firstPrompt.client,
-    }),
+    })
   ).rejects.toBe(dismissed);
 });
 
@@ -558,7 +558,7 @@ test("the browser client attaches the created passkey when PRF output parsing fa
 
   await withStubbedGlobal("navigator", navigator, async () => {
     await expect(
-      createPasskeyWithPrfOutput({ rp, user }),
+      createPasskeyWithPrfOutput({ rp, user })
     ).rejects.toMatchObject({
       code: "PRF_UNAVAILABLE",
       credential: {

@@ -1,10 +1,10 @@
 <svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="200 0 440 432"
-  width="440"
+  class="mera-diagram"
   height="432"
   role="img"
-  class="mera-diagram"
+  viewBox="200 0 440 432"
+  width="440"
+  xmlns="http://www.w3.org/2000/svg"
 >
   <title>
     The signing session lifecycle. A private key, derived, decrypted, or
@@ -16,36 +16,36 @@
   <defs>
     <marker
       id="sl-arrow"
-      viewBox="0 0 10 10"
+      markerHeight="7"
+      markerWidth="7"
+      orient="auto-start-reverse"
       refX="8"
       refY="5"
-      markerWidth="7"
-      markerHeight="7"
-      orient="auto-start-reverse"
+      viewBox="0 0 10 10"
     >
-      <path d="M0 0 L10 5 L0 10 z" class="d-head" />
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" />
     </marker>
   </defs>
 
-  <rect class="d-secret" x="220" y="24" width="200" height="56" rx="8" />
-  <text x="320" y="57" text-anchor="middle">Private key</text>
+  <rect class="d-secret" height="56" rx="8" width="200" x="220" y="24" />
+  <text text-anchor="middle" x="320" y="57">Private key</text>
 
   <path class="d-edge" d="M320 80 V164" marker-end="url(#sl-arrow)" />
-  <text x="332" y="126" class="d-sub">create the session</text>
+  <text class="d-sub" x="332" y="126">create the session</text>
 
-  <rect class="d-secret" x="220" y="168" width="200" height="64" rx="16" />
-  <text x="320" y="205" text-anchor="middle">Live</text>
+  <rect class="d-secret" height="64" rx="16" width="200" x="220" y="168" />
+  <text text-anchor="middle" x="320" y="205">Live</text>
 
   <path
     class="d-edge"
     d="M420 184 C 480 184, 480 216, 420 216"
     marker-end="url(#sl-arrow)"
   />
-  <text x="490" y="203" class="d-sub">signs on request</text>
+  <text class="d-sub" x="490" y="203">signs on request</text>
 
   <path class="d-edge" d="M320 232 V344" marker-end="url(#sl-arrow)" />
-  <text x="332" y="292" class="d-mono">end()</text>
+  <text class="d-mono" x="332" y="292">end()</text>
 
-  <rect class="d-node" x="220" y="348" width="200" height="64" rx="16" />
-  <text x="320" y="385" text-anchor="middle">Ended</text>
+  <rect class="d-node" height="64" rx="16" width="200" x="220" y="348" />
+  <text text-anchor="middle" x="320" y="385">Ended</text>
 </svg>

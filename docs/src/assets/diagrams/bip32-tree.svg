@@ -1,10 +1,10 @@
 <svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 640 308"
-  width="640"
+  class="mera-diagram"
   height="308"
   role="img"
-  class="mera-diagram"
+  viewBox="0 0 640 308"
+  width="640"
+  xmlns="http://www.w3.org/2000/svg"
 >
   <title>
     One seed derives a tree of keys. The BIP-44 paths m/44'/60'/0'/0/0 and
@@ -15,56 +15,56 @@
   <defs>
     <marker
       id="bt-arrow"
-      viewBox="0 0 10 10"
+      markerHeight="7"
+      markerWidth="7"
+      orient="auto-start-reverse"
       refX="8"
       refY="5"
-      markerWidth="7"
-      markerHeight="7"
-      orient="auto-start-reverse"
+      viewBox="0 0 10 10"
     >
-      <path d="M0 0 L10 5 L0 10 z" class="d-head" />
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" />
     </marker>
   </defs>
 
-  <rect class="d-secret" x="230" y="20" width="180" height="44" rx="8" />
-  <text x="320" y="48" text-anchor="middle">Seed</text>
+  <rect class="d-secret" height="44" rx="8" width="180" x="230" y="20" />
+  <text text-anchor="middle" x="320" y="48">Seed</text>
 
   <path class="d-edge" d="M320 64 L118 190" marker-end="url(#bt-arrow)" />
   <path class="d-edge" d="M320 64 V190" marker-end="url(#bt-arrow)" />
   <path class="d-edge" d="M320 64 L522 190" marker-end="url(#bt-arrow)" />
 
-  <rect class="d-underlay" x="50" y="162" width="136" height="20" />
-  <rect class="d-underlay" x="252" y="162" width="136" height="20" />
-  <rect class="d-underlay" x="454" y="162" width="136" height="20" />
-  <text x="118" y="176" text-anchor="middle" class="d-mono">
+  <rect class="d-underlay" height="20" width="136" x="50" y="162" />
+  <rect class="d-underlay" height="20" width="136" x="252" y="162" />
+  <rect class="d-underlay" height="20" width="136" x="454" y="162" />
+  <text class="d-mono" text-anchor="middle" x="118" y="176">
     m/44'/60'/0'/0/0
   </text>
-  <text x="320" y="176" text-anchor="middle" class="d-mono">
+  <text class="d-mono" text-anchor="middle" x="320" y="176">
     m/44'/60'/0'/0/1
   </text>
-  <text x="522" y="176" text-anchor="middle" class="d-mono">
+  <text class="d-mono" text-anchor="middle" x="522" y="176">
     m/44'/501'/0'/0'
   </text>
 
-  <rect class="d-secret" x="24" y="196" width="188" height="56" rx="8" />
-  <text x="118" y="220" text-anchor="middle">EVM account 0</text>
-  <text x="118" y="239" text-anchor="middle" class="d-sub">
+  <rect class="d-secret" height="56" rx="8" width="188" x="24" y="196" />
+  <text text-anchor="middle" x="118" y="220">EVM account 0</text>
+  <text class="d-sub" text-anchor="middle" x="118" y="239">
     secp256k1 · BIP-32
   </text>
 
-  <rect class="d-secret" x="226" y="196" width="188" height="56" rx="8" />
-  <text x="320" y="220" text-anchor="middle">EVM account 1</text>
-  <text x="320" y="239" text-anchor="middle" class="d-sub">
+  <rect class="d-secret" height="56" rx="8" width="188" x="226" y="196" />
+  <text text-anchor="middle" x="320" y="220">EVM account 1</text>
+  <text class="d-sub" text-anchor="middle" x="320" y="239">
     secp256k1 · BIP-32
   </text>
 
-  <rect class="d-secret" x="428" y="196" width="188" height="56" rx="8" />
-  <text x="522" y="220" text-anchor="middle">Solana account 0</text>
-  <text x="522" y="239" text-anchor="middle" class="d-sub">
+  <rect class="d-secret" height="56" rx="8" width="188" x="428" y="196" />
+  <text text-anchor="middle" x="522" y="220">Solana account 0</text>
+  <text class="d-sub" text-anchor="middle" x="522" y="239">
     Ed25519 · SLIP-0010
   </text>
 
-  <text x="320" y="290" text-anchor="middle" class="d-note">
+  <text class="d-note" text-anchor="middle" x="320" y="290">
     The same seed and path produce the same key on any machine.
   </text>
 </svg>

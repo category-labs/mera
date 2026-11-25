@@ -42,7 +42,7 @@ function deriveSolanaPrivateKey(seed: Uint8Array): Uint8Array {
     new DataView(data.buffer).setUint32(
       33,
       (index + 0x80_00_00_00) >>> 0,
-      false,
+      false
     );
     node = hmac(sha512, node.subarray(32), data);
   }
@@ -53,7 +53,7 @@ function deriveModel(inputs: ModelInputs): ModelResult {
   const credentialMaterial = concatBytes(
     utf8ToBytes(inputs.rpId),
     new Uint8Array([0]),
-    utf8ToBytes(inputs.passkey),
+    utf8ToBytes(inputs.passkey)
   );
   const credentialSecret = sha256(credentialMaterial);
 

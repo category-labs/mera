@@ -5,7 +5,7 @@ import type { WebAuthnClient } from "../dist/webauthn.js";
 // sha256("mera.prf.salt.v1"): the fixed default salt documented on
 // getPasskeyPrfOutput.
 const DEFAULT_PRF_SALT = hexToBytes(
-  "896d46ac4ac191885c46137439db7bb52fb05cff3ecd34af7cdae0a1e0c00db9",
+  "896d46ac4ac191885c46137439db7bb52fb05cff3ecd34af7cdae0a1e0c00db9"
 );
 
 const SEQUENCE_PRF_OUTPUT = Uint8Array.from({ length: 32 }, (_, i) => i);
@@ -31,7 +31,7 @@ function stubPublicKeyCredential({
     type: "public-key",
     rawId: new Uint8Array(CREDENTIAL_ID_BYTES).buffer,
     response:
-      transports !== undefined ? { getTransports: () => transports } : {},
+      transports === undefined ? {} : { getTransports: () => transports },
     getClientExtensionResults: () => ({ prf }),
   };
 }
@@ -43,7 +43,7 @@ function readEvaluatedPrfSalt(
   publicKey:
     | PublicKeyCredentialRequestOptions
     | PublicKeyCredentialCreationOptions
-    | undefined,
+    | undefined
 ): Uint8Array<ArrayBuffer> {
   const first = publicKey?.extensions?.prf?.eval?.first;
   if (!(first instanceof Uint8Array)) {
@@ -61,7 +61,7 @@ function expectError(fn: () => unknown, code: string): void {
 async function withStubbedGlobal<T>(
   name: string,
   value: unknown,
-  fn: () => T | Promise<T>,
+  fn: () => T | Promise<T>
 ): Promise<T> {
   const original = Object.getOwnPropertyDescriptor(globalThis, name);
   Object.defineProperty(globalThis, name, { configurable: true, value });
@@ -79,7 +79,7 @@ async function withStubbedGlobal<T>(
 
 // Forwards Web Crypto unchanged while recording the randomness requested by fn.
 async function withCountedRandomness<T>(
-  fn: () => T | Promise<T>,
+  fn: () => T | Promise<T>
 ): Promise<{ result: T; calls: number; bytesDrawn: number }> {
   const crypto = globalThis.crypto;
   let calls = 0;
@@ -111,7 +111,7 @@ function stubClient(
     getPrfOutput?: (prfSalt: Uint8Array) => Uint8Array | undefined;
     createError?: Error;
     getError?: Error;
-  } = {},
+  } = {}
 ): { client: WebAuthnClient; calls: ClientCalls } {
   const calls: ClientCalls = { create: [], get: [] };
   const getPrfOutput =

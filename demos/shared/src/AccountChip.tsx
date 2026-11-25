@@ -20,10 +20,10 @@ function AccountChip({ address, connected }: AccountChipProps): ReactElement {
     <div className="account-chip">
       {address !== null && (
         <button
-          type="button"
           className="chip-address mono"
-          title={address}
           onClick={() => void copy(address)}
+          title={address}
+          type="button"
         >
           {feedback ?? truncateAddress(address)}
         </button>

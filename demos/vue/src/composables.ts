@@ -61,7 +61,7 @@ function useNow(): Ref<number> {
 function usePosition(
   evm: MaybeRefOrGetter<EvmContext | null>,
   address: MaybeRefOrGetter<EvmAddress | null>,
-  costBasis: CostBasisStore,
+  costBasis: CostBasisStore
 ): UsePositionResult {
   const position = shallowRef(initialPositionState);
   const funding = ref(false);
@@ -87,7 +87,7 @@ function usePosition(
   watch(
     () => toValue(address),
     (next) => reset(next, null),
-    { immediate: true },
+    { immediate: true }
   );
 
   watch(
@@ -96,7 +96,7 @@ function usePosition(
       if (current !== null && basis !== null) {
         costBasis.save(current, basis);
       }
-    },
+    }
   );
 
   async function refresh(): Promise<void> {
@@ -148,7 +148,7 @@ function usePosition(
       // A failed top-up surfaces through the balance reads.
       fund().catch(() => {});
     },
-    { immediate: true },
+    { immediate: true }
   );
 
   function adopt(next: EvmAddress, portfolio: Portfolio): void {

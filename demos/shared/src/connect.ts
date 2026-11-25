@@ -66,7 +66,7 @@ async function connect(
             ? await createPasskeyPrf(rpId, known ? [known] : undefined).catch(
                 rememberCreatedCredential
               )
-            : await getPasskeyPrf(rpId)
+            : await getPasskeyPrf(rpId).catch(explainIncompleteSignIn)
         )
       : {
           mode,
@@ -93,6 +93,21 @@ async function connect(
     saveKnownCredential(wallet.credential);
   }
   return wallet;
+}
+
+/**
+ * Adds a hint to an incomplete sign-in. Browsers report a dismissed prompt, a
+ * timeout, and no matching passkey alike, so the passkey may still exist on
+ * another device.
+ */
+function explainIncompleteSignIn(error: unknown): never {
+  if (error instanceof MeraError && error.code === "PASSKEY_CANCELLED") {
+    throw new Error(
+      "Passkey sign-in didn't complete. Try again, or use a passkey from another device.",
+      { cause: error }
+    );
+  }
+  throw error;
 }
 
 /**
@@ -156,7 +171,7 @@ async function decryptStoredVault(): Promise<string> {
   const raw = localStorage.getItem(VAULT_KEY);
   if (raw === null) {
     throw new Error(
-      "No vault-backed account exists on this device. Create one first."
+      "No vault-backed account exists on this device. Create a vault first."
     );
   }
   const secret = await decryptSecretVaultWithPasskey({

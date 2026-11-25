@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import {
-  type AccountMode,
-  type ConnectedWallet,
-  connect,
+import type {
+  AccountMode,
+  ConnectedWallet,
 } from "@category-labs/mera-demo-shared/connect";
+import { connect } from "@category-labs/mera-demo-shared/connect";
 import { describeError } from "@category-labs/mera-demo-shared/errors";
 import {
   createMnemonic,
@@ -63,7 +63,9 @@ async function run(action: ConnectAction): Promise<void> {
 }
 
 function actionLabel(action: ConnectAction, idle: string): string {
-  if (busy.value?.action !== action) return idle;
+  if (busy.value?.action !== action) {
+    return idle;
+  }
   return busy.value.phase === "passkey"
     ? "Waiting for passkey…"
     : "Opening account…";

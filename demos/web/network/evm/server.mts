@@ -232,7 +232,7 @@ async function handle(
     return;
   }
   if (request.method !== "POST") {
-    respond(response, 405, rpcError(null, -32600, "Only POST is supported."));
+    respond(response, 405, rpcError(null, -32_600, "Only POST is supported."));
     return;
   }
 
@@ -244,7 +244,7 @@ async function handle(
       respond(
         response,
         413,
-        rpcError(null, -32600, "The request body is too large."),
+        rpcError(null, -32_600, "The request body is too large."),
       );
       // Responding does not stop the caller from streaming the rest of the
       // declared body into the open connection; drop the connection too.
@@ -261,7 +261,7 @@ async function handle(
     respond(
       response,
       400,
-      rpcError(null, -32700, "The request body is not valid JSON."),
+      rpcError(null, -32_700, "The request body is not valid JSON."),
     );
     return;
   }
@@ -269,7 +269,7 @@ async function handle(
     respond(
       response,
       400,
-      rpcError(null, -32600, "Batch requests are not supported."),
+      rpcError(null, -32_600, "Batch requests are not supported."),
     );
     return;
   }
@@ -279,7 +279,7 @@ async function handle(
     params?: unknown;
   };
   if (typeof method !== "string") {
-    respond(response, 400, rpcError(id, -32600, "The request has no method."));
+    respond(response, 400, rpcError(id, -32_600, "The request has no method."));
     return;
   }
 
@@ -294,7 +294,7 @@ async function handle(
       respond(
         response,
         200,
-        rpcError(id, -32602, "params must be a single 0x-prefixed address."),
+        rpcError(id, -32_602, "params must be a single 0x-prefixed address."),
       );
       return;
     }
@@ -305,7 +305,7 @@ async function handle(
       respond(
         response,
         200,
-        rpcError(id, -32603, `Funding failed: ${message}`),
+        rpcError(id, -32_603, `Funding failed: ${message}`),
       );
     }
     return;
@@ -318,7 +318,7 @@ async function handle(
     respond(
       response,
       200,
-      rpcError(id, -32601, `The demo network does not expose ${method}.`),
+      rpcError(id, -32_601, `The demo network does not expose ${method}.`),
     );
     return;
   }
@@ -338,7 +338,7 @@ async function handle(
     respond(
       response,
       502,
-      rpcError(id, -32603, "The network node is not responding."),
+      rpcError(id, -32_603, "The network node is not responding."),
     );
   }
 }
@@ -373,7 +373,7 @@ try {
 http
   .createServer((request, response) => {
     handle(request, response).catch(() => {
-      respond(response, 500, rpcError(null, -32603, "Internal error."));
+      respond(response, 500, rpcError(null, -32_603, "Internal error."));
     });
   })
   .listen(PORT, "0.0.0.0", () => {

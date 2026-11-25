@@ -1,4 +1,5 @@
-import { type Fill, TICKER } from "./market";
+import type { Fill } from "./market";
+import { TICKER } from "./market";
 
 /** The demo's currency name; every balance is play money. */
 const CASH_SYMBOL = "DEMOCASH";
@@ -25,7 +26,9 @@ function formatSignedCash(wei: bigint): string {
  * "+12.34 · +5.00%". A zero basis has no share, so only the cash shows.
  */
 function formatPnl(pnl: bigint, basis: bigint): string {
-  if (basis === 0n) return formatSignedCash(pnl);
+  if (basis === 0n) {
+    return formatSignedCash(pnl);
+  }
   const percent = Number((pnl * 10_000n) / basis) / 100;
   return `${formatSignedCash(pnl)} · ${percent < 0 ? "" : "+"}${percent.toFixed(2)}%`;
 }

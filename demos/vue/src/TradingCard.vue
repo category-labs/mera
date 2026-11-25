@@ -1,30 +1,32 @@
 <script setup lang="ts">
+import type { AccountState } from "@category-labs/mera-demo-shared/account";
 import {
-  type AccountState,
   accountAddress,
   clearCachedAccount,
 } from "@category-labs/mera-demo-shared/account";
+import type {
+  AccountMode,
+  ConnectedWallet,
+} from "@category-labs/mera-demo-shared/connect";
 import {
-  type AccountMode,
-  type ConnectedWallet,
   connect,
   revealMnemonic,
 } from "@category-labs/mera-demo-shared/connect";
 import { costBasisStorage } from "@category-labs/mera-demo-shared/costBasisStorage";
 import { describeError } from "@category-labs/mera-demo-shared/errors";
+import type {
+  Fill,
+  Order,
+  TradeDraft,
+} from "@category-labs/mera-demo-shared/market";
 import {
-  type Fill,
   LOW_CASH_WEI,
-  type Order,
   placeOrder,
   priceAt,
   readPortfolio,
-  type TradeDraft,
 } from "@category-labs/mera-demo-shared/market";
-import {
-  type EvmContext,
-  fundAccount,
-} from "@category-labs/mera-demo-shared/network";
+import type { EvmContext } from "@category-labs/mera-demo-shared/network";
+import { fundAccount } from "@category-labs/mera-demo-shared/network";
 import { CASH_SYMBOL } from "@category-labs/mera-demo-shared/ui";
 import { computed, ref, shallowRef } from "vue";
 import AccountHoldings from "./AccountHoldings.vue";
@@ -102,7 +104,9 @@ async function openAccount(wallet: ConnectedWallet): Promise<void> {
 async function submit(order: Order): Promise<void> {
   const current = account.value;
   const held = loaded.value;
-  if (current.status === "none" || evm === null || held === null) return;
+  if (current.status === "none" || evm === null || held === null) {
+    return;
+  }
   // The quote ticks while the trade waits; size it at the one the click saw.
   const quote = price.value;
   tradeError.value = null;
@@ -151,7 +155,9 @@ async function addFunds(): Promise<void> {
 
 async function revealBackup(): Promise<void> {
   const current = account.value;
-  if (current.status === "none") return;
+  if (current.status === "none") {
+    return;
+  }
   revealing.value = true;
   backupError.value = null;
   try {
@@ -166,7 +172,9 @@ async function revealBackup(): Promise<void> {
 }
 
 function signOut(): void {
-  if (account.value.status === "unlocked") account.value.wallet.session.end();
+  if (account.value.status === "unlocked") {
+    account.value.wallet.session.end();
+  }
   clearCachedAccount();
   switchAccount({ status: "none" });
 }

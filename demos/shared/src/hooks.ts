@@ -1,17 +1,13 @@
 import type { EvmAddress } from "@category-labs/mera";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { describeError } from "./errors";
-import { type Fill, type Portfolio, REFRESH_MS, readPortfolio } from "./market";
+import type { Fill, Portfolio } from "./market";
+import { REFRESH_MS, readPortfolio } from "./market";
+import type { EvmContext } from "./network";
+import { fundAccount, resolveEvmContext, retryingResolve } from "./network";
+import type { CostBasisStore, LoadedPosition } from "./position";
 import {
-  type EvmContext,
-  fundAccount,
-  resolveEvmContext,
-  retryingResolve,
-} from "./network";
-import {
-  type CostBasisStore,
   initialPositionState,
-  type LoadedPosition,
   loadedPosition,
   positionReducer,
 } from "./position";
@@ -44,7 +40,7 @@ const unixNow = (): number => Math.floor(Date.now() / 1000);
 function useNow(): number {
   const [now, setNow] = useState(unixNow);
   useEffect(() => {
-    const timer = setInterval(() => setNow(unixNow()), 1_000);
+    const timer = setInterval(() => setNow(unixNow()), 1000);
     return () => clearInterval(timer);
   }, []);
   return now;
@@ -113,7 +109,9 @@ function usePosition(
   }, [costBasis, position.address, position.basis]);
 
   const refresh = useCallback(async (): Promise<void> => {
-    if (evm === null || address === null) return;
+    if (evm === null || address === null) {
+      return;
+    }
     const requestId = ++operationId.current;
     dispatch({ type: "readStarted", address, requestId });
     try {
@@ -135,7 +133,9 @@ function usePosition(
   }, [refresh]);
 
   const fund = useCallback(async (): Promise<void> => {
-    if (evm === null || address === null) return;
+    if (evm === null || address === null) {
+      return;
+    }
     setFunding(true);
     try {
       await fundAccount(evm, address);
@@ -146,7 +146,9 @@ function usePosition(
   }, [evm, address, refresh]);
 
   useEffect(() => {
-    if (evm === null || address === null || funded.current === address) return;
+    if (evm === null || address === null || funded.current === address) {
+      return;
+    }
     funded.current = address;
     // A failed top-up surfaces through the balance reads.
     fund().catch(() => {});
@@ -200,8 +202,10 @@ function useCopyButton(
 ): { feedback: string | null; copy: (text: string) => Promise<void> } {
   const [feedback, setFeedback] = useState<string | null>(null);
   useEffect(() => {
-    if (feedback === null) return;
-    const timer = setTimeout(() => setFeedback(null), 1_200);
+    if (feedback === null) {
+      return;
+    }
+    const timer = setTimeout(() => setFeedback(null), 1200);
     return () => clearTimeout(timer);
   }, [feedback]);
   async function copy(text: string): Promise<void> {

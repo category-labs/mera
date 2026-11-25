@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
-import {
-  MeraError,
-  type PasskeyCredentialTransport,
-  type PasskeySecretVault,
+import type {
+  PasskeyCredentialTransport,
+  PasskeySecretVault,
 } from "../dist/index.js";
+import { MeraError } from "../dist/index.js";
 import {
   createSecretVault,
   createSecretVaultWithExistingPasskey,

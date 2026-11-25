@@ -5,11 +5,11 @@ import type {
 } from "@category-labs/mera";
 import type { CostBasisStore } from "@category-labs/mera-demo-shared/position";
 import { base64urlnopad } from "@scure/base";
+import type { SecureStoreOptions } from "expo-secure-store";
 import {
   deleteItemAsync,
   getItem,
   getItemAsync,
-  type SecureStoreOptions,
   setItem,
   setItemAsync,
   WHEN_UNLOCKED_THIS_DEVICE_ONLY,
@@ -56,7 +56,9 @@ async function readStoredPrfResult(): Promise<
   getPasskeyPrfOutput.Result | undefined
 > {
   const stored = await getItemAsync(PRF_KEY, GATED);
-  if (stored === null) return undefined;
+  if (stored === null) {
+    return undefined;
+  }
   const { credentialId, prfOutput } = JSON.parse(stored) as Record<
     string,
     unknown

@@ -1,13 +1,13 @@
 <script setup lang="ts">
+import type { AccountState } from "@category-labs/mera-demo-shared/account";
 import {
-  type AccountState,
   accountAddress,
   loadCachedAccount,
 } from "@category-labs/mera-demo-shared/account";
 import { describeError } from "@category-labs/mera-demo-shared/errors";
+import type { EvmContext } from "@category-labs/mera-demo-shared/network";
 import {
   DEMO_RPC_URL,
-  type EvmContext,
   resolveEvmContext,
   retryingResolve,
 } from "@category-labs/mera-demo-shared/network";

@@ -1,12 +1,13 @@
 import { AccountChip } from "@category-labs/mera-demo-shared/AccountChip";
+import type { AccountState } from "@category-labs/mera-demo-shared/account";
 import {
-  type AccountState,
   accountAddress,
   loadCachedAccount,
 } from "@category-labs/mera-demo-shared/account";
 import { useEvmContext } from "@category-labs/mera-demo-shared/hooks";
 import { DEMO_RPC_URL } from "@category-labs/mera-demo-shared/network";
-import { type ReactElement, useState } from "react";
+import type { ReactElement } from "react";
+import { useState } from "react";
 import { TradingPanel } from "./TradingPanel";
 
 function App(): ReactElement {

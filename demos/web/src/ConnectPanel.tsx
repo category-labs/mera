@@ -1,14 +1,15 @@
-import {
-  type AccountMode,
-  type ConnectedWallet,
-  connect,
+import type {
+  AccountMode,
+  ConnectedWallet,
 } from "@category-labs/mera-demo-shared/connect";
+import { connect } from "@category-labs/mera-demo-shared/connect";
 import { describeError } from "@category-labs/mera-demo-shared/errors";
 import {
   createMnemonic,
   isValidMnemonic,
 } from "@category-labs/mera-demo-shared/hd";
-import { type ReactElement, useRef, useState } from "react";
+import type { ReactElement } from "react";
+import { useRef, useState } from "react";
 
 type ConnectAction = "create" | "signin";
 
@@ -51,7 +52,9 @@ function ConnectPanel({
 
   function generate(): void {
     const phrase = createMnemonic();
-    if (secretInput.current) secretInput.current.value = phrase;
+    if (secretInput.current) {
+      secretInput.current.value = phrase;
+    }
     setSecret(phrase);
     setError(null);
   }
@@ -73,7 +76,9 @@ function ConnectPanel({
   }
 
   function actionLabel(action: ConnectAction, idle: string): string {
-    if (busy?.action !== action) return idle;
+    if (busy?.action !== action) {
+      return idle;
+    }
     return busy.phase === "passkey"
       ? "Waiting for passkey…"
       : "Opening account…";

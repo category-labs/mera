@@ -5,8 +5,8 @@ import {
 } from "@category-labs/mera";
 import { reactNativeWebAuthnClient } from "@category-labs/mera/react-native-webauthn-client";
 import { describeError as describeDemoError } from "@category-labs/mera-demo-shared/errors";
+import type { EvmAccount } from "@category-labs/mera-demo-shared/hd";
 import {
-  type EvmAccount,
   evmAccountFromPrfOutput,
   prfOutputToMnemonic,
 } from "@category-labs/mera-demo-shared/hd";

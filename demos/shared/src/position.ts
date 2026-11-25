@@ -34,7 +34,9 @@ function positionReducer(
 ): positionReducer.State {
   switch (event.type) {
     case "accountChanged":
-      if (state.address === event.address) return state;
+      if (state.address === event.address) {
+        return state;
+      }
       return {
         ...initialPositionState,
         address: event.address,
@@ -79,7 +81,9 @@ function positionReducer(
       // the cutoff for that read to land.
       return { ...state, readError: event.error };
     case "tradeStarted":
-      if (state.trade !== null || loadedPosition(state) === null) return state;
+      if (state.trade !== null || loadedPosition(state) === null) {
+        return state;
+      }
       return {
         ...state,
         trade: { id: event.tradeId, stage: "sending" },
@@ -171,7 +175,9 @@ declare namespace positionReducer {
 
 /** The position once a balance read and the cost basis are both in, else null. */
 function loadedPosition(state: positionReducer.State): LoadedPosition | null {
-  if (state.balances === null || state.basis === null) return null;
+  if (state.balances === null || state.basis === null) {
+    return null;
+  }
   return { ...state.balances, basis: state.basis };
 }
 

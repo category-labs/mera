@@ -1,14 +1,16 @@
+import type {
+  Fill,
+  Order,
+  Portfolio,
+  Side,
+  TradeDraft,
+} from "@category-labs/mera-demo-shared/market";
 import {
   coversTrade,
   draftOrder,
-  type Fill,
   maxDraft,
-  type Order,
   orderShares,
-  type Portfolio,
-  type Side,
   TICKER,
-  type TradeDraft,
 } from "@category-labs/mera-demo-shared/market";
 import type { positionReducer } from "@category-labs/mera-demo-shared/position";
 import {
@@ -69,8 +71,12 @@ function TradeForm({
 
   function submitLabel(): string {
     const buying = draft.side === "buy";
-    if (stage !== "sending") return buying ? "Buy" : "Sell";
-    if (locked) return "Unlocking…";
+    if (stage !== "sending") {
+      return buying ? "Buy" : "Sell";
+    }
+    if (locked) {
+      return "Unlocking…";
+    }
     return buying ? "Buying…" : "Selling…";
   }
 
@@ -132,7 +138,9 @@ function TradeForm({
             primary
             disabled={coveredOrder === null}
             onPress={() => {
-              if (coveredOrder !== null) onSubmit(coveredOrder);
+              if (coveredOrder !== null) {
+                onSubmit(coveredOrder);
+              }
             }}
           />
         </View>

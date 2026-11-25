@@ -1,5 +1,6 @@
 import { base64urlnopad } from "@scure/base";
-import { MeraError, type MeraErrorCode } from "./errors.js";
+import type { MeraErrorCode } from "./errors.js";
+import { MeraError } from "./errors.js";
 
 function normalizePrfOutput(
   value: ArrayBuffer | ArrayBufferView | ArrayLike<number>,

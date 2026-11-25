@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { maxDraft, priceAt, UNIT } from "../src/market";
 import { DEMO_RPC_URL } from "../src/network";
 
@@ -58,7 +59,7 @@ async function routeRpc(
           ? {
               jsonrpc: "2.0",
               id,
-              error: { code: -32000, message: answer.error },
+              error: { code: -32_000, message: answer.error },
             }
           : { jsonrpc: "2.0", id, result: answer.result },
     });
@@ -90,8 +91,8 @@ test("Sell Max remains enabled after the quote falls; typing restores amount val
   while (priceAt(BigInt(nextTimestamp)) >= price - UNIT / 1_000n) {
     nextTimestamp += 1;
   }
-  await page.clock.install({ time: new Date((timestamp - 1) * 1_000) });
-  await page.clock.pauseAt(new Date(timestamp * 1_000));
+  await page.clock.install({ time: new Date((timestamp - 1) * 1000) });
+  await page.clock.pauseAt(new Date(timestamp * 1000));
   await page.addInitScript((cachedAddress) => {
     localStorage.setItem(
       "mera.demo.account",
@@ -117,7 +118,7 @@ test("Sell Max remains enabled after the quote falls; typing restores amount val
   await expect(amount).toHaveValue(originalAmount);
   const sell = page.getByRole("button", { name: "Sell", exact: true });
   await expect(sell).toBeEnabled();
-  await page.clock.runFor((nextTimestamp - timestamp) * 1_000);
+  await page.clock.runFor((nextTimestamp - timestamp) * 1000);
   await expect(amount).toHaveValue(originalAmount);
   await expect(sell).toBeEnabled();
   await amount.fill(`${originalAmount}0`);
@@ -216,13 +217,13 @@ test("a failed refresh after buying preserves the saved basis until balances rec
     page.getByRole("button", { name: "Buy", exact: true }),
   ).toBeDisabled();
   failReads = false;
-  await page.clock.runFor(5_000);
+  await page.clock.runFor(5000);
   await expect(
     page.locator(".holding-row").filter({ hasText: "P&L" }),
   ).toContainText("-");
   expect(await storedBasis()).toBe((100n * UNIT).toString());
   traded = false;
-  await page.clock.runFor(5_000);
+  await page.clock.runFor(5000);
   await expect.poll(storedBasis).toBe("0");
   await expect(page.locator(".holding-value").nth(1)).toHaveText("0 · 0.00");
   await page.reload();
@@ -232,7 +233,7 @@ test("a failed refresh after buying preserves the saved basis until balances rec
   await expect(page.getByText("Bought 1 NAD for 25.00 DEMOCASH")).toBeVisible();
   await expect.poll(storedBasis).toBe((25n * UNIT).toString());
   failReads = false;
-  await page.clock.runFor(5_000);
+  await page.clock.runFor(5000);
   await expect(page.locator(".holding-value").first()).toHaveText("10,000.00");
   await page.getByRole("tab", { name: "Sell" }).click();
   await page.getByRole("button", { name: "Max", exact: true }).click();

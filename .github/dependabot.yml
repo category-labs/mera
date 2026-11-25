@@ -13,6 +13,10 @@ updates:
     commit-message:
       prefix: "build"
       include: "scope"
+    # Expo SDK pins react-native-svg to one exact version, so it moves only
+    # when the Expo SDK does.
+    ignore:
+      - dependency-name: "react-native-svg"
     groups:
       library-runtime:
         patterns:

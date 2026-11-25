@@ -50,6 +50,7 @@ h4,
   color: var(--sl-color-white);
 }
 
+/* biome-ignore lint/suspicious/useBaseline: browsers without ::selection keep their default highlight colors. */
 ::selection {
   color: var(--sl-color-black);
   background: var(--sl-color-white);

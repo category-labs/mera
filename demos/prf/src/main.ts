@@ -4,25 +4,26 @@ import type { ModelInputs, ModelResult } from "./model";
 import { DEFAULT_INPUTS, deriveModel } from "./model";
 import "./styles.css";
 
-function elementById<T extends HTMLElement>(id: string): T {
-  const element = document.getElementById(id);
+function requiredElement<T extends HTMLElement>(selector: string): T {
+  const element = document.querySelector<T>(selector);
   if (!element) {
-    throw new Error(`Missing #${id}`);
+    throw new Error(`Missing ${selector}`);
   }
-  return element as T;
+  return element;
 }
 
 const inputs = {
-  rpId: elementById<HTMLInputElement>("in-rp-id"),
-  salt: elementById<HTMLInputElement>("in-salt"),
-  passkey: elementById<HTMLSelectElement>("in-passkey"),
+  rpId: requiredElement<HTMLInputElement>("#in-rp-id"),
+  salt: requiredElement<HTMLInputElement>("#in-salt"),
+  passkey: requiredElement<HTMLSelectElement>("#in-passkey"),
 };
-const entropyElement = elementById<HTMLOutputElement>("entropy");
-const mnemonicElement = elementById<HTMLOListElement>("mnemonic");
-const evmAddressElement = elementById<HTMLOutputElement>("evm-address");
-const solanaAddressElement = elementById<HTMLOutputElement>("solana-address");
-const fingerprintCanvas = elementById<HTMLCanvasElement>("fingerprint");
-const errorElement = elementById<HTMLParagraphElement>("error");
+const entropyElement = requiredElement<HTMLOutputElement>("#entropy");
+const mnemonicElement = requiredElement<HTMLOListElement>("#mnemonic");
+const evmAddressElement = requiredElement<HTMLOutputElement>("#evm-address");
+const solanaAddressElement =
+  requiredElement<HTMLOutputElement>("#solana-address");
+const fingerprintCanvas = requiredElement<HTMLCanvasElement>("#fingerprint");
+const errorElement = requiredElement<HTMLParagraphElement>("#error");
 
 const byteElements: HTMLSpanElement[] = [];
 for (let rowIndex = 0; rowIndex < 4; rowIndex += 1) {

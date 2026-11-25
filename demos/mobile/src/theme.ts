@@ -10,6 +10,7 @@ const palette = {
   border: "rgba(15, 17, 21, 0.1)",
   accent: "#f50",
   accentText: "#ffffff",
+  accentTint: "rgba(255, 85, 0, 0.14)",
   ok: "#15a34a",
   error: "#dc2626",
   up: "#15a34a",

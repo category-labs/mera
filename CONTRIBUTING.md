@@ -28,7 +28,7 @@ npm run check:pack    # package contents, exports, and public types
 npm run check:all     # every check above
 ```
 
-`npm run check` applies to every change; biome verifies formatting and lint across the repository, including CSS and SVG files, and `npm run format` applies its safe fixes, such as formatting and import order. Run `npm test` for library or test changes. Run `npm run check:pack` when packaged files, exports, types, or package metadata change; it also typechecks the built public types without the DOM libs, so they stay usable from React Native.
+`npm run check` applies to every change; biome verifies formatting and lint across the repository, including CSS and SVG files, and `npm run format` applies its safe fixes, such as formatting and import order. Biome's Astro formatter sometimes needs two passes, so if `npm run check` still flags an `.astro` file after `npm run format`, run `npm run format` again. Run `npm test` for library or test changes. Run `npm run check:pack` when packaged files, exports, types, or package metadata change; it also typechecks the built public types without the DOM libs, so they stay usable from React Native.
 
 Each demo's README covers running it on its own: [extension](./demos/extension/README.md), [mobile](./demos/mobile/README.md), and [PRF model](./demos/prf/README.md). The web and Vue demos build against the library, so build it first:
 

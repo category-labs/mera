@@ -66,7 +66,7 @@ function evmAccountFromMnemonic(mnemonic: string): EvmAccount {
   const seed = mnemonicToSeedSync(mnemonic);
   let privateKey: Uint8Array | null = null;
   try {
-    privateKey = HDKey.fromMasterSeed(seed).derive(EVM_ACCOUNT_PATH).privateKey;
+    ({ privateKey } = HDKey.fromMasterSeed(seed).derive(EVM_ACCOUNT_PATH));
     if (privateKey === null) {
       throw new Error("Derivation produced no key");
     }

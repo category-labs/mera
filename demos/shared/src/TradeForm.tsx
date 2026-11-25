@@ -130,15 +130,12 @@ function TradeForm({
           </button>
         </div>
 
-        {fill === null ? (
-          estimatedShares === null ? null : (
-            <p className="hint">
-              ≈ {formatShares(estimatedShares)} {TICKER} at the current price
-            </p>
-          )
-        ) : (
-          <p className="status ok">{fillText(fill)}</p>
+        {fill === null && estimatedShares !== null && (
+          <p className="hint">
+            ≈ {formatShares(estimatedShares)} {TICKER} at the current price
+          </p>
         )}
+        {fill !== null && <p className="status ok">{fillText(fill)}</p>}
       </form>
     </>
   );

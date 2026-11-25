@@ -219,7 +219,7 @@ async function createSecretVaultWithNewPasskey({
       ...passkeyOptions,
       prfSalt: randomBytes(PRF_SALT_LENGTH),
     });
-    prfOutput = credential.prfOutput;
+    ({ prfOutput } = credential);
 
     try {
       return await createSecretVault({ credential, secret: secretCopy });
@@ -269,7 +269,7 @@ async function createSecretVaultWithExistingPasskey({
       credential: credentialCopy,
       prfSalt,
     });
-    prfOutput = evaluated.prfOutput;
+    ({ prfOutput } = evaluated);
 
     // Reuse the caller's metadata (with its transports) only when the platform
     // selected that same credential.

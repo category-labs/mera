@@ -10,8 +10,8 @@ type LoadedPosition = Portfolio & { basis: bigint };
  * the authority on balances.
  */
 type CostBasisStore = {
-  load(address: EvmAddress): bigint;
-  save(address: EvmAddress, basis: bigint): void;
+  load: (address: EvmAddress) => bigint;
+  save: (address: EvmAddress, basis: bigint) => void;
 };
 
 const initialPositionState: positionReducer.State = {
@@ -41,7 +41,7 @@ function positionReducer(
         ...initialPositionState,
         address: event.address,
         balances: event.portfolio,
-        basis: event.portfolio?.shares === 0n ? 0n : event.basis,
+        basis: basisFor(event.portfolio, event.basis),
       };
     case "readStarted":
       // A read during the send can already include the trade; applying its
@@ -54,16 +54,13 @@ function positionReducer(
         liveReadsFrom: state.liveReadsFrom ?? event.requestId,
       };
     case "portfolioLoaded":
-      if (
-        state.liveReadsFrom === null ||
-        event.requestId < state.liveReadsFrom
-      ) {
+      if (isStaleRead(state, event.requestId)) {
         return state;
       }
       return {
         ...state,
         balances: event.portfolio,
-        basis: event.portfolio.shares === 0n ? 0n : state.basis,
+        basis: basisFor(event.portfolio, state.basis),
         liveReadsFrom: event.requestId + 1,
         // Reads during the send are dropped, so this one includes any trade
         // that was settling.
@@ -71,10 +68,7 @@ function positionReducer(
         readError: null,
       };
     case "refreshFailed":
-      if (
-        state.liveReadsFrom === null ||
-        event.requestId < state.liveReadsFrom
-      ) {
+      if (isStaleRead(state, event.requestId)) {
         return state;
       }
       // A failure has no balances to replace an older read's, so it leaves
@@ -91,31 +85,10 @@ function positionReducer(
       };
     case "tradeConfirmed": {
       const position = loadedPosition(state);
-      if (
-        state.trade?.id !== event.tradeId ||
-        state.trade.stage !== "sending" ||
-        position === null
-      ) {
+      if (!isSendingTrade(state, event.tradeId) || position === null) {
         return state;
       }
-      const { fill } = event;
-      const after =
-        fill.side === "buy"
-          ? {
-              shares: position.shares + fill.shares,
-              basis: position.basis + fill.spent,
-            }
-          : {
-              shares:
-                position.shares > fill.shares
-                  ? position.shares - fill.shares
-                  : 0n,
-              basis: basisAfterSell(
-                position.basis,
-                fill.shares,
-                position.shares
-              ),
-            };
+      const after = positionAfterFill(position, event.fill);
       return {
         ...state,
         // The fill gives the share count, but cash also depends on the
@@ -127,13 +100,14 @@ function positionReducer(
       };
     }
     case "tradeFinished":
-      if (
-        state.trade?.id !== event.tradeId ||
-        state.trade.stage !== "sending"
-      ) {
+      if (!isSendingTrade(state, event.tradeId)) {
         return state;
       }
       return { ...state, trade: null };
+    default:
+      throw new Error(
+        `Unhandled position event: ${String(event satisfies never)}`
+      );
   }
 }
 
@@ -179,6 +153,42 @@ function loadedPosition(state: positionReducer.State): LoadedPosition | null {
     return null;
   }
   return { ...state.balances, basis: state.basis };
+}
+
+// A portfolio without shares has no cost basis left.
+function basisFor(
+  portfolio: Portfolio | null,
+  basis: bigint | null
+): bigint | null {
+  return portfolio?.shares === 0n ? 0n : basis;
+}
+
+// Older than the cutoff, or arriving while no read may land.
+function isStaleRead(state: positionReducer.State, requestId: number): boolean {
+  return state.liveReadsFrom === null || requestId < state.liveReadsFrom;
+}
+
+function isSendingTrade(
+  state: positionReducer.State,
+  tradeId: number
+): boolean {
+  return state.trade?.id === tradeId && state.trade.stage === "sending";
+}
+
+function positionAfterFill(
+  position: LoadedPosition,
+  fill: Fill
+): { shares: bigint; basis: bigint } {
+  if (fill.side === "buy") {
+    return {
+      shares: position.shares + fill.shares,
+      basis: position.basis + fill.spent,
+    };
+  }
+  return {
+    shares: position.shares > fill.shares ? position.shares - fill.shares : 0n,
+    basis: basisAfterSell(position.basis, fill.shares, position.shares),
+  };
 }
 
 // A sell releases basis in proportion to the shares sold, so the rest of the

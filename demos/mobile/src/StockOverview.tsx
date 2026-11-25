@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   quote: { alignItems: "flex-end", gap: 2 },
   symbol: {
-    backgroundColor: "rgba(255, 85, 0, 0.14)",
+    backgroundColor: palette.accentTint,
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 3,

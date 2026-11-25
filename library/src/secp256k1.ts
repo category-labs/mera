@@ -75,7 +75,7 @@ function createSecp256k1SigningSession({
       });
 
       // noble's "recovered" format is 65 bytes: the recovery ID, then r || s.
-      const recovery = signature[0];
+      const [recovery] = signature;
 
       // A recovery ID of 2 or 3 requires r >= the curve order (probability
       // about 2^-127) and cannot be address-recovered from a parity bit, so

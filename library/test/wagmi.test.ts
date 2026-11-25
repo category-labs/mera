@@ -79,9 +79,9 @@ function fakeAuthenticator(
   } = {}
 ): {
   client: WebAuthnClient;
-  prompts(): number;
+  prompts: () => number;
   gets: WebAuthnClient.GetCredentialRequest[];
-  prfOutputOf(credentialId: Uint8Array): Uint8Array;
+  prfOutputOf: (credentialId: Uint8Array) => Uint8Array;
 } {
   const passkeys = new Map<string, Uint8Array>();
   const gets: WebAuthnClient.GetCredentialRequest[] = [];
@@ -738,7 +738,7 @@ test("rejects signing methods and transaction fields it does not support", async
 
 /** The connector's EIP-1193 provider, which answers any method name. */
 async function providerOf(connector: Connector): Promise<{
-  request(args: { method: string; params?: unknown }): Promise<unknown>;
+  request: (args: { method: string; params?: unknown }) => Promise<unknown>;
 }> {
   return (await connector.getProvider()) as never;
 }

@@ -68,6 +68,18 @@ const suggestions = suggestedSlugs.map((slug) => {
 
 <style>
   @layer starlight.core {
+    /* Match the metrics Starlight derives for Pagefind's result rows, so the
+       panel and the results it gives way to sit on the same grid. Starlight
+       declares those on `#starlight__search`, which the panel is a sibling of,
+       so recompute them from the scale Pagefind sets on `:root`. */
+    .search-suggestions {
+      --suggestion-pad-block: calc(0.9375rem * var(--pagefind-ui-scale));
+      --suggestion-pad-inline-end: calc(1.25rem * var(--pagefind-ui-scale));
+      --suggestion-pad-inline-start: calc(3.75rem * var(--pagefind-ui-scale));
+      --suggestion-corners: calc(0.3125rem * var(--pagefind-ui-scale));
+      margin-top: 1.25rem;
+    }
+
     /* Pagefind suppresses its clear button while the query is empty, so its
        absence marks a query worth handing the panel back to Pagefind for.
        Reading that class beats reading the input: Pagefind's clear button
@@ -81,17 +93,6 @@ const suggestions = suggestedSlugs.map((slug) => {
       display: none;
     }
 
-    /* Match the metrics Starlight derives for Pagefind's result rows, so the
-       panel and the results it gives way to sit on the same grid. Starlight
-       declares those on `#starlight__search`, which the panel is a sibling of,
-       so recompute them from the scale Pagefind sets on `:root`. */
-    .search-suggestions {
-      --suggestion-pad-block: calc(0.9375rem * var(--pagefind-ui-scale));
-      --suggestion-pad-inline-end: calc(1.25rem * var(--pagefind-ui-scale));
-      --suggestion-pad-inline-start: calc(3.75rem * var(--pagefind-ui-scale));
-      --suggestion-corners: calc(0.3125rem * var(--pagefind-ui-scale));
-      margin-top: 1.25rem;
-    }
     .suggestions-label {
       margin: 0 0 0.5rem;
       font-size: var(--sl-text-sm);

@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   link: { paddingHorizontal: 4, paddingVertical: 2 },
   linkLabel: { color: palette.accent, fontSize: 14, fontWeight: "600" },
   pressed: { opacity: 0.8 },
-  primary: { backgroundColor: palette.accent, borderColor: "transparent" },
+  primary: { backgroundColor: palette.accent, borderColor: palette.accent },
   primaryLabel: { color: palette.accentText },
 });
 

@@ -409,6 +409,7 @@ input:focus-visible {
 
 .mono {
   font-family:
+    /* biome-ignore lint/suspicious/useBaseline: browsers without ui-monospace skip to the next family in the list. */
     ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 

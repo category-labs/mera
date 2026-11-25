@@ -34,7 +34,7 @@ const ACTIONS = {
 type Action = keyof typeof ACTIONS;
 
 const params = new URLSearchParams(location.search);
-const action = params.get("action");
+const requestedAction = params.get("action");
 const credentialId = params.get("credentialId");
 const transports = params.get("transports");
 const credential: PasskeyCredentialMetadata | undefined =
@@ -99,17 +99,17 @@ function PasskeyPage({ action }: { action: Action }): ReactElement {
       >
         {pending ? "Waiting for passkey…" : ACTIONS[action].button}
       </button>
-      {error && <p className="status error">{error}</p>}
+      {error !== null && <p className="status error">{error}</p>}
     </section>
   );
 }
 
-const copy = isAction(action)
-  ? ACTIONS[action]
+const copy = isAction(requestedAction)
+  ? ACTIONS[requestedAction]
   : { title: "mera demo extension", destination: "" };
 document.title = `${copy.title} ${copy.destination}`.trim();
 
-const root = document.getElementById("root");
+const root = document.querySelector("#root");
 if (!root) {
   throw new Error("Missing #root element.");
 }
@@ -117,16 +117,22 @@ createRoot(root).render(
   <StrictMode>
     <main className="app signin">
       <header className="signin-brand">
-        <img alt="" className="signin-mark" src={favicon} />
+        <img
+          alt=""
+          className="signin-mark"
+          height={48}
+          src={favicon}
+          width={48}
+        />
         <h1 className="signin-title">
           {copy.title}
-          {copy.destination && (
+          {copy.destination !== "" && (
             <span className="signin-to">{copy.destination}</span>
           )}
         </h1>
       </header>
-      {isAction(action) && window.opener !== null ? (
-        <PasskeyPage action={action} />
+      {isAction(requestedAction) && window.opener !== null ? (
+        <PasskeyPage action={requestedAction} />
       ) : (
         <section className="card">
           <p className="status error">

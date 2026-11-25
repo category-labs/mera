@@ -357,6 +357,20 @@ input:focus-visible {
   opacity: 0.5;
 }
 
+/*
+ * The two connect buttons share a row while both labels fit on one line, and
+ * stack at full width once they don't, as on phones and in the side panel.
+ */
+.connect-cta .actions {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.connect-cta .actions .btn {
+  flex: 1 1 0;
+  min-width: max-content;
+}
+
 .link {
   padding: 2px 4px;
   font: inherit;

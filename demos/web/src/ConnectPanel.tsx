@@ -49,6 +49,11 @@ function ConnectPanel({
 
   const trimmedSecret = secret.trim();
   const secretValid = isValidMnemonic(trimmedSecret);
+  // The first action is the primary one. Vault sign-in opens only a vault this
+  // browser saved, so sign-in leads only in passkey mode, where any passkey
+  // for the site can answer.
+  const actions: ConnectAction[] =
+    mode === "passkey" ? ["signin", "create"] : ["create", "signin"];
 
   function generate(): void {
     const phrase = createMnemonic();
@@ -75,13 +80,16 @@ function ConnectPanel({
     }
   }
 
-  function actionLabel(action: ConnectAction, idle: string): string {
-    if (busy?.action !== action) {
-      return idle;
+  function actionLabel(action: ConnectAction): string {
+    if (busy?.action === action) {
+      return busy.phase === "passkey"
+        ? "Waiting for passkey…"
+        : "Opening account…";
     }
-    return busy.phase === "passkey"
-      ? "Waiting for passkey…"
-      : "Opening account…";
+    if (action === "signin") {
+      return "Sign in with a passkey";
+    }
+    return mode === "vault" ? "Create a vault" : "Create a new wallet";
   }
 
   return (
@@ -123,25 +131,20 @@ function ConnectPanel({
         </>
       )}
       <div className="actions">
-        <button
-          className="btn primary"
-          disabled={busy !== null || (mode === "vault" && !secretValid)}
-          onClick={() => void run("create")}
-          type="button"
-        >
-          {actionLabel(
-            "create",
-            mode === "vault" ? "Open account" : "Create account"
-          )}
-        </button>
-        <button
-          className="btn"
-          disabled={busy !== null}
-          onClick={() => void run("signin")}
-          type="button"
-        >
-          {actionLabel("signin", "Sign in")}
-        </button>
+        {actions.map((action, index) => (
+          <button
+            className={index === 0 ? "btn primary" : "btn"}
+            disabled={
+              busy !== null ||
+              (action === "create" && mode === "vault" && !secretValid)
+            }
+            key={action}
+            onClick={() => void run(action)}
+            type="button"
+          >
+            {actionLabel(action)}
+          </button>
+        ))}
       </div>
       {error !== null && <p className="status error">{error}</p>}
     </div>

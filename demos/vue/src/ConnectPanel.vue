@@ -40,6 +40,12 @@
 
   const trimmedSecret = computed(() => secret.value.trim());
   const secretValid = computed(() => isValidMnemonic(trimmedSecret.value));
+  // The first action is the primary one. Vault sign-in opens only a vault this
+  // browser saved, so sign-in leads only in passkey mode, where any passkey for
+  // the site can answer.
+  const actions = computed<ConnectAction[]>(() =>
+    mode === "passkey" ? ["signin", "create"] : ["create", "signin"]
+  );
 
   function generate(): void {
     secret.value = createMnemonic();
@@ -62,13 +68,16 @@
     }
   }
 
-  function actionLabel(action: ConnectAction, idle: string): string {
-    if (busy.value?.action !== action) {
-      return idle;
+  function actionLabel(action: ConnectAction): string {
+    if (busy.value?.action === action) {
+      return busy.value.phase === "passkey"
+        ? "Waiting for passkey…"
+        : "Opening account…";
     }
-    return busy.value.phase === "passkey"
-      ? "Waiting for passkey…"
-      : "Opening account…";
+    if (action === "signin") {
+      return "Sign in with a passkey";
+    }
+    return mode === "vault" ? "Create a vault" : "Create a new wallet";
   }
 </script>
 
@@ -109,25 +118,17 @@
     </template>
     <div class="actions">
       <button
-        class="btn primary"
         type="button"
-        :disabled="busy !== null || (mode === 'vault' && !secretValid)"
-        @click="run('create')"
+        v-for="(action, index) in actions"
+        :key="action"
+        :class="index === 0 ? 'btn primary' : 'btn'"
+        :disabled="
+          busy !== null ||
+          (action === 'create' && mode === 'vault' && !secretValid)
+        "
+        @click="run(action)"
       >
-        {{
-          actionLabel(
-            "create",
-            mode === "vault" ? "Open account" : "Create account"
-          )
-        }}
-      </button>
-      <button
-        class="btn"
-        type="button"
-        :disabled="busy !== null"
-        @click="run('signin')"
-      >
-        {{ actionLabel("signin", "Sign in") }}
+        {{ actionLabel(action) }}
       </button>
     </div>
     <p class="status error" v-if="connectError">{{ connectError }}</p>

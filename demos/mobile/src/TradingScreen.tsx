@@ -351,14 +351,14 @@ function TradingScreen({
           <View style={styles.connect}>
             <Button
               disabled={busy || evm === null}
-              onPress={() => void connect("create")}
+              onPress={() => void connect("signin")}
               primary
-              title={connectLabel("create", "Create account")}
+              title={connectLabel("signin", "Sign in with a passkey")}
             />
             <Button
               disabled={busy || evm === null}
-              onPress={() => void connect("signin")}
-              title={connectLabel("signin", "Sign in")}
+              onPress={() => void connect("create")}
+              title={connectLabel("create", "Create a new wallet")}
             />
             {tradeError === null ? null : (
               <Text style={styles.error}>{tradeError}</Text>

@@ -373,18 +373,18 @@ function TradingPanel({
               <button
                 className="btn primary"
                 disabled={busy || evm === null}
-                onClick={() => void connect("create")}
+                onClick={() => void connect("signin")}
                 type="button"
               >
-                {connectLabel("create", "Create account")}
+                {connectLabel("signin", "Sign in with a passkey")}
               </button>
               <button
                 className="btn"
                 disabled={busy || evm === null}
-                onClick={() => void connect("signin")}
+                onClick={() => void connect("create")}
                 type="button"
               >
-                {connectLabel("signin", "Sign in")}
+                {connectLabel("create", "Create a new wallet")}
               </button>
             </div>
             {statusError !== null && (

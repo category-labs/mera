@@ -2,6 +2,7 @@ import type { PasskeyCredentialMetadata } from "@category-labs/mera";
 import {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
+  MeraError,
 } from "@category-labs/mera";
 
 /** A ceremony's PRF output and the credential that produced it. */
@@ -51,17 +52,34 @@ async function createPasskeyPrf(
 
 /**
  * Runs an assertion pinned to `credential`, or one that lets the platform
- * offer any passkey for `rpId` when it is omitted.
+ * offer any passkey for `rpId` when it is omitted. An unpinned assertion that
+ * doesn't complete rethrows with a hint: browsers report a dismissed prompt, a
+ * timeout, and no matching passkey alike, so the passkey may be on another
+ * device.
  */
 async function getPasskeyPrf(
   rpId: string,
   credential?: PasskeyCredentialMetadata
 ): Promise<PasskeyPrf> {
-  const { prfOutput, credentialId } = await getPasskeyPrfOutput({
-    rpId,
-    credential,
-  });
-  return { prfOutput, credential: credential ?? { credentialId } };
+  try {
+    const { prfOutput, credentialId } = await getPasskeyPrfOutput({
+      rpId,
+      credential,
+    });
+    return { prfOutput, credential: credential ?? { credentialId } };
+  } catch (error) {
+    if (
+      credential === undefined &&
+      error instanceof MeraError &&
+      error.code === "PASSKEY_CANCELLED"
+    ) {
+      throw new Error(
+        "Passkey sign-in didn't complete. Try again, or use a passkey from another device.",
+        { cause: error }
+      );
+    }
+    throw error;
+  }
 }
 
 export type { PasskeyPrf, PasskeyTabMessage };

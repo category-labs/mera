@@ -18,6 +18,10 @@ function accountAddress(account: AccountState): EvmAddress | null {
       return account.address;
     case "unlocked":
       return account.wallet.address;
+    default:
+      throw new Error(
+        `Unhandled account status: ${String(account satisfies never)}`
+      );
   }
 }
 

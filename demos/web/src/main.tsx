@@ -4,7 +4,7 @@ import { App } from "./App";
 import { reportHeightWhenEmbedded } from "./embed";
 import "./styles.css";
 
-const root = document.getElementById("root");
+const root = document.querySelector("#root");
 if (!root) {
   throw new Error("Missing #root element");
 }

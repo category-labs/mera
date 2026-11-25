@@ -1,3 +1,4 @@
+import type { EvmAddress } from "@category-labs/mera";
 import { AccountHoldings } from "@category-labs/mera-demo-shared/AccountHoldings";
 import type {
   AccountState,
@@ -30,6 +31,7 @@ import {
 } from "@category-labs/mera-demo-shared/market";
 import type { EvmContext } from "@category-labs/mera-demo-shared/network";
 import { fundAccount } from "@category-labs/mera-demo-shared/network";
+import type { PasskeyPrf } from "@category-labs/mera-demo-shared/passkey";
 import { RecoveryPhrase } from "@category-labs/mera-demo-shared/RecoveryPhrase";
 import { StockOverview } from "@category-labs/mera-demo-shared/StockOverview";
 import { TradeForm } from "@category-labs/mera-demo-shared/TradeForm";
@@ -44,7 +46,7 @@ type Props = {
   evm: EvmContext | null;
   evmError: string | null;
   account: AccountState;
-  onAccountChange(next: AccountState): void;
+  onAccountChange: (next: AccountState) => void;
 };
 
 type Pending =
@@ -65,6 +67,25 @@ const cachedAccount = (wallet: ConnectedWallet): CachedAccount => ({
   address: wallet.address,
   credential: wallet.credential,
 });
+
+function requestConnectPrf(action: "create" | "signin"): Promise<PasskeyPrf> {
+  return action === "create"
+    ? requestPrf("create", loadKnownCredential())
+    : requestPrf("get");
+}
+
+// Null when funding or the read fails; the balance reads report the failure.
+async function fundAndReadPortfolio(
+  evm: EvmContext,
+  address: EvmAddress
+): Promise<Portfolio | null> {
+  try {
+    await fundAccount(evm, address);
+    return await readPortfolio(evm, address);
+  } catch {
+    return null;
+  }
+}
 
 /**
  * The side panel's trading surface. The account locks whenever the panel
@@ -168,10 +189,7 @@ function TradingPanel({
     setError(null);
     let wallet: ConnectedWallet | undefined;
     try {
-      const prf = await requestPrf(
-        action === "create" ? "create" : "get",
-        action === "create" ? loadKnownCredential() : undefined
-      );
+      const prf = await requestConnectPrf(action);
       if (action === "create") {
         saveKnownCredential(prf.credential);
       }
@@ -180,15 +198,9 @@ function TradingPanel({
         return;
       }
       // Fund and read the account first, so the connect buttons give way to
-      // settled balances.
+      // settled balances. Show the account even when this fails.
       setPending(`opening:${action}`);
-      let portfolio: Portfolio | null = null;
-      try {
-        await fundAccount(evm, wallet.address);
-        portfolio = await readPortfolio(evm, wallet.address);
-      } catch {
-        // Show the account anyway; the balance reads report the failure.
-      }
+      const portfolio = await fundAndReadPortfolio(evm, wallet.address);
       if (locks.current !== started) {
         return;
       }
@@ -351,7 +363,7 @@ function TradingPanel({
     <div className="account-shell">
       <section className="card">
         <StockOverview now={now} />
-        {evmError && (
+        {evmError !== null && (
           <p className="status error">The market is unavailable: {evmError}</p>
         )}
 
@@ -375,7 +387,9 @@ function TradingPanel({
                 {connectLabel("signin", "Sign in")}
               </button>
             </div>
-            {statusError && <p className="status error">{statusError}</p>}
+            {statusError !== null && (
+              <p className="status error">{statusError}</p>
+            )}
           </div>
         ) : (
           <>
@@ -403,7 +417,9 @@ function TradingPanel({
                 />
               </>
             )}
-            {statusError && <p className="status error">{statusError}</p>}
+            {statusError !== null && (
+              <p className="status error">{statusError}</p>
+            )}
           </>
         )}
       </section>
@@ -447,7 +463,7 @@ function TradingPanel({
         </div>
       )}
 
-      {recoveryWarning && (
+      {recoveryWarning ? (
         <section className="backup warning" role="alert">
           <p className="status error">
             The next passkey check reveals the recovery phrase. Anyone who sees
@@ -473,7 +489,7 @@ function TradingPanel({
             </button>
           </div>
         </section>
-      )}
+      ) : null}
       <p className="disclaimer">
         Runs on a demo network. Everything traded is fictional.
       </p>

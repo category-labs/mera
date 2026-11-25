@@ -55,6 +55,79 @@ const clearedDraft = (draft: TradeDraft): TradeDraft => ({
   text: "",
 });
 
+type AccountLinksProps = {
+  lowCash: boolean;
+  funding: boolean;
+  busy: boolean;
+  locked: boolean;
+  onAddFunds: () => void;
+  onLock: () => void;
+  onExport: () => void;
+  onSignOut: () => void;
+};
+
+function AccountLinks({
+  lowCash,
+  funding,
+  busy,
+  locked,
+  onAddFunds,
+  onLock,
+  onExport,
+  onSignOut,
+}: AccountLinksProps): ReactElement {
+  return (
+    <View style={styles.links}>
+      {lowCash ? (
+        <LinkButton
+          disabled={busy}
+          onPress={onAddFunds}
+          title={funding ? "Adding funds…" : `Add 10,000 ${CASH_SYMBOL}`}
+        />
+      ) : null}
+      <LinkButton disabled={busy || locked} onPress={onLock} title="Lock" />
+      <LinkButton disabled={busy} onPress={onExport} title="Export account" />
+      <LinkButton disabled={busy} onPress={onSignOut} title="Sign out" />
+    </View>
+  );
+}
+
+type RecoveryWarningProps = {
+  busy: boolean;
+  revealing: boolean;
+  onCancel: () => void;
+  onReveal: () => void;
+};
+
+function RecoveryWarning({
+  busy,
+  revealing,
+  onCancel,
+  onReveal,
+}: RecoveryWarningProps): ReactElement {
+  return (
+    <View style={styles.warning}>
+      <Text style={styles.error}>
+        The next passkey check reveals the recovery phrase. Anyone who sees or
+        copies it can control the account.
+      </Text>
+      <View style={styles.warningActions}>
+        <View style={styles.warningAction}>
+          <Button onPress={onCancel} title="Cancel" />
+        </View>
+        <View style={styles.warningAction}>
+          <Button
+            disabled={busy}
+            onPress={onReveal}
+            primary
+            title={revealing ? "Waiting for passkey…" : "Reveal phrase"}
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
+
 /**
  * The trading surface. The stock renders for everyone; the area below it
  * depends on the account. Trades sign without a prompt; the first trade while
@@ -326,30 +399,16 @@ function TradingScreen({
       </View>
 
       {account.status === "none" ? null : (
-        <View style={styles.links}>
-          {loaded !== null && loaded.cash < LOW_CASH_WEI ? (
-            <LinkButton
-              disabled={busy}
-              onPress={() => void addFunds()}
-              title={funding ? "Adding funds…" : `Add 10,000 ${CASH_SYMBOL}`}
-            />
-          ) : null}
-          <LinkButton
-            disabled={busy || account.status === "locked"}
-            onPress={lock}
-            title="Lock"
-          />
-          <LinkButton
-            disabled={busy}
-            onPress={() => setRecoveryWarning(true)}
-            title="Export account"
-          />
-          <LinkButton
-            disabled={busy}
-            onPress={() => void signOut()}
-            title="Sign out"
-          />
-        </View>
+        <AccountLinks
+          busy={busy}
+          funding={funding}
+          locked={account.status === "locked"}
+          lowCash={loaded !== null && loaded.cash < LOW_CASH_WEI}
+          onAddFunds={() => void addFunds()}
+          onExport={() => setRecoveryWarning(true)}
+          onLock={lock}
+          onSignOut={() => void signOut()}
+        />
       )}
 
       {backupError === null ? null : (
@@ -357,32 +416,12 @@ function TradingScreen({
       )}
 
       {recoveryWarning ? (
-        <View style={styles.warning}>
-          <Text style={styles.error}>
-            The next passkey check reveals the recovery phrase. Anyone who sees
-            or copies it can control the account.
-          </Text>
-          <View style={styles.warningActions}>
-            <View style={styles.warningAction}>
-              <Button
-                onPress={() => setRecoveryWarning(false)}
-                title="Cancel"
-              />
-            </View>
-            <View style={styles.warningAction}>
-              <Button
-                disabled={busy}
-                onPress={() => void revealBackup()}
-                primary
-                title={
-                  pending === "recovery"
-                    ? "Waiting for passkey…"
-                    : "Reveal phrase"
-                }
-              />
-            </View>
-          </View>
-        </View>
+        <RecoveryWarning
+          busy={busy}
+          onCancel={() => setRecoveryWarning(false)}
+          onReveal={() => void revealBackup()}
+          revealing={pending === "recovery"}
+        />
       ) : null}
 
       <Text style={styles.disclaimer}>

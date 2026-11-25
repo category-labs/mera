@@ -143,7 +143,7 @@ function ConnectPanel({
           {actionLabel("signin", "Sign in")}
         </button>
       </div>
-      {error && <p className="status error">{error}</p>}
+      {error !== null && <p className="status error">{error}</p>}
     </div>
   );
 }

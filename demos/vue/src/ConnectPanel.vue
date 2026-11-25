@@ -36,26 +36,26 @@
     action: ConnectAction;
     phase: "passkey" | "opening";
   } | null>(null);
-  const error = ref<string | null>(null);
+  const connectError = ref<string | null>(null);
 
   const trimmedSecret = computed(() => secret.value.trim());
   const secretValid = computed(() => isValidMnemonic(trimmedSecret.value));
 
   function generate(): void {
     secret.value = createMnemonic();
-    error.value = null;
+    connectError.value = null;
   }
 
   async function run(action: ConnectAction): Promise<void> {
     busy.value = { action, phase: "passkey" };
-    error.value = null;
+    connectError.value = null;
     onBusyChange(true);
     try {
       const wallet = await connect(mode, action, secret.value);
       busy.value = { action, phase: "opening" };
       await onConnected(wallet);
     } catch (caught) {
-      error.value = describeError(caught);
+      connectError.value = describeError(caught);
     } finally {
       busy.value = null;
       onBusyChange(false);
@@ -130,6 +130,6 @@
         {{ actionLabel("signin", "Sign in") }}
       </button>
     </div>
-    <p class="status error" v-if="error">{{ error }}</p>
+    <p class="status error" v-if="connectError">{{ connectError }}</p>
   </div>
 </template>

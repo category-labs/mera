@@ -7,6 +7,7 @@ import {
 import type {
   Address,
   Chain,
+  Hex,
   LocalAccount,
   TypedDataDefinition,
   WalletClient,
@@ -58,7 +59,7 @@ const STORAGE_KEY = "mera.account";
 type StorageItem = { [STORAGE_KEY]: StoredAccount };
 
 type Provider = {
-  request(args: { method: string; params?: unknown }): Promise<unknown>;
+  request: (args: { method: string; params?: unknown }) => Promise<unknown>;
 };
 
 /** The `create` connect parameter. */
@@ -68,7 +69,7 @@ type CreatePasskey = Pick<
 >;
 
 type Properties = {
-  connect<withCapabilities extends boolean = false>(parameters?: {
+  connect: <withCapabilities extends boolean = false>(parameters?: {
     chainId?: number | undefined;
     isReconnecting?: boolean | undefined;
     withCapabilities?: withCapabilities | boolean | undefined;
@@ -87,7 +88,7 @@ type Properties = {
      * `create`.
      */
     immediate?: boolean | undefined;
-  }): Promise<{
+  }) => Promise<{
     accounts: withCapabilities extends true
       ? readonly { address: Address; capabilities: Record<string, unknown> }[]
       : readonly Address[];
@@ -97,7 +98,7 @@ type Properties = {
    * Returns the connected account's passkey credential metadata, or
    * `undefined` when no account is connected.
    */
-  getCredential(): PasskeyCredentialMetadata | undefined;
+  getCredential: () => PasskeyCredentialMetadata | undefined;
 };
 
 /** Inputs for the passkey account connector. */
@@ -173,7 +174,7 @@ function mera({
   checkAccountIndex(accountIndex);
 
   return createConnector<Provider, Properties, StorageItem>((config) => {
-    let chain = config.chains[0];
+    let [chain] = config.chains;
     // Storage only carries the account across page loads, so a config with
     // storage disabled still signs until it disconnects.
     let connection: Connection | undefined;
@@ -204,14 +205,14 @@ function mera({
         : undefined;
     }
 
-    function clientFor(chain: Chain): WalletClient {
-      let client = clients.get(chain.id);
+    function clientFor(target: Chain): WalletClient {
+      let client = clients.get(target.id);
       if (client === undefined) {
         client = createWalletClient({
-          chain,
-          transport: config.transports?.[chain.id] ?? http(),
+          chain: target,
+          transport: config.transports?.[target.id] ?? http(),
         });
-        clients.set(chain.id, client);
+        clients.set(target.id, client);
       }
       return client;
     }
@@ -440,25 +441,25 @@ function mera({
             } as never)
           );
         }
+        default:
+          if (
+            method.startsWith("wallet_") ||
+            method.startsWith("eth_sign") ||
+            method.startsWith("personal_")
+          ) {
+            // -32004 rather than EIP-1193's 4200: viem's sendCalls falls back
+            // to one eth_sendTransaction per call only on a "not supported"
+            // error.
+            throw new MethodNotSupportedRpcError(
+              new Error(`${method} is not supported by the passkey account`),
+              { method }
+            );
+          }
+          return clientFor(chain).request({
+            method,
+            params,
+          } as never);
       }
-
-      if (
-        method.startsWith("wallet_") ||
-        method.startsWith("eth_sign") ||
-        method.startsWith("personal_")
-      ) {
-        // -32004 rather than EIP-1193's 4200: viem's sendCalls falls back to
-        // one eth_sendTransaction per call only on a "not supported" error.
-        throw new MethodNotSupportedRpcError(
-          new Error(`${method} is not supported by the passkey account`),
-          { method }
-        );
-      }
-
-      return clientFor(chain).request({
-        method,
-        params,
-      } as never);
     }
 
     const provider: Provider = { request };
@@ -670,14 +671,8 @@ function parseTransactionRequest(
   }
 
   const request: Record<string, unknown> = {};
-  if (data !== undefined && input !== undefined && data !== input) {
-    throw new InvalidParamsRpcError(new Error("data and input differ"));
-  }
-  const callData = data ?? input;
+  const callData = callDataOf(data, input);
   if (callData !== undefined) {
-    if (!isHex(callData)) {
-      throw new InvalidParamsRpcError(new Error("data must be hex"));
-    }
     request.data = callData;
   }
   if (to !== undefined && to !== null) {
@@ -694,13 +689,7 @@ function parseTransactionRequest(
     request.accessList = accessList;
   }
   if (type !== undefined) {
-    request.type =
-      typeof type === "string" ? TRANSACTION_TYPES.get(type) : undefined;
-    if (request.type === undefined) {
-      throw new InvalidParamsRpcError(
-        new Error(`Unsupported transaction type: ${String(type)}`)
-      );
-    }
+    request.type = transactionTypeOf(type);
   }
   const quantities = {
     value,
@@ -718,6 +707,32 @@ function parseTransactionRequest(
     request.nonce = Number(quantity("nonce", nonce));
   }
   return { from, request };
+}
+
+/** Returns the call data from `data` or its `input` alias, which must agree. */
+function callDataOf(data: unknown, input: unknown): Hex | undefined {
+  if (data !== undefined && input !== undefined && data !== input) {
+    throw new InvalidParamsRpcError(new Error("data and input differ"));
+  }
+  const callData = data ?? input;
+  if (callData === undefined) {
+    return undefined;
+  }
+  if (!isHex(callData)) {
+    throw new InvalidParamsRpcError(new Error("data must be hex"));
+  }
+  return callData;
+}
+
+function transactionTypeOf(type: unknown): string {
+  const name =
+    typeof type === "string" ? TRANSACTION_TYPES.get(type) : undefined;
+  if (name === undefined) {
+    throw new InvalidParamsRpcError(
+      new Error(`Unsupported transaction type: ${String(type)}`)
+    );
+  }
+  return name;
 }
 
 function quantity(field: string, value: unknown): bigint {

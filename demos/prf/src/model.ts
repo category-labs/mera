@@ -39,11 +39,7 @@ function deriveSolanaPrivateKey(seed: Uint8Array): Uint8Array {
   for (const index of [44, 501, 0, 0]) {
     const data = new Uint8Array(37);
     data.set(node.subarray(0, 32), 1);
-    new DataView(data.buffer).setUint32(
-      33,
-      (index + 0x80_00_00_00) >>> 0,
-      false
-    );
+    new DataView(data.buffer).setUint32(33, index + 0x80_00_00_00, false);
     node = hmac(sha512, node.subarray(32), data);
   }
   return node.slice(0, 32);

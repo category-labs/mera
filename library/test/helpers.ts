@@ -81,7 +81,7 @@ async function withStubbedGlobal<T>(
 async function withCountedRandomness<T>(
   fn: () => T | Promise<T>
 ): Promise<{ result: T; calls: number; bytesDrawn: number }> {
-  const crypto = globalThis.crypto;
+  const { crypto } = globalThis;
   let calls = 0;
   let bytesDrawn = 0;
   const countingCrypto = {

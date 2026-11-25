@@ -123,7 +123,7 @@ function TradingCard({
       const filled = await trade(async () => {
         let wallet: ConnectedWallet;
         if (account.status === "unlocked") {
-          wallet = account.wallet;
+          ({ wallet } = account);
         } else {
           // The ceremony must be the first await, so the click's user
           // activation still covers the WebAuthn prompt (Safari enforces it).
@@ -202,7 +202,7 @@ function TradingCard({
       <section className="card">
         <StockOverview now={now} />
 
-        {evmError && (
+        {evmError !== null && (
           <p className="status error">The market is unavailable: {evmError}</p>
         )}
 
@@ -238,8 +238,10 @@ function TradingCard({
                 />
               </>
             )}
-            {tradeError && <p className="status error">{tradeError}</p>}
-            {position.readError && (
+            {tradeError !== null && (
+              <p className="status error">{tradeError}</p>
+            )}
+            {position.readError !== null && (
               <p className="status error">{position.readError}</p>
             )}
           </>
@@ -276,7 +278,9 @@ function TradingCard({
               Sign out
             </button>
           </div>
-          {backupError && <p className="status error">{backupError}</p>}
+          {backupError !== null && (
+            <p className="status error">{backupError}</p>
+          )}
         </>
       )}
 

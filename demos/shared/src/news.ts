@@ -37,6 +37,16 @@ const HEADLINES = {
   ],
 } as const;
 
+function sentimentOf(change: bigint): keyof typeof HEADLINES {
+  if (change > FLAT_THRESHOLD_WEI) {
+    return "up";
+  }
+  if (change < -FLAT_THRESHOLD_WEI) {
+    return "down";
+  }
+  return "flat";
+}
+
 /**
  * One fictional headline matched to the price's direction over the current
  * 90-second window. Both the sentiment and the pick derive from the clock,
@@ -48,16 +58,11 @@ function headlineAt(now: number): string {
   const change =
     priceAt(BigInt(bucket * ROTATE_SECONDS)) -
     priceAt(BigInt((bucket - 1) * ROTATE_SECONDS));
-  const sentiment =
-    change > FLAT_THRESHOLD_WEI
-      ? "up"
-      : change < -FLAT_THRESHOLD_WEI
-        ? "down"
-        : "flat";
-  const options = HEADLINES[sentiment];
+  const options = HEADLINES[sentimentOf(change)];
   // Knuth's multiplicative hash (32-bit) spreads consecutive buckets across
   // the list; a plain multiply would overflow 2^53 and lose the low bits the
   // modulo reads.
+  // biome-ignore lint/suspicious/noBitwiseOperators: `>>> 0` reads Math.imul's signed 32-bit product as unsigned, so the modulo yields a valid index.
   const hash = Math.imul(bucket, 2_654_435_761) >>> 0;
   return options[hash % options.length] ?? options[0];
 }

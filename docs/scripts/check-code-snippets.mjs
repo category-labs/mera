@@ -33,14 +33,20 @@ const twoslasher = createTwoslasher({
   vfsRoot: docsDirectory,
 });
 
+const contentFiles = await Promise.all(
+  (await listContentFiles(contentDirectory)).map(async (path) => ({
+    path,
+    source: await readFile(path, "utf8"),
+  }))
+);
+
 const failures = [];
-for (const path of await listContentFiles(contentDirectory)) {
-  const source = await readFile(path, "utf8");
-  const codeFence = /^```(tsx?)(?:[^\n]*)\r?\n([\s\S]*?)^```\s*$/gmu;
+for (const { path, source } of contentFiles) {
+  const codeFence =
+    /^```(?<language>tsx?)(?:[^\n]*)\r?\n(?<code>[\s\S]*?)^```\s*$/gmu;
 
   for (const match of source.matchAll(codeFence)) {
-    const language = match[1];
-    const code = match[2];
+    const { language, code } = match.groups ?? {};
     if (language === undefined || code === undefined) {
       continue;
     }
@@ -64,16 +70,17 @@ if (failures.length > 0) {
 
 /** @param {string} directory */
 async function listContentFiles(directory) {
-  const files = [];
-  for (const entry of await readdir(directory, { withFileTypes: true })) {
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...(await listContentFiles(path)));
-    } else if ([".md", ".mdx"].includes(extname(entry.name))) {
-      files.push(path);
-    }
-  }
-  return files.sort();
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = await Promise.all(
+    entries.map((entry) => {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        return listContentFiles(path);
+      }
+      return [".md", ".mdx"].includes(extname(entry.name)) ? [path] : [];
+    })
+  );
+  return files.flat().sort();
 }
 
 /** @param {ts.Diagnostic} diagnostic */

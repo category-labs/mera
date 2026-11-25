@@ -71,6 +71,10 @@
   const revealing = ref(false);
   const backupError = ref<string | null>(null);
 
+  function setConnecting(busy: boolean): void {
+    connecting.value = busy;
+  }
+
   function clearDraft(): void {
     draft.value = { kind: "amount", side: draft.value.side, text: "" };
   }
@@ -119,7 +123,7 @@
       const filled = await trade(async () => {
         let wallet: ConnectedWallet;
         if (current.status === "unlocked") {
-          wallet = current.wallet;
+          ({ wallet } = current);
         } else {
           // The ceremony must be the first await, so the click's user
           // activation still covers the WebAuthn prompt (Safari enforces it).
@@ -201,7 +205,7 @@
         v-if="account.status === 'none'"
         :key="connectMode"
         :mode="connectMode"
-        :on-busy-change="(busy: boolean) => (connecting = busy)"
+        :on-busy-change="setConnecting"
         :on-connected="openAccount"
       />
       <template v-else>

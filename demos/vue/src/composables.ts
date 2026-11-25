@@ -26,18 +26,18 @@ type UsePositionResult = {
   /** Whether a faucet top-up is in flight. */
   funding: Ref<boolean>;
   /** Tops up the account through the faucet, then re-reads its balances. */
-  fund(): Promise<void>;
+  fund: () => Promise<void>;
   /**
    * Starts `address`'s position from balances read ahead of the switch and
    * skips its first top-up. The caller switches to `address` right after.
    */
-  adopt(address: EvmAddress, portfolio: Portfolio): void;
+  adopt: (address: EvmAddress, portfolio: Portfolio) => void;
   /**
    * Runs `run` as the account's trade: reads that start meanwhile are dropped,
    * and the fill it resolves to moves the position until the read that
    * settles it. `run` resolves to null when it placed no trade.
    */
-  trade(run: () => Promise<Fill | null>): Promise<Fill | null>;
+  trade: (run: () => Promise<Fill | null>) => Promise<Fill | null>;
 };
 
 const unixNow = (): number => Math.floor(Date.now() / 1000);
@@ -105,7 +105,8 @@ function usePosition(
     if (context === null || current === null) {
       return;
     }
-    const requestId = ++operationId;
+    operationId += 1;
+    const requestId = operationId;
     dispatch({ type: "readStarted", address: current, requestId });
     try {
       const portfolio = await readPortfolio(context, current);
@@ -157,7 +158,8 @@ function usePosition(
   }
 
   async function trade(run: () => Promise<Fill | null>): Promise<Fill | null> {
-    const tradeId = ++operationId;
+    operationId += 1;
+    const tradeId = operationId;
     dispatch({ type: "tradeStarted", tradeId });
     try {
       const fill = await run();

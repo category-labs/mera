@@ -11,6 +11,7 @@
 const DEMO_PATH = "/demo/index.html";
 ---
 
+{/* biome-ignore lint/security/useIframeSandbox: the demo needs scripts and its own origin for passkeys, and a sandbox that allows both lets a same-origin frame remove it. */}
 <iframe
   class="not-content"
   data-demo
@@ -23,7 +24,7 @@ const DEMO_PATH = "/demo/index.html";
 
 <script>
   window.addEventListener("message", (event) => {
-    const data = event.data;
+    const { data } = event;
     if (
       data?.type !== "mera:resize" ||
       event.origin !== location.origin ||

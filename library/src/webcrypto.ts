@@ -1,7 +1,7 @@
 import { MeraError } from "./errors.js";
 
 function randomBytes(length: number): Uint8Array<ArrayBuffer> {
-  const crypto = globalThis.crypto;
+  const { crypto } = globalThis;
 
   if (!crypto?.getRandomValues) {
     throw new MeraError(

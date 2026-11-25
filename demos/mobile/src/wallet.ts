@@ -112,18 +112,20 @@ async function revealMnemonic(credentialId: string): Promise<string> {
 
 /** The shared error text, with React Native wording for passkey failures. */
 function describeError(error: unknown): string {
-  if (error instanceof MeraError) {
-    switch (error.code) {
-      case "PRF_UNAVAILABLE":
-        return "This passkey provider does not support the WebAuthn PRF extension. iOS needs 18 or newer; on Android, Google Password Manager and 1Password both supply it.";
-      case "PASSKEY_CANCELLED":
-      case "PASSKEY_OPERATION_FAILED":
-        return describePasskeyFailure(error.cause);
-      case "CRYPTO_UNAVAILABLE":
-        return "The runtime provides no CSPRNG.";
-    }
+  if (!(error instanceof MeraError)) {
+    return describeDemoError(error);
   }
-  return describeDemoError(error);
+  switch (error.code) {
+    case "PRF_UNAVAILABLE":
+      return "This passkey provider does not support the WebAuthn PRF extension. iOS needs 18 or newer; on Android, Google Password Manager and 1Password both supply it.";
+    case "PASSKEY_CANCELLED":
+    case "PASSKEY_OPERATION_FAILED":
+      return describePasskeyFailure(error.cause);
+    case "CRYPTO_UNAVAILABLE":
+      return "The runtime provides no CSPRNG.";
+    default:
+      return describeDemoError(error);
+  }
 }
 
 function describePasskeyFailure(cause: unknown): string {

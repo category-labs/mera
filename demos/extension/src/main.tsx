@@ -4,7 +4,7 @@ import { App } from "./App";
 import "@category-labs/mera-demo-shared/base.css";
 import "./styles.css";
 
-const root = document.getElementById("root");
+const root = document.querySelector("#root");
 if (!root) {
   throw new Error("Missing #root element.");
 }

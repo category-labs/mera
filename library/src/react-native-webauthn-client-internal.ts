@@ -80,7 +80,7 @@ function createReactNativeWebAuthnClient(
         "Credential ID",
         "PASSKEY_OPERATION_FAILED"
       );
-      const transports = created.response.transports;
+      const { transports } = created.response;
       const prf = created.clientExtensionResults?.prf;
       let prfOutput: Uint8Array | undefined;
       try {
@@ -195,13 +195,18 @@ function prfExtension(prfSalt: Uint8Array): NativeExtensions {
   return { prf: { eval: { first: prfSalt } } };
 }
 
+const TRAILING_PADDING = /[=]+$/u;
+
 function decodeNativeBase64Url(
   value: string,
   name: string,
   code: MeraErrorCode
 ): Uint8Array {
   return base64UrlDecode(
-    value.replace(/\+/gu, "-").replace(/\//gu, "_").replace(/[=]+$/u, ""),
+    value
+      .replaceAll("+", "-")
+      .replaceAll("/", "_")
+      .replace(TRAILING_PADDING, ""),
     { name, code }
   );
 }

@@ -45,6 +45,7 @@ const MARKET_LIQUIDITY_WEI = 10n ** 27n;
 // Large enough for any raw transaction the demo produces; requests beyond
 // this are rejected with 413.
 const MAX_BODY_BYTES = 128 * 1024;
+const ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/u;
 
 // Anvil runs as a child on localhost, so the cheat methods are reachable
 // only from this process. The guard exits when anvil dies and the platform
@@ -165,7 +166,8 @@ async function deployMarket(): Promise<string> {
   ]);
   // The deploy mines in the next interval block, up to a second after the
   // send, so poll for the receipt instead of reading it once.
-  for (let attempt = 0; attempt < 100; attempt++) {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    // biome-ignore lint/performance/noAwaitInLoops: polling; each receipt read follows the previous read and a 100 ms pause.
     const receipt = (await anvilRequest("eth_getTransactionReceipt", [
       hash,
     ])) as { contractAddress?: unknown } | null;
@@ -218,6 +220,28 @@ function respond(
     ...CORS_HEADERS,
   });
   response.end(body);
+}
+
+async function respondToFundAccount(
+  response: http.ServerResponse,
+  id: unknown,
+  params: unknown
+): Promise<void> {
+  const address = Array.isArray(params) ? params[0] : undefined;
+  if (typeof address !== "string" || !ADDRESS_PATTERN.test(address)) {
+    respond(
+      response,
+      200,
+      rpcError(id, -32_602, "params must be a single 0x-prefixed address.")
+    );
+    return;
+  }
+  try {
+    respond(response, 200, rpcResult(id, await fundAccount(address)));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    respond(response, 200, rpcError(id, -32_603, `Funding failed: ${message}`));
+  }
 }
 
 async function handle(
@@ -289,25 +313,7 @@ async function handle(
   }
 
   if (method === "demo_fundAccount") {
-    const address = Array.isArray(params) ? params[0] : undefined;
-    if (typeof address !== "string" || !/^0x[0-9a-fA-F]{40}$/u.test(address)) {
-      respond(
-        response,
-        200,
-        rpcError(id, -32_602, "params must be a single 0x-prefixed address.")
-      );
-      return;
-    }
-    try {
-      respond(response, 200, rpcResult(id, await fundAccount(address)));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      respond(
-        response,
-        200,
-        rpcError(id, -32_603, `Funding failed: ${message}`)
-      );
-    }
+    await respondToFundAccount(response, id, params);
     return;
   }
 
@@ -345,8 +351,9 @@ async function handle(
 
 // Serve only once anvil answers, so the platform's routing never sees a
 // listening guard with a dead node behind it during boot.
-for (let attempt = 0; ; attempt++) {
+for (let attempt = 0; ; attempt += 1) {
   try {
+    // biome-ignore lint/performance/noAwaitInLoops: polling; each readiness probe follows the previous failure and a 100 ms pause.
     await anvilRequest("eth_chainId", []);
     break;
   } catch {

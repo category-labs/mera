@@ -65,8 +65,8 @@ function TradeForm({
       ? null
       : orderShares({ order, price, heldShares: portfolio.shares });
 
-  function editAmount(side: Side, text: string): void {
-    onDraftChange({ kind: "amount", side, text });
+  function editAmount(side: Side, amount: string): void {
+    onDraftChange({ kind: "amount", side, text: amount });
   }
 
   function submitLabel(): string {
@@ -125,7 +125,7 @@ function TradeForm({
             autoCorrect={false}
             editable={!disabled && stage !== "sending"}
             keyboardType="decimal-pad"
-            onChangeText={(text) => editAmount(draft.side, text)}
+            onChangeText={(amount) => editAmount(draft.side, amount)}
             placeholder="100.00"
             placeholderTextColor={palette.muted}
             style={styles.input}
@@ -146,15 +146,12 @@ function TradeForm({
         </View>
       </View>
 
-      {fill === null ? (
-        estimatedShares === null ? null : (
-          <Text style={text.hint}>
-            ≈ {formatShares(estimatedShares)} {TICKER} at the current price
-          </Text>
-        )
-      ) : (
-        <Text style={styles.ok}>{fillText(fill)}</Text>
+      {fill === null && estimatedShares !== null && (
+        <Text style={text.hint}>
+          ≈ {formatShares(estimatedShares)} {TICKER} at the current price
+        </Text>
       )}
+      {fill !== null && <Text style={styles.ok}>{fillText(fill)}</Text>}
     </View>
   );
 }

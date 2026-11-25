@@ -8,7 +8,8 @@ import type {
   PasskeyCredentialTransport,
   PasskeyRelyingParty,
 } from "./types.js";
-import { browserWebAuthnClient, type WebAuthnClient } from "./webauthn.js";
+import type { WebAuthnClient } from "./webauthn.js";
+import { browserWebAuthnClient } from "./webauthn.js";
 import { randomBytes } from "./webcrypto.js";
 
 const DEFAULT_PRF_SALT = sha256(utf8ToBytes("mera.prf.salt.v1"));

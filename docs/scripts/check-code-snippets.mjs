@@ -41,7 +41,9 @@ for (const path of await listContentFiles(contentDirectory)) {
   for (const match of source.matchAll(codeFence)) {
     const language = match[1];
     const code = match[2];
-    if (language === undefined || code === undefined) continue;
+    if (language === undefined || code === undefined) {
+      continue;
+    }
 
     try {
       twoslasher(code, language, {

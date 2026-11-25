@@ -5,7 +5,9 @@ import "@category-labs/mera-demo-shared/base.css";
 import "./styles.css";
 
 const root = document.getElementById("root");
-if (!root) throw new Error("Missing #root element.");
+if (!root) {
+  throw new Error("Missing #root element.");
+}
 
 createRoot(root).render(
   <StrictMode>

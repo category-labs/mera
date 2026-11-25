@@ -1,22 +1,24 @@
 import { useNow, usePosition } from "@category-labs/mera-demo-shared/hooks";
+import type {
+  Fill,
+  Order,
+  Portfolio,
+  TradeDraft,
+} from "@category-labs/mera-demo-shared/market";
 import {
-  type Fill,
   LOW_CASH_WEI,
-  type Order,
-  type Portfolio,
   placeOrder,
   priceAt,
   readPortfolio,
-  type TradeDraft,
 } from "@category-labs/mera-demo-shared/market";
-import {
-  type EvmContext,
-  fundAccount,
-} from "@category-labs/mera-demo-shared/network";
+import type { EvmContext } from "@category-labs/mera-demo-shared/network";
+import { fundAccount } from "@category-labs/mera-demo-shared/network";
 import { CASH_SYMBOL } from "@category-labs/mera-demo-shared/ui";
-import { type ReactElement, useEffect, useState } from "react";
+import type { ReactElement } from "react";
+import { useEffect, useState } from "react";
 import { AppState, StyleSheet, Text, View } from "react-native";
-import { type AccountState, accountAddress } from "./account";
+import type { AccountState } from "./account";
+import { accountAddress } from "./account";
 import { Button, LinkButton } from "./Button";
 import { Holdings } from "./Holdings";
 import { RecoveryPhrase } from "./RecoveryPhrase";
@@ -24,13 +26,13 @@ import { StockOverview } from "./StockOverview";
 import { clearStoredAccount, storedCostBasis } from "./storage";
 import { TradeForm } from "./TradeForm";
 import { palette, text } from "./theme";
+import type { Wallet } from "./wallet";
 import {
   createAccount,
   describeError,
   revealMnemonic,
   signIn,
   unlockStoredWallet,
-  type Wallet,
 } from "./wallet";
 
 type Pending =
@@ -92,7 +94,9 @@ function TradingScreen({
   // switcher's snapshot.
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
-      if (state !== "active") setPhrase(null);
+      if (state !== "active") {
+        setPhrase(null);
+      }
     });
     return () => subscription.remove();
   }, []);
@@ -132,7 +136,9 @@ function TradingScreen({
           // Show the account anyway; the balance reads report the failure.
         }
       }
-      if (portfolio !== null) adopt(wallet.address, portfolio);
+      if (portfolio !== null) {
+        adopt(wallet.address, portfolio);
+      }
       switchAccount({ status: "unlocked", wallet });
     } catch (caught) {
       setTradeError(describeError(caught));
@@ -142,8 +148,12 @@ function TradingScreen({
   }
 
   function connectLabel(action: "create" | "signin", idle: string): string {
-    if (pending === action) return "Waiting for passkey…";
-    if (pending === `opening:${action}`) return "Opening account…";
+    if (pending === action) {
+      return "Waiting for passkey…";
+    }
+    if (pending === `opening:${action}`) {
+      return "Opening account…";
+    }
     return idle;
   }
 
@@ -166,7 +176,9 @@ function TradingScreen({
   }
 
   async function submit(order: Order): Promise<void> {
-    if (loaded === null || evm === null || account.status === "none") return;
+    if (loaded === null || evm === null || account.status === "none") {
+      return;
+    }
     setTradeError(null);
     setFill(null);
     try {
@@ -200,7 +212,9 @@ function TradingScreen({
   }
 
   async function revealBackup(): Promise<void> {
-    if (account.status === "none") return;
+    if (account.status === "none") {
+      return;
+    }
     setPending("recovery");
     setBackupError(null);
     try {
@@ -220,7 +234,9 @@ function TradingScreen({
   }
 
   function lock(): void {
-    if (account.status !== "unlocked") return;
+    if (account.status !== "unlocked") {
+      return;
+    }
     account.wallet.session.end();
     setRecoveryWarning(false);
     onAccountChange({
@@ -237,7 +253,9 @@ function TradingScreen({
       setTradeError(describeError(caught));
       return;
     }
-    if (account.status === "unlocked") account.wallet.session.end();
+    if (account.status === "unlocked") {
+      account.wallet.session.end();
+    }
     switchAccount({ status: "none" });
   }
 

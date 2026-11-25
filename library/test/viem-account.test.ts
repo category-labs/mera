@@ -1,5 +1,6 @@
 import { hexToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
+import type { TransactionSerialized } from "viem";
 import {
   parseTransaction,
   recoverAddress,
@@ -7,7 +8,6 @@ import {
   recoverTransactionAddress,
   recoverTypedDataAddress,
   serializeTransaction,
-  type TransactionSerialized,
 } from "viem";
 import { recoverAuthorizationAddress } from "viem/utils";
 import { createSecp256k1SigningSession } from "../dist/index.js";
@@ -142,7 +142,9 @@ test("signTypedData produces an EIP-712 signature that recovers the address", as
 
 test("sign produces a raw-hash signature that recovers the address", async () => {
   const { account } = createAccount();
-  if (!account.sign) throw new Error("account.sign is not implemented");
+  if (!account.sign) {
+    throw new Error("account.sign is not implemented");
+  }
   const hash = `0x${"11".repeat(32)}` as const;
 
   const signature = await account.sign({ hash });
@@ -183,7 +185,9 @@ test("signing rejects with SESSION_ENDED after the session has ended", async () 
 
 test("sign rejects with INPUT_INVALID when the hash is not 32 bytes", async () => {
   const { account } = createAccount();
-  if (!account.sign) throw new Error("account.sign is not implemented");
+  if (!account.sign) {
+    throw new Error("account.sign is not implemented");
+  }
 
   await expect(account.sign({ hash: "0x1234" })).rejects.toMatchObject({
     code: "INPUT_INVALID",

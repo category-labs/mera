@@ -1,9 +1,8 @@
+import type { EvmAddress, Secp256k1SigningSession } from "@category-labs/mera";
 import {
   createSecp256k1SigningSession,
   deriveEvmPrivateKey,
-  type EvmAddress,
   getEvmAddress,
-  type Secp256k1SigningSession,
 } from "@category-labs/mera";
 import { HDKey } from "@scure/bip32";
 import {
@@ -32,7 +31,9 @@ const EVM_ACCOUNT_PATH = "m/44'/60'/0'/0/0";
  */
 function prfOutputToMnemonic(prfOutput: Uint8Array): string {
   try {
-    if (prfOutput.length !== 32) throw new Error("PRF output must be 32 bytes");
+    if (prfOutput.length !== 32) {
+      throw new Error("PRF output must be 32 bytes");
+    }
     return entropyToMnemonic(prfOutput, wordlist);
   } finally {
     prfOutput.fill(0);
@@ -66,7 +67,9 @@ function evmAccountFromMnemonic(mnemonic: string): EvmAccount {
   let privateKey: Uint8Array | null = null;
   try {
     privateKey = HDKey.fromMasterSeed(seed).derive(EVM_ACCOUNT_PATH).privateKey;
-    if (privateKey === null) throw new Error("Derivation produced no key");
+    if (privateKey === null) {
+      throw new Error("Derivation produced no key");
+    }
     const session = createSecp256k1SigningSession({ privateKey });
     return { session, address: getEvmAddress(session.publicKey) };
   } finally {

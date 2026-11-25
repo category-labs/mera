@@ -1,15 +1,17 @@
 <script setup lang="ts">
+import type {
+  Fill,
+  Order,
+  Portfolio,
+  Side,
+  TradeDraft,
+} from "@category-labs/mera-demo-shared/market";
 import {
   coversTrade,
   draftOrder,
-  type Fill,
   maxDraft,
-  type Order,
   orderShares,
-  type Portfolio,
-  type Side,
   TICKER,
-  type TradeDraft,
 } from "@category-labs/mera-demo-shared/market";
 import type { positionReducer } from "@category-labs/mera-demo-shared/position";
 import {
@@ -59,8 +61,12 @@ const amountText = computed({
 
 const submitLabel = computed(() => {
   const buying = draft.value.side === "buy";
-  if (stage !== "sending") return buying ? "Buy" : "Sell";
-  if (locked) return "Waiting for passkey…";
+  if (stage !== "sending") {
+    return buying ? "Buy" : "Sell";
+  }
+  if (locked) {
+    return "Waiting for passkey…";
+  }
   return buying ? "Buying…" : "Selling…";
 });
 
@@ -73,7 +79,9 @@ function fillMax(): void {
 }
 
 function submit(): void {
-  if (coveredOrder.value !== null) emit("submit", coveredOrder.value);
+  if (coveredOrder.value !== null) {
+    emit("submit", coveredOrder.value);
+  }
 }
 </script>
 

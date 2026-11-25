@@ -1,12 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  type BrowserContext,
-  test as base,
-  expect,
-  type Page,
-} from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { test as base, expect } from "@playwright/test";
 import { extensionIdFromKey } from "./extension-id";
 
 const extensionDir = resolve(
@@ -52,7 +48,9 @@ const test = base.extend<{ context: BrowserContext; extensionId: string }>({
         id: unknown;
         method: string;
       };
-      if (method === "demo_fundAccount") funded = true;
+      if (method === "demo_fundAccount") {
+        funded = true;
+      }
       await route.fulfill({
         json: { jsonrpc: "2.0", id, result: rpcResult(method, funded) },
       });
@@ -197,7 +195,7 @@ async function waitForHeldCredentialResult(page: Page): Promise<void> {
 async function releaseCredentialResult(page: Page): Promise<void> {
   await page.evaluate(() => {
     (globalThis as Held).releaseCredentialResult?.();
-    delete (globalThis as Held).releaseCredentialResult;
+    (globalThis as Held).releaseCredentialResult = undefined;
   });
 }
 
@@ -275,7 +273,9 @@ test("runs the side-panel account lifecycle", async ({
 
   await page.evaluate((key) => {
     const raw = localStorage.getItem(key);
-    if (raw === null) throw new Error("Missing stored account.");
+    if (raw === null) {
+      throw new Error("Missing stored account.");
+    }
     const value = JSON.parse(raw) as Record<string, unknown>;
     value.address = "0x2222222222222222222222222222222222222222";
     localStorage.setItem(key, JSON.stringify(value));
@@ -289,7 +289,9 @@ test("runs the side-panel account lifecycle", async ({
   await expect(page.getByRole("button", { name: "Lock" })).toBeDisabled();
   await page.evaluate(
     ([key, raw]) => {
-      if (raw !== null) localStorage.setItem(key, raw);
+      if (raw !== null) {
+        localStorage.setItem(key, raw);
+      }
     },
     [accountKey, storedAccount] as const,
   );
@@ -492,7 +494,9 @@ test("opens a passkey tab from the side panel", async ({
         : null;
     }, credentialKey);
   const remembered = await readRememberedId();
-  if (remembered === null) throw new Error("Missing remembered credential.");
+  if (remembered === null) {
+    throw new Error("Missing remembered credential.");
+  }
 
   // Signing out keeps the remembered credential and forwards it in the next
   // creation tab URL so the page passes it in excludeCredentials; completing

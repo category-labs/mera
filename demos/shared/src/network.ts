@@ -1,5 +1,5 @@
+import type { Address } from "viem";
 import {
-  type Address,
   createPublicClient,
   defineChain,
   http,
@@ -11,16 +11,16 @@ import {
 // on it holds value.
 const DEMO_RPC_URL = "https://evm-network-production.up.railway.app";
 const NETWORK_NAME = "Demo Network";
-const RESOLVE_RETRY_MS = 5_000;
+const RESOLVE_RETRY_MS = 5000;
 
 const demoChain = defineChain({
-  id: 31337,
+  id: 31_337,
   name: NETWORK_NAME,
   nativeCurrency: { name: "Demon", symbol: "DEMON", decimals: 18 },
   rpcUrls: { default: { http: [DEMO_RPC_URL] } },
   // The network mines a block a second. viem polls for receipts at half the
   // block time, or every 4 s when it is unset, so a fill shows within a second.
-  blockTime: 1_000,
+  blockTime: 1000,
 });
 
 // The methods the network's guard adds to JSON-RPC. The market reply is
@@ -82,10 +82,14 @@ function retryingResolve<T>(
   function attempt(): void {
     resolve().then(
       (value) => {
-        if (!stopped) onResolved(value);
+        if (!stopped) {
+          onResolved(value);
+        }
       },
       (error: unknown) => {
-        if (stopped) return;
+        if (stopped) {
+          return;
+        }
         onError(error);
         timer = setTimeout(attempt, RESOLVE_RETRY_MS);
       },

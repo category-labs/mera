@@ -1,7 +1,7 @@
+import type { PasskeyCredentialMetadata } from "@category-labs/mera";
 import {
   createPasskeyWithPrfOutput,
   getPasskeyPrfOutput,
-  type PasskeyCredentialMetadata,
 } from "@category-labs/mera";
 
 /** A ceremony's PRF output and the credential that produced it. */

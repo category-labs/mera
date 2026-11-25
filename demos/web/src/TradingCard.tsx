@@ -1,36 +1,39 @@
 import { AccountHoldings } from "@category-labs/mera-demo-shared/AccountHoldings";
+import type { AccountState } from "@category-labs/mera-demo-shared/account";
 import {
-  type AccountState,
   accountAddress,
   clearCachedAccount,
 } from "@category-labs/mera-demo-shared/account";
+import type {
+  AccountMode,
+  ConnectedWallet,
+} from "@category-labs/mera-demo-shared/connect";
 import {
-  type AccountMode,
-  type ConnectedWallet,
   connect,
   revealMnemonic,
 } from "@category-labs/mera-demo-shared/connect";
 import { costBasisStorage } from "@category-labs/mera-demo-shared/costBasisStorage";
 import { describeError } from "@category-labs/mera-demo-shared/errors";
 import { useNow, usePosition } from "@category-labs/mera-demo-shared/hooks";
+import type {
+  Fill,
+  Order,
+  TradeDraft,
+} from "@category-labs/mera-demo-shared/market";
 import {
-  type Fill,
   LOW_CASH_WEI,
-  type Order,
   placeOrder,
   priceAt,
   readPortfolio,
-  type TradeDraft,
 } from "@category-labs/mera-demo-shared/market";
-import {
-  type EvmContext,
-  fundAccount,
-} from "@category-labs/mera-demo-shared/network";
+import type { EvmContext } from "@category-labs/mera-demo-shared/network";
+import { fundAccount } from "@category-labs/mera-demo-shared/network";
 import { RecoveryPhrase } from "@category-labs/mera-demo-shared/RecoveryPhrase";
 import { StockOverview } from "@category-labs/mera-demo-shared/StockOverview";
 import { TradeForm } from "@category-labs/mera-demo-shared/TradeForm";
 import { CASH_SYMBOL } from "@category-labs/mera-demo-shared/ui";
-import { type ReactElement, useState } from "react";
+import type { ReactElement } from "react";
+import { useState } from "react";
 import { ConnectPanel } from "./ConnectPanel";
 
 type TradingCardProps = {
@@ -111,7 +114,9 @@ function TradingCard({
   }
 
   async function submit(order: Order): Promise<void> {
-    if (loaded === null || evm === null || account.status === "none") return;
+    if (loaded === null || evm === null || account.status === "none") {
+      return;
+    }
     setTradeError(null);
     setFill(null);
     try {
@@ -157,7 +162,9 @@ function TradingCard({
   }
 
   async function revealBackup(): Promise<void> {
-    if (account.status === "none") return;
+    if (account.status === "none") {
+      return;
+    }
     setRevealing(true);
     setBackupError(null);
     try {
@@ -174,7 +181,9 @@ function TradingCard({
   }
 
   function signOut(): void {
-    if (account.status === "unlocked") account.wallet.session.end();
+    if (account.status === "unlocked") {
+      account.wallet.session.end();
+    }
     clearCachedAccount();
     switchAccount({ status: "none" });
   }

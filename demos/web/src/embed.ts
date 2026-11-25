@@ -13,7 +13,9 @@ const FOOTER_PIN_SLACK_PX = 8;
  * viewport.
  */
 function reportHeightWhenEmbedded(): void {
-  if (window.self === window.top) return;
+  if (window.self === window.top) {
+    return;
+  }
   document.documentElement.dataset.embedded = "true";
 
   let last = 0;
@@ -24,7 +26,9 @@ function reportHeightWhenEmbedded(): void {
     document.documentElement.dataset.footerPinned = String(
       window.innerHeight > height + FOOTER_PIN_SLACK_PX,
     );
-    if (height === last) return;
+    if (height === last) {
+      return;
+    }
     last = height;
     window.parent.postMessage({ type: "mera:resize", height }, "*");
   };

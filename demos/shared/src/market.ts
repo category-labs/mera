@@ -1,9 +1,9 @@
 import type { EvmAddress, Secp256k1SigningSession } from "@category-labs/mera";
 import { toViemAccount } from "@category-labs/mera/viem";
+import type { Hash } from "viem";
 import {
   createWalletClient,
   encodePacked,
-  type Hash,
   http,
   isAddressEqual,
   keccak256,
@@ -11,7 +11,8 @@ import {
   parseEther,
   parseEventLogs,
 } from "viem";
-import { demoChain, type EvmContext } from "./network";
+import type { EvmContext } from "./network";
+import { demoChain } from "./network";
 
 const COMPANY_NAME = "Nad Computer Company";
 const TICKER = "NAD";
@@ -165,7 +166,9 @@ async function filledShares(evm: EvmContext, hash: Hash): Promise<bigint> {
       isAddressEqual(log.address, evm.marketAddress),
     ),
   });
-  if (transfer === undefined) throw new Error("The market returned no fill.");
+  if (transfer === undefined) {
+    throw new Error("The market returned no fill.");
+  }
   return transfer.args.value;
 }
 
@@ -189,7 +192,7 @@ type TradeDraft =
   | { kind: "sellAll"; side: "sell"; text: string };
 
 // How often the demos re-read the portfolio.
-const REFRESH_MS = 5_000;
+const REFRESH_MS = 5000;
 // Cash kept out of Max buys so the account can always pay a trade's network
 // fee; at the demo network's gas prices this covers hundreds of trades.
 const FEE_RESERVE_WEI = 10n ** 16n;
@@ -204,7 +207,9 @@ const CASH_AMOUNT = /^(?:\d+(?:\.\d{0,18})?|\.\d{1,18})$/u;
 
 /** The order a draft places; null while its text is not a positive amount. */
 function draftOrder(draft: TradeDraft): Order | null {
-  if (draft.kind === "sellAll") return { kind: "sellAll", side: "sell" };
+  if (draft.kind === "sellAll") {
+    return { kind: "sellAll", side: "sell" };
+  }
   const text = draft.text.trim();
   const amountWei = CASH_AMOUNT.test(text) ? parseEther(text) : 0n;
   return amountWei > 0n
@@ -292,7 +297,9 @@ function orderShares({
   price: bigint;
   heldShares: bigint;
 }): bigint {
-  if (order.kind === "sellAll") return heldShares;
+  if (order.kind === "sellAll") {
+    return heldShares;
+  }
   const shares = (order.amountWei * UNIT) / price;
   if (
     order.side === "sell" &&

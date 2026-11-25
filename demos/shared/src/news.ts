@@ -58,7 +58,7 @@ function headlineAt(now: number): string {
   // Knuth's multiplicative hash (32-bit) spreads consecutive buckets across
   // the list; a plain multiply would overflow 2^53 and lose the low bits the
   // modulo reads.
-  const hash = Math.imul(bucket, 2654435761) >>> 0;
+  const hash = Math.imul(bucket, 2_654_435_761) >>> 0;
   return options[hash % options.length] ?? options[0];
 }
 

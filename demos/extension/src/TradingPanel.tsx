@@ -1,46 +1,41 @@
 import { AccountHoldings } from "@category-labs/mera-demo-shared/AccountHoldings";
+import type {
+  AccountState,
+  CachedAccount,
+} from "@category-labs/mera-demo-shared/account";
 import {
-  type AccountState,
   accountAddress,
-  type CachedAccount,
   clearCachedAccount,
   loadKnownCredential,
   saveCachedAccount,
   saveKnownCredential,
 } from "@category-labs/mera-demo-shared/account";
-import {
-  type ConnectedWallet,
-  walletFromPrf,
-} from "@category-labs/mera-demo-shared/connect";
+import type { ConnectedWallet } from "@category-labs/mera-demo-shared/connect";
+import { walletFromPrf } from "@category-labs/mera-demo-shared/connect";
 import { costBasisStorage } from "@category-labs/mera-demo-shared/costBasisStorage";
 import { describeError } from "@category-labs/mera-demo-shared/errors";
 import { prfOutputToMnemonic } from "@category-labs/mera-demo-shared/hd";
 import { useNow, usePosition } from "@category-labs/mera-demo-shared/hooks";
+import type {
+  Fill,
+  Order,
+  Portfolio,
+  TradeDraft,
+} from "@category-labs/mera-demo-shared/market";
 import {
-  type Fill,
   LOW_CASH_WEI,
-  type Order,
-  type Portfolio,
   placeOrder,
   priceAt,
   readPortfolio,
-  type TradeDraft,
 } from "@category-labs/mera-demo-shared/market";
-import {
-  type EvmContext,
-  fundAccount,
-} from "@category-labs/mera-demo-shared/network";
+import type { EvmContext } from "@category-labs/mera-demo-shared/network";
+import { fundAccount } from "@category-labs/mera-demo-shared/network";
 import { RecoveryPhrase } from "@category-labs/mera-demo-shared/RecoveryPhrase";
 import { StockOverview } from "@category-labs/mera-demo-shared/StockOverview";
 import { TradeForm } from "@category-labs/mera-demo-shared/TradeForm";
 import { CASH_SYMBOL } from "@category-labs/mera-demo-shared/ui";
-import {
-  type ReactElement,
-  useEffect,
-  useEffectEvent,
-  useRef,
-  useState,
-} from "react";
+import type { ReactElement } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { passkeyTabOpen, requestPrf } from "./passkey";
 
 const RECOVERY_VISIBLE_MS = 60_000;
@@ -119,7 +114,9 @@ function TradingPanel({
     setRecoveryWarning(false);
     setPhrase(null);
     const wallet = unlocked.current;
-    if (wallet === null) return;
+    if (wallet === null) {
+      return;
+    }
     unlocked.current = null;
     wallet.session.end();
     onAccountChange({ status: "locked", ...cachedAccount(wallet) });
@@ -148,7 +145,9 @@ function TradingPanel({
   }, []);
 
   useEffect(() => {
-    if (phrase === null) return;
+    if (phrase === null) {
+      return;
+    }
     const timer = setTimeout(() => setPhrase(null), RECOVERY_VISIBLE_MS);
     return () => clearTimeout(timer);
   }, [phrase]);
@@ -161,7 +160,9 @@ function TradingPanel({
   }
 
   async function connect(action: "create" | "signin"): Promise<void> {
-    if (evm === null) return;
+    if (evm === null) {
+      return;
+    }
     const started = locks.current;
     setPending(action);
     setError(null);
@@ -171,9 +172,13 @@ function TradingPanel({
         action === "create" ? "create" : "get",
         action === "create" ? loadKnownCredential() : undefined,
       );
-      if (action === "create") saveKnownCredential(prf.credential);
+      if (action === "create") {
+        saveKnownCredential(prf.credential);
+      }
       wallet = walletFromPrf(prf);
-      if (locks.current !== started) return;
+      if (locks.current !== started) {
+        return;
+      }
       // Fund and read the account first, so the connect buttons give way to
       // settled balances.
       setPending(`opening:${action}`);
@@ -184,17 +189,25 @@ function TradingPanel({
       } catch {
         // Show the account anyway; the balance reads report the failure.
       }
-      if (locks.current !== started) return;
+      if (locks.current !== started) {
+        return;
+      }
       saveCachedAccount(cachedAccount(wallet));
-      if (action === "signin") saveKnownCredential(prf.credential);
-      if (portfolio !== null) adopt(wallet.address, portfolio);
+      if (action === "signin") {
+        saveKnownCredential(prf.credential);
+      }
+      if (portfolio !== null) {
+        adopt(wallet.address, portfolio);
+      }
       unlockWith(wallet);
       setDraft(clearedDraft);
       setFill(null);
       // The account owns the session now.
       wallet = undefined;
     } catch (caught) {
-      if (locks.current === started) setError(describeError(caught));
+      if (locks.current === started) {
+        setError(describeError(caught));
+      }
     } finally {
       wallet?.session.end();
       setPending(null);
@@ -202,8 +215,12 @@ function TradingPanel({
   }
 
   function connectLabel(action: "create" | "signin", idle: string): string {
-    if (pending === action) return "Waiting for passkey…";
-    if (pending === `opening:${action}`) return "Opening account…";
+    if (pending === action) {
+      return "Waiting for passkey…";
+    }
+    if (pending === `opening:${action}`) {
+      return "Opening account…";
+    }
     return idle;
   }
 
@@ -216,7 +233,9 @@ function TradingPanel({
     const wallet = walletFromPrf(await requestPrf("get", locked.credential));
     if (locks.current !== started || wallet.address !== locked.address) {
       wallet.session.end();
-      if (locks.current !== started) return null;
+      if (locks.current !== started) {
+        return null;
+      }
       clearCachedAccount();
       throw new Error("The passkey does not match the cached account.");
     }
@@ -225,7 +244,9 @@ function TradingPanel({
   }
 
   async function submit(order: Order): Promise<void> {
-    if (loaded === null || evm === null || account.status === "none") return;
+    if (loaded === null || evm === null || account.status === "none") {
+      return;
+    }
     const started = locks.current;
     setError(null);
     setFill(null);
@@ -235,7 +256,9 @@ function TradingPanel({
           account.status === "unlocked"
             ? account.wallet
             : await unlock(account, started);
-        if (wallet === null) return null;
+        if (wallet === null) {
+          return null;
+        }
         return placeOrder({
           session: wallet.session,
           evm,
@@ -246,16 +269,22 @@ function TradingPanel({
       });
       // A lock during the trade keeps its fill in the position, but not on
       // screen.
-      if (filled === null || locks.current !== started) return;
+      if (filled === null || locks.current !== started) {
+        return;
+      }
       setFill(filled);
       setDraft(clearedDraft);
     } catch (caught) {
-      if (locks.current === started) setError(describeError(caught));
+      if (locks.current === started) {
+        setError(describeError(caught));
+      }
     }
   }
 
   async function revealPhrase(): Promise<void> {
-    if (account.status === "none") return;
+    if (account.status === "none") {
+      return;
+    }
     const started = locks.current;
     const credential =
       account.status === "unlocked"
@@ -266,11 +295,15 @@ function TradingPanel({
     try {
       const { prfOutput } = await requestPrf("recovery", credential);
       const revealed = prfOutputToMnemonic(prfOutput);
-      if (locks.current !== started) return;
+      if (locks.current !== started) {
+        return;
+      }
       setPhrase(revealed);
       setRecoveryWarning(false);
     } catch (caught) {
-      if (locks.current === started) setError(describeError(caught));
+      if (locks.current === started) {
+        setError(describeError(caught));
+      }
     } finally {
       setPending(null);
     }

@@ -1,8 +1,8 @@
+import type { PasskeyCredentialMetadata } from "@category-labs/mera";
 import {
   createSecretVaultWithNewPasskey,
   decryptSecretVaultWithPasskey,
   MeraError,
-  type PasskeyCredentialMetadata,
   parseSecretVault,
 } from "@category-labs/mera";
 import {
@@ -10,19 +10,15 @@ import {
   saveCachedAccount,
   saveKnownCredential,
 } from "./account";
+import type { EvmAccount } from "./hd";
 import {
-  type EvmAccount,
   evmAccountFromMnemonic,
   evmAccountFromPrfOutput,
   isValidMnemonic,
   prfOutputToMnemonic,
 } from "./hd";
-import {
-  createPasskeyPrf,
-  getPasskeyPrf,
-  newPasskeyOptions,
-  type PasskeyPrf,
-} from "./passkey";
+import type { PasskeyPrf } from "./passkey";
+import { createPasskeyPrf, getPasskeyPrf, newPasskeyOptions } from "./passkey";
 
 type AccountMode = "vault" | "passkey";
 
@@ -182,7 +178,9 @@ async function revealMnemonic({
   mode,
   credential,
 }: Pick<ConnectedWallet, "mode" | "credential">): Promise<string> {
-  if (mode === "vault") return decryptStoredVault();
+  if (mode === "vault") {
+    return decryptStoredVault();
+  }
   const { prfOutput } = await getPasskeyPrf(rpId, credential);
   return prfOutputToMnemonic(prfOutput);
 }

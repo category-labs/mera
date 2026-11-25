@@ -44,7 +44,9 @@ function chartGeometry(now: number): ChartGeometry {
     Math.ceil((now - CHART_WINDOW_SECONDS) / SAMPLE_SECONDS) * SAMPLE_SECONDS;
   // Dropping t >= now also clears samples ahead of a clock that moved back.
   for (const t of gridPrices.keys()) {
-    if (t < start || t >= now) gridPrices.delete(t);
+    if (t < start || t >= now) {
+      gridPrices.delete(t);
+    }
   }
   for (let t = start; t < now; t += SAMPLE_SECONDS) {
     let price = gridPrices.get(t);
@@ -61,8 +63,12 @@ function chartGeometry(now: number): ChartGeometry {
   let min = price;
   let max = price;
   for (const point of points) {
-    if (point.price < min) min = point.price;
-    if (point.price > max) max = point.price;
+    if (point.price < min) {
+      min = point.price;
+    }
+    if (point.price > max) {
+      max = point.price;
+    }
   }
   // Cents as floats are exact enough for pixel math.
   const toCents = (wei: bigint) => Number(wei / 10n ** 16n);

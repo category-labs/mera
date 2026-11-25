@@ -1,12 +1,17 @@
+import type { CreateConnectorFn } from "@wagmi/core";
 import {
   ChainNotConfiguredError,
   ConnectorNotConnectedError,
-  type CreateConnectorFn,
   createConnector,
 } from "@wagmi/core";
+import type {
+  Address,
+  Chain,
+  LocalAccount,
+  TypedDataDefinition,
+  WalletClient,
+} from "viem";
 import {
-  type Address,
-  type Chain,
   createWalletClient,
   hexToBigInt,
   http,
@@ -14,15 +19,12 @@ import {
   isAddress,
   isAddressEqual,
   isHex,
-  type LocalAccount,
   MethodNotSupportedRpcError,
   nonceManager,
   numberToHex,
   SwitchChainError,
-  type TypedDataDefinition,
   UnauthorizedProviderError,
   UserRejectedRequestError,
-  type WalletClient,
 } from "viem";
 import { deriveEvmPrivateKey } from "./chains/evm.js";
 import { isStringArray } from "./encoding.js";
@@ -40,7 +42,8 @@ import type {
   Secp256k1SigningSession,
 } from "./types.js";
 import { toViemAccount } from "./viem.js";
-import { browserWebAuthnClient, type WebAuthnClient } from "./webauthn.js";
+import type { WebAuthnClient } from "./webauthn.js";
+import { browserWebAuthnClient } from "./webauthn.js";
 
 /** The account kept between page loads. Holds no key material. */
 type StoredAccount = {
@@ -258,7 +261,9 @@ function mera({
       const { credentialId, transports, prfOutput } =
         await ceremony.catch(rejectCeremony);
       const opened = openAccount(prfOutput, accountIndex);
-      if (!keepSessionOpen) opened.session.end();
+      if (!keepSessionOpen) {
+        opened.session.end();
+      }
       const account: StoredAccount = {
         address: opened.account.address,
         credential: toCredentialMetadata(credentialId, transports),
@@ -280,7 +285,9 @@ function mera({
     /** Restores the stored account without a prompt. */
     async function restore(): Promise<StoredAccount> {
       const stored = await readStoredAccount();
-      if (stored === undefined) throw new ConnectorNotConnectedError();
+      if (stored === undefined) {
+        throw new ConnectorNotConnectedError();
+      }
       if (
         connection === undefined ||
         !isAddressEqual(connection.account.address, stored.address)
@@ -468,11 +475,15 @@ function mera({
         immediate = false,
       }: NonNullable<Parameters<Properties["connect"]>[0]> = {}) {
         // Checked before the ceremony, so an unknown chain stores nothing.
-        if (requestedChainId !== undefined) configuredChain(requestedChainId);
+        if (requestedChainId !== undefined) {
+          configuredChain(requestedChainId);
+        }
         const account = isReconnecting
           ? await restore()
           : await signIn(create, immediate);
-        if (requestedChainId !== undefined) switchTo(requestedChainId);
+        if (requestedChainId !== undefined) {
+          switchTo(requestedChainId);
+        }
         return {
           accounts: (withCapabilities
             ? [{ address: account.address, capabilities: {} }]
@@ -560,10 +571,16 @@ function rejectCeremony(error: unknown): never {
 }
 
 function isStoredAccount(value: unknown): value is StoredAccount {
-  if (typeof value !== "object" || value === null) return false;
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
   const { address, credential } = value as Record<string, unknown>;
-  if (!isAddressString(address)) return false;
-  if (typeof credential !== "object" || credential === null) return false;
+  if (!isAddressString(address)) {
+    return false;
+  }
+  if (typeof credential !== "object" || credential === null) {
+    return false;
+  }
   const { credentialId, transports } = credential as Record<string, unknown>;
   return (
     typeof credentialId === "string" &&
@@ -693,9 +710,13 @@ function parseTransactionRequest(
     maxPriorityFeePerGas,
   };
   for (const [name, encoded] of Object.entries(quantities)) {
-    if (encoded !== undefined) request[name] = quantity(name, encoded);
+    if (encoded !== undefined) {
+      request[name] = quantity(name, encoded);
+    }
   }
-  if (nonce !== undefined) request.nonce = Number(quantity("nonce", nonce));
+  if (nonce !== undefined) {
+    request.nonce = Number(quantity("nonce", nonce));
+  }
   return { from, request };
 }
 

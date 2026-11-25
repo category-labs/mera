@@ -58,7 +58,8 @@ function getEvmAddress(publicKey: Uint8Array): EvmAddress {
   // EIP-55 uppercases each hex digit whose matching digit in
   // keccak256(lowercaseHex) is 8 or more.
   const hashHex = bytesToHex(keccak_256(utf8ToBytes(lowercaseHex)));
-  const checksummed = [...lowercaseHex]
+  const checksummed = lowercaseHex
+    .split("")
     .map((char, i) =>
       Number.parseInt(hashHex.charAt(i), 16) >= 8 ? char.toUpperCase() : char,
     )

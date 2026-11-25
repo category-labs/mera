@@ -1,34 +1,23 @@
 import type { EvmAddress } from "@category-labs/mera";
 import { describeError } from "@category-labs/mera-demo-shared/errors";
+import type { Fill, Portfolio } from "@category-labs/mera-demo-shared/market";
 import {
-  type Fill,
-  type Portfolio,
   REFRESH_MS,
   readPortfolio,
 } from "@category-labs/mera-demo-shared/market";
+import type { EvmContext } from "@category-labs/mera-demo-shared/network";
+import { fundAccount } from "@category-labs/mera-demo-shared/network";
+import type {
+  CostBasisStore,
+  LoadedPosition,
+} from "@category-labs/mera-demo-shared/position";
 import {
-  type EvmContext,
-  fundAccount,
-} from "@category-labs/mera-demo-shared/network";
-import {
-  type CostBasisStore,
   initialPositionState,
-  type LoadedPosition,
   loadedPosition,
   positionReducer,
 } from "@category-labs/mera-demo-shared/position";
-import {
-  type ComputedRef,
-  computed,
-  type MaybeRefOrGetter,
-  onScopeDispose,
-  type Ref,
-  ref,
-  type ShallowRef,
-  shallowRef,
-  toValue,
-  watch,
-} from "vue";
+import type { ComputedRef, MaybeRefOrGetter, Ref, ShallowRef } from "vue";
+import { computed, onScopeDispose, ref, shallowRef, toValue, watch } from "vue";
 
 type UsePositionResult = {
   position: ShallowRef<positionReducer.State>;
@@ -58,7 +47,7 @@ function useNow(): Ref<number> {
   const now = ref(unixNow());
   const timer = setInterval(() => {
     now.value = unixNow();
-  }, 1_000);
+  }, 1000);
   onScopeDispose(() => clearInterval(timer));
   return now;
 }
@@ -104,14 +93,18 @@ function usePosition(
   watch(
     [() => position.value.address, () => position.value.basis],
     ([current, basis]) => {
-      if (current !== null && basis !== null) costBasis.save(current, basis);
+      if (current !== null && basis !== null) {
+        costBasis.save(current, basis);
+      }
     },
   );
 
   async function refresh(): Promise<void> {
     const context = toValue(evm);
     const current = toValue(address);
-    if (context === null || current === null) return;
+    if (context === null || current === null) {
+      return;
+    }
     const requestId = ++operationId;
     dispatch({ type: "readStarted", address: current, requestId });
     try {
@@ -129,7 +122,9 @@ function usePosition(
   async function fund(): Promise<void> {
     const context = toValue(evm);
     const current = toValue(address);
-    if (context === null || current === null) return;
+    if (context === null || current === null) {
+      return;
+    }
     funding.value = true;
     try {
       await fundAccount(context, current);
@@ -146,7 +141,9 @@ function usePosition(
     [() => toValue(evm), () => toValue(address)],
     ([context, current]) => {
       void refresh();
-      if (context === null || current === null || funded === current) return;
+      if (context === null || current === null || funded === current) {
+        return;
+      }
       funded = current;
       // A failed top-up surfaces through the balance reads.
       fund().catch(() => {});
@@ -208,7 +205,7 @@ function useCopyButton(): {
     clearTimeout(timer);
     timer = setTimeout(() => {
       feedback.value = null;
-    }, 1_200);
+    }, 1200);
   }
 
   return { feedback, copy };

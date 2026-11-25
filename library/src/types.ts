@@ -29,7 +29,7 @@ type PasskeyCredentialMetadata = {
   /** Credential ID encoded as canonical unpadded base64url. */
   readonly credentialId: string;
   /** Authenticator transports reported by the platform, when available. */
-  readonly transports?: readonly PasskeyCredentialTransport[] | undefined;
+  readonly transports?: ReadonlyArray<PasskeyCredentialTransport> | undefined;
 };
 
 /**

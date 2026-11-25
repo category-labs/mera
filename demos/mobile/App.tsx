@@ -4,7 +4,8 @@ import { useEffect, useEffectEvent, useState } from "react";
 import { ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AccountChip } from "./src/AccountChip";
-import { type AccountState, accountAddress } from "./src/account";
+import type { AccountState } from "./src/account";
+import { accountAddress } from "./src/account";
 import { loadStoredAccount } from "./src/storage";
 import { TradingScreen } from "./src/TradingScreen";
 import { palette } from "./src/theme";
@@ -22,7 +23,9 @@ export default function App() {
   // Unmounting ends the live session, so its key does not wait for garbage
   // collection.
   const endSession = useEffectEvent((): void => {
-    if (account.status === "unlocked") account.wallet.session.end();
+    if (account.status === "unlocked") {
+      account.wallet.session.end();
+    }
   });
   useEffect(() => () => endSession(), []);
 

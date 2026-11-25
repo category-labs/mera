@@ -1,5 +1,6 @@
 import { base64urlnopad } from "@scure/base";
-import { MeraError, type MeraErrorCode } from "./errors.js";
+import type { MeraErrorCode } from "./errors.js";
+import { MeraError } from "./errors.js";
 
 function normalizePrfOutput(
   value: ArrayBuffer | ArrayBufferView | ArrayLike<number>,
@@ -50,8 +51,8 @@ function base64UrlDecode(
   let bytes: Uint8Array<ArrayBuffer>;
   try {
     bytes = base64urlnopad.decode(value) as Uint8Array<ArrayBuffer>;
-  } catch (cause) {
-    throw new MeraError(code, `${name} must be base64url`, { cause });
+  } catch (error) {
+    throw new MeraError(code, `${name} must be base64url`, { cause: error });
   }
 
   if (options.byteLength !== undefined && bytes.length !== options.byteLength) {
@@ -71,7 +72,7 @@ function base64UrlDecode(
   return bytes;
 }
 
-function isStringArray(value: unknown): value is string[] {
+function isStringArray(value: unknown): value is Array<string> {
   return (
     Array.isArray(value) && value.every((item) => typeof item === "string")
   );

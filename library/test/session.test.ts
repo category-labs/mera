@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { createSigningKey } from "../dist/session.js";
 import { expectError } from "./helpers.js";
 
-function sharedBytes(values: number[]): Uint8Array {
+function sharedBytes(values: Array<number>): Uint8Array {
   const bytes = new Uint8Array(new SharedArrayBuffer(values.length));
   bytes.set(values);
   return bytes;

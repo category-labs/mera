@@ -25,7 +25,9 @@ function describeError(error: unknown): string {
   }
   // A viem error's `message` appends the request URL, body, and hex payload;
   // `shortMessage` is its one-line summary.
-  if (error instanceof ViemError) return error.shortMessage;
+  if (error instanceof ViemError) {
+    return error.shortMessage;
+  }
   return error instanceof Error ? error.message : String(error);
 }
 

@@ -57,7 +57,7 @@ const suggestions = suggestedSlugs.map((slug) => {
     // renders Pagefind into; its parent is the modal's content container.
     const container =
       document.querySelector<HTMLElement>("#starlight__search")?.parentElement;
-    if (!panel || !container) return;
+    if (!panel || !container) {return;}
 
     // Move the panel into the modal, below the Pagefind input. Whether it shows
     // is left to CSS, which reads Pagefind's own state.

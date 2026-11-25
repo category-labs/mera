@@ -1,15 +1,11 @@
 import type { ReactElement } from "react";
+import type { Fill, Order, Portfolio, Side, TradeDraft } from "./market";
 import {
   coversTrade,
   draftOrder,
-  type Fill,
   maxDraft,
-  type Order,
   orderShares,
-  type Portfolio,
-  type Side,
   TICKER,
-  type TradeDraft,
 } from "./market";
 import type { positionReducer } from "./position";
 import { CASH_SYMBOL, fillText, formatShares } from "./ui";
@@ -28,7 +24,7 @@ type TradeFormProps = {
   onSubmit: (order: Order) => void;
 };
 
-const SIDES: readonly Side[] = ["buy", "sell"];
+const SIDES: ReadonlyArray<Side> = ["buy", "sell"];
 
 /**
  * The buy and sell form. It calls `onSubmit` with an order the portfolio
@@ -62,8 +58,12 @@ function TradeForm({
 
   function submitLabel(): string {
     const buying = draft.side === "buy";
-    if (stage !== "sending") return buying ? "Buy" : "Sell";
-    if (locked) return "Waiting for passkey…";
+    if (stage !== "sending") {
+      return buying ? "Buy" : "Sell";
+    }
+    if (locked) {
+      return "Waiting for passkey…";
+    }
     return buying ? "Buying…" : "Selling…";
   }
 
@@ -89,7 +89,9 @@ function TradeForm({
         className="trade"
         onSubmit={(event) => {
           event.preventDefault();
-          if (coveredOrder !== null) onSubmit(coveredOrder);
+          if (coveredOrder !== null) {
+            onSubmit(coveredOrder);
+          }
         }}
       >
         <div className="send-row">

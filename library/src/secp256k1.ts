@@ -18,11 +18,11 @@ function getSecp256k1PublicKey(
 ): Uint8Array<ArrayBuffer> {
   try {
     return secp256k1.getPublicKey(privateKey, false);
-  } catch (cause) {
+  } catch (error) {
     throw new MeraError(
       "INPUT_INVALID",
       "Private key is not a valid secp256k1 scalar",
-      { cause },
+      { cause: error },
     );
   }
 }
@@ -39,9 +39,9 @@ function normalizeSecp256k1PublicKey(
 ): Uint8Array<ArrayBuffer> {
   try {
     return secp256k1.Point.fromBytes(publicKey).toBytes(false);
-  } catch (cause) {
+  } catch (error) {
     throw new MeraError("INPUT_INVALID", "Public key is not valid secp256k1", {
-      cause,
+      cause: error,
     });
   }
 }

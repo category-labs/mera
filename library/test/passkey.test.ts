@@ -144,7 +144,7 @@ test("getPasskeyPrfOutput rejects an empty credentialId without prompting", asyn
 });
 
 test("PRF output helpers default to Mera's fixed salt", async () => {
-  const evaluatedSalts: Uint8Array[] = [];
+  const evaluatedSalts: Array<Uint8Array> = [];
 
   const navigator = {
     credentials: {
@@ -239,7 +239,7 @@ test("getPasskeyPrfOutput refuses immediate with a credential before any prompt"
 });
 
 test("the browser client sets uiMode only for immediate assertions", async () => {
-  const requests: CredentialRequestOptions[] = [];
+  const requests: Array<CredentialRequestOptions> = [];
   const navigator = {
     credentials: {
       async get(request: CredentialRequestOptions) {
@@ -337,7 +337,7 @@ test("the browser client reports InvalidStateError on create as PASSKEY_EXISTS o
 });
 
 test("createPasskeyWithPrfOutput forwards excludeCredentials and omits an empty list", async () => {
-  const requests: CredentialCreationOptions[] = [];
+  const requests: Array<CredentialCreationOptions> = [];
   const navigator = {
     credentials: {
       async create(request: CredentialCreationOptions) {
@@ -426,7 +426,7 @@ test("createPasskeyWithPrfOutput generates a fresh user ID for each passkey", as
   // The handle never reaches the caller, so the WebAuthn options are the only
   // place it is observable. A repeated handle would make the second call
   // overwrite the passkey the first one created.
-  const handles: Uint8Array[] = [];
+  const handles: Array<Uint8Array> = [];
 
   const navigator = {
     credentials: {

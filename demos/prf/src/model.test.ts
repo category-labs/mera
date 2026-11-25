@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_INPUTS, deriveModel, type ModelInputs } from "./model";
+import type { ModelInputs } from "./model";
+import { DEFAULT_INPUTS, deriveModel } from "./model";
 
 describe("PRF model", () => {
   it("matches the legacy default vector", () => {

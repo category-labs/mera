@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { test as base, type CDPSession, expect } from "@playwright/test";
+import type { CDPSession } from "@playwright/test";
+import { test as base, expect } from "@playwright/test";
 
 // The test page imports the library by its package name, which transitively
 // pulls in bare specifiers from `@noble/*` and `@scure/*`. Browsers can't

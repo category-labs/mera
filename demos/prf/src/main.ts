@@ -1,16 +1,14 @@
 import "@fontsource-variable/jetbrains-mono";
 import { reportHeightWhenEmbedded } from "./embed";
-import {
-  DEFAULT_INPUTS,
-  deriveModel,
-  type ModelInputs,
-  type ModelResult,
-} from "./model";
+import type { ModelInputs, ModelResult } from "./model";
+import { DEFAULT_INPUTS, deriveModel } from "./model";
 import "./styles.css";
 
 function elementById<T extends HTMLElement>(id: string): T {
   const element = document.getElementById(id);
-  if (!element) throw new Error(`Missing #${id}`);
+  if (!element) {
+    throw new Error(`Missing #${id}`);
+  }
   return element as T;
 }
 
@@ -26,7 +24,7 @@ const solanaAddressElement = elementById<HTMLOutputElement>("solana-address");
 const fingerprintCanvas = elementById<HTMLCanvasElement>("fingerprint");
 const errorElement = elementById<HTMLParagraphElement>("error");
 
-const byteElements: HTMLSpanElement[] = [];
+const byteElements: Array<HTMLSpanElement> = [];
 for (let rowIndex = 0; rowIndex < 4; rowIndex += 1) {
   const row = document.createElement("span");
   row.className = "byte-row";
@@ -34,16 +32,16 @@ for (let rowIndex = 0; rowIndex < 4; rowIndex += 1) {
   const offset = document.createElement("span");
   offset.className = "byte-offset";
   offset.textContent = (rowIndex * 8).toString(16).padStart(2, "0");
-  row.appendChild(offset);
+  row.append(offset);
 
   for (let columnIndex = 0; columnIndex < 8; columnIndex += 1) {
     const byte = document.createElement("span");
     byte.className = "byte";
-    row.appendChild(byte);
+    row.append(byte);
     byteElements.push(byte);
   }
 
-  entropyElement.appendChild(row);
+  entropyElement.append(row);
 }
 
 const mnemonicWords = Array.from({ length: 24 }, (_, index) => {
@@ -57,7 +55,7 @@ const mnemonicWords = Array.from({ length: 24 }, (_, index) => {
   word.className = "word";
 
   item.append(number, word);
-  mnemonicElement.appendChild(item);
+  mnemonicElement.append(item);
   return word;
 });
 
@@ -85,9 +83,13 @@ function animateChange(element: HTMLElement): void {
 }
 
 function setAnimatedText(element: HTMLElement, value: string): void {
-  if (element.textContent === value) return;
+  if (element.textContent === value) {
+    return;
+  }
   element.textContent = value;
-  if (previous) animateChange(element);
+  if (previous) {
+    animateChange(element);
+  }
 }
 
 // The compact layout puts the fingerprint beside the byte matrix as a swatch.
@@ -96,7 +98,9 @@ const compactLayout = window.matchMedia("(max-width: 760px)");
 
 function drawFingerprint(fingerprint: Uint8Array): void {
   const context = fingerprintCanvas.getContext("2d");
-  if (!context) throw new Error("Canvas is unavailable");
+  if (!context) {
+    throw new Error("Canvas is unavailable");
+  }
 
   const size = compactLayout.matches ? 32 : 112;
   const scale = Math.min(window.devicePixelRatio || 1, 3);
@@ -134,7 +138,9 @@ function drawFingerprint(fingerprint: Uint8Array): void {
 function syncChips(values: ModelInputs): void {
   for (const group of document.querySelectorAll<HTMLElement>(".chips")) {
     const field = group.dataset.field as keyof ModelInputs | undefined;
-    if (!field) continue;
+    if (!field) {
+      continue;
+    }
     for (const chip of group.querySelectorAll<HTMLButtonElement>(".chip")) {
       chip.dataset.active = String(chip.dataset.value === values[field]);
     }
@@ -160,7 +166,9 @@ function render(values: ModelInputs): void {
     setAnimatedText(solanaAddressElement, result.solanaAddress);
     if (previous?.fingerprintHex !== result.fingerprintHex) {
       drawFingerprint(result.fingerprint);
-      if (previous) animateChange(fingerprintCanvas);
+      if (previous) {
+        animateChange(fingerprintCanvas);
+      }
     }
 
     previous = result;
@@ -180,7 +188,9 @@ function update(): void {
 }
 
 function scheduleUpdate(): void {
-  if (scheduled) return;
+  if (scheduled) {
+    return;
+  }
   scheduled = true;
   window.requestAnimationFrame(() => {
     scheduled = false;
@@ -194,7 +204,9 @@ for (const input of Object.values(inputs)) {
 
 for (const group of document.querySelectorAll<HTMLElement>(".chips")) {
   const field = group.dataset.field as keyof ModelInputs | undefined;
-  if (!field) continue;
+  if (!field) {
+    continue;
+  }
   for (const chip of group.querySelectorAll<HTMLButtonElement>(".chip")) {
     chip.addEventListener("click", () => {
       inputs[field].value = chip.dataset.value ?? "";
@@ -204,7 +216,9 @@ for (const group of document.querySelectorAll<HTMLElement>(".chips")) {
 }
 
 compactLayout.addEventListener("change", () => {
-  if (previous) drawFingerprint(previous.fingerprint);
+  if (previous) {
+    drawFingerprint(previous.fingerprint);
+  }
 });
 
 reportHeightWhenEmbedded();

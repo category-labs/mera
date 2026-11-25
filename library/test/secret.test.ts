@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
-import {
-  MeraError,
-  type PasskeyCredentialTransport,
-  type PasskeySecretVault,
+import type {
+  PasskeyCredentialTransport,
+  PasskeySecretVault,
 } from "../dist/index.js";
+import { MeraError } from "../dist/index.js";
 import {
   createSecretVault,
   createSecretVaultWithExistingPasskey,
@@ -56,7 +56,7 @@ test("createSecretVault draws one 12-byte nonce from crypto.getRandomValues", as
 test("creates a secret vault and decrypts the exact bytes", async () => {
   const vault = await createTestVault();
 
-  expect(Object.keys(vault).sort()).toEqual([
+  expect(Object.keys(vault).sort((a, b) => a.localeCompare(b))).toEqual([
     "ciphertext",
     "credential",
     "nonce",
@@ -185,7 +185,7 @@ test("createSecretVaultWithExistingPasskey copies inputs and keeps transports", 
   };
 
   await withStubbedGlobal("navigator", navigator, async () => {
-    const transports: PasskeyCredentialTransport[] = ["usb"];
+    const transports: Array<PasskeyCredentialTransport> = ["usb"];
     const credential = { credentialId: CREDENTIAL_ID_BASE64URL, transports };
     const secret = new Uint8Array(SECRET);
     const pending = createSecretVaultWithExistingPasskey({
@@ -285,7 +285,7 @@ test("createSecretVaultWithNewPasskey checks crypto.subtle before creating a pas
 test("createSecretVaultWithNewPasskey errors carry the created passkey when encryption fails", async () => {
   const { client } = stubClient();
 
-  const error: unknown = await withStubbedGlobal(
+  const failure: unknown = await withStubbedGlobal(
     "crypto",
     cryptoWithoutHkdf,
     () =>
@@ -294,13 +294,13 @@ test("createSecretVaultWithNewPasskey errors carry the created passkey when encr
         user,
         secret: SECRET,
         webAuthnClient: client,
-      }).catch((caught: unknown) => caught),
+      }).catch((error: unknown) => error),
   );
 
-  expect(error).toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
+  expect(failure).toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
   // The creation result also holds the PRF salt and output, which must stay
   // off the error.
-  expect((error as MeraError).credential).toEqual({
+  expect((failure as MeraError).credential).toEqual({
     credentialId: CREDENTIAL_ID_BASE64URL,
     transports: ["internal"],
   });
@@ -310,7 +310,7 @@ test("zeroes the PRF output and secret handed to Web Crypto", async () => {
   const real = globalThis.crypto;
   // Nonces and the HKDF info reach Web Crypto as algorithm fields rather than
   // as these arguments, and are public values that stay unzeroed.
-  const captured: Uint8Array[] = [];
+  const captured: Array<Uint8Array> = [];
   const capturing = {
     getRandomValues: real.getRandomValues.bind(real),
     subtle: {
@@ -321,7 +321,7 @@ test("zeroes the PRF output and secret handed to Web Crypto", async () => {
         keyData: Uint8Array<ArrayBuffer>,
         algorithm: "HKDF",
         extractable: boolean,
-        usages: KeyUsage[],
+        usages: Array<KeyUsage>,
       ) {
         captured.push(keyData);
         return real.subtle.importKey(

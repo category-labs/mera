@@ -25,7 +25,7 @@ function stubPublicKeyCredential({
   transports,
 }: {
   prf: unknown;
-  transports?: string[];
+  transports?: Array<string>;
 }) {
   return {
     type: "public-key",
@@ -98,8 +98,8 @@ async function withCountedRandomness<T>(
 }
 
 type ClientCalls = {
-  create: Parameters<WebAuthnClient["createCredential"]>[0][];
-  get: Parameters<WebAuthnClient["getCredential"]>[0][];
+  create: Array<Parameters<WebAuthnClient["createCredential"]>[0]>;
+  get: Array<Parameters<WebAuthnClient["getCredential"]>[0]>;
 };
 
 // WebAuthnClient stub that records every request. Unless `getPrfOutput` says

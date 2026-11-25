@@ -69,13 +69,13 @@ function stubPlatformApi(
   } = {},
 ): {
   platformApi: PlatformApi;
-  createRequests: PasskeyCreateRequest[];
-  getRequests: PasskeyGetRequest[];
-  immediateRequests: PasskeyGetRequest[];
+  createRequests: Array<PasskeyCreateRequest>;
+  getRequests: Array<PasskeyGetRequest>;
+  immediateRequests: Array<PasskeyGetRequest>;
 } {
-  const createRequests: PasskeyCreateRequest[] = [];
-  const getRequests: PasskeyGetRequest[] = [];
-  const immediateRequests: PasskeyGetRequest[] = [];
+  const createRequests: Array<PasskeyCreateRequest> = [];
+  const getRequests: Array<PasskeyGetRequest> = [];
+  const immediateRequests: Array<PasskeyGetRequest> = [];
 
   const platformApi: PlatformApi = {
     async createPlatformKey(request) {
@@ -307,7 +307,7 @@ test("other native failures reach the caller unchanged", async () => {
 });
 
 test("createCredential attaches the created passkey when native PRF output parsing fails", async () => {
-  for (const first of ["not!valid", [0, 256]] as unknown[]) {
+  for (const first of ["not!valid", [0, 256]] as Array<unknown>) {
     const { platformApi } = stubPlatformApi({
       createResult: createResult({
         rawId: "++//==",

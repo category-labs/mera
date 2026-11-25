@@ -2,8 +2,8 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils.js";
 import { expect, test } from "@playwright/test";
 import { base64urlnopad } from "@scure/base";
+import type { Connector } from "@wagmi/core";
 import {
-  type Connector,
   connect,
   createConfig,
   createStorage,
@@ -16,16 +16,14 @@ import {
   signTypedData,
   switchChain,
 } from "@wagmi/core";
+import type { AccessList, BaseError, TransactionSerialized } from "viem";
 import {
-  type AccessList,
-  type BaseError,
   custom,
   defineChain,
   keccak256,
   numberToHex,
   parseTransaction,
   recoverTransactionAddress,
-  type TransactionSerialized,
   verifyMessage,
   verifyTypedData,
 } from "viem";
@@ -46,7 +44,7 @@ const recipient = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
 
 // Pads gas estimates the documented way for chains that charge the limit.
 const testChain = defineChain({
-  id: 31337,
+  id: 31_337,
   name: "Test",
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: { default: { http: ["http://127.0.0.1:1"] } },
@@ -58,7 +56,7 @@ const testChain = defineChain({
     { runAt: ["afterFillParameters"] },
   ],
 });
-const otherChain = defineChain({ ...testChain, id: 31338, name: "Other" });
+const otherChain = defineChain({ ...testChain, id: 31_338, name: "Other" });
 
 const typedData = {
   domain: { name: "Mera Test", chainId: testChain.id },
@@ -82,11 +80,11 @@ function fakeAuthenticator(
 ): {
   client: WebAuthnClient;
   prompts(): number;
-  gets: WebAuthnClient.GetCredentialRequest[];
+  gets: Array<WebAuthnClient.GetCredentialRequest>;
   prfOutputOf(credentialId: Uint8Array): Uint8Array;
 } {
   const passkeys = new Map<string, Uint8Array>();
-  const gets: WebAuthnClient.GetCredentialRequest[] = [];
+  const gets: Array<WebAuthnClient.GetCredentialRequest> = [];
   let prompts = 0;
   const prf = (secret: Uint8Array, salt: Uint8Array) =>
     sha256(new Uint8Array([...secret, ...salt]));
@@ -116,7 +114,9 @@ function fakeAuthenticator(
       prompts += 1;
       gets.push(request);
       await options.beforeGet?.();
-      if (options.get !== undefined) throw options.get;
+      if (options.get !== undefined) {
+        throw options.get;
+      }
       const id =
         request.allowCredential !== undefined
           ? bytesToHex(request.allowCredential.credentialId)
@@ -138,7 +138,9 @@ function fakeAuthenticator(
     gets,
     prfOutputOf(credentialId) {
       const secret = passkeys.get(bytesToHex(credentialId));
-      if (secret === undefined) throw new Error("unknown passkey");
+      if (secret === undefined) {
+        throw new Error("unknown passkey");
+      }
       return prf(secret, DEFAULT_PRF_SALT);
     },
   };
@@ -152,9 +154,9 @@ function fakeAuthenticator(
  */
 function fakeRpc(beforeNonce?: () => Promise<void>): {
   transport: ReturnType<typeof custom>;
-  sent: TransactionSerialized[];
+  sent: Array<TransactionSerialized>;
 } {
-  const sent: TransactionSerialized[] = [];
+  const sent: Array<TransactionSerialized> = [];
   const transport = custom({
     async request({ method, params }: { method: string; params?: unknown }) {
       switch (method) {
@@ -174,7 +176,7 @@ function fakeRpc(beforeNonce?: () => Promise<void>): {
         }
         default:
           throw Object.assign(new Error(`${method} is not available`), {
-            code: -32601,
+            code: -32_601,
           });
       }
     },
@@ -229,7 +231,9 @@ function openPage(
     multiInjectedProviderDiscovery: false,
   });
   const [connector] = config.connectors;
-  if (connector === undefined) throw new Error("connector missing");
+  if (connector === undefined) {
+    throw new Error("connector missing");
+  }
   return { config, connector, sent: rpc.sent, items };
 }
 
@@ -368,7 +372,9 @@ test("sends transactions signed in the page through the configured chain and tra
   });
 
   const [raw] = page.sent;
-  if (raw === undefined) throw new Error("no transaction sent");
+  if (raw === undefined) {
+    throw new Error("no transaction sent");
+  }
   const transaction = parseTransaction(raw);
   expect(hash).toBe(keccak256(raw));
   expect(transaction).toMatchObject({
@@ -420,7 +426,7 @@ test("gives transactions sent together distinct nonces", async () => {
   ]);
 
   const nonces = page.sent.map((raw) => parseTransaction(raw).nonce);
-  expect(nonces.sort()).toEqual([0, 1]);
+  expect(new Set(nonces)).toEqual(new Set([0, 1]));
 });
 
 test("sends each call as its own transaction when sendCalls falls back", async () => {
@@ -455,9 +461,9 @@ test("disconnecting ends the session, stops a send in flight, and forgets the ac
   await disconnect(page.config);
   nonceReleased.resolve();
 
-  const error = (await sending.catch((caught: unknown) => caught)) as BaseError;
+  const failure = (await sending.catch((error: unknown) => error)) as BaseError;
   expect(
-    error.walk(
+    failure.walk(
       (cause) => (cause as { code?: unknown }).code === "SESSION_ENDED",
     ),
   ).toBeTruthy();
@@ -608,7 +614,7 @@ test("switches between the config's chains and refuses others", async () => {
   ).rejects.toMatchObject({ code: 4902 });
   await expect(
     provider.request({ method: "wallet_switchEthereumChain", params: [null] }),
-  ).rejects.toMatchObject({ code: -32602 });
+  ).rejects.toMatchObject({ code: -32_602 });
 });
 
 test("exposes credential metadata via getCredential and forwards excludeCredentials on create", async () => {
@@ -619,12 +625,16 @@ test("exposes credential metadata via getCredential and forwards excludeCredenti
   await connect(page.config, { connector: page.connector, create: { user } });
   const created = page.connector.getCredential();
   expect(created).toMatchObject({ transports: ["internal"] });
-  if (created === undefined) throw new Error("credential missing");
+  if (created === undefined) {
+    throw new Error("credential missing");
+  }
   // Mutating the returned copy does not affect the connector's stored metadata.
-  (created.transports as string[] | undefined)?.push("usb");
+  (created.transports as Array<string> | undefined)?.push("usb");
   const remembered = page.connector.getCredential();
   expect(remembered?.transports).toEqual(["internal"]);
-  if (remembered === undefined) throw new Error("credential missing");
+  if (remembered === undefined) {
+    throw new Error("credential missing");
+  }
 
   await disconnect(page.config);
   expect(page.connector.getCredential()).toBeUndefined();
@@ -660,12 +670,12 @@ test("carries the created passkey on UserRejectedRequestError.cause when the fal
   });
   const page = openPage(authenticator, { persist: false });
 
-  const error: unknown = await connect(page.config, {
+  const failure: unknown = await connect(page.config, {
     connector: page.connector,
     create: { user },
-  }).catch((caught: unknown) => caught);
+  }).catch((error: unknown) => error);
 
-  expect(error).toMatchObject({
+  expect(failure).toMatchObject({
     name: "UserRejectedRequestError",
     code: 4001,
     cause: {
@@ -674,7 +684,7 @@ test("carries the created passkey on UserRejectedRequestError.cause when the fal
       credential: { transports: ["internal"] },
     },
   });
-  const { cause } = error as BaseError;
+  const { cause } = failure as BaseError;
   if (!(cause instanceof MeraError) || cause.credential === undefined) {
     throw new Error("expected MeraError cause with credential");
   }
@@ -703,13 +713,13 @@ test("rejects signing methods and transaction fields it does not support", async
         { ...typedData, domain: { ...typedData.domain, chainId: 1 } },
       ],
     }),
-  ).rejects.toMatchObject({ code: -32602 });
+  ).rejects.toMatchObject({ code: -32_602 });
   await expect(
     provider.request({
       method: "eth_signTransaction",
       params: [{ from: accounts[0], to: recipient }],
     }),
-  ).rejects.toMatchObject({ code: -32004 });
+  ).rejects.toMatchObject({ code: -32_004 });
   const badChecksum = recipient.replace("C", "c");
   for (const field of [
     { blobs: ["0x00"] },
@@ -722,7 +732,7 @@ test("rejects signing methods and transaction fields it does not support", async
         method: "eth_sendTransaction",
         params: [{ from: accounts[0], to: recipient, ...field }],
       }),
-    ).rejects.toMatchObject({ code: -32602 });
+    ).rejects.toMatchObject({ code: -32_602 });
   }
 });
 
@@ -733,9 +743,11 @@ async function providerOf(connector: Connector): Promise<{
   return (await connector.getProvider()) as never;
 }
 
-function readStoredAccount(items: Map<string, string>): {
-  address: string;
-  credential: { credentialId: string };
-} {
-  return JSON.parse(items.get(STORED_ACCOUNT_KEY) ?? "null");
+type StoredAccount = { address: string; credential: { credentialId: string } };
+
+function readStoredAccount(items: Map<string, string>): StoredAccount {
+  const stored: StoredAccount = JSON.parse(
+    items.get(STORED_ACCOUNT_KEY) ?? "null",
+  );
+  return stored;
 }

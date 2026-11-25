@@ -5,7 +5,7 @@ import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { MeraError } from "./errors.js";
 
-const HARDENED_OFFSET = 0x80000000;
+const HARDENED_OFFSET = 0x80_00_00_00;
 const SLIP10_ED25519_MASTER_KEY = utf8ToBytes("ed25519 seed");
 
 /** Returns the hardened form of a BIP-32 child index. */
@@ -51,7 +51,7 @@ function bip39Seed(entropy: Uint8Array): Uint8Array<ArrayBuffer> {
  */
 function slip10Ed25519PrivateKey(
   seed: Uint8Array,
-  path: readonly number[],
+  path: ReadonlyArray<number>,
 ): Uint8Array<ArrayBuffer> {
   // Each node is the 32-byte key followed by the 32-byte chain code.
   let node = hmac(sha512, SLIP10_ED25519_MASTER_KEY, seed);

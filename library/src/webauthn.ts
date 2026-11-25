@@ -44,12 +44,12 @@ declare namespace WebAuthnClient {
     };
     challenge: Uint8Array<ArrayBuffer>;
     /** COSE algorithm identifiers for the credential key, most preferred first. */
-    algorithms: readonly number[];
+    algorithms: ReadonlyArray<number>;
     /**
      * Credentials the authenticator should refuse to duplicate. When omitted or
      * empty, no existing credentials are excluded.
      */
-    excludeCredentials?: readonly CredentialDescriptor[] | undefined;
+    excludeCredentials?: ReadonlyArray<CredentialDescriptor> | undefined;
     /** PRF salt to evaluate during creation, as 32 raw bytes. */
     prfSalt: Uint8Array<ArrayBuffer>;
     /** Discoverable-credential requirement. */
@@ -65,7 +65,7 @@ declare namespace WebAuthnClient {
     /** Credential ID of the new passkey, as raw bytes. */
     credentialId: Uint8Array;
     /** Authenticator transports reported for the new credential. */
-    transports?: readonly PasskeyCredentialTransport[] | undefined;
+    transports?: ReadonlyArray<PasskeyCredentialTransport> | undefined;
     /** Whether the authenticator enabled PRF for the new credential. */
     prfEnabled: boolean;
     /** First PRF output, when the authenticator evaluated the salt during creation. */
@@ -76,7 +76,7 @@ declare namespace WebAuthnClient {
   type CredentialDescriptor = {
     credentialId: Uint8Array<ArrayBuffer>;
     /** Authenticator transports, which the platform reads as hints. */
-    transports?: readonly PasskeyCredentialTransport[] | undefined;
+    transports?: ReadonlyArray<PasskeyCredentialTransport> | undefined;
   };
 
   /** Ceremony parameters for asserting a passkey and evaluating its PRF. */
@@ -240,7 +240,7 @@ function toPublicKeyCredentialDescriptor(
           // The library's transport type admits future strings beyond lib.dom's
           // closed AuthenticatorTransport union. The cast is safe: transports
           // are hints, and WebAuthn ignores values it does not recognize.
-          transports: descriptor.transports as AuthenticatorTransport[],
+          transports: descriptor.transports as Array<AuthenticatorTransport>,
         }
       : {}),
   };

@@ -1,10 +1,12 @@
 import type { PasskeyCredentialMetadata } from "@category-labs/mera";
+import type {
+  PasskeyPrf,
+  PasskeyTabMessage,
+} from "@category-labs/mera-demo-shared/passkey";
 import {
   createPasskeyPrf,
   getPasskeyPrf,
   PASSKEY_TAB_CHANNEL,
-  type PasskeyPrf,
-  type PasskeyTabMessage,
 } from "@category-labs/mera-demo-shared/passkey";
 
 const RP_ID = "mera.category.xyz";
@@ -46,14 +48,18 @@ async function requestPrf(
     }
   }
   const tab = window.open(url.href);
-  if (tab === null) throw new Error("Chrome blocked the passkey tab.");
+  if (tab === null) {
+    throw new Error("Chrome blocked the passkey tab.");
+  }
   tab.focus();
   passkeyTab = tab;
   try {
     return await prfFromTab(tab);
   } finally {
     passkeyTab = null;
-    if (!tab.closed) tab.close();
+    if (!tab.closed) {
+      tab.close();
+    }
   }
 }
 
@@ -64,18 +70,27 @@ async function requestPrf(
 function prfFromTab(tab: Window): Promise<PasskeyPrf> {
   return new Promise((resolve, reject) => {
     const closedCheck = setInterval(() => {
-      if (!tab.closed) return;
+      if (!tab.closed) {
+        return;
+      }
       stop();
       reject(new Error("The passkey tab was closed."));
     }, 300);
 
     function onMessage({ origin, source, data }: MessageEvent): void {
-      if (origin !== RP_ORIGIN || source !== tab) return;
+      if (origin !== RP_ORIGIN || source !== tab) {
+        return;
+      }
       const message = data as PasskeyTabMessage | null;
-      if (message?.channel !== PASSKEY_TAB_CHANNEL) return;
+      if (message?.channel !== PASSKEY_TAB_CHANNEL) {
+        return;
+      }
       stop();
-      if (message.kind === "prf") resolve(message.material);
-      else reject(new Error(message.message));
+      if (message.kind === "prf") {
+        resolve(message.material);
+      } else {
+        reject(new Error(message.message));
+      }
     }
 
     function stop(): void {

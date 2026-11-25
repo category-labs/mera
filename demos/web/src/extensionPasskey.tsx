@@ -1,12 +1,13 @@
 import type { PasskeyCredentialMetadata } from "@category-labs/mera";
 import { describeError } from "@category-labs/mera-demo-shared/errors";
+import type { PasskeyTabMessage } from "@category-labs/mera-demo-shared/passkey";
 import {
   createPasskeyPrf,
   getPasskeyPrf,
   PASSKEY_TAB_CHANNEL,
-  type PasskeyTabMessage,
 } from "@category-labs/mera-demo-shared/passkey";
-import { type ReactElement, StrictMode, useState } from "react";
+import type { ReactElement } from "react";
+import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import favicon from "../../../docs/public/favicon.svg";
 import "./styles.css";
@@ -72,8 +73,8 @@ function PasskeyPage({ action }: { action: Action }): ReactElement {
       postToExtension({ channel: PASSKEY_TAB_CHANNEL, kind: "prf", material });
       // postMessage sent a copy.
       material.prfOutput.fill(0);
-    } catch (caught) {
-      const message = describeError(caught);
+    } catch (passkeyError) {
+      const message = describeError(passkeyError);
       try {
         postToExtension({
           channel: PASSKEY_TAB_CHANNEL,
@@ -109,7 +110,9 @@ const copy = isAction(action)
 document.title = `${copy.title} ${copy.destination}`.trim();
 
 const root = document.getElementById("root");
-if (!root) throw new Error("Missing #root element.");
+if (!root) {
+  throw new Error("Missing #root element.");
+}
 createRoot(root).render(
   <StrictMode>
     <main className="app signin">

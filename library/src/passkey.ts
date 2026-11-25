@@ -8,7 +8,8 @@ import type {
   PasskeyCredentialTransport,
   PasskeyRelyingParty,
 } from "./types.js";
-import { browserWebAuthnClient, type WebAuthnClient } from "./webauthn.js";
+import type { WebAuthnClient } from "./webauthn.js";
+import { browserWebAuthnClient } from "./webauthn.js";
 import { randomBytes } from "./webcrypto.js";
 
 const DEFAULT_PRF_SALT = sha256(utf8ToBytes("mera.prf.salt.v1"));
@@ -132,7 +133,7 @@ declare namespace createPasskeyWithPrfOutput {
      * with `PASSKEY_EXISTS` instead of creating another. An authenticator that
      * ignores `excludeCredentials` creates a new passkey as usual.
      */
-    excludeCredentials?: readonly PasskeyCredentialMetadata[] | undefined;
+    excludeCredentials?: ReadonlyArray<PasskeyCredentialMetadata> | undefined;
     /** WebAuthn timeout in milliseconds. Platform defaults apply when omitted. */
     timeout?: number | undefined;
     /**
@@ -284,7 +285,7 @@ declare namespace getPasskeyPrfOutput {
 // undefined field.
 function toCredentialMetadata(
   credentialId: string,
-  transports: readonly PasskeyCredentialTransport[] | undefined,
+  transports: ReadonlyArray<PasskeyCredentialTransport> | undefined,
 ): PasskeyCredentialMetadata {
   return {
     credentialId,
@@ -313,8 +314,8 @@ function toCredentialDescriptor(
 }
 
 function toExcludeCredentials(
-  credentials: readonly PasskeyCredentialMetadata[] | undefined,
-): WebAuthnClient.CredentialDescriptor[] | undefined {
+  credentials: ReadonlyArray<PasskeyCredentialMetadata> | undefined,
+): Array<WebAuthnClient.CredentialDescriptor> | undefined {
   if (credentials === undefined || credentials.length === 0) {
     return undefined;
   }

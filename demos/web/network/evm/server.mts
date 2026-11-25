@@ -15,6 +15,7 @@
 // one.
 import { spawn } from "node:child_process";
 import http from "node:http";
+import { setTimeout as sleep } from "node:timers/promises";
 import { DEMO_STOCK_CREATION_BYTECODE } from "./demoStock.mts";
 
 const PORT = Number(process.env.PORT ?? 8545);
@@ -98,7 +99,7 @@ for (const signal of ["SIGTERM", "SIGINT"] as const) {
 
 async function anvilRequest(
   method: string,
-  params: unknown[],
+  params: Array<unknown>,
 ): Promise<unknown> {
   const response = await fetch(ANVIL_URL, {
     method: "POST",
@@ -117,7 +118,7 @@ async function anvilRequest(
 
 async function anvilQuantity(
   method: string,
-  params: unknown[],
+  params: Array<unknown>,
 ): Promise<bigint> {
   const result = await anvilRequest(method, params);
   if (typeof result !== "string") {
@@ -177,7 +178,7 @@ async function deployMarket(): Promise<string> {
       ]);
       return address;
     }
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await sleep(100);
   }
   throw new Error("the deploy receipt reports no contract address");
 }
@@ -232,11 +233,11 @@ async function handle(
     return;
   }
   if (request.method !== "POST") {
-    respond(response, 405, rpcError(null, -32600, "Only POST is supported."));
+    respond(response, 405, rpcError(null, -32_600, "Only POST is supported."));
     return;
   }
 
-  const chunks: Buffer[] = [];
+  const chunks: Array<Buffer> = [];
   let received = 0;
   for await (const chunk of request as AsyncIterable<Buffer>) {
     received += chunk.length;
@@ -244,7 +245,7 @@ async function handle(
       respond(
         response,
         413,
-        rpcError(null, -32600, "The request body is too large."),
+        rpcError(null, -32_600, "The request body is too large."),
       );
       // Responding does not stop the caller from streaming the rest of the
       // declared body into the open connection; drop the connection too.
@@ -261,7 +262,7 @@ async function handle(
     respond(
       response,
       400,
-      rpcError(null, -32700, "The request body is not valid JSON."),
+      rpcError(null, -32_700, "The request body is not valid JSON."),
     );
     return;
   }
@@ -269,7 +270,7 @@ async function handle(
     respond(
       response,
       400,
-      rpcError(null, -32600, "Batch requests are not supported."),
+      rpcError(null, -32_600, "Batch requests are not supported."),
     );
     return;
   }
@@ -279,7 +280,7 @@ async function handle(
     params?: unknown;
   };
   if (typeof method !== "string") {
-    respond(response, 400, rpcError(id, -32600, "The request has no method."));
+    respond(response, 400, rpcError(id, -32_600, "The request has no method."));
     return;
   }
 
@@ -294,7 +295,7 @@ async function handle(
       respond(
         response,
         200,
-        rpcError(id, -32602, "params must be a single 0x-prefixed address."),
+        rpcError(id, -32_602, "params must be a single 0x-prefixed address."),
       );
       return;
     }
@@ -305,7 +306,7 @@ async function handle(
       respond(
         response,
         200,
-        rpcError(id, -32603, `Funding failed: ${message}`),
+        rpcError(id, -32_603, `Funding failed: ${message}`),
       );
     }
     return;
@@ -318,7 +319,7 @@ async function handle(
     respond(
       response,
       200,
-      rpcError(id, -32601, `The demo network does not expose ${method}.`),
+      rpcError(id, -32_601, `The demo network does not expose ${method}.`),
     );
     return;
   }
@@ -338,7 +339,7 @@ async function handle(
     respond(
       response,
       502,
-      rpcError(id, -32603, "The network node is not responding."),
+      rpcError(id, -32_603, "The network node is not responding."),
     );
   }
 }
@@ -354,7 +355,7 @@ for (let attempt = 0; ; attempt++) {
       console.error("anvil did not become ready");
       process.exit(1);
     }
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await sleep(100);
   }
 }
 
@@ -373,7 +374,7 @@ try {
 http
   .createServer((request, response) => {
     handle(request, response).catch(() => {
-      respond(response, 500, rpcError(null, -32603, "Internal error."));
+      respond(response, 500, rpcError(null, -32_603, "Internal error."));
     });
   })
   .listen(PORT, "0.0.0.0", () => {

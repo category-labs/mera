@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { coversTrade, type Order, orderShares, UNIT } from "../src/market";
+import type { Order } from "../src/market";
+import { coversTrade, orderShares, UNIT } from "../src/market";
 
 const sellAll: Order = { kind: "sellAll", side: "sell" };
 

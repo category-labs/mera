@@ -6,12 +6,8 @@ import type {
   PasskeyGetResult,
 } from "react-native-passkey";
 import { base64UrlDecode, normalizePrfOutput } from "./encoding.js";
-import {
-  MeraError,
-  type MeraErrorCode,
-  toPasskeyError,
-  withCreatedCredential,
-} from "./errors.js";
+import type { MeraErrorCode } from "./errors.js";
+import { MeraError, toPasskeyError, withCreatedCredential } from "./errors.js";
 import type { WebAuthnClient } from "./webauthn.js";
 
 type PlatformApi = Pick<
@@ -147,7 +143,7 @@ function toNativeCredentialDescriptor(
     id: base64urlnopad.encode(descriptor.credentialId),
     ...(descriptor.transports !== undefined
       ? {
-          transports: descriptor.transports as NativeTransport[],
+          transports: descriptor.transports as Array<NativeTransport>,
         }
       : {}),
   };
@@ -205,7 +201,7 @@ function decodeNativeBase64Url(
   code: MeraErrorCode,
 ): Uint8Array {
   return base64UrlDecode(
-    value.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
+    value.replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, ""),
     { name, code },
   );
 }
@@ -213,7 +209,9 @@ function decodeNativeBase64Url(
 function readPrfOutput(
   value: NativePrfValue | undefined,
 ): Uint8Array | undefined {
-  if (value === undefined) return undefined;
+  if (value === undefined) {
+    return undefined;
+  }
   if (typeof value === "string") {
     return decodeNativeBase64Url(value, "PRF output", "PRF_UNAVAILABLE");
   }

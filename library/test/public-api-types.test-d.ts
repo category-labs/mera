@@ -138,7 +138,7 @@ type WebAuthnClientTypes = [
   Expect<
     Equal<
       WebAuthnClient.CreateCredentialRequest["excludeCredentials"],
-      readonly WebAuthnClient.CredentialDescriptor[] | undefined
+      ReadonlyArray<WebAuthnClient.CredentialDescriptor> | undefined
     >
   >,
   Expect<

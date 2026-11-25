@@ -212,7 +212,7 @@ test("runs the side-panel account lifecycle", async ({
   await page.goto(`chrome-extension://${extensionId}/sidepanel.html`);
   await expect(page.getByRole("heading", { name: "mera demo" })).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Create account" })
+    page.getByRole("button", { name: "Create a new wallet" })
   ).toBeEnabled();
   await expect(
     page.getByText("Runs on a demo network. Everything traded is fictional.")
@@ -224,7 +224,7 @@ test("runs the side-panel account lifecycle", async ({
     "WebAuthn.addVirtualAuthenticator",
     { options: authenticator(true) }
   );
-  await page.getByRole("button", { name: "Create account" }).click();
+  await page.getByRole("button", { name: "Create a new wallet" }).click();
   await expect(page.getByRole("button", { name: /^0x/u })).toBeVisible();
   // The panel adopts the account only after funding it and reading the
   // portfolio, so the account view appears with the balance already set.
@@ -324,7 +324,7 @@ test("runs the side-panel account lifecycle", async ({
 
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(
-    page.getByRole("button", { name: "Create account" })
+    page.getByRole("button", { name: "Create a new wallet" })
   ).toBeVisible();
   await page.reload();
   await expect(page.getByRole("button", { name: "Lock" })).toHaveCount(0);
@@ -334,7 +334,7 @@ test("runs the side-panel account lifecycle", async ({
   );
   expect(initialRemembered).not.toBeNull();
 
-  await page.getByRole("button", { name: "Create account" }).click();
+  await page.getByRole("button", { name: "Create a new wallet" }).click();
   await expect(
     page.getByText("A passkey already exists for this demo. Sign in instead.")
   ).toBeVisible();
@@ -351,7 +351,7 @@ test("runs the side-panel account lifecycle", async ({
   }
 
   await holdNextCredentialResult(page, "create");
-  await page.getByRole("button", { name: "Create account" }).click();
+  await page.getByRole("button", { name: "Create a new wallet" }).click();
   await expect(
     page.getByRole("button", { name: "Waiting for passkey…" })
   ).toBeVisible();
@@ -359,7 +359,7 @@ test("runs the side-panel account lifecycle", async ({
   await setVisibility(page, "hidden");
   await releaseCredentialResult(page);
   await expect(
-    page.getByRole("button", { name: "Create account" })
+    page.getByRole("button", { name: "Create a new wallet" })
   ).toBeEnabled();
   await expect(page.getByRole("button", { name: /^0x/u })).toHaveCount(0);
   expect(
@@ -379,14 +379,16 @@ test("runs the side-panel account lifecycle", async ({
     priorCredential,
   ] as const);
   await holdNextCredentialResult(page, "get");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByRole("button", { name: "Sign in with a passkey" }).click();
   await expect(
     page.getByRole("button", { name: "Waiting for passkey…" })
   ).toBeVisible();
   await waitForHeldCredentialResult(page);
   await setVisibility(page, "hidden");
   await releaseCredentialResult(page);
-  await expect(page.getByRole("button", { name: "Sign in" })).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "Sign in with a passkey" })
+  ).toBeEnabled();
   await expect(page.getByRole("button", { name: /^0x/u })).toHaveCount(0);
   expect(
     await page.evaluate((key) => localStorage.getItem(key), accountKey)
@@ -402,7 +404,7 @@ test("runs the side-panel account lifecycle", async ({
   await client.send("WebAuthn.addVirtualAuthenticator", {
     options: authenticator(false),
   });
-  await page.getByRole("button", { name: "Create account" }).click();
+  await page.getByRole("button", { name: "Create a new wallet" }).click();
   await expect(
     page.getByText("doesn't support the WebAuthn PRF extension")
   ).toBeVisible();
@@ -472,11 +474,11 @@ test("opens a passkey tab from the side panel", async ({
   const page = await context.newPage();
   await page.goto(`chrome-extension://${extensionId}/sidepanel.html?panel=1`);
   await expect(
-    page.getByRole("button", { name: "Create account" })
+    page.getByRole("button", { name: "Create a new wallet" })
   ).toBeEnabled();
 
   const popupPromise = context.waitForEvent("page");
-  await page.getByRole("button", { name: "Create account" }).click();
+  await page.getByRole("button", { name: "Create a new wallet" }).click();
   const popup = await popupPromise;
   const client = await context.newCDPSession(popup);
   await client.send("WebAuthn.enable");
@@ -503,7 +505,7 @@ test("opens a passkey tab from the side panel", async ({
   // creation updates the remembered credential ID.
   await page.getByRole("button", { name: "Sign out" }).click();
   const secondPopupPromise = context.waitForEvent("page");
-  await page.getByRole("button", { name: "Create account" }).click();
+  await page.getByRole("button", { name: "Create a new wallet" }).click();
   const secondPopup = await secondPopupPromise;
   const secondUrl = new URL(secondPopup.url());
   expect(secondUrl.searchParams.get("action")).toBe("create");

@@ -69,16 +69,16 @@ function TradeForm({
 
   return (
     <>
-      <div className="segmented" role="tablist" aria-label="Trade side">
+      <div aria-label="Trade side" className="segmented" role="tablist">
         {SIDES.map((side) => (
           <button
-            key={side}
-            type="button"
-            role="tab"
             aria-selected={side === draft.side}
             className={side === draft.side ? "segment active" : "segment"}
             disabled={disabled}
+            key={side}
             onClick={() => editAmount(side, draft.text)}
+            role="tab"
+            type="button"
           >
             {side === "buy" ? "Buy" : "Sell"}
           </button>
@@ -99,44 +99,46 @@ function TradeForm({
             <span className="field-head">
               <label htmlFor="trade-amount">Amount ({CASH_SYMBOL})</label>
               <button
-                type="button"
                 className="link small"
                 disabled={!idle}
                 onClick={() =>
                   onDraftChange(
-                    maxDraft({ side: draft.side, price, portfolio }),
+                    maxDraft({ side: draft.side, price, portfolio })
                   )
                 }
+                type="button"
               >
                 Max
               </button>
             </span>
             <input
-              id="trade-amount"
-              value={draft.text}
-              placeholder="100.00"
-              inputMode="decimal"
-              spellCheck={false}
               disabled={disabled || stage === "sending"}
+              id="trade-amount"
+              inputMode="decimal"
               onChange={(event) => editAmount(draft.side, event.target.value)}
+              placeholder="100.00"
+              spellCheck={false}
+              value={draft.text}
             />
           </div>
           <button
-            type="submit"
             className="btn primary send-btn"
             disabled={coveredOrder === null}
+            type="submit"
           >
             {submitLabel()}
           </button>
         </div>
 
-        {fill !== null ? (
+        {fill === null ? (
+          estimatedShares === null ? null : (
+            <p className="hint">
+              ≈ {formatShares(estimatedShares)} {TICKER} at the current price
+            </p>
+          )
+        ) : (
           <p className="status ok">{fillText(fill)}</p>
-        ) : estimatedShares !== null ? (
-          <p className="hint">
-            ≈ {formatShares(estimatedShares)} {TICKER} at the current price
-          </p>
-        ) : null}
+        )}
       </form>
     </>
   );

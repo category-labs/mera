@@ -77,7 +77,7 @@ async function readStoredPrfResult(): Promise<
 function loadStoredAccount(): StoredAccount | undefined {
   try {
     const { address, credentialId } = (JSON.parse(
-      getItem(ACCOUNT_KEY) ?? "null",
+      getItem(ACCOUNT_KEY) ?? "null"
     ) ?? {}) as Record<string, unknown>;
     if (
       typeof address !== "string" ||
@@ -115,14 +115,16 @@ async function clearStoredAccount(): Promise<void> {
 function loadKnownCredential(): PasskeyCredentialMetadata | undefined {
   try {
     const { credentialId, transports } = (JSON.parse(
-      getItem(CREDENTIAL_KEY) ?? "null",
+      getItem(CREDENTIAL_KEY) ?? "null"
     ) ?? {}) as Record<string, unknown>;
     if (
       typeof credentialId !== "string" ||
       credentialId.length === 0 ||
       (transports !== undefined &&
-        (!Array.isArray(transports) ||
-          !transports.every((transport) => typeof transport === "string")))
+        !(
+          Array.isArray(transports) &&
+          transports.every((transport) => typeof transport === "string")
+        ))
     ) {
       return undefined;
     }

@@ -37,16 +37,14 @@ const suggestions = suggestedSlugs.map((slug) => {
 <div class="search-suggestions" data-suggestions hidden>
   <p class="suggestions-label">Suggested pages</p>
   <ul class="suggestions-list">
-    {
-      suggestions.map((s) => (
-        <li>
-          <a class="suggestion" href={s.href}>
-            <span class="suggestion-title">{s.title}</span>
-            <span class="suggestion-excerpt">{s.description}</span>
-          </a>
-        </li>
-      ))
-    }
+    {suggestions.map((s) => (
+      <li>
+        <a class="suggestion" href={s.href}>
+          <span class="suggestion-title">{s.title}</span>
+          <span class="suggestion-excerpt">{s.description}</span>
+        </a>
+      </li>
+    ))}
   </ul>
 </div>
 
@@ -57,7 +55,9 @@ const suggestions = suggestedSlugs.map((slug) => {
     // renders Pagefind into; its parent is the modal's content container.
     const container =
       document.querySelector<HTMLElement>("#starlight__search")?.parentElement;
-    if (!panel || !container) return;
+    if (!(panel && container)) {
+      return;
+    }
 
     // Move the panel into the modal, below the Pagefind input. Whether it shows
     // is left to CSS, which reads Pagefind's own state.
@@ -73,10 +73,10 @@ const suggestions = suggestedSlugs.map((slug) => {
        Reading that class beats reading the input: Pagefind's clear button
        rewrites the value without firing an `input` event. */
     :global(
-      #starlight__search:has(
+        #starlight__search:has(
           .pagefind-ui__search-clear:not(.pagefind-ui__suppressed)
         )
-    )
+      )
       ~ .search-suggestions {
       display: none;
     }
@@ -94,14 +94,14 @@ const suggestions = suggestedSlugs.map((slug) => {
     }
     .suggestions-label {
       margin: 0 0 0.5rem;
-      color: var(--sl-color-gray-2);
       font-size: var(--sl-text-sm);
       font-weight: 600;
+      color: var(--sl-color-gray-2);
     }
     .suggestions-list {
-      list-style: none;
-      margin: 0;
       padding: 0;
+      margin: 0;
+      list-style: none;
     }
     .suggestions-list > li + li {
       margin-top: 1px;
@@ -111,9 +111,9 @@ const suggestions = suggestedSlugs.map((slug) => {
       padding: var(--suggestion-pad-block) var(--suggestion-pad-inline-end);
       padding-inline-start: var(--suggestion-pad-inline-start);
       text-decoration: none;
-      background-color: var(--sl-color-black);
       outline: 1px solid transparent;
       outline-offset: -1px;
+      background-color: var(--sl-color-black);
     }
     .suggestions-list > li:first-child .suggestion {
       border-radius: var(--suggestion-corners) var(--suggestion-corners) 0 0;
@@ -128,15 +128,15 @@ const suggestions = suggestedSlugs.map((slug) => {
     }
     .suggestion-title {
       display: block;
-      color: var(--sl-color-white);
       font-size: calc(21px * var(--pagefind-ui-scale));
       font-weight: 600;
+      color: var(--sl-color-white);
     }
     .suggestion-excerpt {
       display: block;
       margin-top: 0.25rem;
-      color: var(--sl-color-gray-2);
       font-size: calc(1rem * var(--pagefind-ui-scale));
+      color: var(--sl-color-gray-2);
       overflow-wrap: anywhere;
     }
   }

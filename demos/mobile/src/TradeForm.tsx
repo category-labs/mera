@@ -85,10 +85,10 @@ function TradeForm({
       <View style={styles.segmented}>
         {SIDES.map((side) => (
           <Pressable
-            key={side}
             accessibilityRole="tab"
             accessibilityState={{ selected: side === draft.side }}
             disabled={disabled}
+            key={side}
             onPress={() => editAmount(side, draft.text)}
             style={[
               styles.segment,
@@ -112,11 +112,11 @@ function TradeForm({
           <View style={styles.fieldHead}>
             <Text style={text.label}>Amount ({CASH_SYMBOL})</Text>
             <LinkButton
-              title="Max"
               disabled={!idle}
               onPress={() =>
                 onDraftChange(maxDraft({ side: draft.side, price, portfolio }))
               }
+              title="Max"
             />
           </View>
           <TextInput
@@ -134,25 +134,27 @@ function TradeForm({
         </View>
         <View style={styles.submit}>
           <Button
-            title={submitLabel()}
-            primary
             disabled={coveredOrder === null}
             onPress={() => {
               if (coveredOrder !== null) {
                 onSubmit(coveredOrder);
               }
             }}
+            primary
+            title={submitLabel()}
           />
         </View>
       </View>
 
-      {fill !== null ? (
+      {fill === null ? (
+        estimatedShares === null ? null : (
+          <Text style={text.hint}>
+            ≈ {formatShares(estimatedShares)} {TICKER} at the current price
+          </Text>
+        )
+      ) : (
         <Text style={styles.ok}>{fillText(fill)}</Text>
-      ) : estimatedShares !== null ? (
-        <Text style={text.hint}>
-          ≈ {formatShares(estimatedShares)} {TICKER} at the current price
-        </Text>
-      ) : null}
+      )}
     </View>
   );
 }

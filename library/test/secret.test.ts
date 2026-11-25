@@ -29,11 +29,11 @@ const PRF_SALT = new Uint8Array(32).fill(9);
 // A real 12-word BIP-39 phrase stands in for an opaque secret; the library
 // neither knows nor cares that these bytes are a mnemonic.
 const SECRET = new TextEncoder().encode(
-  "legal winner thank year wave sausage worth useful legal winner thank yellow",
+  "legal winner thank year wave sausage worth useful legal winner thank yellow"
 );
 
 async function createTestVault(
-  secret: Uint8Array<ArrayBuffer> = SECRET,
+  secret: Uint8Array<ArrayBuffer> = SECRET
 ): Promise<PasskeySecretVault> {
   return createSecretVault({
     credential: {
@@ -64,7 +64,7 @@ test("creates a secret vault and decrypts the exact bytes", async () => {
     "version",
   ]);
   await expect(
-    decryptSecretVault({ vault, prfOutput: PRF_OUTPUT }),
+    decryptSecretVault({ vault, prfOutput: PRF_OUTPUT })
   ).resolves.toEqual(SECRET);
 });
 
@@ -77,7 +77,7 @@ test("secret-vault creation rejects an empty secret before prompting", async () 
       user,
       secret: new Uint8Array(0),
       webAuthnClient: client,
-    }),
+    })
   ).rejects.toMatchObject({ code: "INPUT_INVALID" });
 
   await expect(
@@ -85,7 +85,7 @@ test("secret-vault creation rejects an empty secret before prompting", async () 
       rpId: rp.id,
       secret: new Uint8Array(0),
       webAuthnClient: client,
-    }),
+    })
   ).rejects.toMatchObject({ code: "INPUT_INVALID" });
 
   expect(calls.create).toHaveLength(0);
@@ -108,14 +108,14 @@ test("secret-vault creation keeps PRF errors and does not change input secrets",
 
   await withStubbedGlobal("navigator", navigator, async () => {
     await expect(
-      createSecretVaultWithNewPasskey({ rp, user, secret: newPasskeySecret }),
+      createSecretVaultWithNewPasskey({ rp, user, secret: newPasskeySecret })
     ).rejects.toMatchObject({ code: "PRF_UNAVAILABLE" });
 
     await expect(
       createSecretVaultWithExistingPasskey({
         rpId: rp.id,
         secret: existingPasskeySecret,
-      }),
+      })
     ).rejects.toMatchObject({ code: "PRF_UNAVAILABLE" });
   });
 
@@ -160,10 +160,10 @@ test("createSecretVaultWithNewPasskey uses a fresh salt and copies the secret", 
       transports: ["internal"],
     });
     expect(vault.prfSalt).not.toBe(
-      Buffer.from(DEFAULT_PRF_SALT).toString("base64url"),
+      Buffer.from(DEFAULT_PRF_SALT).toString("base64url")
     );
     await expect(
-      decryptSecretVault({ vault, prfOutput: evaluatedSalt }),
+      decryptSecretVault({ vault, prfOutput: evaluatedSalt })
     ).resolves.toEqual(SECRET);
   });
 });
@@ -209,7 +209,7 @@ test("createSecretVaultWithExistingPasskey copies inputs and keeps transports", 
       transports: ["usb"],
     });
     await expect(
-      decryptSecretVault({ vault, prfOutput: evaluatedSalt }),
+      decryptSecretVault({ vault, prfOutput: evaluatedSalt })
     ).resolves.toEqual(SECRET);
   });
 });
@@ -218,7 +218,7 @@ test("decryptSecretVault fails with the wrong PRF output", async () => {
   const vault = await createTestVault();
 
   await expect(
-    decryptSecretVault({ vault, prfOutput: new Uint8Array(32).fill(1) }),
+    decryptSecretVault({ vault, prfOutput: new Uint8Array(32).fill(1) })
   ).rejects.toMatchObject({ code: "DECRYPT_FAILED" });
 });
 
@@ -231,7 +231,7 @@ test("decryptSecretVaultWithPasskey rejects a malformed vault without prompting"
       rpId: rp.id,
       vault: { ...vault, ciphertext: "!!!!" },
       webAuthnClient: client,
-    }),
+    })
   ).rejects.toMatchObject({ code: "VAULT_FORMAT_INVALID" });
 
   expect(calls.get).toHaveLength(0);
@@ -255,7 +255,7 @@ test("secret vault helpers report CRYPTO_UNAVAILABLE when Web Crypto or HKDF is 
         code: "CRYPTO_UNAVAILABLE",
       });
       await expect(
-        decryptSecretVault({ vault, prfOutput: PRF_OUTPUT }),
+        decryptSecretVault({ vault, prfOutput: PRF_OUTPUT })
       ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
     });
   }
@@ -274,7 +274,7 @@ test("createSecretVaultWithNewPasskey checks crypto.subtle before creating a pas
         user,
         secret: new Uint8Array([1, 2, 3]),
         webAuthnClient: client,
-      }),
+      })
     ).rejects.toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
   });
 
@@ -294,7 +294,7 @@ test("createSecretVaultWithNewPasskey errors carry the created passkey when encr
         user,
         secret: SECRET,
         webAuthnClient: client,
-      }).catch((caught: unknown) => caught),
+      }).catch((caught: unknown) => caught)
   );
 
   expect(error).toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
@@ -321,7 +321,7 @@ test("zeroes the PRF output and secret handed to Web Crypto", async () => {
         keyData: Uint8Array<ArrayBuffer>,
         algorithm: "HKDF",
         extractable: boolean,
-        usages: KeyUsage[],
+        usages: KeyUsage[]
       ) {
         captured.push(keyData);
         return real.subtle.importKey(
@@ -329,13 +329,13 @@ test("zeroes the PRF output and secret handed to Web Crypto", async () => {
           keyData,
           algorithm,
           extractable,
-          usages,
+          usages
         );
       },
       encrypt(
         algorithm: AesGcmParams,
         key: CryptoKey,
-        data: Uint8Array<ArrayBuffer>,
+        data: Uint8Array<ArrayBuffer>
       ) {
         captured.push(data);
         return real.subtle.encrypt(algorithm, key, data);
@@ -372,7 +372,7 @@ test("zeroes the PRF output and secret handed to Web Crypto", async () => {
       });
 
       await expect(
-        decryptSecretVaultWithPasskey({ rpId: rp.id, vault }),
+        decryptSecretVaultWithPasskey({ rpId: rp.id, vault })
       ).resolves.toEqual(SECRET);
     });
   });
@@ -396,7 +396,7 @@ test("changing the credential ID or PRF salt does not change decryption", async 
 
   expect(edited.prfSalt).not.toBe(vault.prfSalt);
   await expect(
-    decryptSecretVault({ vault: edited, prfOutput: PRF_OUTPUT }),
+    decryptSecretVault({ vault: edited, prfOutput: PRF_OUTPUT })
   ).resolves.toEqual(SECRET);
 });
 
@@ -414,7 +414,7 @@ test("parseSecretVault drops fields outside the v1 format", async () => {
       ...vault,
       unknown: "drop me",
       credential: { ...vault.credential, unknown: "drop me" },
-    }),
+    })
   ).toEqual(vault);
 });
 
@@ -446,7 +446,7 @@ test("parseSecretVault reports VAULT_FORMAT_INVALID for malformed vaults", async
 
   for (const [label, value] of Object.entries(malformed)) {
     expect(() => parseSecretVault(value), label).toThrow(
-      expect.objectContaining({ code: "VAULT_FORMAT_INVALID" }),
+      expect.objectContaining({ code: "VAULT_FORMAT_INVALID" })
     );
   }
 });
@@ -473,7 +473,7 @@ test("createSecretVaultWithNewPasskey forwards excludeCredentials and surfaces P
       secret,
       excludeCredentials: [{ credentialId: CREDENTIAL_ID_BASE64URL }],
       webAuthnClient: client,
-    }),
+    })
   ).rejects.toMatchObject({ code: "PASSKEY_EXISTS" });
 
   expect(calls.create).toHaveLength(1);
@@ -493,7 +493,7 @@ test("createSecretVaultWithNewPasskey rejects invalid excludeCredentials before 
       secret: SECRET,
       excludeCredentials: [{ credentialId: "" }],
       webAuthnClient: client,
-    }),
+    })
   ).rejects.toMatchObject({ code: "INPUT_INVALID" });
 
   expect(calls.create).toHaveLength(0);
@@ -503,6 +503,6 @@ test("decryptSecretVault rejects a wrong-length PRF output", async () => {
   const vault = await createTestVault();
 
   await expect(
-    decryptSecretVault({ vault, prfOutput: new Uint8Array(31) }),
+    decryptSecretVault({ vault, prfOutput: new Uint8Array(31) })
   ).rejects.toMatchObject({ code: "INPUT_INVALID" });
 });

@@ -73,7 +73,7 @@ function TradingScreen({
   const { position, loaded, stage, funding, fund, adopt, trade } = usePosition(
     evm,
     accountAddress(account),
-    storedCostBasis,
+    storedCostBasis
   );
   const [draft, setDraft] = useState<TradeDraft>({
     kind: "amount",
@@ -168,7 +168,7 @@ function TradingScreen({
       throw new Error(
         wallet === undefined
           ? "The stored account is gone. Sign in again."
-          : "The stored key does not open this account. Sign in again.",
+          : "The stored key does not open this account. Sign in again."
       );
     }
     onAccountChange({ status: "unlocked", wallet });
@@ -222,8 +222,8 @@ function TradingScreen({
         await revealMnemonic(
           account.status === "unlocked"
             ? account.wallet.credentialId
-            : account.credentialId,
-        ),
+            : account.credentialId
+        )
       );
       setRecoveryWarning(false);
     } catch (caught) {
@@ -260,7 +260,7 @@ function TradingScreen({
   }
 
   if (phrase !== null) {
-    return <RecoveryPhrase phrase={phrase} onHide={() => setPhrase(null)} />;
+    return <RecoveryPhrase onHide={() => setPhrase(null)} phrase={phrase} />;
   }
 
   return (
@@ -268,28 +268,28 @@ function TradingScreen({
       <View style={styles.card}>
         <StockOverview now={now} />
 
-        {evmError !== null ? (
+        {evmError === null ? null : (
           <Text style={styles.error}>
             The market is unavailable: {evmError}
           </Text>
-        ) : null}
+        )}
 
         {account.status === "none" ? (
           <View style={styles.connect}>
             <Button
-              title={connectLabel("create", "Create account")}
-              primary
               disabled={busy || evm === null}
               onPress={() => void connect("create")}
+              primary
+              title={connectLabel("create", "Create account")}
             />
             <Button
-              title={connectLabel("signin", "Sign in")}
               disabled={busy || evm === null}
               onPress={() => void connect("signin")}
+              title={connectLabel("signin", "Sign in")}
             />
-            {tradeError !== null ? (
+            {tradeError === null ? null : (
               <Text style={styles.error}>{tradeError}</Text>
-            ) : null}
+            )}
           </View>
         ) : (
           <>
@@ -303,58 +303,58 @@ function TradingScreen({
                   settling={stage === "settling"}
                 />
                 <TradeForm
+                  disabled={pending !== null || funding}
                   draft={draft}
+                  fill={fill}
+                  locked={account.status === "locked"}
                   onDraftChange={editDraft}
+                  onSubmit={(next) => void submit(next)}
                   portfolio={loaded}
                   price={price}
                   stage={stage}
-                  locked={account.status === "locked"}
-                  fill={fill}
-                  disabled={pending !== null || funding}
-                  onSubmit={(next) => void submit(next)}
                 />
               </>
             )}
-            {tradeError !== null ? (
+            {tradeError === null ? null : (
               <Text style={styles.error}>{tradeError}</Text>
-            ) : null}
-            {position.readError !== null ? (
+            )}
+            {position.readError === null ? null : (
               <Text style={styles.error}>{position.readError}</Text>
-            ) : null}
+            )}
           </>
         )}
       </View>
 
-      {account.status !== "none" ? (
+      {account.status === "none" ? null : (
         <View style={styles.links}>
           {loaded !== null && loaded.cash < LOW_CASH_WEI ? (
             <LinkButton
-              title={funding ? "Adding funds…" : `Add 10,000 ${CASH_SYMBOL}`}
               disabled={busy}
               onPress={() => void addFunds()}
+              title={funding ? "Adding funds…" : `Add 10,000 ${CASH_SYMBOL}`}
             />
           ) : null}
           <LinkButton
-            title="Lock"
             disabled={busy || account.status === "locked"}
             onPress={lock}
+            title="Lock"
           />
           <LinkButton
-            title="Export account"
             disabled={busy}
             onPress={() => setRecoveryWarning(true)}
+            title="Export account"
           />
           <LinkButton
-            title="Sign out"
             disabled={busy}
             onPress={() => void signOut()}
+            title="Sign out"
           />
         </View>
-      ) : null}
+      )}
 
-      {backupError !== null ? (
+      {backupError === null ? null : (
         <Text style={[styles.error, styles.centered]}>{backupError}</Text>
-      ) : null}
+      )}
 
       {recoveryWarning ? (
         <View style={styles.warning}>
@@ -365,20 +365,20 @@ function TradingScreen({
           <View style={styles.warningActions}>
             <View style={styles.warningAction}>
               <Button
-                title="Cancel"
                 onPress={() => setRecoveryWarning(false)}
+                title="Cancel"
               />
             </View>
             <View style={styles.warningAction}>
               <Button
+                disabled={busy}
+                onPress={() => void revealBackup()}
+                primary
                 title={
                   pending === "recovery"
                     ? "Waiting for passkey…"
                     : "Reveal phrase"
                 }
-                primary
-                disabled={busy}
-                onPress={() => void revealBackup()}
               />
             </View>
           </View>

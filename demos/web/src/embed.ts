@@ -21,10 +21,10 @@ function reportHeightWhenEmbedded(): void {
   let last = 0;
   const post = (): void => {
     const height = Math.ceil(
-      document.documentElement.getBoundingClientRect().height,
+      document.documentElement.getBoundingClientRect().height
     );
     document.documentElement.dataset.footerPinned = String(
-      window.innerHeight > height + FOOTER_PIN_SLACK_PX,
+      window.innerHeight > height + FOOTER_PIN_SLACK_PX
     );
     if (height === last) {
       return;

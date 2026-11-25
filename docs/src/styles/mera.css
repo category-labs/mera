@@ -2,8 +2,6 @@
    Light-only, like the demo; ThemeProvider.astro pins the theme. */
 
 :root {
-  color-scheme: light;
-
   /* Cool grays: text #0f1115 on white surfaces, muted #6b7280. */
   --sl-color-white: #0f1115;
   --sl-color-gray-1: #2a303a;
@@ -34,6 +32,7 @@
   --sl-line-height: 1.7;
   /* Body text at full strength, like the demo's card text. */
   --sl-color-text: var(--sl-color-white);
+  color-scheme: light;
 }
 
 h1,
@@ -52,8 +51,8 @@ h4,
 }
 
 ::selection {
-  background: var(--sl-color-white);
   color: var(--sl-color-black);
+  background: var(--sl-color-white);
 }
 
 /* Sidebar current page: a soft accent tint, like the demo's chips, instead
@@ -61,16 +60,16 @@ h4,
 .sidebar-content a[aria-current="page"],
 .sidebar-content a[aria-current="page"]:hover,
 .sidebar-content a[aria-current="page"]:focus {
-  background: color-mix(in srgb, var(--sl-color-accent) 14%, transparent);
   color: var(--sl-color-accent-high);
+  background: color-mix(in srgb, var(--sl-color-accent) 14%, transparent);
 }
 
 /* Content links: the demo's orange, underlined softly for affordance. */
 .sl-markdown-content a:not(.sl-link-button) {
   color: var(--sl-color-text-accent);
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
   text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
   text-underline-offset: 0.16em;
   transition: text-decoration-color 0.15s ease;
 }
@@ -81,9 +80,9 @@ h4,
 
 /* CTA buttons: the demo's button language. */
 .sl-link-button.primary {
+  color: #ffffff;
   background: var(--sl-color-accent);
   border-color: transparent;
-  color: #ffffff;
   border-radius: 10px;
   transition: background 0.15s;
 }
@@ -93,14 +92,14 @@ h4,
 }
 
 .sl-link-button.secondary {
-  border-color: var(--sl-color-hairline);
   color: var(--sl-color-white);
+  border-color: var(--sl-color-hairline);
   border-radius: 10px;
 }
 
 .sl-link-button.minimal {
-  color: var(--sl-color-text-accent);
   font-weight: 500;
+  color: var(--sl-color-text-accent);
   text-decoration: none;
 }
 
@@ -115,9 +114,9 @@ h4,
    are safe to share. */
 svg.mera-diagram {
   display: block;
-  margin: 2.5rem auto;
   max-width: 100%;
   height: auto;
+  margin: 2.5rem auto;
 }
 
 /* The Twoslash script sets a viewport-sized max height on each popup. Scroll
@@ -131,8 +130,8 @@ svg.mera-diagram {
   font-family: var(--sl-font);
   font-size: 15px;
   font-weight: 500;
-  fill: var(--sl-color-white);
   letter-spacing: -0.01em;
+  fill: var(--sl-color-white);
 }
 
 .mera-diagram .d-sub,

@@ -29,8 +29,8 @@ body {
 
   .stock-head,
   .send-row {
-    align-items: stretch;
     flex-direction: column;
+    align-items: stretch;
   }
 
   .stock-quote {

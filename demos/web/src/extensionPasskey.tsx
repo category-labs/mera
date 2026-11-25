@@ -93,9 +93,9 @@ function PasskeyPage({ action }: { action: Action }): ReactElement {
     <section className="card">
       <button
         className="btn primary"
-        type="button"
         disabled={pending}
         onClick={() => void run()}
+        type="button"
       >
         {pending ? "Waiting for passkey…" : ACTIONS[action].button}
       </button>
@@ -117,7 +117,7 @@ createRoot(root).render(
   <StrictMode>
     <main className="app signin">
       <header className="signin-brand">
-        <img className="signin-mark" src={favicon} alt="" />
+        <img alt="" className="signin-mark" src={favicon} />
         <h1 className="signin-title">
           {copy.title}
           {copy.destination && (
@@ -135,5 +135,5 @@ createRoot(root).render(
         </section>
       )}
     </main>
-  </StrictMode>,
+  </StrictMode>
 );

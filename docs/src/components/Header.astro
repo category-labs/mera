@@ -10,10 +10,14 @@ import CategoryLogotype from "./CategoryLogotype.astro";
 
 <div class="header">
   <div class="title-wrapper sl-flex">
-    <a class="brand-link" href="https://category.xyz" aria-label="Category Labs">
+    <a
+      aria-label="Category Labs"
+      class="brand-link"
+      href="https://category.xyz"
+    >
       <CategoryLogotype />
     </a>
-    <span class="brand-divider" aria-hidden="true"></span>
+    <span aria-hidden="true" class="brand-divider"></span>
     <SiteTitle />
   </div>
 
@@ -43,18 +47,18 @@ import CategoryLogotype from "./CategoryLogotype.astro";
     }
 
     .title-wrapper {
-      min-width: 0;
-      margin: -0.25rem;
-      padding: 0.25rem;
-      overflow: clip;
-      align-items: center;
       gap: 0.5rem;
+      align-items: center;
+      min-width: 0;
+      padding: 0.25rem;
+      margin: -0.25rem;
+      overflow: clip;
     }
 
     .brand-link {
       display: inline-flex;
-      align-items: center;
       flex-shrink: 0;
+      align-items: center;
       color: var(--sl-color-white);
       transition: opacity 0.15s;
     }
@@ -67,16 +71,16 @@ import CategoryLogotype from "./CategoryLogotype.astro";
        boxes leaves its baseline above the site title's. Nudge it down so
        both sit on one baseline; the offset shrinks as the svg grows. */
     .brand-link :global(svg) {
-      height: 0.875rem;
-      width: auto;
       display: block;
+      width: auto;
+      height: 0.875rem;
       transform: translateY(0.21875rem);
     }
 
     .brand-divider {
+      flex-shrink: 0;
       width: 1px;
       height: 1.125rem;
-      flex-shrink: 0;
       background: var(--sl-color-gray-5);
     }
 
@@ -96,18 +100,18 @@ import CategoryLogotype from "./CategoryLogotype.astro";
 
     .header-cta {
       display: inline-flex;
-      min-height: 2.25rem;
       align-items: center;
       justify-content: center;
-      border-radius: 10px;
+      min-height: 2.25rem;
       padding: 0.45rem 0.55rem;
-      background: var(--sl-color-accent);
-      color: #ffffff;
       font-size: 0.78rem;
       font-weight: 500;
       line-height: 1;
-      text-decoration: none;
+      color: #ffffff;
       white-space: nowrap;
+      text-decoration: none;
+      background: var(--sl-color-accent);
+      border-radius: 10px;
       transition: background 0.15s;
     }
 
@@ -146,8 +150,8 @@ import CategoryLogotype from "./CategoryLogotype.astro";
       }
 
       .right-group {
-        justify-self: end;
         gap: 1rem;
+        justify-self: end;
       }
 
       .header-cta {

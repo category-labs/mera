@@ -2,21 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#f5f6f8">
-    <link rel="preconnect" href="https://api.fontshare.com">
-    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <meta content="#f5f6f8" name="theme-color">
+    <link href="https://api.fontshare.com" rel="preconnect">
+    <link crossorigin href="https://cdn.fontshare.com" rel="preconnect">
     <!-- no-referrer: Fontshare rejects requests bearing a localhost referer,
          which would leave local dev on the fallback fonts -->
     <link
-      rel="stylesheet"
-      referrerpolicy="no-referrer"
       href="https://api.fontshare.com/v2/css?f[]=satoshi@1&display=swap"
+      referrerpolicy="no-referrer"
+      rel="stylesheet"
     >
     <title>Sign in to the extension</title>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/extensionPasskey.tsx"></script>
+    <script src="/src/extensionPasskey.tsx" type="module"></script>
   </body>
 </html>

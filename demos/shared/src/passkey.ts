@@ -26,7 +26,7 @@ type PasskeyTabMessage =
  * apart in the authenticator's picker.
  */
 function newPasskeyOptions(
-  rpId: string,
+  rpId: string
 ): Pick<createPasskeyWithPrfOutput.Options, "rp" | "user"> {
   return {
     rp: { id: rpId, name: "mera demo" },
@@ -39,7 +39,7 @@ function newPasskeyOptions(
 
 async function createPasskeyPrf(
   rpId: string,
-  excludeCredentials?: readonly PasskeyCredentialMetadata[],
+  excludeCredentials?: readonly PasskeyCredentialMetadata[]
 ): Promise<PasskeyPrf> {
   const { prfOutput, credentialId, transports } =
     await createPasskeyWithPrfOutput({
@@ -55,7 +55,7 @@ async function createPasskeyPrf(
  */
 async function getPasskeyPrf(
   rpId: string,
-  credential?: PasskeyCredentialMetadata,
+  credential?: PasskeyCredentialMetadata
 ): Promise<PasskeyPrf> {
   const { prfOutput, credentialId } = await getPasskeyPrfOutput({
     rpId,

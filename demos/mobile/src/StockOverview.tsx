@@ -44,37 +44,37 @@ function StockOverview({ now }: { now: number }): ReactElement {
       >
         <Path d={chart.area} fill={tone} opacity={0.08} />
         <Line
-          x1={0}
-          y1={chart.openY}
-          x2={CHART_WIDTH}
-          y2={chart.openY}
           stroke={palette.muted}
-          strokeOpacity={0.35}
           strokeDasharray="3 5"
+          strokeOpacity={0.35}
+          x1={0}
+          x2={CHART_WIDTH}
+          y1={chart.openY}
+          y2={chart.openY}
         />
         <Path
           d={chart.line}
           fill="none"
           stroke={tone}
-          strokeWidth={2}
-          strokeLinejoin="round"
           strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
         />
         <SvgText
-          x={6}
-          y={14}
           fill={palette.muted}
           fontSize={10}
           fontWeight="600"
+          x={6}
+          y={14}
         >
           {`H ${chart.high.toFixed(2)}`}
         </SvgText>
         <SvgText
-          x={6}
-          y={CHART_HEIGHT - 5}
           fill={palette.muted}
           fontSize={10}
           fontWeight="600"
+          x={6}
+          y={CHART_HEIGHT - 5}
         >
           {`L ${chart.low.toFixed(2)}`}
         </SvgText>

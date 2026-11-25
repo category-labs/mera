@@ -15,7 +15,7 @@ function hardened(index: number): number {
 
 function checkAccountDerivationInputs(
   prfOutput: Uint8Array,
-  accountIndex: number,
+  accountIndex: number
 ): void {
   if (prfOutput.length !== 32) {
     throw new MeraError("INPUT_INVALID", "PRF output must be 32 bytes");
@@ -32,7 +32,7 @@ function checkAccountIndex(accountIndex: number): void {
   ) {
     throw new MeraError(
       "INPUT_INVALID",
-      "accountIndex must be an integer from 0 to 2^31 - 1",
+      "accountIndex must be an integer from 0 to 2^31 - 1"
     );
   }
 }
@@ -51,7 +51,7 @@ function bip39Seed(entropy: Uint8Array): Uint8Array<ArrayBuffer> {
  */
 function slip10Ed25519PrivateKey(
   seed: Uint8Array,
-  path: readonly number[],
+  path: readonly number[]
 ): Uint8Array<ArrayBuffer> {
   // Each node is the 32-byte key followed by the 32-byte chain code.
   let node = hmac(sha512, SLIP10_ED25519_MASTER_KEY, seed);

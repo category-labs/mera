@@ -24,10 +24,10 @@ import type {
  */
 type WebAuthnClient = {
   readonly createCredential: (
-    request: WebAuthnClient.CreateCredentialRequest,
+    request: WebAuthnClient.CreateCredentialRequest
   ) => Promise<WebAuthnClient.CreateCredentialResult>;
   readonly getCredential: (
-    request: WebAuthnClient.GetCredentialRequest,
+    request: WebAuthnClient.GetCredentialRequest
   ) => Promise<WebAuthnClient.GetCredentialResult>;
 };
 
@@ -148,11 +148,11 @@ const browserWebAuthnClient: WebAuthnClient = {
         ...(hasExcludedCredentials
           ? {
               excludeCredentials: excludeCredentials.map(
-                toPublicKeyCredentialDescriptor,
+                toPublicKeyCredentialDescriptor
               ),
             }
           : {}),
-        ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
+        ...(request.timeout === undefined ? {} : { timeout: request.timeout }),
         attestation: request.attestation,
         authenticatorSelection: {
           residentKey: request.residentKey,
@@ -169,7 +169,7 @@ const browserWebAuthnClient: WebAuthnClient = {
     const credential = await globalThis.navigator?.credentials
       ?.create(options)
       .catch(
-        hasExcludedCredentials ? rejectCreateCeremony : rejectCancelledCeremony,
+        hasExcludedCredentials ? rejectCreateCeremony : rejectCancelledCeremony
       );
 
     const publicKeyCredential = assertPublicKeyCredential(credential);
@@ -183,7 +183,7 @@ const browserWebAuthnClient: WebAuthnClient = {
     } catch (error) {
       throw withCreatedCredential(
         toPasskeyError(error, "Passkey creation failed"),
-        { credentialId: base64urlnopad.encode(credentialId), transports },
+        { credentialId: base64urlnopad.encode(credentialId), transports }
       );
     }
 
@@ -204,16 +204,16 @@ const browserWebAuthnClient: WebAuthnClient = {
       publicKey: {
         rpId: request.rpId,
         challenge: request.challenge,
-        ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
+        ...(request.timeout === undefined ? {} : { timeout: request.timeout }),
         userVerification: request.userVerification,
         extensions: { prf: { eval: { first: request.prfSalt } } },
-        ...(allowCredential !== undefined
-          ? {
+        ...(allowCredential === undefined
+          ? {}
+          : {
               allowCredentials: [
                 toPublicKeyCredentialDescriptor(allowCredential),
               ],
-            }
-          : {}),
+            }),
       },
     };
     const credential = await globalThis.navigator?.credentials
@@ -230,19 +230,19 @@ const browserWebAuthnClient: WebAuthnClient = {
 };
 
 function toPublicKeyCredentialDescriptor(
-  descriptor: WebAuthnClient.CredentialDescriptor,
+  descriptor: WebAuthnClient.CredentialDescriptor
 ): PublicKeyCredentialDescriptor {
   return {
     id: descriptor.credentialId,
     type: "public-key",
-    ...(descriptor.transports !== undefined
-      ? {
+    ...(descriptor.transports === undefined
+      ? {}
+      : {
           // The library's transport type admits future strings beyond lib.dom's
           // closed AuthenticatorTransport union. The cast is safe: transports
           // are hints, and WebAuthn ignores values it does not recognize.
           transports: descriptor.transports as AuthenticatorTransport[],
-        }
-      : {}),
+        }),
   };
 }
 
@@ -256,7 +256,7 @@ function rejectCreateCeremony(error: unknown): never {
     throw new MeraError(
       "PASSKEY_EXISTS",
       "An excluded passkey already exists on this authenticator",
-      { cause: error },
+      { cause: error }
     );
   }
   rejectCancelledCeremony(error);
@@ -271,14 +271,14 @@ function rejectCancelledCeremony(error: unknown): never {
     throw new MeraError(
       "PASSKEY_CANCELLED",
       "The passkey prompt was dismissed, timed out, or found no passkey",
-      { cause: error },
+      { cause: error }
     );
   }
   throw error;
 }
 
 function assertPublicKeyCredential(
-  credential: Credential | null | undefined,
+  credential: Credential | null | undefined
 ): PublicKeyCredential {
   if (
     credential?.type !== "public-key" ||
@@ -288,7 +288,7 @@ function assertPublicKeyCredential(
   ) {
     throw new MeraError(
       "PASSKEY_OPERATION_FAILED",
-      "WebAuthn returned no usable public key credential",
+      "WebAuthn returned no usable public key credential"
     );
   }
 

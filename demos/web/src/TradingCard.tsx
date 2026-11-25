@@ -67,7 +67,7 @@ function TradingCard({
   const { position, loaded, stage, funding, fund, adopt, trade } = usePosition(
     evm,
     accountAddress(account),
-    costBasisStorage,
+    costBasisStorage
   );
   const [connectMode, setConnectMode] = useState<AccountMode>("passkey");
   const [connecting, setConnecting] = useState(false);
@@ -132,7 +132,7 @@ function TradingCard({
             // The amount was checked against the old portfolio.
             switchAccount({ status: "unlocked", wallet });
             throw new Error(
-              "That passkey opens a different account; its balances are shown now.",
+              "That passkey opens a different account; its balances are shown now."
             );
           }
           onAccountChange({ status: "unlocked", wallet });
@@ -170,8 +170,8 @@ function TradingCard({
     try {
       setPhrase(
         await revealMnemonic(
-          account.status === "unlocked" ? account.wallet : account,
-        ),
+          account.status === "unlocked" ? account.wallet : account
+        )
       );
     } catch (caught) {
       setBackupError(describeError(caught));
@@ -192,7 +192,7 @@ function TradingCard({
   if (phrase !== null) {
     return (
       <div className="account-shell">
-        <RecoveryPhrase phrase={phrase} onHide={() => setPhrase(null)} />
+        <RecoveryPhrase onHide={() => setPhrase(null)} phrase={phrase} />
       </div>
     );
   }
@@ -210,8 +210,8 @@ function TradingCard({
           <ConnectPanel
             key={connectMode}
             mode={connectMode}
-            onConnected={openAccount}
             onBusyChange={setConnecting}
+            onConnected={openAccount}
           />
         ) : (
           <>
@@ -228,13 +228,13 @@ function TradingCard({
                 />
                 <TradeForm
                   draft={draft}
+                  fill={fill}
+                  locked={account.status === "locked"}
                   onDraftChange={editDraft}
+                  onSubmit={(order) => void submit(order)}
                   portfolio={loaded}
                   price={price}
                   stage={stage}
-                  locked={account.status === "locked"}
-                  fill={fill}
-                  onSubmit={(order) => void submit(order)}
                 />
               </>
             )}
@@ -251,27 +251,27 @@ function TradingCard({
           <div className="account-links">
             {loaded !== null && loaded.cash < LOW_CASH_WEI && (
               <button
-                type="button"
                 className="link"
-                onClick={() => void addFunds()}
                 disabled={funding}
+                onClick={() => void addFunds()}
+                type="button"
               >
                 {funding ? "Adding funds…" : `Add 10,000 ${CASH_SYMBOL}`}
               </button>
             )}
             <button
-              type="button"
               className="link"
-              onClick={() => void revealBackup()}
               disabled={revealing}
+              onClick={() => void revealBackup()}
+              type="button"
             >
               {revealing ? "Waiting for passkey…" : "Export account"}
             </button>
             <button
-              type="button"
               className="link"
-              onClick={signOut}
               disabled={stage === "sending" || revealing}
+              onClick={signOut}
+              type="button"
             >
               Sign out
             </button>
@@ -283,12 +283,12 @@ function TradingCard({
       <div className="shell-footer">
         {account.status === "none" && (
           <button
-            type="button"
             className="mode-switch"
             disabled={connecting}
             onClick={() =>
               setConnectMode(connectMode === "passkey" ? "vault" : "passkey")
             }
+            type="button"
           >
             {connectMode === "passkey"
               ? "Import existing secret →"

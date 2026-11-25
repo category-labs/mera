@@ -77,7 +77,7 @@ const anvil = spawn(
     "--transaction-block-keeper",
     "256",
   ],
-  { stdio: ["ignore", "inherit", "inherit"] },
+  { stdio: ["ignore", "inherit", "inherit"] }
 );
 anvil.on("exit", (code) => {
   console.error(`anvil exited with code ${code}`);
@@ -98,7 +98,7 @@ for (const signal of ["SIGTERM", "SIGINT"] as const) {
 
 async function anvilRequest(
   method: string,
-  params: unknown[],
+  params: unknown[]
 ): Promise<unknown> {
   const response = await fetch(ANVIL_URL, {
     method: "POST",
@@ -117,7 +117,7 @@ async function anvilRequest(
 
 async function anvilQuantity(
   method: string,
-  params: unknown[],
+  params: unknown[]
 ): Promise<bigint> {
   const result = await anvilRequest(method, params);
   if (typeof result !== "string") {
@@ -211,7 +211,7 @@ function rpcResult(id: unknown, result: unknown): string {
 function respond(
   response: http.ServerResponse,
   status: number,
-  body: string | Buffer,
+  body: string | Buffer
 ): void {
   response.writeHead(status, {
     "content-type": "application/json",
@@ -222,7 +222,7 @@ function respond(
 
 async function handle(
   request: http.IncomingMessage,
-  response: http.ServerResponse,
+  response: http.ServerResponse
 ): Promise<void> {
   if (request.method === "OPTIONS") {
     // A preflight response carries no body, so 204 with the CORS headers
@@ -244,7 +244,7 @@ async function handle(
       respond(
         response,
         413,
-        rpcError(null, -32_600, "The request body is too large."),
+        rpcError(null, -32_600, "The request body is too large.")
       );
       // Responding does not stop the caller from streaming the rest of the
       // declared body into the open connection; drop the connection too.
@@ -261,7 +261,7 @@ async function handle(
     respond(
       response,
       400,
-      rpcError(null, -32_700, "The request body is not valid JSON."),
+      rpcError(null, -32_700, "The request body is not valid JSON.")
     );
     return;
   }
@@ -269,7 +269,7 @@ async function handle(
     respond(
       response,
       400,
-      rpcError(null, -32_600, "Batch requests are not supported."),
+      rpcError(null, -32_600, "Batch requests are not supported.")
     );
     return;
   }
@@ -290,11 +290,11 @@ async function handle(
 
   if (method === "demo_fundAccount") {
     const address = Array.isArray(params) ? params[0] : undefined;
-    if (typeof address !== "string" || !/^0x[0-9a-fA-F]{40}$/.test(address)) {
+    if (typeof address !== "string" || !/^0x[0-9a-fA-F]{40}$/u.test(address)) {
       respond(
         response,
         200,
-        rpcError(id, -32_602, "params must be a single 0x-prefixed address."),
+        rpcError(id, -32_602, "params must be a single 0x-prefixed address.")
       );
       return;
     }
@@ -305,7 +305,7 @@ async function handle(
       respond(
         response,
         200,
-        rpcError(id, -32_603, `Funding failed: ${message}`),
+        rpcError(id, -32_603, `Funding failed: ${message}`)
       );
     }
     return;
@@ -318,7 +318,7 @@ async function handle(
     respond(
       response,
       200,
-      rpcError(id, -32_601, `The demo network does not expose ${method}.`),
+      rpcError(id, -32_601, `The demo network does not expose ${method}.`)
     );
     return;
   }
@@ -332,13 +332,13 @@ async function handle(
     respond(
       response,
       upstream.status,
-      Buffer.from(await upstream.arrayBuffer()),
+      Buffer.from(await upstream.arrayBuffer())
     );
   } catch {
     respond(
       response,
       502,
-      rpcError(id, -32_603, "The network node is not responding."),
+      rpcError(id, -32_603, "The network node is not responding.")
     );
   }
 }

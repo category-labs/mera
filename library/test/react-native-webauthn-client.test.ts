@@ -38,7 +38,7 @@ function rejectingClient(failure: unknown): WebAuthnClient {
 }
 
 function createResult(
-  overrides: Partial<PasskeyCreateResult> = {},
+  overrides: Partial<PasskeyCreateResult> = {}
 ): PasskeyCreateResult {
   return {
     id: "AQID",
@@ -49,7 +49,7 @@ function createResult(
 }
 
 function getResult(
-  overrides: Partial<PasskeyGetResult> = {},
+  overrides: Partial<PasskeyGetResult> = {}
 ): PasskeyGetResult {
   return {
     id: "AQID",
@@ -66,7 +66,7 @@ function stubPlatformApi(
   options: {
     createResult?: PasskeyCreateResult;
     getResult?: PasskeyGetResult;
-  } = {},
+  } = {}
 ): {
   platformApi: PlatformApi;
   createRequests: PasskeyCreateRequest[];
@@ -226,17 +226,17 @@ test("a cancelled native ceremony rejects with PASSKEY_CANCELLED", async () => {
     const cancelled = { code: "PASSKEY_CANCELLED", cause: failure };
 
     await expect(client.createCredential(createRequest)).rejects.toMatchObject(
-      cancelled,
+      cancelled
     );
     await expect(
       client.createCredential({
         ...createRequest,
         excludeCredentials: [{ credentialId: new Uint8Array([1, 2, 3]) }],
-      }),
+      })
     ).rejects.toMatchObject(cancelled);
     for (const immediate of [false, true]) {
       await expect(
-        client.getCredential({ ...getRequest, immediate }),
+        client.getCredential({ ...getRequest, immediate })
       ).rejects.toMatchObject(cancelled);
     }
   }
@@ -279,14 +279,14 @@ test("CredentialAlreadyExists on create rejects with PASSKEY_EXISTS only with ex
     client.createCredential({
       ...createRequest,
       excludeCredentials: [{ credentialId: new Uint8Array([1, 2, 3]) }],
-    }),
+    })
   ).rejects.toMatchObject({
     code: "PASSKEY_EXISTS",
     cause: failure,
   });
   await expect(client.createCredential(createRequest)).rejects.toBe(failure);
   await expect(
-    client.createCredential({ ...createRequest, excludeCredentials: [] }),
+    client.createCredential({ ...createRequest, excludeCredentials: [] })
   ).rejects.toBe(failure);
   // CredentialAlreadyExists is only a create-ceremony outcome.
   await expect(client.getCredential(getRequest)).rejects.toBe(failure);
@@ -301,7 +301,7 @@ test("other native failures reach the caller unchanged", async () => {
     client.createCredential({
       ...createRequest,
       excludeCredentials: [{ credentialId: new Uint8Array([1, 2, 3]) }],
-    }),
+    })
   ).rejects.toBe(failure);
   await expect(client.getCredential(getRequest)).rejects.toBe(failure);
 });

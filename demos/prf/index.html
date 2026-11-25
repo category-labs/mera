@@ -2,37 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
     <meta
-      name="description"
       content="An interactive model of passkey PRF output and the accounts derived from it with mera."
+      name="description"
     >
-    <meta name="theme-color" content="#f5f6f8">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="mera">
-    <meta property="og:title" content="Passkey PRF model | mera">
+    <meta content="#f5f6f8" name="theme-color">
+    <meta content="website" property="og:type">
+    <meta content="mera" property="og:site_name">
+    <meta content="Passkey PRF model | mera" property="og:title">
     <meta
-      property="og:description"
       content="Change a modeled passkey, relying party ID, or salt and see the resulting account data."
+      property="og:description"
     >
-    <meta property="og:image" content="%BASE_URL%../og.png">
-    <meta name="twitter:card" content="summary_large_image">
-    <link rel="preconnect" href="https://api.fontshare.com">
-    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+    <meta content="%BASE_URL%../og.png" property="og:image">
+    <meta content="summary_large_image" name="twitter:card">
+    <link href="https://api.fontshare.com" rel="preconnect">
+    <link crossorigin href="https://cdn.fontshare.com" rel="preconnect">
     <link
-      rel="stylesheet"
-      referrerpolicy="no-referrer"
       href="https://api.fontshare.com/v2/css?f[]=satoshi@1&display=swap"
+      referrerpolicy="no-referrer"
+      rel="stylesheet"
     >
     <title>Passkey PRF model | mera</title>
   </head>
   <body>
-    <main class="panel" aria-labelledby="panel-title">
+    <main aria-labelledby="panel-title" class="panel">
       <header class="panel-head">
         <h1 id="panel-title">Passkey PRF to accounts</h1>
       </header>
 
-      <section class="stage" aria-labelledby="input-stage-title">
+      <section aria-labelledby="input-stage-title" class="stage">
         <header class="stage-marker">
           <span class="stage-number">01</span>
           <h2 id="input-stage-title">Input</h2>
@@ -43,27 +43,27 @@
             <div class="field">
               <label for="in-rp-id">RP ID</label>
               <input
-                id="in-rp-id"
-                type="text"
-                spellcheck="false"
-                autocomplete="off"
                 autocapitalize="off"
+                autocomplete="off"
+                id="in-rp-id"
+                spellcheck="false"
+                type="text"
               >
               <div class="chips" data-field="rpId">
                 <button
-                  type="button"
                   class="chip"
                   data-value="mera.category.xyz"
+                  type="button"
                 >
                   mera.category.xyz
                 </button>
-                <button type="button" class="chip" data-value="app.example.com">
+                <button class="chip" data-value="app.example.com" type="button">
                   app.example.com
                 </button>
                 <button
-                  type="button"
                   class="chip"
                   data-value="mera.category.xyz.evil.link"
+                  type="button"
                 >
                   look-alike
                 </button>
@@ -73,28 +73,28 @@
             <div class="field">
               <label for="in-salt">Salt</label>
               <input
-                id="in-salt"
-                type="text"
-                spellcheck="false"
-                autocomplete="off"
                 autocapitalize="off"
+                autocomplete="off"
+                id="in-salt"
+                spellcheck="false"
+                type="text"
               >
               <div class="chips" data-field="salt">
                 <button
-                  type="button"
                   class="chip"
                   data-value="mera.prf.salt.v1"
+                  type="button"
                 >
                   salt.v1
                 </button>
                 <button
-                  type="button"
                   class="chip"
                   data-value="mera.prf.salt.v2"
+                  type="button"
                 >
                   salt.v2
                 </button>
-                <button type="button" class="chip" data-value="backup-key">
+                <button class="chip" data-value="backup-key" type="button">
                   backup-key
                 </button>
               </div>
@@ -111,7 +111,7 @@
           </div>
 
           <div class="input-merge">
-            <div class="merge-lines" aria-hidden="true">
+            <div aria-hidden="true" class="merge-lines">
               <span class="merge-stem"></span><span class="merge-stem"></span
               ><span class="merge-stem"></span>
             </div>
@@ -120,7 +120,7 @@
         </div>
       </section>
 
-      <section class="stage" aria-labelledby="output-stage-title">
+      <section aria-labelledby="output-stage-title" class="stage">
         <header class="stage-marker">
           <span class="stage-number">02</span>
           <h2 id="output-stage-title">PRF output</h2>
@@ -134,20 +134,20 @@
                 <span class="value-meta">256 bits</span>
               </div>
               <output
-                id="entropy"
-                class="byte-matrix"
                 aria-label="32 bytes of PRF output in hexadecimal"
+                class="byte-matrix"
+                id="entropy"
               ></output>
             </div>
 
             <figure class="fingerprint-figure">
               <canvas
-                id="fingerprint"
-                class="fingerprint"
-                width="112"
-                height="112"
-                role="img"
                 aria-label="Visual fingerprint of the PRF output"
+                class="fingerprint"
+                height="112"
+                id="fingerprint"
+                role="img"
+                width="112"
               ></canvas>
               <figcaption>Visual fingerprint</figcaption>
             </figure>
@@ -159,7 +159,7 @@
         </div>
       </section>
 
-      <section class="stage" aria-labelledby="recovery-stage-title">
+      <section aria-labelledby="recovery-stage-title" class="stage">
         <header class="stage-marker">
           <span class="stage-number">03</span>
           <h2 id="recovery-stage-title">Recovery</h2>
@@ -171,9 +171,9 @@
             <span class="value-meta">BIP-39 · 24 words</span>
           </div>
           <ol
-            id="mnemonic"
-            class="mnemonic-grid"
             aria-label="24-word recovery phrase"
+            class="mnemonic-grid"
+            id="mnemonic"
           ></ol>
 
           <div class="transition">
@@ -182,7 +182,7 @@
         </div>
       </section>
 
-      <section class="stage" aria-labelledby="accounts-stage-title">
+      <section aria-labelledby="accounts-stage-title" class="stage">
         <header class="stage-marker">
           <span class="stage-number">04</span>
           <h2 id="accounts-stage-title">Accounts</h2>
@@ -195,9 +195,9 @@
               <span class="account-path">BIP-32 · m/44'/60'/0'/0/0</span>
             </header>
             <output
-              id="evm-address"
-              class="address"
               aria-label="Ethereum address"
+              class="address"
+              id="evm-address"
             ></output>
           </article>
 
@@ -207,15 +207,15 @@
               <span class="account-path">SLIP-0010 · m/44'/501'/0'/0'</span>
             </header>
             <output
-              id="solana-address"
-              class="address"
               aria-label="Solana address"
+              class="address"
+              id="solana-address"
             ></output>
           </article>
         </div>
       </section>
 
-      <p id="error" class="error" role="alert" hidden></p>
+      <p class="error" hidden id="error" role="alert"></p>
 
       <footer class="panel-foot">
         <p class="note">
@@ -225,6 +225,6 @@
       </footer>
     </main>
 
-    <script type="module" src="/src/main.ts"></script>
+    <script src="/src/main.ts" type="module"></script>
   </body>
 </html>

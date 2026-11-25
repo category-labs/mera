@@ -53,7 +53,7 @@ const test = base.extend<{
             hasPrf: true,
             automaticPresenceSimulation: true,
           },
-        },
+        }
       );
 
       await page.goto("http://localhost/");
@@ -131,8 +131,8 @@ test("PRF output helpers use the default salt when prfSalt is omitted", async ({
     const documentedSalt = new Uint8Array(
       await crypto.subtle.digest(
         "SHA-256",
-        new TextEncoder().encode("mera.prf.salt.v1"),
-      ),
+        new TextEncoder().encode("mera.prf.salt.v1")
+      )
     );
 
     return {
@@ -256,7 +256,7 @@ test("excludeCredentials rejects with PASSKEY_EXISTS while the credential exists
 
   const { credentials } = await authenticator.session.send(
     "WebAuthn.getCredentials",
-    { authenticatorId: authenticator.id },
+    { authenticatorId: authenticator.id }
   );
   expect(credentials).toHaveLength(1);
   const [stored] = credentials;
@@ -278,7 +278,7 @@ test("excludeCredentials rejects with PASSKEY_EXISTS while the credential exists
       });
       return { credentialId: created.credentialId };
     },
-    { credentialId: first.credentialId, transports: first.transports },
+    { credentialId: first.credentialId, transports: first.transports }
   );
 
   expect(replacement.credentialId).toMatch(/^[A-Za-z0-9_-]+$/u);

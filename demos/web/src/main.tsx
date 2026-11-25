@@ -15,5 +15,5 @@ reportHeightWhenEmbedded();
 createRoot(root).render(
   <StrictMode>
     <App />
-  </StrictMode>,
+  </StrictMode>
 );

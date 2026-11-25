@@ -128,7 +128,7 @@ function drawFingerprint(fingerprint: Uint8Array): void {
           Math.round(padding + column * cellSize),
           Math.round(padding + row * cellSize),
           Math.ceil(cellSize),
-          Math.ceil(cellSize),
+          Math.ceil(cellSize)
         );
       }
     }
@@ -154,7 +154,7 @@ function render(values: ModelInputs): void {
     for (const [index, element] of byteElements.entries()) {
       setAnimatedText(
         element,
-        result.entropyHex.slice(index * 2, index * 2 + 2),
+        result.entropyHex.slice(index * 2, index * 2 + 2)
       );
     }
 

@@ -26,7 +26,7 @@ function RecoveryPhrase({
     <section className="backup">
       <div className="backup-head">
         <span className="backup-title">Recovery phrase</span>
-        <button type="button" className="link" onClick={onHide}>
+        <button className="link" onClick={onHide} type="button">
           Hide
         </button>
       </div>
@@ -43,7 +43,7 @@ function RecoveryPhrase({
         ))}
       </ol>
       {children}
-      <button type="button" className="btn" onClick={() => void copy(phrase)}>
+      <button className="btn" onClick={() => void copy(phrase)} type="button">
         {feedback ?? "Copy phrase"}
       </button>
     </section>

@@ -14,7 +14,7 @@ import type {
  * @throws MeraError with code `INPUT_INVALID` when `privateKey` is not a valid secp256k1 scalar.
  */
 function getSecp256k1PublicKey(
-  privateKey: Uint8Array,
+  privateKey: Uint8Array
 ): Uint8Array<ArrayBuffer> {
   try {
     return secp256k1.getPublicKey(privateKey, false);
@@ -22,7 +22,7 @@ function getSecp256k1PublicKey(
     throw new MeraError(
       "INPUT_INVALID",
       "Private key is not a valid secp256k1 scalar",
-      { cause },
+      { cause }
     );
   }
 }
@@ -35,7 +35,7 @@ function getSecp256k1PublicKey(
  * @internal
  */
 function normalizeSecp256k1PublicKey(
-  publicKey: Uint8Array,
+  publicKey: Uint8Array
 ): Uint8Array<ArrayBuffer> {
   try {
     return secp256k1.Point.fromBytes(publicKey).toBytes(false);
@@ -58,7 +58,7 @@ function createSecp256k1SigningSession({
 }: CreateSigningSessionOptions): Secp256k1SigningSession {
   const { use, end, publicKey } = createSigningKey(
     privateKey,
-    getSecp256k1PublicKey,
+    getSecp256k1PublicKey
   );
 
   return {
@@ -84,7 +84,7 @@ function createSecp256k1SigningSession({
       if (recovery !== 0 && recovery !== 1) {
         throw new MeraError(
           "INPUT_INVALID",
-          `Signature recovery ID must be 0 or 1, got ${recovery}`,
+          `Signature recovery ID must be 0 or 1, got ${recovery}`
         );
       }
 

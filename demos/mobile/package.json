@@ -1,14 +1,14 @@
 {
   "name": "@category-labs/mera-demo-mobile",
-  "private": true,
   "version": "0.1.0",
+  "private": true,
   "main": "index.ts",
   "scripts": {
-    "prebuild": "expo prebuild --clean",
-    "ios": "expo run:ios --device",
     "android": "expo run:android --device",
-    "start": "expo start",
-    "check": "tsc && expo export --platform android --output-dir .expo/export"
+    "check": "tsc && expo export --platform android --output-dir .expo/export",
+    "ios": "expo run:ios --device",
+    "prebuild": "expo prebuild --clean",
+    "start": "expo start"
   },
   "dependencies": {
     "@category-labs/mera": "*",

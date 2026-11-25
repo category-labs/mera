@@ -11,8 +11,13 @@
 const DEMO_PATH = "/demo/index.html";
 ---
 
-<iframe src={DEMO_PATH} data-demo title="mera demo" class="not-content"></iframe>
-<a class="open-demo" href={DEMO_PATH} target="_blank" rel="noreferrer">
+<iframe
+  class="not-content"
+  data-demo
+  src={DEMO_PATH}
+  title="mera demo"
+></iframe>
+<a class="open-demo" href={DEMO_PATH} rel="noreferrer" target="_blank">
   If the demo does not work, try opening it in a new tab.
 </a>
 
@@ -29,12 +34,12 @@ const DEMO_PATH = "/demo/index.html";
     }
 
     for (const frame of document.querySelectorAll<HTMLIFrameElement>(
-      "iframe[data-demo]",
+      "iframe[data-demo]"
     )) {
       if (frame.contentWindow === event.source) {
         frame.style.setProperty(
           "--demo-content-height",
-          `${Math.ceil(data.height)}px`,
+          `${Math.ceil(data.height)}px`
         );
       }
     }
@@ -51,13 +56,13 @@ const DEMO_PATH = "/demo/index.html";
   .open-demo {
     display: block;
     padding: 0.625rem 0.875rem;
-    border-top: 1px solid var(--sl-color-hairline);
-    color: var(--sl-color-text-accent);
     font-size: 0.8125rem;
     font-weight: 600;
     line-height: 1.25;
+    color: var(--sl-color-text-accent);
     text-align: center;
     text-decoration: none;
+    border-top: 1px solid var(--sl-color-hairline);
   }
 
   .open-demo:hover {

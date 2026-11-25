@@ -10,7 +10,7 @@ function reportHeightWhenEmbedded(): void {
 
   const report = (): void => {
     const height = Math.ceil(
-      document.documentElement.getBoundingClientRect().height,
+      document.documentElement.getBoundingClientRect().height
     );
     if (height === lastHeight) {
       return;

@@ -22,7 +22,7 @@ function AccountChip({ address, connected }: AccountChipProps): ReactElement {
   const { feedback, copy } = useCopyButton(setStringAsync);
   return (
     <View style={styles.chip}>
-      {address !== null ? (
+      {address === null ? null : (
         <Pressable
           accessibilityRole="button"
           onPress={() => void copy(address)}
@@ -31,7 +31,7 @@ function AccountChip({ address, connected }: AccountChipProps): ReactElement {
             {feedback ?? truncateAddress(address)}
           </Text>
         </Pressable>
-      ) : null}
+      )}
       <View style={styles.network}>
         <View style={[styles.dot, connected ? styles.dotConnected : null]} />
         <Text style={styles.networkName}>{NETWORK_NAME}</Text>

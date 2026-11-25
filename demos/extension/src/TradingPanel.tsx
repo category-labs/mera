@@ -84,7 +84,7 @@ function TradingPanel({
   const { position, loaded, stage, funding, fund, adopt, trade } = usePosition(
     evm,
     accountAddress(account),
-    costBasisStorage,
+    costBasisStorage
   );
   const [draft, setDraft] = useState<TradeDraft>({
     kind: "amount",
@@ -170,7 +170,7 @@ function TradingPanel({
     try {
       const prf = await requestPrf(
         action === "create" ? "create" : "get",
-        action === "create" ? loadKnownCredential() : undefined,
+        action === "create" ? loadKnownCredential() : undefined
       );
       if (action === "create") {
         saveKnownCredential(prf.credential);
@@ -228,7 +228,7 @@ function TradingPanel({
   // credential; null when a lock happened during the ceremony.
   async function unlock(
     locked: CachedAccount,
-    started: number,
+    started: number
   ): Promise<ConnectedWallet | null> {
     const wallet = walletFromPrf(await requestPrf("get", locked.credential));
     if (locks.current !== started || wallet.address !== locked.address) {
@@ -331,7 +331,7 @@ function TradingPanel({
   if (phrase !== null) {
     return (
       <div className="account-shell">
-        <RecoveryPhrase phrase={phrase} onHide={() => setPhrase(null)}>
+        <RecoveryPhrase onHide={() => setPhrase(null)} phrase={phrase}>
           <p className="status error">The phrase hides after 60 seconds.</p>
           <p className="hint">
             Copying exposes the phrase to applications that can read the
@@ -339,7 +339,7 @@ function TradingPanel({
           </p>
         </RecoveryPhrase>
         <div className="account-links">
-          <button className="link" type="button" onClick={lock}>
+          <button className="link" onClick={lock} type="button">
             Lock account
           </button>
         </div>
@@ -360,17 +360,17 @@ function TradingPanel({
             <div className="actions">
               <button
                 className="btn primary"
-                type="button"
                 disabled={busy || evm === null}
                 onClick={() => void connect("create")}
+                type="button"
               >
                 {connectLabel("create", "Create account")}
               </button>
               <button
                 className="btn"
-                type="button"
                 disabled={busy || evm === null}
                 onClick={() => void connect("signin")}
+                type="button"
               >
                 {connectLabel("signin", "Sign in")}
               </button>
@@ -391,15 +391,15 @@ function TradingPanel({
                   settling={stage === "settling"}
                 />
                 <TradeForm
+                  disabled={pending !== null || funding}
                   draft={draft}
+                  fill={fill}
+                  locked={account.status === "locked"}
                   onDraftChange={editDraft}
+                  onSubmit={(order) => void submit(order)}
                   portfolio={loaded}
                   price={price}
                   stage={stage}
-                  locked={account.status === "locked"}
-                  fill={fill}
-                  disabled={pending !== null || funding}
-                  onSubmit={(order) => void submit(order)}
                 />
               </>
             )}
@@ -413,34 +413,34 @@ function TradingPanel({
           {loaded !== null && loaded.cash < LOW_CASH_WEI && (
             <button
               className="link"
-              type="button"
               disabled={busy}
               onClick={() => void addFunds()}
+              type="button"
             >
               {funding ? "Adding funds…" : `Add 10,000 ${CASH_SYMBOL}`}
             </button>
           )}
           <button
             className="link"
-            type="button"
-            onClick={lock}
             disabled={account.status === "locked"}
+            onClick={lock}
+            type="button"
           >
             Lock
           </button>
           <button
             className="link"
-            type="button"
             disabled={busy}
             onClick={() => setRecoveryWarning(true)}
+            type="button"
           >
             Export account
           </button>
           <button
             className="link"
-            type="button"
             disabled={busy}
             onClick={signOut}
+            type="button"
           >
             Sign out
           </button>
@@ -456,16 +456,16 @@ function TradingPanel({
           <div className="actions">
             <button
               className="btn"
-              type="button"
               onClick={() => setRecoveryWarning(false)}
+              type="button"
             >
               Cancel
             </button>
             <button
               className="btn primary"
-              type="button"
               disabled={busy}
               onClick={() => void revealPhrase()}
+              type="button"
             >
               {pending === "recovery"
                 ? "Waiting for passkey…"

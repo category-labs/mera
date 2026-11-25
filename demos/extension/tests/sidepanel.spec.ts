@@ -7,7 +7,7 @@ import { extensionIdFromKey } from "./extension-id";
 
 const extensionDir = resolve(
   dirname(fileURLToPath(import.meta.url)),
-  "../dist",
+  "../dist"
 );
 const rpcUrl = "https://evm-network-production.up.railway.app/";
 const accountKey = "mera.demo.account";
@@ -146,7 +146,7 @@ function rpcResult(method: string, funded: boolean): unknown {
 
 async function setVisibility(
   page: Page,
-  state: "hidden" | "visible",
+  state: "hidden" | "visible"
 ): Promise<void> {
   await page.evaluate((visibilityState) => {
     Object.defineProperty(document, "visibilityState", {
@@ -163,7 +163,7 @@ type Held = typeof globalThis & { releaseCredentialResult?: () => void };
 // can hide the panel while a ceremony is still running.
 async function holdNextCredentialResult(
   page: Page,
-  method: "create" | "get",
+  method: "create" | "get"
 ): Promise<void> {
   await page.evaluate((name) => {
     const original = navigator.credentials[name].bind(navigator.credentials);
@@ -187,7 +187,7 @@ async function holdNextCredentialResult(
 async function waitForHeldCredentialResult(page: Page): Promise<void> {
   await expect
     .poll(() =>
-      page.evaluate(() => typeof (globalThis as Held).releaseCredentialResult),
+      page.evaluate(() => typeof (globalThis as Held).releaseCredentialResult)
     )
     .toBe("function");
 }
@@ -204,7 +204,7 @@ test("runs the side-panel account lifecycle", async ({
   extensionId,
 }) => {
   const manifest = JSON.parse(
-    await readFile(resolve(extensionDir, "manifest.json"), "utf8"),
+    await readFile(resolve(extensionDir, "manifest.json"), "utf8")
   ) as { key: string };
   expect(extensionId).toBe(extensionIdFromKey(manifest.key));
   const page = await context.newPage();
@@ -212,36 +212,36 @@ test("runs the side-panel account lifecycle", async ({
   await page.goto(`chrome-extension://${extensionId}/sidepanel.html`);
   await expect(page.getByRole("heading", { name: "mera demo" })).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Create account" }),
+    page.getByRole("button", { name: "Create account" })
   ).toBeEnabled();
   await expect(
-    page.getByText("Runs on a demo network. Everything traded is fictional."),
+    page.getByText("Runs on a demo network. Everything traded is fictional.")
   ).toBeVisible();
 
   const client = await context.newCDPSession(page);
   await client.send("WebAuthn.enable");
   const { authenticatorId } = await client.send(
     "WebAuthn.addVirtualAuthenticator",
-    { options: authenticator(true) },
+    { options: authenticator(true) }
   );
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("button", { name: /^0x/u })).toBeVisible();
   // The panel adopts the account only after funding it and reading the
   // portfolio, so the account view appears with the balance already set.
   expect(await page.locator(".holding-value").first().textContent()).toBe(
-    "10,000.00",
+    "10,000.00"
   );
   await expect(page.getByRole("button", { name: "Lock" })).toBeEnabled();
   const storedAccount = await page.evaluate(
     (key) => localStorage.getItem(key),
-    accountKey,
+    accountKey
   );
   expect(storedAccount).not.toBeNull();
 
   await page.reload();
   await expect(page.getByRole("button", { name: "Lock" })).toBeDisabled();
   await expect(
-    page.getByRole("button", { name: "Export account" }),
+    page.getByRole("button", { name: "Export account" })
   ).toBeVisible();
 
   const credentialSignCount = async (): Promise<number> => {
@@ -250,7 +250,7 @@ test("runs the side-panel account lifecycle", async ({
     });
     return result.credentials.reduce(
       (total, credential) => total + credential.signCount,
-      0,
+      0
     );
   };
   const signCount = await credentialSignCount();
@@ -284,7 +284,7 @@ test("runs the side-panel account lifecycle", async ({
   await page.getByPlaceholder("100.00").fill("1.00");
   await page.getByRole("button", { name: "Buy" }).click();
   await expect(
-    page.getByText("does not match the cached account"),
+    page.getByText("does not match the cached account")
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Lock" })).toBeDisabled();
   await page.evaluate(
@@ -293,13 +293,13 @@ test("runs the side-panel account lifecycle", async ({
         localStorage.setItem(key, raw);
       }
     },
-    [accountKey, storedAccount] as const,
+    [accountKey, storedAccount] as const
   );
   await page.reload();
 
   await page.getByRole("button", { name: "Export account" }).click();
   await expect(page.getByRole("alert")).toContainText(
-    "reveals the recovery phrase",
+    "reveals the recovery phrase"
   );
   await page.getByRole("button", { name: "Reveal phrase" }).click();
   await expect(page.getByText("Recovery phrase")).toBeVisible();
@@ -311,37 +311,37 @@ test("runs the side-panel account lifecycle", async ({
   await holdNextCredentialResult(page, "get");
   await page.getByRole("button", { name: "Reveal phrase" }).click();
   await expect(
-    page.getByRole("button", { name: "Waiting for passkey…" }),
+    page.getByRole("button", { name: "Waiting for passkey…" })
   ).toBeVisible();
   await waitForHeldCredentialResult(page);
   await setVisibility(page, "hidden");
   await releaseCredentialResult(page);
   await expect(page.getByText("Recovery phrase")).not.toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Export account" }),
+    page.getByRole("button", { name: "Export account" })
   ).toBeEnabled();
   await page.reload();
 
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(
-    page.getByRole("button", { name: "Create account" }),
+    page.getByRole("button", { name: "Create account" })
   ).toBeVisible();
   await page.reload();
   await expect(page.getByRole("button", { name: "Lock" })).toHaveCount(0);
   const initialRemembered = await page.evaluate(
     (key) => localStorage.getItem(key),
-    credentialKey,
+    credentialKey
   );
   expect(initialRemembered).not.toBeNull();
 
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(
-    page.getByText("A passkey already exists for this demo. Sign in instead."),
+    page.getByText("A passkey already exists for this demo. Sign in instead.")
   ).toBeVisible();
 
   const { credentials: existingCredentials } = await client.send(
     "WebAuthn.getCredentials",
-    { authenticatorId },
+    { authenticatorId }
   );
   for (const credential of existingCredentials) {
     await client.send("WebAuthn.removeCredential", {
@@ -353,21 +353,21 @@ test("runs the side-panel account lifecycle", async ({
   await holdNextCredentialResult(page, "create");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(
-    page.getByRole("button", { name: "Waiting for passkey…" }),
+    page.getByRole("button", { name: "Waiting for passkey…" })
   ).toBeVisible();
   await waitForHeldCredentialResult(page);
   await setVisibility(page, "hidden");
   await releaseCredentialResult(page);
   await expect(
-    page.getByRole("button", { name: "Create account" }),
+    page.getByRole("button", { name: "Create account" })
   ).toBeEnabled();
   await expect(page.getByRole("button", { name: /^0x/u })).toHaveCount(0);
   expect(
-    await page.evaluate((key) => localStorage.getItem(key), accountKey),
+    await page.evaluate((key) => localStorage.getItem(key), accountKey)
   ).toBeNull();
   const createdWhileHidden = await page.evaluate(
     (key) => localStorage.getItem(key),
-    credentialKey,
+    credentialKey
   );
   expect(createdWhileHidden).not.toBeNull();
   expect(createdWhileHidden).not.toBe(initialRemembered);
@@ -381,7 +381,7 @@ test("runs the side-panel account lifecycle", async ({
   await holdNextCredentialResult(page, "get");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(
-    page.getByRole("button", { name: "Waiting for passkey…" }),
+    page.getByRole("button", { name: "Waiting for passkey…" })
   ).toBeVisible();
   await waitForHeldCredentialResult(page);
   await setVisibility(page, "hidden");
@@ -389,10 +389,10 @@ test("runs the side-panel account lifecycle", async ({
   await expect(page.getByRole("button", { name: "Sign in" })).toBeEnabled();
   await expect(page.getByRole("button", { name: /^0x/u })).toHaveCount(0);
   expect(
-    await page.evaluate((key) => localStorage.getItem(key), accountKey),
+    await page.evaluate((key) => localStorage.getItem(key), accountKey)
   ).toBeNull();
   expect(
-    await page.evaluate((key) => localStorage.getItem(key), credentialKey),
+    await page.evaluate((key) => localStorage.getItem(key), credentialKey)
   ).toBe(priorCredential);
   await setVisibility(page, "visible");
 
@@ -404,7 +404,7 @@ test("runs the side-panel account lifecycle", async ({
   });
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(
-    page.getByText("doesn't support the WebAuthn PRF extension"),
+    page.getByText("doesn't support the WebAuthn PRF extension")
   ).toBeVisible();
 });
 
@@ -467,12 +467,12 @@ test("opens a passkey tab from the side panel", async ({
   </body>
 </html>`,
       });
-    },
+    }
   );
   const page = await context.newPage();
   await page.goto(`chrome-extension://${extensionId}/sidepanel.html?panel=1`);
   await expect(
-    page.getByRole("button", { name: "Create account" }),
+    page.getByRole("button", { name: "Create account" })
   ).toBeEnabled();
 
   const popupPromise = context.waitForEvent("page");

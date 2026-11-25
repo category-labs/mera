@@ -43,7 +43,7 @@ function accountAddress(account: AccountState): EvmAddress | null {
 function loadCachedAccount(): CachedAccount | undefined {
   try {
     const value: unknown = JSON.parse(
-      localStorage.getItem(STORAGE_KEY) ?? "null",
+      localStorage.getItem(STORAGE_KEY) ?? "null"
     );
     return isCachedAccount(value) ? value : undefined;
   } catch {
@@ -73,7 +73,7 @@ function clearCachedAccount(): void {
 function loadKnownCredential(): PasskeyCredentialMetadata | undefined {
   try {
     const value: unknown = JSON.parse(
-      localStorage.getItem(CREDENTIAL_KEY) ?? "null",
+      localStorage.getItem(CREDENTIAL_KEY) ?? "null"
     );
     return isCredential(value) ? value : undefined;
   } catch {

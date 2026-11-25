@@ -53,7 +53,7 @@ function walletFromPrf({ prfOutput, credential }: PasskeyPrf): ConnectedWallet {
 async function connect(
   mode: AccountMode,
   action: "create" | "signin",
-  phrase = "",
+  phrase = ""
 ): Promise<ConnectedWallet> {
   const known =
     mode === "passkey" && action === "create"
@@ -64,16 +64,16 @@ async function connect(
       ? walletFromPrf(
           action === "create"
             ? await createPasskeyPrf(rpId, known ? [known] : undefined).catch(
-                rememberCreatedCredential,
+                rememberCreatedCredential
               )
-            : await getPasskeyPrf(rpId),
+            : await getPasskeyPrf(rpId)
         )
       : {
           mode,
           ...evmAccountFromMnemonic(
             action === "create"
               ? await createVault(phrase)
-              : await decryptStoredVault(),
+              : await decryptStoredVault()
           ),
         };
   if (action === "create" && wallet.credential !== undefined) {
@@ -138,7 +138,7 @@ async function createVault(phrase: string): Promise<string> {
     if (error instanceof MeraError && error.code === "PASSKEY_EXISTS") {
       throw new Error(
         "The saved vault's passkey already exists. Sign in to open the saved vault's account.",
-        { cause: error },
+        { cause: error }
       );
     }
     throw error;
@@ -156,7 +156,7 @@ async function decryptStoredVault(): Promise<string> {
   const raw = localStorage.getItem(VAULT_KEY);
   if (raw === null) {
     throw new Error(
-      "No vault-backed account exists on this device. Create one first.",
+      "No vault-backed account exists on this device. Create one first."
     );
   }
   const secret = await decryptSecretVaultWithPasskey({

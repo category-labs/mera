@@ -4,9 +4,9 @@ name: Socket
 # every package in the dependency tree is checked before it is fetched.
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 permissions: {}
 

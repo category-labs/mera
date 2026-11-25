@@ -1,11 +1,11 @@
 {
   "name": "@category-labs/mera-demo-prf",
-  "private": true,
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
     "build": "tsc && vite build",
+    "dev": "vite",
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc"

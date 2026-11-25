@@ -19,12 +19,12 @@ const GCM_TAG_LENGTH = 16;
 // HKDF info keeps the encryption key distinct from any other key derived from
 // the same PRF output.
 const SECRET_ENCRYPTION_INFO = new TextEncoder().encode(
-  "mera.v1.encrypt.secret",
+  "mera.v1.encrypt.secret"
 );
 
 // Derives the non-extractable AES-256-GCM vault key with HKDF-SHA-256.
 async function deriveEncryptionKey(
-  prfOutput: Uint8Array<ArrayBuffer>,
+  prfOutput: Uint8Array<ArrayBuffer>
 ): Promise<CryptoKey> {
   if (prfOutput.length !== 32) {
     throw new MeraError("INPUT_INVALID", "PRF output must be 32 bytes");
@@ -50,7 +50,7 @@ async function deriveEncryptionKey(
         length: 256,
       },
       false,
-      ["encrypt", "decrypt"],
+      ["encrypt", "decrypt"]
     );
   } catch (error) {
     // The PRF output is valid by now, so a rejection means the runtime cannot
@@ -75,7 +75,7 @@ function parseJsonVault(value: string): unknown {
 function readVaultBase64Url(
   value: unknown,
   name: string,
-  options: { byteLength?: number; minByteLength?: number } = {},
+  options: { byteLength?: number; minByteLength?: number } = {}
 ): string {
   if (typeof value !== "string") {
     throw new MeraError("VAULT_FORMAT_INVALID", `${name} must be base64url`);
@@ -128,7 +128,7 @@ async function createSecretVault({
         iv: nonce,
       },
       encryptionKey,
-      secret,
+      secret
     );
   } catch (error) {
     // The key and nonce are valid, so a rejection means the runtime cannot run
@@ -142,7 +142,7 @@ async function createSecretVault({
     version: 1,
     credential: toCredentialMetadata(
       credential.credentialId,
-      credential.transports,
+      credential.transports
     ),
     prfSalt: base64urlnopad.encode(credential.prfSalt),
     nonce: base64urlnopad.encode(nonce),
@@ -321,7 +321,7 @@ async function decryptSecretVault({
         iv: nonce,
       },
       encryptionKey,
-      ciphertext,
+      ciphertext
     );
     return new Uint8Array(plaintext);
   } catch (error) {
@@ -365,7 +365,7 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
   ) {
     throw new MeraError(
       "VAULT_FORMAT_INVALID",
-      "Vault credential must be an object",
+      "Vault credential must be an object"
     );
   }
 
@@ -374,7 +374,7 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
   if (transports !== undefined && !isStringArray(transports)) {
     throw new MeraError(
       "VAULT_FORMAT_INVALID",
-      "credential.transports must be an array of strings or omitted",
+      "credential.transports must be an array of strings or omitted"
     );
   }
 
@@ -384,7 +384,7 @@ function parseSecretVault(value: unknown): PasskeySecretVault {
       readVaultBase64Url(credentialId, "credential.credentialId", {
         minByteLength: 1,
       }),
-      transports,
+      transports
     ),
     prfSalt: readVaultBase64Url(prfSalt, "prfSalt", {
       byteLength: PRF_SALT_LENGTH,

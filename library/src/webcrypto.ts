@@ -6,7 +6,7 @@ function randomBytes(length: number): Uint8Array<ArrayBuffer> {
   if (!crypto?.getRandomValues) {
     throw new MeraError(
       "CRYPTO_UNAVAILABLE",
-      "crypto.getRandomValues is unavailable",
+      "crypto.getRandomValues is unavailable"
     );
   }
 

@@ -14,7 +14,7 @@ import { createSecp256k1SigningSession } from "../dist/index.js";
 import { toViemAccount } from "../dist/viem.js";
 
 const PRIVATE_KEY_ONE = hexToBytes(
-  "0000000000000000000000000000000000000000000000000000000000000001",
+  "0000000000000000000000000000000000000000000000000000000000000001"
 );
 const ADDRESS_ONE = "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf";
 const RECIPIENT = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
@@ -66,7 +66,7 @@ test("signTransaction signs an EIP-1559 transaction the sender recovers from", a
 
   // The account's signTransaction is typed to return plain hex.
   const serializedTransaction = (await account.signTransaction(
-    transaction,
+    transaction
   )) as TransactionSerialized;
 
   const parsed = parseTransaction(serializedTransaction);
@@ -74,7 +74,7 @@ test("signTransaction signs an EIP-1559 transaction the sender recovers from", a
   expect(parsed.value).toBe(transaction.value);
   expect(parsed.chainId).toBe(transaction.chainId);
   expect(await recoverTransactionAddress({ serializedTransaction })).toBe(
-    ADDRESS_ONE,
+    ADDRESS_ONE
   );
 });
 
@@ -92,7 +92,7 @@ test("signTransaction signs a legacy transaction via the EIP-155 `v` path", asyn
 
   expect(parseTransaction(serializedTransaction).type).toBe("legacy");
   expect(await recoverTransactionAddress({ serializedTransaction })).toBe(
-    ADDRESS_ONE,
+    ADDRESS_ONE
   );
 });
 
@@ -114,13 +114,13 @@ test("signTransaction honors a custom serializer", async () => {
       to: RECIPIENT,
       value: 1_000_000n,
     },
-    { serializer },
+    { serializer }
   )) as TransactionSerialized;
 
   // Once for the signed digest, once for the final serialization.
   expect(calls).toBe(2);
   expect(await recoverTransactionAddress({ serializedTransaction })).toBe(
-    ADDRESS_ONE,
+    ADDRESS_ONE
   );
 });
 
@@ -136,7 +136,7 @@ test("signTypedData produces an EIP-712 signature that recovers the address", as
   const signature = await account.signTypedData(typedData);
 
   expect(await recoverTypedDataAddress({ ...typedData, signature })).toBe(
-    ADDRESS_ONE,
+    ADDRESS_ONE
   );
 });
 
@@ -170,7 +170,7 @@ test("signAuthorization signs an EIP-7702 authorization", async () => {
     nonce: 0,
   });
   expect(await recoverAuthorizationAddress({ authorization })).toBe(
-    ADDRESS_ONE,
+    ADDRESS_ONE
   );
 });
 

@@ -25,7 +25,7 @@ function RecoveryPhrase({ phrase, onHide }: RecoveryPhraseProps): ReactElement {
     <View style={styles.backup}>
       <View style={styles.head}>
         <Text style={text.label}>Recovery phrase</Text>
-        <LinkButton title="Hide" onPress={onHide} />
+        <LinkButton onPress={onHide} title="Hide" />
       </View>
       <Text style={text.hint}>
         Anyone with these {words.length} words controls the funds. Compatible
@@ -40,8 +40,8 @@ function RecoveryPhrase({ phrase, onHide }: RecoveryPhraseProps): ReactElement {
         ))}
       </View>
       <Button
-        title={feedback ?? "Copy phrase"}
         onPress={() => void copy(phrase)}
+        title={feedback ?? "Copy phrase"}
       />
     </View>
   );

@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 const sidePanelEntry = fileURLToPath(
-  new URL("./sidepanel.html", import.meta.url),
+  new URL("./sidepanel.html", import.meta.url)
 );
 
 export default defineConfig({

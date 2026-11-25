@@ -49,13 +49,6 @@ function createReactNativeWebAuthnClient(
           type: "public-key",
           alg,
         })),
-        ...(hasExcludedCredentials
-          ? {
-              excludeCredentials: excludeCredentials.map(
-                toNativeCredentialDescriptor,
-              ),
-            }
-          : {}),
         authenticatorSelection: {
           residentKey: request.residentKey,
           requireResidentKey: true,
@@ -63,8 +56,15 @@ function createReactNativeWebAuthnClient(
         },
         attestation: request.attestation,
         extensions: prfExtension(request.prfSalt),
-        ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
       };
+      if (hasExcludedCredentials) {
+        nativeRequest.excludeCredentials = excludeCredentials.map(
+          toNativeCredentialDescriptor,
+        );
+      }
+      if (request.timeout !== undefined) {
+        nativeRequest.timeout = request.timeout;
+      }
       // The general iOS entry point can offer a security key, whose result has
       // no PRF output. Android treats the platform-only flag as a no-op.
       const created = await platformApi
@@ -107,13 +107,15 @@ function createReactNativeWebAuthnClient(
         challenge: base64urlnopad.encode(request.challenge),
         userVerification: request.userVerification,
         extensions: prfExtension(request.prfSalt),
-        ...(allowCredential !== undefined
-          ? {
-              allowCredentials: [toNativeCredentialDescriptor(allowCredential)],
-            }
-          : {}),
-        ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
       };
+      if (allowCredential !== undefined) {
+        nativeRequest.allowCredentials = [
+          toNativeCredentialDescriptor(allowCredential),
+        ];
+      }
+      if (request.timeout !== undefined) {
+        nativeRequest.timeout = request.timeout;
+      }
       // getImmediate sends only the platform request, as getPlatformKey does.
       const assertion =
         request.immediate === true
@@ -138,15 +140,15 @@ function createReactNativeWebAuthnClient(
 function toNativeCredentialDescriptor(
   descriptor: WebAuthnClient.CredentialDescriptor,
 ): NativeCredentialDescriptor {
-  return {
+  const nativeDescriptor: NativeCredentialDescriptor = {
     type: "public-key",
     id: base64urlnopad.encode(descriptor.credentialId),
-    ...(descriptor.transports !== undefined
-      ? {
-          transports: descriptor.transports as Array<NativeTransport>,
-        }
-      : {}),
   };
+  if (descriptor.transports !== undefined) {
+    nativeDescriptor.transports =
+      descriptor.transports as Array<NativeTransport>;
+  }
+  return nativeDescriptor;
 }
 
 /**
@@ -155,8 +157,7 @@ function toNativeCredentialDescriptor(
  * {@link rejectCancelledCeremony}.
  */
 function rejectCreateCeremony(error: unknown): never {
-  const reason = (error as { error?: unknown } | null)?.error;
-  if (reason === "CredentialAlreadyExists") {
+  if (rejectionReason(error) === "CredentialAlreadyExists") {
     throw new MeraError(
       "PASSKEY_EXISTS",
       "An excluded passkey already exists on this authenticator",
@@ -171,7 +172,7 @@ function rejectCreateCeremony(error: unknown): never {
  * `NoCredentials` rejections as `PASSKEY_CANCELLED`.
  */
 function rejectCancelledCeremony(error: unknown): never {
-  const reason = (error as { error?: unknown } | null)?.error;
+  const reason = rejectionReason(error);
   if (
     reason === "UserCancelled" ||
     reason === "TimedOut" ||
@@ -184,6 +185,16 @@ function rejectCancelledCeremony(error: unknown): never {
     );
   }
   throw error;
+}
+
+// react-native-passkey rejects with an object whose `error` names the reason.
+function rejectionReason(error: unknown): string | undefined {
+  return typeof error === "object" &&
+    error !== null &&
+    "error" in error &&
+    typeof error.error === "string"
+    ? error.error
+    : undefined;
 }
 
 /**

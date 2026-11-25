@@ -300,7 +300,7 @@ test("createSecretVaultWithNewPasskey errors carry the created passkey when encr
   expect(failure).toMatchObject({ code: "CRYPTO_UNAVAILABLE" });
   // The creation result also holds the PRF salt and output, which must stay
   // off the error.
-  expect((failure as MeraError).credential).toEqual({
+  expect(failure).toHaveProperty("credential", {
     credentialId: CREDENTIAL_ID_BASE64URL,
     transports: ["internal"],
   });

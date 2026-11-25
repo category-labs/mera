@@ -44,7 +44,7 @@ type Props = {
   evm: EvmContext | null;
   evmError: string | null;
   account: AccountState;
-  onAccountChange(next: AccountState): void;
+  onAccountChange: (next: AccountState) => void;
 };
 
 type Pending =

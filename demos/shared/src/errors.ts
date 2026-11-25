@@ -21,6 +21,8 @@ function describeError(error: unknown): string {
         return "The passkey request failed.";
       case "VAULT_FORMAT_INVALID":
         return "Stored vault is malformed.";
+      case "INPUT_INVALID":
+        return error.message;
     }
   }
   // A viem error's `message` appends the request URL, body, and hex payload;

@@ -8,6 +8,9 @@ const CHART_WIDTH = 400;
 const CHART_HEIGHT = 110;
 const PAD_Y = 8;
 
+// Cents as floats are exact enough for pixel math.
+const toCents = (wei: bigint): number => Number(wei / 10n ** 16n);
+
 type ChartGeometry = {
   /** SVG path of the price line. */
   line: string;
@@ -70,8 +73,6 @@ function chartGeometry(now: number): ChartGeometry {
       max = point.price;
     }
   }
-  // Cents as floats are exact enough for pixel math.
-  const toCents = (wei: bigint) => Number(wei / 10n ** 16n);
   const [minC, maxC] = [toCents(min), toCents(max)];
   const span = Math.max(maxC - minC, 1);
   const x = (t: number) =>

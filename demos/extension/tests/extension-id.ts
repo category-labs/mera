@@ -8,9 +8,9 @@ function extensionIdFromKey(key: string): string {
     .digest()
     .subarray(0, 16)
     .toString("hex");
-  return [...nibbles]
-    .map((value) => String.fromCharCode(97 + Number.parseInt(value, 16)))
-    .join("");
+  return nibbles.replaceAll(/[0-9a-f]/g, (nibble) =>
+    String.fromCharCode(97 + Number.parseInt(nibble, 16)),
+  );
 }
 
 export { extensionIdFromKey };

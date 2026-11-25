@@ -19,19 +19,29 @@ type UsePositionResult = {
   /** Whether a faucet top-up is in flight. */
   funding: boolean;
   /** Tops up the account through the faucet, then re-reads its balances. */
-  fund(): Promise<void>;
+  fund: () => Promise<void>;
   /**
    * Starts `address`'s position from balances read ahead of the switch and
    * skips its first top-up. The caller switches to `address` in the same
    * update.
    */
-  adopt(address: EvmAddress, portfolio: Portfolio): void;
+  adopt: (address: EvmAddress, portfolio: Portfolio) => void;
   /**
    * Runs `run` as the account's trade: reads that start meanwhile are dropped,
    * and the fill it resolves to moves the position until the read that
    * settles it. `run` resolves to null when it placed no trade.
    */
-  trade(run: () => Promise<Fill | null>): Promise<Fill | null>;
+  trade: (run: () => Promise<Fill | null>) => Promise<Fill | null>;
+};
+
+type UseEvmContextResult = {
+  evm: EvmContext | null;
+  evmError: string | null;
+};
+
+type UseCopyButtonResult = {
+  feedback: string | null;
+  copy: (text: string) => Promise<void>;
 };
 
 const unixNow = (): number => Math.floor(Date.now() / 1000);
@@ -50,10 +60,7 @@ function useNow(): number {
  * The demo network, retried until it answers. `evmError` holds the latest
  * failure until a retry lands.
  */
-function useEvmContext(rpcUrl: string): {
-  evm: EvmContext | null;
-  evmError: string | null;
-} {
+function useEvmContext(rpcUrl: string): UseEvmContextResult {
   const [evm, setEvm] = useState<EvmContext | null>(null);
   const [evmError, setEvmError] = useState<string | null>(null);
   useEffect(
@@ -197,9 +204,11 @@ function usePosition(
  * expo-clipboard reports failure with false.
  */
 function useCopyButton(
-  writeText: (text: string) => Promise<unknown> = (text) =>
-    navigator.clipboard.writeText(text),
-): { feedback: string | null; copy: (text: string) => Promise<void> } {
+  writeText: (text: string) => Promise<boolean> = async (text) => {
+    await navigator.clipboard.writeText(text);
+    return true;
+  },
+): UseCopyButtonResult {
   const [feedback, setFeedback] = useState<string | null>(null);
   useEffect(() => {
     if (feedback === null) {
@@ -211,7 +220,7 @@ function useCopyButton(
   async function copy(text: string): Promise<void> {
     try {
       const written = await writeText(text);
-      setFeedback(written === false ? "Copy failed" : "Copied");
+      setFeedback(written ? "Copied" : "Copy failed");
     } catch {
       setFeedback("Copy failed");
     }

@@ -106,14 +106,21 @@ async function anvilRequest(
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
   });
-  const body = (await response.json()) as {
-    result?: unknown;
-    error?: { message?: string };
-  };
-  if (body.error) {
-    throw new Error(body.error.message ?? `anvil refused ${method}`);
+  const body: unknown = await response.json();
+  if (typeof body !== "object" || body === null) {
+    throw new Error(`anvil sent a malformed reply to ${method}`);
   }
-  return body.result;
+  if ("error" in body && body.error) {
+    const { error } = body;
+    throw new Error(
+      typeof error === "object" &&
+        "message" in error &&
+        typeof error.message === "string"
+        ? error.message
+        : `anvil refused ${method}`,
+    );
+  }
+  return "result" in body ? body.result : undefined;
 }
 
 async function anvilQuantity(
@@ -157,7 +164,7 @@ let marketAddress = "";
  */
 async function deployMarket(): Promise<string> {
   const accounts = await anvilRequest("eth_accounts", []);
-  const deployer = Array.isArray(accounts) ? accounts[0] : undefined;
+  const deployer: unknown = Array.isArray(accounts) ? accounts[0] : undefined;
   if (typeof deployer !== "string") {
     throw new Error("anvil returned no unlocked accounts");
   }
@@ -167,10 +174,13 @@ async function deployMarket(): Promise<string> {
   // The deploy mines in the next interval block, up to a second after the
   // send, so poll for the receipt instead of reading it once.
   for (let attempt = 0; attempt < 100; attempt++) {
-    const receipt = (await anvilRequest("eth_getTransactionReceipt", [
-      hash,
-    ])) as { contractAddress?: unknown } | null;
-    const address = receipt?.contractAddress;
+    const receipt = await anvilRequest("eth_getTransactionReceipt", [hash]);
+    const address =
+      typeof receipt === "object" &&
+      receipt !== null &&
+      "contractAddress" in receipt
+        ? receipt.contractAddress
+        : undefined;
     if (typeof address === "string") {
       await anvilRequest("anvil_setBalance", [
         address,
@@ -290,7 +300,7 @@ async function handle(
   }
 
   if (method === "demo_fundAccount") {
-    const address = Array.isArray(params) ? params[0] : undefined;
+    const address: unknown = Array.isArray(params) ? params[0] : undefined;
     if (typeof address !== "string" || !/^0x[0-9a-fA-F]{40}$/.test(address)) {
       respond(
         response,

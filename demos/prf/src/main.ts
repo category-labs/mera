@@ -17,6 +17,11 @@ const inputs = {
   salt: elementById<HTMLInputElement>("in-salt"),
   passkey: elementById<HTMLSelectElement>("in-passkey"),
 };
+
+function isInputField(field: string | undefined): field is keyof ModelInputs {
+  return field !== undefined && Object.hasOwn(inputs, field);
+}
+
 const entropyElement = elementById<HTMLOutputElement>("entropy");
 const mnemonicElement = elementById<HTMLOListElement>("mnemonic");
 const evmAddressElement = elementById<HTMLOutputElement>("evm-address");
@@ -71,9 +76,9 @@ function readInputs(): ModelInputs {
 }
 
 function setInputs(values: ModelInputs): void {
-  for (const field of Object.keys(inputs) as Array<keyof ModelInputs>) {
-    inputs[field].value = values[field];
-  }
+  inputs.rpId.value = values.rpId;
+  inputs.salt.value = values.salt;
+  inputs.passkey.value = values.passkey;
 }
 
 function animateChange(element: HTMLElement): void {
@@ -137,8 +142,8 @@ function drawFingerprint(fingerprint: Uint8Array): void {
 
 function syncChips(values: ModelInputs): void {
   for (const group of document.querySelectorAll<HTMLElement>(".chips")) {
-    const field = group.dataset.field as keyof ModelInputs | undefined;
-    if (!field) {
+    const field = group.dataset.field;
+    if (!isInputField(field)) {
       continue;
     }
     for (const chip of group.querySelectorAll<HTMLButtonElement>(".chip")) {
@@ -203,8 +208,8 @@ for (const input of Object.values(inputs)) {
 }
 
 for (const group of document.querySelectorAll<HTMLElement>(".chips")) {
-  const field = group.dataset.field as keyof ModelInputs | undefined;
-  if (!field) {
+  const field = group.dataset.field;
+  if (!isInputField(field)) {
     continue;
   }
   for (const chip of group.querySelectorAll<HTMLButtonElement>(".chip")) {

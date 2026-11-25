@@ -43,15 +43,26 @@ const receipt = {
 
 type RpcReply = { result: unknown } | { error: string };
 
+type RpcRequest = { id: unknown; method: string };
+
+function parseRpcRequest(body: unknown): RpcRequest {
+  if (
+    typeof body !== "object" ||
+    body === null ||
+    !("method" in body) ||
+    typeof body.method !== "string"
+  ) {
+    throw new Error("Expected a JSON-RPC request.");
+  }
+  return { id: "id" in body ? body.id : undefined, method: body.method };
+}
+
 async function routeRpc(
   page: Page,
   reply: (method: string) => RpcReply,
 ): Promise<void> {
   await page.route(`${DEMO_RPC_URL}/`, async (route) => {
-    const { id, method } = route.request().postDataJSON() as {
-      id: number;
-      method: string;
-    };
+    const { id, method } = parseRpcRequest(route.request().postDataJSON());
     const answer = reply(method);
     await route.fulfill({
       json:
@@ -68,7 +79,7 @@ async function routeRpc(
 
 // The reads behind a portfolio: chain, market, the share balance, and 10,000
 // DEMOCASH for the cash balance or any other method.
-function readResult(method: string, shares: bigint): unknown {
+function readResult(method: string, shares: bigint) {
   switch (method) {
     case "eth_chainId":
       return "0x7a69";

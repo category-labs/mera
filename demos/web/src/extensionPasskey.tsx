@@ -42,20 +42,24 @@ const credential: PasskeyCredentialMetadata | undefined =
     ? undefined
     : {
         credentialId,
-        transports: transports
-          ? (transports.split(",") as PasskeyCredentialMetadata["transports"])
-          : undefined,
+        transports: transports ? transports.split(",") : undefined,
       };
 
 function isAction(value: string | null): value is Action {
   return value === "create" || value === "get" || value === "recovery";
 }
 
+// lib.dom types `window.opener` as any.
+function isWindow(value: unknown): value is Window {
+  return typeof value === "object" && value !== null && "postMessage" in value;
+}
+
 function postToExtension(message: PasskeyTabMessage): void {
-  if (window.opener === null) {
+  const opener: unknown = window.opener;
+  if (!isWindow(opener)) {
     throw new Error("This tab was not opened from the extension.");
   }
-  window.opener.postMessage(message, EXTENSION_ORIGIN);
+  opener.postMessage(message, EXTENSION_ORIGIN);
 }
 
 function PasskeyPage({ action }: { action: Action }): ReactElement {

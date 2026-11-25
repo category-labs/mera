@@ -121,6 +121,12 @@ function describeError(error: unknown): string {
         return describePasskeyFailure(error.cause);
       case "CRYPTO_UNAVAILABLE":
         return "The runtime provides no CSPRNG.";
+      case "PASSKEY_EXISTS":
+      case "SESSION_ENDED":
+      case "DECRYPT_FAILED":
+      case "INPUT_INVALID":
+      case "VAULT_FORMAT_INVALID":
+        return describeDemoError(error);
     }
   }
   return describeDemoError(error);

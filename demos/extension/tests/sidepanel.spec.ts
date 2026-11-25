@@ -1,14 +1,10 @@
-import { readFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import type { BrowserContext, Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
+import manifest from "../public/manifest.json" with { type: "json" };
 import { extensionIdFromKey } from "./extension-id";
 
-const extensionDir = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  "../dist",
-);
+const extensionDir = resolve(import.meta.dirname, "../dist");
 const rpcUrl = "https://evm-network-production.up.railway.app/";
 const accountKey = "mera.demo.account";
 const credentialKey = "mera.demo.credential";
@@ -44,10 +40,7 @@ const test = base.extend<{ context: BrowserContext; extensionId: string }>({
     });
     let funded = false;
     await context.route(rpcUrl, async (route) => {
-      const { id, method } = route.request().postDataJSON() as {
-        id: unknown;
-        method: string;
-      };
+      const { id, method } = parseRpcRequest(route.request().postDataJSON());
       if (method === "demo_fundAccount") {
         funded = true;
       }
@@ -65,7 +58,21 @@ const test = base.extend<{ context: BrowserContext; extensionId: string }>({
   },
 });
 
-function rpcResult(method: string, funded: boolean): unknown {
+type RpcRequest = { id: unknown; method: string };
+
+function parseRpcRequest(body: unknown): RpcRequest {
+  if (
+    typeof body !== "object" ||
+    body === null ||
+    !("method" in body) ||
+    typeof body.method !== "string"
+  ) {
+    throw new Error("Expected a JSON-RPC request.");
+  }
+  return { id: "id" in body ? body.id : undefined, method: body.method };
+}
+
+function rpcResult(method: string, funded: boolean) {
   switch (method) {
     case "eth_chainId":
       return "0x7a69";
@@ -203,9 +210,6 @@ test("runs the side-panel account lifecycle", async ({
   context,
   extensionId,
 }) => {
-  const manifest = JSON.parse(
-    await readFile(resolve(extensionDir, "manifest.json"), "utf8"),
-  ) as { key: string };
   expect(extensionId).toBe(extensionIdFromKey(manifest.key));
   const page = await context.newPage();
   await page.clock.install();
@@ -276,9 +280,17 @@ test("runs the side-panel account lifecycle", async ({
     if (raw === null) {
       throw new Error("Missing stored account.");
     }
-    const value = JSON.parse(raw) as Record<string, unknown>;
-    value.address = "0x2222222222222222222222222222222222222222";
-    localStorage.setItem(key, JSON.stringify(value));
+    const value: unknown = JSON.parse(raw);
+    if (typeof value !== "object" || value === null) {
+      throw new Error("Stored account is not an object.");
+    }
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        ...value,
+        address: "0x2222222222222222222222222222222222222222",
+      }),
+    );
   }, accountKey);
   await page.reload();
   await page.getByPlaceholder("100.00").fill("1.00");
@@ -489,8 +501,12 @@ test("opens a passkey tab from the side panel", async ({
   const readRememberedId = () =>
     page.evaluate((key) => {
       const raw = localStorage.getItem(key);
-      return raw
-        ? (JSON.parse(raw) as { credentialId: string }).credentialId
+      const value: unknown = raw ? JSON.parse(raw) : null;
+      return typeof value === "object" &&
+        value !== null &&
+        "credentialId" in value &&
+        typeof value.credentialId === "string"
+        ? value.credentialId
         : null;
     }, credentialKey);
   const remembered = await readRememberedId();

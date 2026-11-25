@@ -405,10 +405,14 @@ function mera({
         case "eth_chainId":
           return numberToHex(chain.id);
         case "wallet_switchEthereumChain": {
-          const [parameter] = args as [
-            { chainId?: unknown } | null | undefined,
-          ];
-          switchTo(Number(quantity("chainId", parameter?.chainId)));
+          const [parameter] = args;
+          const chainId =
+            typeof parameter === "object" &&
+            parameter !== null &&
+            "chainId" in parameter
+              ? parameter.chainId
+              : undefined;
+          switchTo(Number(quantity("chainId", chainId)));
           return null;
         }
         case "personal_sign": {
@@ -602,7 +606,9 @@ function parseTypedData(value: unknown, chainId: number): TypedDataDefinition {
     try {
       typedData = JSON.parse(value);
     } catch (error) {
-      throw new InvalidParamsRpcError(error as Error);
+      throw new InvalidParamsRpcError(
+        new Error("typed data must be JSON", { cause: error }),
+      );
     }
   }
   if (typeof typedData !== "object" || typedData === null) {
@@ -630,10 +636,7 @@ const TRANSACTION_TYPES = new Map([
  * by field. Unknown fields, blob and set-code transactions, and a chain other
  * than the current one are refused rather than dropped.
  */
-function parseTransactionRequest(
-  transaction: unknown,
-  chainId: number,
-): { from: unknown; request: Record<string, unknown> } {
+function parseTransactionRequest(transaction: unknown, chainId: number) {
   if (typeof transaction !== "object" || transaction === null) {
     throw new InvalidParamsRpcError(new Error("transaction must be an object"));
   }

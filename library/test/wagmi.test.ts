@@ -16,8 +16,9 @@ import {
   signTypedData,
   switchChain,
 } from "@wagmi/core";
-import type { AccessList, BaseError, TransactionSerialized } from "viem";
+import type { AccessList, TransactionSerialized } from "viem";
 import {
+  BaseError,
   custom,
   defineChain,
   keccak256,
@@ -66,6 +67,10 @@ const typedData = {
   message: { amount: 2n ** 60n },
 } as const;
 
+function prf(secret: Uint8Array, salt: Uint8Array): Uint8Array {
+  return sha256(new Uint8Array([...secret, ...salt]));
+}
+
 /**
  * A passkey store in memory. Each passkey's PRF output is
  * sha256(secret || salt), and every call counts as one prompt. `get` is a
@@ -77,17 +82,10 @@ function fakeAuthenticator(
     get?: unknown;
     beforeGet?: () => Promise<void>;
   } = {},
-): {
-  client: WebAuthnClient;
-  prompts(): number;
-  gets: Array<WebAuthnClient.GetCredentialRequest>;
-  prfOutputOf(credentialId: Uint8Array): Uint8Array;
-} {
+) {
   const passkeys = new Map<string, Uint8Array>();
   const gets: Array<WebAuthnClient.GetCredentialRequest> = [];
   let prompts = 0;
-  const prf = (secret: Uint8Array, salt: Uint8Array) =>
-    sha256(new Uint8Array([...secret, ...salt]));
 
   const client: WebAuthnClient = {
     async createCredential({ prfSalt, excludeCredentials }) {
@@ -105,9 +103,8 @@ function fakeAuthenticator(
         credentialId,
         transports: ["internal"],
         prfEnabled: true,
-        ...(options.createPrfOutput === false
-          ? {}
-          : { prfOutput: prf(secret, prfSalt) }),
+        prfOutput:
+          options.createPrfOutput === false ? undefined : prf(secret, prfSalt),
       };
     },
     async getCredential(request) {
@@ -136,7 +133,7 @@ function fakeAuthenticator(
     client,
     prompts: () => prompts,
     gets,
-    prfOutputOf(credentialId) {
+    prfOutputOf(credentialId: Uint8Array): Uint8Array {
       const secret = passkeys.get(bytesToHex(credentialId));
       if (secret === undefined) {
         throw new Error("unknown passkey");
@@ -152,10 +149,7 @@ function fakeAuthenticator(
  * reports a base fee, so viem fills EIP-1559 transactions unless a request
  * names another type.
  */
-function fakeRpc(beforeNonce?: () => Promise<void>): {
-  transport: ReturnType<typeof custom>;
-  sent: Array<TransactionSerialized>;
-} {
+function fakeRpc(beforeNonce?: () => Promise<void>) {
   const sent: Array<TransactionSerialized> = [];
   const transport = custom({
     async request({ method, params }: { method: string; params?: unknown }) {
@@ -461,10 +455,13 @@ test("disconnecting ends the session, stops a send in flight, and forgets the ac
   await disconnect(page.config);
   nonceReleased.resolve();
 
-  const failure = (await sending.catch((error: unknown) => error)) as BaseError;
+  const failure = await sending.catch((error: unknown) => error);
+  if (!(failure instanceof BaseError)) {
+    throw new Error("expected a viem error", { cause: failure });
+  }
   expect(
     failure.walk(
-      (cause) => (cause as { code?: unknown }).code === "SESSION_ENDED",
+      (cause) => cause instanceof MeraError && cause.code === "SESSION_ENDED",
     ),
   ).toBeTruthy();
   expect(await page.connector.isAuthorized()).toBe(false);
@@ -684,7 +681,7 @@ test("carries the created passkey on UserRejectedRequestError.cause when the fal
       credential: { transports: ["internal"] },
     },
   });
-  const { cause } = failure as BaseError;
+  const cause = failure instanceof Error ? failure.cause : undefined;
   if (!(cause instanceof MeraError) || cause.credential === undefined) {
     throw new Error("expected MeraError cause with credential");
   }

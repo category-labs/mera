@@ -2,15 +2,16 @@
 
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, extname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { createTwoslasher } from "@ec-ts/twoslash";
 import ts from "typescript";
 
-const docsDirectory = dirname(dirname(fileURLToPath(import.meta.url)));
+const docsDirectory = dirname(import.meta.dirname);
 const contentDirectory = join(docsDirectory, "src/content/docs");
 const tsConfigPath = join(docsDirectory, "tsconfig.twoslash.json");
 
-const configFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
+const configFile = ts.readConfigFile(tsConfigPath, (path) =>
+  ts.sys.readFile(path),
+);
 if (configFile.error !== undefined) {
   throw new Error(formatDiagnostic(configFile.error));
 }

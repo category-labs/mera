@@ -7,9 +7,9 @@ type SigningKey = {
    *
    * @throws MeraError with code `SESSION_ENDED` after `end` has been called.
    */
-  use(): Uint8Array<ArrayBuffer>;
+  use: () => Uint8Array<ArrayBuffer>;
   /** Zeroes the session-owned key; later `use` calls throw. */
-  end(): void;
+  end: () => void;
   /** Public key derived from the session-owned key. */
   readonly publicKey: Uint8Array<ArrayBuffer>;
 };

@@ -136,50 +136,47 @@ const browserWebAuthnClient: WebAuthnClient = {
     const { excludeCredentials } = request;
     const hasExcludedCredentials =
       excludeCredentials !== undefined && excludeCredentials.length > 0;
-    const options: CredentialCreationOptions = {
-      publicKey: {
-        rp: request.rp,
-        user: request.user,
-        challenge: request.challenge,
-        pubKeyCredParams: request.algorithms.map((alg) => ({
-          type: "public-key" as const,
-          alg,
-        })),
-        ...(hasExcludedCredentials
-          ? {
-              excludeCredentials: excludeCredentials.map(
-                toPublicKeyCredentialDescriptor,
-              ),
-            }
-          : {}),
-        ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
-        attestation: request.attestation,
-        authenticatorSelection: {
-          residentKey: request.residentKey,
-          // WebAuthn Level 1's boolean, kept in step with residentKey for
-          // authenticators that still read it.
-          requireResidentKey: true,
-          userVerification: request.userVerification,
-        },
-        extensions: {
-          prf: { eval: { first: request.prfSalt } },
-        },
+    const publicKey: PublicKeyCredentialCreationOptions = {
+      rp: request.rp,
+      user: request.user,
+      challenge: request.challenge,
+      pubKeyCredParams: request.algorithms.map((alg) => ({
+        type: "public-key" as const,
+        alg,
+      })),
+      attestation: request.attestation,
+      authenticatorSelection: {
+        residentKey: request.residentKey,
+        // WebAuthn Level 1's boolean, kept in step with residentKey for
+        // authenticators that still read it.
+        requireResidentKey: true,
+        userVerification: request.userVerification,
+      },
+      extensions: {
+        prf: { eval: { first: request.prfSalt } },
       },
     };
+    if (hasExcludedCredentials) {
+      publicKey.excludeCredentials = excludeCredentials.map(
+        toPublicKeyCredentialDescriptor,
+      );
+    }
+    if (request.timeout !== undefined) {
+      publicKey.timeout = request.timeout;
+    }
     const credential = await globalThis.navigator?.credentials
-      ?.create(options)
+      ?.create({ publicKey })
       .catch(
         hasExcludedCredentials ? rejectCreateCeremony : rejectCancelledCeremony,
       );
 
-    const publicKeyCredential = assertPublicKeyCredential(credential);
-    const credentialId = new Uint8Array(publicKeyCredential.rawId);
-    const response =
-      publicKeyCredential.response as AuthenticatorAttestationResponse;
+    assertPublicKeyCredential(credential);
+    const credentialId = new Uint8Array(credential.rawId);
+    const response = credential.response as AuthenticatorAttestationResponse;
     const transports = response.getTransports?.();
-    let prf: { enabled: boolean; output: Uint8Array | undefined };
+    let prf: ReturnType<typeof readPrfExtension>;
     try {
-      prf = readPrfExtension(publicKeyCredential);
+      prf = readPrfExtension(credential);
     } catch (error) {
       throw withCreatedCredential(
         toPasskeyError(error, "Passkey creation failed"),
@@ -197,33 +194,34 @@ const browserWebAuthnClient: WebAuthnClient = {
 
   async getCredential(request) {
     const { allowCredential } = request;
-    const options: CredentialRequestOptionsWithUiMode = {
-      // A browser without immediate mode ignores the member and shows its
-      // usual prompt.
-      ...(request.immediate === true ? { uiMode: "immediate" } : {}),
-      publicKey: {
-        rpId: request.rpId,
-        challenge: request.challenge,
-        ...(request.timeout !== undefined ? { timeout: request.timeout } : {}),
-        userVerification: request.userVerification,
-        extensions: { prf: { eval: { first: request.prfSalt } } },
-        ...(allowCredential !== undefined
-          ? {
-              allowCredentials: [
-                toPublicKeyCredentialDescriptor(allowCredential),
-              ],
-            }
-          : {}),
-      },
+    const publicKey: PublicKeyCredentialRequestOptions = {
+      rpId: request.rpId,
+      challenge: request.challenge,
+      userVerification: request.userVerification,
+      extensions: { prf: { eval: { first: request.prfSalt } } },
     };
+    if (request.timeout !== undefined) {
+      publicKey.timeout = request.timeout;
+    }
+    if (allowCredential !== undefined) {
+      publicKey.allowCredentials = [
+        toPublicKeyCredentialDescriptor(allowCredential),
+      ];
+    }
+    const options: CredentialRequestOptionsWithUiMode = { publicKey };
+    // A browser without immediate mode ignores the member and shows its usual
+    // prompt.
+    if (request.immediate === true) {
+      options.uiMode = "immediate";
+    }
     const credential = await globalThis.navigator?.credentials
       ?.get(options)
       .catch(rejectCancelledCeremony);
-    const publicKeyCredential = assertPublicKeyCredential(credential);
-    const prf = readPrfExtension(publicKeyCredential);
+    assertPublicKeyCredential(credential);
+    const prf = readPrfExtension(credential);
 
     return {
-      credentialId: new Uint8Array(publicKeyCredential.rawId),
+      credentialId: new Uint8Array(credential.rawId),
       prfOutput: prf.output,
     };
   },
@@ -232,18 +230,18 @@ const browserWebAuthnClient: WebAuthnClient = {
 function toPublicKeyCredentialDescriptor(
   descriptor: WebAuthnClient.CredentialDescriptor,
 ): PublicKeyCredentialDescriptor {
-  return {
+  const publicKeyDescriptor: PublicKeyCredentialDescriptor = {
     id: descriptor.credentialId,
     type: "public-key",
-    ...(descriptor.transports !== undefined
-      ? {
-          // The library's transport type admits future strings beyond lib.dom's
-          // closed AuthenticatorTransport union. The cast is safe: transports
-          // are hints, and WebAuthn ignores values it does not recognize.
-          transports: descriptor.transports as Array<AuthenticatorTransport>,
-        }
-      : {}),
   };
+  if (descriptor.transports !== undefined) {
+    // The library's transport type admits future strings beyond lib.dom's
+    // closed AuthenticatorTransport union. The cast is safe: transports are
+    // hints, and WebAuthn ignores values it does not recognize.
+    publicKeyDescriptor.transports =
+      descriptor.transports as Array<AuthenticatorTransport>;
+  }
+  return publicKeyDescriptor;
 }
 
 /**
@@ -252,7 +250,7 @@ function toPublicKeyCredentialDescriptor(
  * and delegates cancellation errors to {@link rejectCancelledCeremony}.
  */
 function rejectCreateCeremony(error: unknown): never {
-  if ((error as { name?: unknown } | null)?.name === "InvalidStateError") {
+  if (hasErrorName(error, "InvalidStateError")) {
     throw new MeraError(
       "PASSKEY_EXISTS",
       "An excluded passkey already exists on this authenticator",
@@ -267,7 +265,7 @@ function rejectCreateCeremony(error: unknown): never {
  * the prompt, it times out, or no passkey answers, as `PASSKEY_CANCELLED`.
  */
 function rejectCancelledCeremony(error: unknown): never {
-  if ((error as { name?: unknown } | null)?.name === "NotAllowedError") {
+  if (hasErrorName(error, "NotAllowedError")) {
     throw new MeraError(
       "PASSKEY_CANCELLED",
       "The passkey prompt was dismissed, timed out, or found no passkey",
@@ -277,9 +275,19 @@ function rejectCancelledCeremony(error: unknown): never {
   throw error;
 }
 
+// Reads `name` without assuming the rejection is an Error or DOMException.
+function hasErrorName(error: unknown, name: string): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    error.name === name
+  );
+}
+
 function assertPublicKeyCredential(
   credential: Credential | null | undefined,
-): PublicKeyCredential {
+): asserts credential is PublicKeyCredential {
   if (
     credential?.type !== "public-key" ||
     !("rawId" in credential) ||
@@ -291,18 +299,13 @@ function assertPublicKeyCredential(
       "WebAuthn returned no usable public key credential",
     );
   }
-
-  return credential as PublicKeyCredential;
 }
 
 /**
  * @throws MeraError with code `PRF_UNAVAILABLE` when the PRF output is an
  * array holding a value that is not a byte.
  */
-function readPrfExtension(credential: PublicKeyCredential): {
-  enabled: boolean;
-  output: Uint8Array | undefined;
-} {
+function readPrfExtension(credential: PublicKeyCredential) {
   const { prf }: PrfExtensionOutputs = credential.getClientExtensionResults();
   const first = prf?.results?.first;
 

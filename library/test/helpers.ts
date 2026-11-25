@@ -52,7 +52,7 @@ function readEvaluatedPrfSalt(
   return new Uint8Array(first);
 }
 
-function expectError(fn: () => unknown, code: string): void {
+function expectError(fn: () => void, code: string): void {
   expect(fn).toThrow(expect.objectContaining({ code }));
 }
 
@@ -102,6 +102,8 @@ type ClientCalls = {
   get: Array<Parameters<WebAuthnClient["getCredential"]>[0]>;
 };
 
+type StubClientResult = { client: WebAuthnClient; calls: ClientCalls };
+
 // WebAuthnClient stub that records every request. Unless `getPrfOutput` says
 // otherwise, an assertion's PRF output is a copy of the salt it evaluated.
 function stubClient(
@@ -112,7 +114,7 @@ function stubClient(
     createError?: Error;
     getError?: Error;
   } = {},
-): { client: WebAuthnClient; calls: ClientCalls } {
+): StubClientResult {
   const calls: ClientCalls = { create: [], get: [] };
   const getPrfOutput =
     answers.getPrfOutput ?? ((prfSalt) => new Uint8Array(prfSalt));

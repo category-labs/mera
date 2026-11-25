@@ -101,21 +101,37 @@ function saveKnownCredential(credential: PasskeyCredentialMetadata): void {
 }
 
 function isCachedAccount(value: unknown): value is CachedAccount {
-  const { mode, address, credential } = (value ?? {}) as Record<
-    string,
-    unknown
-  >;
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("mode" in value) ||
+    !("address" in value)
+  ) {
+    return false;
+  }
+  const { mode, address } = value;
   return (
     typeof address === "string" &&
     isAddress(address, { strict: false }) &&
     // Passkey mode needs the credential: an unpinned reveal offers every
     // passkey and can show another account's phrase.
-    (mode === "vault" || (mode === "passkey" && isCredential(credential)))
+    (mode === "vault" ||
+      (mode === "passkey" &&
+        "credential" in value &&
+        isCredential(value.credential)))
   );
 }
 
 function isCredential(value: unknown): value is PasskeyCredentialMetadata {
-  const { credentialId, transports } = (value ?? {}) as Record<string, unknown>;
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("credentialId" in value)
+  ) {
+    return false;
+  }
+  const { credentialId } = value;
+  const transports = "transports" in value ? value.transports : undefined;
   return (
     typeof credentialId === "string" &&
     credentialId.length > 0 &&

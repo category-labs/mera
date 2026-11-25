@@ -1,7 +1,9 @@
 import type { ExpoConfig } from "expo/config";
 
 const webDemoHost = "mera.category.xyz";
-const rpId = process.env.MERA_RP_ID ?? webDemoHost;
+// Expo types process.env values as any.
+const configuredRpId: unknown = process.env.MERA_RP_ID;
+const rpId = typeof configuredRpId === "string" ? configuredRpId : webDemoHost;
 
 const applicationId = "xyz.category.mera.demo";
 

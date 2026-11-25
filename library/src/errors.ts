@@ -73,13 +73,17 @@ function withCreatedCredential(
   error: MeraError,
   { credentialId, transports }: PasskeyCredentialMetadata,
 ): MeraError {
-  return new MeraError(error.code, error.message, {
-    ...(error.cause !== undefined ? { cause: error.cause } : {}),
-    credential: {
-      credentialId,
-      ...(transports !== undefined ? { transports: [...transports] } : {}),
-    },
-  });
+  const credential: PasskeyCredentialMetadata =
+    transports === undefined
+      ? { credentialId }
+      : { credentialId, transports: [...transports] };
+  return new MeraError(
+    error.code,
+    error.message,
+    error.cause === undefined
+      ? { credential }
+      : { cause: error.cause, credential },
+  );
 }
 
 export type { MeraErrorCode };

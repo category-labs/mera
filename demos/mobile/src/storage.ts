@@ -59,10 +59,16 @@ async function readStoredPrfResult(): Promise<
   if (stored === null) {
     return undefined;
   }
-  const { credentialId, prfOutput } = JSON.parse(stored) as Record<
-    string,
-    unknown
-  >;
+  const parsed: unknown = JSON.parse(stored);
+  if (
+    typeof parsed !== "object" ||
+    parsed === null ||
+    !("credentialId" in parsed) ||
+    !("prfOutput" in parsed)
+  ) {
+    throw new Error("Stored PRF result is malformed");
+  }
+  const { credentialId, prfOutput } = parsed;
   if (typeof credentialId !== "string" || typeof prfOutput !== "string") {
     throw new Error("Stored PRF result is malformed");
   }
@@ -76,9 +82,16 @@ async function readStoredPrfResult(): Promise<
 /** The stored account metadata; undefined when it is absent or malformed. */
 function loadStoredAccount(): StoredAccount | undefined {
   try {
-    const { address, credentialId } = (JSON.parse(
-      getItem(ACCOUNT_KEY) ?? "null",
-    ) ?? {}) as Record<string, unknown>;
+    const parsed: unknown = JSON.parse(getItem(ACCOUNT_KEY) ?? "null");
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      !("address" in parsed) ||
+      !("credentialId" in parsed)
+    ) {
+      return undefined;
+    }
+    const { address, credentialId } = parsed;
     if (
       typeof address !== "string" ||
       !isAddress(address, { strict: false }) ||
@@ -114,22 +127,28 @@ async function clearStoredAccount(): Promise<void> {
  */
 function loadKnownCredential(): PasskeyCredentialMetadata | undefined {
   try {
-    const { credentialId, transports } = (JSON.parse(
-      getItem(CREDENTIAL_KEY) ?? "null",
-    ) ?? {}) as Record<string, unknown>;
+    const parsed: unknown = JSON.parse(getItem(CREDENTIAL_KEY) ?? "null");
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      !("credentialId" in parsed)
+    ) {
+      return undefined;
+    }
+    const { credentialId } = parsed;
+    const transports = "transports" in parsed ? parsed.transports : undefined;
     if (
       typeof credentialId !== "string" ||
       credentialId.length === 0 ||
       (transports !== undefined &&
         (!Array.isArray(transports) ||
-          !transports.every((transport) => typeof transport === "string")))
+          !transports.every(
+            (transport): transport is string => typeof transport === "string",
+          )))
     ) {
       return undefined;
     }
-    return {
-      credentialId,
-      transports: transports as PasskeyCredentialMetadata["transports"],
-    };
+    return { credentialId, transports };
   } catch {
     return undefined;
   }

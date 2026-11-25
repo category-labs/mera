@@ -287,10 +287,9 @@ function toCredentialMetadata(
   credentialId: string,
   transports: ReadonlyArray<PasskeyCredentialTransport> | undefined,
 ): PasskeyCredentialMetadata {
-  return {
-    credentialId,
-    ...(transports !== undefined ? { transports: [...transports] } : {}),
-  };
+  return transports === undefined
+    ? { credentialId }
+    : { credentialId, transports: [...transports] };
 }
 
 /**

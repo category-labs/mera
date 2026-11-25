@@ -67,12 +67,7 @@ function stubPlatformApi(
     createResult?: PasskeyCreateResult;
     getResult?: PasskeyGetResult;
   } = {},
-): {
-  platformApi: PlatformApi;
-  createRequests: Array<PasskeyCreateRequest>;
-  getRequests: Array<PasskeyGetRequest>;
-  immediateRequests: Array<PasskeyGetRequest>;
-} {
+) {
   const createRequests: Array<PasskeyCreateRequest> = [];
   const getRequests: Array<PasskeyGetRequest> = [];
   const immediateRequests: Array<PasskeyGetRequest> = [];

@@ -1,4 +1,4 @@
-import type { Hash, Hex, LocalAccount, NonceManager, Signature } from "viem";
+import type { Hash, LocalAccount, NonceManager, Signature } from "viem";
 import {
   hashMessage,
   hashTypedData,
@@ -66,11 +66,7 @@ function toViemAccount(
       return serializeSignature(signHash(hash));
     },
     async signAuthorization(authorization) {
-      // AuthorizationRequest is a one-of union of `address` and its
-      // `contractAddress` alias; exactly one is set, which TypeScript cannot
-      // express across the union members.
-      const contract = (authorization.contractAddress ??
-        authorization.address) as Hex;
+      const contract = authorization.contractAddress ?? authorization.address;
       const { chainId, nonce } = authorization;
       const signature = signHash(
         hashAuthorization({ address: contract, chainId, nonce }),

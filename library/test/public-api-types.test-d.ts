@@ -1,4 +1,8 @@
 import type {
+  // @ts-expect-error The options type now belongs to the function namespace.
+  CreatePasskeyWithPrfOutputOptions,
+  // @ts-expect-error The result type now belongs to the function namespace.
+  CreatePasskeyWithPrfOutputResult,
   CreateSecretVaultWithExistingPasskeyOptions,
   CreateSecretVaultWithNewPasskeyOptions,
   CreateSigningSessionOptions,
@@ -12,10 +16,24 @@ import type {
   decryptSecretVaultWithPasskey,
   deriveEvmPrivateKey,
   deriveSolanaPrivateKey,
+  // @ts-expect-error The options type now belongs to the function namespace.
+  GetPasskeyPrfOutputOptions,
   getPasskeyPrfOutput,
   MeraError,
   PasskeyCredentialMetadata,
+  // @ts-expect-error The result type now belongs to the function namespace.
+  PasskeyPrfResult,
+  // @ts-expect-error The credential type now belongs to WebAuthnClient.
+  WebAuthnAllowCredential,
   WebAuthnClient,
+  // @ts-expect-error The request type now belongs to WebAuthnClient.
+  WebAuthnCreateCredentialRequest,
+  // @ts-expect-error The result type now belongs to WebAuthnClient.
+  WebAuthnCreateCredentialResult,
+  // @ts-expect-error The request type now belongs to WebAuthnClient.
+  WebAuthnGetCredentialRequest,
+  // @ts-expect-error The result type now belongs to WebAuthnClient.
+  WebAuthnGetCredentialResult,
 } from "../dist/index.js";
 
 type Equal<Left, Right> =
@@ -150,24 +168,15 @@ type WebAuthnClientTypes = [
 ];
 
 type RemovedRootAliases = [
-  // @ts-expect-error The options type now belongs to the function namespace.
-  import("../dist/index.js").CreatePasskeyWithPrfOutputOptions,
-  // @ts-expect-error The result type now belongs to the function namespace.
-  import("../dist/index.js").CreatePasskeyWithPrfOutputResult,
-  // @ts-expect-error The options type now belongs to the function namespace.
-  import("../dist/index.js").GetPasskeyPrfOutputOptions,
-  // @ts-expect-error The result type now belongs to the function namespace.
-  import("../dist/index.js").PasskeyPrfResult,
-  // @ts-expect-error The request type now belongs to WebAuthnClient.
-  import("../dist/index.js").WebAuthnCreateCredentialRequest,
-  // @ts-expect-error The result type now belongs to WebAuthnClient.
-  import("../dist/index.js").WebAuthnCreateCredentialResult,
-  // @ts-expect-error The request type now belongs to WebAuthnClient.
-  import("../dist/index.js").WebAuthnGetCredentialRequest,
-  // @ts-expect-error The result type now belongs to WebAuthnClient.
-  import("../dist/index.js").WebAuthnGetCredentialResult,
-  // @ts-expect-error The credential type now belongs to WebAuthnClient.
-  import("../dist/index.js").WebAuthnAllowCredential,
+  CreatePasskeyWithPrfOutputOptions,
+  CreatePasskeyWithPrfOutputResult,
+  GetPasskeyPrfOutputOptions,
+  PasskeyPrfResult,
+  WebAuthnCreateCredentialRequest,
+  WebAuthnCreateCredentialResult,
+  WebAuthnGetCredentialRequest,
+  WebAuthnGetCredentialResult,
+  WebAuthnAllowCredential,
 ];
 
 type MeraErrorTypes = [

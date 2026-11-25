@@ -61,16 +61,6 @@ async function deriveEncryptionKey(
   }
 }
 
-function parseJsonVault(value: string): unknown {
-  try {
-    return JSON.parse(value);
-  } catch (error) {
-    throw new MeraError("VAULT_FORMAT_INVALID", "Vault JSON is invalid", {
-      cause: error,
-    });
-  }
-}
-
 /** Reads a required base64url string field from untrusted vault data. */
 function readVaultBase64Url(
   value: unknown,
@@ -343,7 +333,16 @@ async function decryptSecretVault({
  * @throws MeraError with code `VAULT_FORMAT_INVALID` when required structure, version, or encoded data is invalid.
  */
 function parseSecretVault(value: unknown): PasskeySecretVault {
-  const vault = typeof value === "string" ? parseJsonVault(value) : value;
+  let vault = value;
+  if (typeof value === "string") {
+    try {
+      vault = JSON.parse(value);
+    } catch (error) {
+      throw new MeraError("VAULT_FORMAT_INVALID", "Vault JSON is invalid", {
+        cause: error,
+      });
+    }
+  }
 
   if (typeof vault !== "object" || vault === null || Array.isArray(vault)) {
     throw new MeraError("VAULT_FORMAT_INVALID", "Vault must be an object");
